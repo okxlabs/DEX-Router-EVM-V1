@@ -27,9 +27,8 @@ contract TokenApproveProxy is OwnableUpgradeable {
     //------- Events ----------------
     //-------------------------------
 
-    //-------------------------------
-    //------- Modifier --------------
-    //-------------------------------
+    event AddNewProxy(address newProxy);
+    event RemoveNewProxy(address oldProxy);
 
     //-------------------------------
     //------- Internal Functions ----
@@ -41,10 +40,12 @@ contract TokenApproveProxy is OwnableUpgradeable {
 
     function addProxy(address _newProxy) external onlyOwner {
         allowedApprove[_newProxy] = true;
+        emit AddNewProxy(_newProxy);
     }
 
     function removeProxy(address _oldProxy) public onlyOwner {
         allowedApprove[_oldProxy] = false;
+        emit RemoveNewProxy(_oldProxy);
     }
 
     function setTokenApprove(address _tokenApprove) external onlyOwner {
@@ -61,7 +62,7 @@ contract TokenApproveProxy is OwnableUpgradeable {
         address _dest,
         uint256 _amount
     ) external {
-        require(allowedApprove[msg.sender], "ApproveProxy:Access restricted");
+        require(allowedApprove[msg.sender], "ApproveProxy: Access restricted");
         IApprove(tokenApprove).claimTokens(_token, _who, _dest, _amount);
     }
 

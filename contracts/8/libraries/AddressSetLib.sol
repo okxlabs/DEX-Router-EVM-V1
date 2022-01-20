@@ -50,11 +50,8 @@ library AddressSetLib {
 
     function remove(AddressSet storage set, address element) internal {
         require(contains(set, element), "Element not in set.");
-        // 将要移除的元素跟最后一个元素替换
         uint index = set.indices[element];
-        // 我们要求该元素在列表中, 因此它不能为空
         uint lastIndex = set.elements.length - 1;
-        // 如果最后一个元素是我们要删除的元素，则无需移动
         if (index != lastIndex) {
             address shiftedElement = set.elements[lastIndex];
             set.elements[index] = shiftedElement;

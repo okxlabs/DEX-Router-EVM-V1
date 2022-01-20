@@ -14,7 +14,7 @@ import "./libraries/SafeMath.sol";
 import "./libraries/UniversalERC20.sol";
 import "./libraries/SafeERC20.sol";
 
-import "hardhat/console.sol";
+
 /// @title DexRoute
 /// @author The name of the author
 /// @notice Entrance of Split trading in Dex platform
@@ -47,10 +47,9 @@ contract DexRoute is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     receive() external payable {}
 
-    function initialize(address payable _weth, address _approveProxy) public initializer {
+    function initialize(address payable _weth) public initializer {
         __Ownable_init();
         WETH = _weth;
-        approveProxy = _approveProxy;
     }
 
     //-------------------------------
@@ -89,7 +88,7 @@ contract DexRoute is OwnableUpgradeable, ReentrancyGuardUpgradeable {
                     _fromTokenAmount = request.fromTokenAmount[i];
                 }
                 SafeERC20.safeApprove(IERC20(request.fromToken[j]), tokenApprove, _fromTokenAmount);
-                // Send the asset to Adapter
+                // Send the asset to adapter
                 _deposit(address(this), path.assetTo[i][j], request.fromToken[j], _fromTokenAmount, request.fromToken[j] == ETH_ADDRESS);
                 if (path.directions[i][j] == 1) {
                     IAdapter(path.mixAdapters[i][j]).sellBase(address(this), path.mixPairs[i][j], path.extraData[i][j]);
@@ -165,10 +164,8 @@ contract DexRoute is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         SwapRequest[][] calldata request,
         RouterPath[][] calldata layers
     )
-        external payable isExpired(deadLine) returns (uint256 returnAmount) 
+        external payable isExpired(deadLine) nonReentrant returns (uint256 returnAmount) 
     {
-        require(minReturnAmount >= 0, "Route: return amount zero");
-
         address tmpFromToken = fromToken;
         toTokenOriginBalance = IERC20(toToken).universalBalanceOf(msg.sender);
         _deposit(msg.sender, address(this), tmpFromToken, fromTokenAmount, tmpFromToken == ETH_ADDRESS);

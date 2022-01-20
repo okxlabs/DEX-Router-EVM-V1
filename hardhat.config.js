@@ -1,6 +1,8 @@
 require("@nomiclabs/hardhat-waffle");
 require("@openzeppelin/hardhat-upgrades")
 require('hardhat-abi-exporter');
+require("hardhat-gas-reporter");
+require('hardhat-contract-sizer');
 require("@nomiclabs/hardhat-solhint");
 require('dotenv').config();
 
@@ -68,6 +70,15 @@ module.exports = {
     path: './abi',
     clear: true,
     flat: true
+  },
+  contractSizer: {
+    alphaSort: true,
+    disambiguatePaths: false,
+    runOnCompile: false,
+    strict: true,
+  },
+  gasReporter: {
+    enabled: (process.env.REPORT_GAS) ? true : false
   }
 }
 

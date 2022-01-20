@@ -19,6 +19,10 @@
     "ethereum-waffle": "^3.4.0",
     "hardhat": "^2.8.2",
     "hardhat-abi-exporter": "^2.2.1",
+    "hardhat-gas-reporter": "^1.0.7",
     "prettier": "^2.5.1"
+  },
+  "dependencies": {
+    "hardhat-contract-sizer": "^2.4.0"
   }
 }
