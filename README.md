@@ -1,4 +1,4 @@
-# sor_smartcontract_dev
+# SOR SmartContract
 
 # First Step
 
