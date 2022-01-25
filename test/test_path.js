@@ -11,7 +11,7 @@ describe("Smart route path test", function() {
     [owner, alice, bob, liquidity] = await ethers.getSigners();
 
     await initMockTokens();
-    await initOkSwap();
+    await initSOR();
 
     const pairs = [
       [weth, usdt, ethers.utils.parseEther('10'), ethers.utils.parseEther('30000')],
@@ -595,7 +595,7 @@ describe("Smart route path test", function() {
     await weth.transfer(bob.address, ethers.utils.parseEther('100000000'));
   }
 
-  const initOkSwap = async () => {
+  const initSOR = async () => {
     TokenApprove = await ethers.getContractFactory("TokenApprove")
     tokenApprove = await TokenApprove.deploy();
     await tokenApprove.deployed();

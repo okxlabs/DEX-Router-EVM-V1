@@ -39,6 +39,28 @@ module.exports = {
       allowUnlimitedContractSize: true,
       timeout: 1800000,
     },
+    oec: {
+      url: "https://exchainrpc.okex.org",
+      chainId: 66,
+      accounts: [`${privateKey}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      },
+    },
+    oec_test: {
+      url: "https://exchaintestrpc.okex.org",
+      chainId: 65,
+      accounts: [`${privateKey}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      },
+    },
     bsc: {
       url: "https://bsc-dataseed1.defibit.io",
       chainId: 56,

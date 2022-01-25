@@ -1,13 +1,14 @@
 const { ethers } = require("hardhat");
+const address = require("./deployed");
 
 async function main() {
+  console.log(address.base.dexRoute)
   const dexRouteProxy = await ethers.getContractAt(
     "DexRouteProxy",
-    "0xaCb20732838ce4F71Dc7f78536f827Fc06Af63DB"
+    deployed.dexRoute
   );
 
-  await dexRouteProxy.setApproveProxy('0x683Bbe914e5222BcE638e9EEcA5eC0D4bD3C7A07');
-
+  await dexRouteProxy.setApproveProxy(address.tokenApprove);
 }
 
 main()
