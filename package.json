@@ -5,6 +5,7 @@
   "description": "Yao Swap For Multi-chain",
   "scripts": {
     "compile": "npx hardhat --config hardhat.config.js compile",
+    "compile5": "npx hardhat --config hardhat.config.5.js compile",
     "prettier:solidity": "./node_modules/.bin/prettier --write contracts/**/*.sol"
   },
   "devDependencies": {

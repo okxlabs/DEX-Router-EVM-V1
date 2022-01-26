@@ -100,7 +100,7 @@ module.exports = {
     strict: true,
   },
   gasReporter: {
-    enabled: (process.env.REPORT_GAS) ? true : false
+    enabled: false
   }
 }
 
