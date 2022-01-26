@@ -2,19 +2,15 @@
 pragma solidity ^0.8.0;
 pragma abicoder v2;
 
-import "./interfaces/IApprove.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-
-interface IApproveProxy {
-    function isAllowedProxy(address _proxy) external view returns (bool);
-    function claimTokens(address token, address who, address dest, uint256 amount) external;
-}
+import "./interfaces/IApprove.sol";
+import "./interfaces/IApproveProxy.sol";
 
 /// @title Allow different version dexproxy to claim from Approve
 /// @author Oker
 /// @notice Explain to an end user what this does
 /// @dev Explain to a developer any extra details
-contract TokenApproveProxy is OwnableUpgradeable {
+contract TokenApproveProxy is IApproveProxy, OwnableUpgradeable {
 
     mapping (address => bool) public allowedApprove;
     address public tokenApprove;
@@ -61,12 +57,12 @@ contract TokenApproveProxy is OwnableUpgradeable {
         address _who,
         address _dest,
         uint256 _amount
-    ) external {
+    ) external override {
         require(allowedApprove[msg.sender], "ApproveProxy: Access restricted");
         IApprove(tokenApprove).claimTokens(_token, _who, _dest, _amount);
     }
 
-    function isAllowedProxy(address _proxy) external view returns (bool) {
+    function isAllowedProxy(address _proxy) external override view returns (bool) {
         return allowedApprove[_proxy];
     }
 }

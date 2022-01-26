@@ -17,7 +17,7 @@ import "../interfaces/IWETH.sol";
 /// @notice Explain to an end user what this does
 /// @dev Explain to a developer any extra details
 contract UniV3Adapter is IAdapter, IUniswapV3SwapCallback {
-    using SafeMath for uint;
+    using SafeMath for uint256;
 
     // ============ Storage ============
 

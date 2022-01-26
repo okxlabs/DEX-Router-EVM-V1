@@ -9,6 +9,7 @@ import "./TokenApproveProxy.sol";
 import "./interfaces/IERC20.sol";
 import "./interfaces/IWETH.sol";
 import "./interfaces/IAdapter.sol";
+import "./interfaces/IApproveProxy.sol";
 
 import "./libraries/SafeMath.sol";
 import "./libraries/UniversalERC20.sol";
