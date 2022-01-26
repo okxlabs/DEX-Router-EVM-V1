@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity >=0.6.0;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract MockERC20 is ERC20Upgradeable {
+contract MockERC20 is ERC20 {
     constructor(
         string memory name,
         string memory symbol,
         uint256 supply
-    ) {
-        __ERC20_init(name, symbol);
+    ) ERC20(name, symbol) {
         _mint(msg.sender, supply);
     }
 }
