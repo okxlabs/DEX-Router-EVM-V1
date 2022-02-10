@@ -11,51 +11,51 @@ import "./libraries/SafeERC20.sol";
 /// @notice Explain to an end user what this does
 /// @dev Explain to a developer any extra details
 contract TokenApprove is OwnableUpgradeable {
-    using SafeERC20 for IERC20;
+  using SafeERC20 for IERC20;
 
-    address public tokenApproveProxy;
+  address public tokenApproveProxy;
 
-    function initialize(address _tokenApproveProxy) public initializer {
-        __Ownable_init();
-        tokenApproveProxy = _tokenApproveProxy;
+  function initialize(address _tokenApproveProxy) public initializer {
+    __Ownable_init();
+    tokenApproveProxy = _tokenApproveProxy;
+  }
+
+  //-------------------------------
+  //------- Events ----------------
+  //-------------------------------
+
+  event ProxyUpdate(address indexed oldProxy, address indexed newProxy);
+
+  //-------------------------------
+  //------- Modifier --------------
+  //-------------------------------
+
+  //--------------------------------
+  //------- Internal Functions -----
+  //--------------------------------
+
+  //---------------------------------
+  //------- Admin functions ---------
+  //---------------------------------
+
+  function setApproveProxy(address _newTokenApproveProxy) external onlyOwner {
+    tokenApproveProxy = _newTokenApproveProxy;
+    emit ProxyUpdate(tokenApproveProxy, _newTokenApproveProxy);
+  }
+
+  //---------------------------------
+  //-------  Users Functions --------
+  //---------------------------------
+
+  function claimTokens(
+    address _token,
+    address _who,
+    address _dest,
+    uint256 _amount
+  ) external {
+    require(msg.sender == tokenApproveProxy, "TokenApprove: Access restricted");
+    if (_amount > 0) {
+      IERC20(_token).safeTransferFrom(_who, _dest, _amount);
     }
-
-    //-------------------------------
-    //------- Events ----------------
-    //-------------------------------
-
-    event ProxyUpdate(address indexed oldProxy, address indexed newProxy);
-
-    //-------------------------------
-    //------- Modifier --------------
-    //-------------------------------
-
-    //--------------------------------
-    //------- Internal Functions -----
-    //--------------------------------
-
-    //---------------------------------
-    //------- Admin functions ---------
-    //---------------------------------
-
-    function setApproveProxy(address _newTokenApproveProxy) external onlyOwner {
-        tokenApproveProxy = _newTokenApproveProxy;
-        emit ProxyUpdate(tokenApproveProxy, _newTokenApproveProxy);
-    }
-
-    //---------------------------------
-    //-------  Users Functions --------
-    //---------------------------------
-
-    function claimTokens(
-        address _token,
-        address _who,
-        address _dest,
-        uint256 _amount
-    ) external {
-        require(msg.sender == tokenApproveProxy, "TokenApprove: Access restricted");
-        if (_amount > 0) {
-            IERC20(_token).safeTransferFrom(_who, _dest, _amount);
-        }
-    }
+  }
 }

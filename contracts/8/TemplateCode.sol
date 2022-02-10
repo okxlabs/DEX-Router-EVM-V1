@@ -9,29 +9,28 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 /// @notice Explain to an end user what this does
 /// @dev Explain to a developer any extra details
 contract TemplateCode is OwnableUpgradeable, ReentrancyGuardUpgradeable {
+  function initialize() public initializer {
+    __ReentrancyGuard_init();
+    __Ownable_init();
+  }
 
-    function initialize() public initializer {
-        __ReentrancyGuard_init();
-        __Ownable_init();
-    }
+  //-------------------------------
+  //------- Events ----------------
+  //-------------------------------
 
-    //-------------------------------
-    //------- Events ----------------
-    //-------------------------------
+  //-------------------------------
+  //------- Modifier --------------
+  //-------------------------------
 
-    //-------------------------------
-    //------- Modifier --------------
-    //-------------------------------
+  //-------------------------------
+  //------- Internal Functions ----
+  //-------------------------------
 
-    //-------------------------------
-    //------- Internal Functions ----
-    //-------------------------------
+  //-------------------------------
+  //------- Admin functions -------
+  //-------------------------------
 
-    //-------------------------------
-    //------- Admin functions -------
-    //-------------------------------
-
-    //-------------------------------
-    //------- Users Functions -------
-    //-------------------------------
+  //-------------------------------
+  //------- Users Functions -------
+  //-------------------------------
 }
