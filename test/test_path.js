@@ -7,7 +7,7 @@ describe("Smart route path test", function() {
   let router, tokenApprove, dexRouter
   let owner, alice, bob, liquidity;
 
-  before(async function() {
+  beforeEach(async function() {
     [owner, alice, bob, liquidity] = await ethers.getSigners();
 
     await initMockTokens();
@@ -34,7 +34,7 @@ describe("Smart route path test", function() {
     }
   });
 
-  xit("mixSwap with single path", async () => {
+  it("mixSwap with single path", async () => {
     // wbtc -> weth -> usdt
     console.log("before: " + await usdt.balanceOf(alice.address));
 
@@ -99,9 +99,11 @@ describe("Smart route path test", function() {
       [request1],
       [layer1],
     );
+
+    console.log("after: " + await usdt.balanceOf(alice.address));
   });
 
-  xit("mixSwap with two fork path", async () => {
+  it("mixSwap with two fork path", async () => {
     // wbtc -> weth -> usdt
     //      -> dot  -> usdt
 
@@ -128,7 +130,7 @@ describe("Smart route path test", function() {
       [lpWBTCWETH.address]
     ];
     const assertTo1 = [
-      [lpWBTCWETH.address]
+      [lpWBTCWETH.address, dexRouter.address]
     ];
     const weight1 = [[10000]];
     const directions1 = [[direction(wbtc.address, weth.address)]];
@@ -148,7 +150,7 @@ describe("Smart route path test", function() {
       [lpWBTCDOT.address],
     ];
     const assertTo2 = [
-      [lpWBTCDOT.address],
+      [lpWBTCDOT.address, dexRouter.address],
     ];
     const weight2 = [[10000]];
     const directions2 = [[direction(wbtc.address, dot.address)]];
@@ -167,7 +169,7 @@ describe("Smart route path test", function() {
       [lpWETHUSDT.address],
     ];
     const assertTo3 = [
-      [lpWETHUSDT.address],
+      [lpWETHUSDT.address, dexRouter.address],
     ];
     const weight3 = [[10000]];
     const directions3 = [[direction(weth.address, usdt.address)]];
@@ -186,7 +188,7 @@ describe("Smart route path test", function() {
       [lpDOTUSDT.address],
     ];
     const assertTo4 = [
-      [lpDOTUSDT.address],
+      [lpDOTUSDT.address, dexRouter.address],
     ];
     const weight4 = [[10000]];
     const directions4 = [[direction(dot.address, usdt.address)]];
@@ -210,7 +212,7 @@ describe("Smart route path test", function() {
     );
   });
 
-  xit("mixSwap with three fork path", async () => {
+  it("mixSwap with three fork path", async () => {
     //       -> weth -> usdt
     //  wbtc -> dot  -> usdt
     //       -> bnb  -> weth -> usdt
