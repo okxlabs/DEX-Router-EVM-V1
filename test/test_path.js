@@ -4,14 +4,14 @@ describe("Smart route path test", function() {
 
   const FOREVER = '2000000000';
   let wbtc, weth, dot, bnb, usdc, usdt
-  let router, tokenApprove, dexRoute
+  let router, tokenApprove, dexRouter
   let owner, alice, bob, liquidity;
 
   before(async function() {
     [owner, alice, bob, liquidity] = await ethers.getSigners();
 
     await initMockTokens();
-    await initDexRoute();
+    await initDexRouter();
 
     const pairs = [
       [weth, usdt, ethers.utils.parseEther('10'), ethers.utils.parseEther('30000')],
@@ -59,7 +59,7 @@ describe("Smart route path test", function() {
       [lpWBTCWETH.address]
     ];
     const assertTo1 = [
-      [lpWBTCWETH.address, dexRoute.address]
+      [lpWBTCWETH.address, dexRouter.address]
     ];
     const weight1 = [[10000]];
     const directions1 = [[direction(wbtc.address, weth.address)]];
@@ -79,7 +79,7 @@ describe("Smart route path test", function() {
       [lpWETHUSDT.address],
     ];
     const assertTo2 = [
-      [lpWETHUSDT.address, dexRoute.address],
+      [lpWETHUSDT.address, dexRouter.address],
     ];
     const weight2 = [[10000]];
     const directions2 = [[direction(weth.address, usdt.address)]];
@@ -90,7 +90,7 @@ describe("Smart route path test", function() {
     const request1 = [requestParam1, requestParam2];
     const layer1 = [router1, router2];
 
-    await dexRoute.connect(alice).smartSwap(
+    await dexRouter.connect(alice).smartSwap(
       fromToken.address,
       toToken.address,
       fromTokenAmount,
@@ -199,7 +199,7 @@ describe("Smart route path test", function() {
     const request2 = [requestParam2, requestParam4];
     const layer2 = [router2, router4];
 
-    await dexRoute.connect(alice).smartSwap(
+    await dexRouter.connect(alice).smartSwap(
       fromToken.address,
       toToken.address,
       fromTokenAmount,
@@ -240,7 +240,7 @@ describe("Smart route path test", function() {
       [lpWBTCWETH.address]
     ];
     const assertTo1 = [
-      [lpWBTCWETH.address, dexRoute.address]
+      [lpWBTCWETH.address, dexRouter.address]
     ];
     const weight1 = [[10000]];
     const directions1 = [[direction(wbtc.address, weth.address)]];
@@ -260,7 +260,7 @@ describe("Smart route path test", function() {
       [lpWETHUSDT.address],
     ];
     const assertTo3 = [
-      [lpWETHUSDT.address, dexRoute.address],
+      [lpWETHUSDT.address, dexRouter.address],
     ];
     const weight3 = [[10000]];
     const directions3 = [[direction(weth.address, usdt.address)]];
@@ -280,7 +280,7 @@ describe("Smart route path test", function() {
       [lpWBTCDOT.address],
     ];
     const assertTo2 = [
-      [lpWBTCDOT.address, dexRoute.address],
+      [lpWBTCDOT.address, dexRouter.address],
     ];
     const weight2 = [[10000]];
     const directions2 = [[direction(wbtc.address, dot.address)]];
@@ -300,7 +300,7 @@ describe("Smart route path test", function() {
       [lpDOTUSDT.address],
     ];
     const assertTo4 = [
-      [lpDOTUSDT.address, dexRoute.address],
+      [lpDOTUSDT.address, dexRouter.address],
     ];
     const weight4 = [[10000]];
     const directions4 = [[direction(dot.address, usdt.address)]];
@@ -320,7 +320,7 @@ describe("Smart route path test", function() {
       [lpWBTCBNB.address],
     ];
     const assertTo5 = [
-      [lpWBTCBNB.address, dexRoute.address],
+      [lpWBTCBNB.address, dexRouter.address],
     ];
     const weight5 = [[10000]];
     const directions5 = [[direction(wbtc.address, bnb.address)]];
@@ -342,8 +342,8 @@ describe("Smart route path test", function() {
       [lpBNBWETH.address]
     ];
     const assertTo6 = [
-      [lpBNBWETH.address, dexRoute.address],
-      [lpBNBWETH.address, dexRoute.address]
+      [lpBNBWETH.address, dexRouter.address],
+      [lpBNBWETH.address, dexRouter.address]
     ];
     const weight6 = [[8000], [2000]];
     const directions6 = [[direction(bnb.address, weth.address)], [direction(bnb.address, weth.address)]];
@@ -363,7 +363,7 @@ describe("Smart route path test", function() {
       [lpWETHUSDT.address],
     ];
     const assertTo7 = [
-      [lpWETHUSDT.address, dexRoute.address],
+      [lpWETHUSDT.address, dexRouter.address],
     ];
     const weight7 = [[10000]];
     const directions7 = [[direction(weth.address, usdt.address)]];
@@ -378,7 +378,7 @@ describe("Smart route path test", function() {
     const request3 = [requestParam5, requestParam6, requestParam7];
     const layer3 = [router5, router6, router7];
 
-    await dexRoute.connect(alice).smartSwap(
+    await dexRouter.connect(alice).smartSwap(
       fromToken.address,
       toToken.address,
       fromTokenAmount,
@@ -390,9 +390,9 @@ describe("Smart route path test", function() {
   });
 
   it("mixSwap with four path, same token", async () => {
-    // wbtc -> usdt(uni)
-    //      -> usdt(curve)
-    //      -> usdt(dodo)
+    // wbtc -> weth(uni)
+    //      -> weth(curve)
+    //      -> weth(dodo)
 
     console.log("before: " + await weth.balanceOf(alice.address));
 
@@ -413,6 +413,7 @@ describe("Smart route path test", function() {
       [weth.address, weth.address, weth.address],
       [fromTokenAmount1, fromTokenAmount2, fromTokenAmount3]
     ];
+
     const mixAdapter1 = [
       [uniAdapter.address],
       [uniAdapter.address], // change curve adapter
@@ -424,11 +425,11 @@ describe("Smart route path test", function() {
       [lpWBTCWETH.address]
     ];
     const assertTo1 = [
-      [lpWBTCWETH.address, dexRoute.address],
-      [lpWBTCWETH.address, dexRoute.address],
-      [lpWBTCWETH.address, dexRoute.address]
+      [lpWBTCWETH.address, dexRouter.address],
+      [lpWBTCWETH.address, dexRouter.address],
+      [lpWBTCWETH.address, dexRouter.address]
     ];
-    // The first flash weight does not work
+    // The first flash swap weight does not work
     const weight1 = [[10000], [10000], [10000]];
     const directions1 = [
       [direction(wbtc.address, weth.address)],
@@ -442,7 +443,7 @@ describe("Smart route path test", function() {
     const request1 = [requestParam1];
     const layer1 = [router1];
 
-    await dexRoute.connect(alice).smartSwap(
+    await dexRouter.connect(alice).smartSwap(
       fromToken,
       toToken,
       fromTokenAmount,
@@ -511,7 +512,7 @@ describe("Smart route path test", function() {
     await weth.transfer(bob.address, ethers.utils.parseEther('100000000'));
   }
 
-  const initDexRoute = async () => {
+  const initDexRouter = async () => {
     const WETH9 = await ethers.getContractFactory("MockWBNB");
     weth9 = await WETH9.deploy();
 
@@ -525,18 +526,18 @@ describe("Smart route path test", function() {
     await tokenApprove.initialize(tokenApproveProxy.address);
     await tokenApprove.deployed();
 
-    DexRoute = await ethers.getContractFactory("DexRoute");
-    dexRoute = await upgrades.deployProxy(
-      DexRoute,
+    DexRouter = await ethers.getContractFactory("DexRouter");
+    dexRouter = await upgrades.deployProxy(
+      DexRouter,
       [
         weth9.address,
       ]  
     )
-    await dexRoute.deployed();
-    await dexRoute.setTokenAprrove(tokenApprove.address);
-    await dexRoute.setApproveProxy(tokenApproveProxy.address);
+    await dexRouter.deployed();
+    await dexRouter.setTokenAprrove(tokenApprove.address);
+    await dexRouter.setApproveProxy(tokenApproveProxy.address);
 
-    await tokenApproveProxy.addProxy(dexRoute.address);
+    await tokenApproveProxy.addProxy(dexRouter.address);
     await tokenApproveProxy.setTokenApprove(tokenApprove.address);
 
     UniAdapter = await ethers.getContractFactory("UniAdapter");

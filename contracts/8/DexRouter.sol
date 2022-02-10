@@ -14,13 +14,13 @@ import "./interfaces/IApproveProxy.sol";
 import "./libraries/SafeMath.sol";
 import "./libraries/UniversalERC20.sol";
 import "./libraries/SafeERC20.sol";
-
+import "hardhat/console.sol";
 
 /// @title DexRoute
 /// @author The name of the author
 /// @notice Entrance of Split trading in Dex platform
 /// @dev Entrance of Split trading in Dex platform
-contract DexRoute is OwnableUpgradeable, ReentrancyGuardUpgradeable {
+contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
 
@@ -90,7 +90,7 @@ contract DexRoute is OwnableUpgradeable, ReentrancyGuardUpgradeable {
                 }
                 SafeERC20.safeApprove(IERC20(request.fromToken[j]), tokenApprove, _fromTokenAmount);
                 // Send the asset to adapter
-                _deposit(address(this), path.assetTo[i][j], request.fromToken[j], _fromTokenAmount, request.fromToken[j] == ETH_ADDRESS);
+                _deposit(address(this), path.assetTo[i][j], request.fromToken[j], _fromTokenAmount);
                 if (path.directions[i][j] == 1) {
                     IAdapter(path.mixAdapters[i][j]).sellBase(address(this), path.mixPairs[i][j], path.extraData[i][j]);
                 } else {
@@ -123,12 +123,12 @@ contract DexRoute is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         address _from,
         address _to,
         address _token,
-        uint256 _amount,
-        bool _isGasToken
+        uint256 _amount
     )
         internal
     {
-        if (_isGasToken) {
+        bool isGasToken = _token == ETH_ADDRESS;
+        if (isGasToken) {
             if (_amount > 0) {
                 IWETH(WETH).deposit{value: _amount}();
                 if (_to != address(this)) { 
@@ -169,7 +169,7 @@ contract DexRoute is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     {
         address tmpFromToken = fromToken;
         toTokenOriginBalance = IERC20(toToken).universalBalanceOf(msg.sender);
-        _deposit(msg.sender, address(this), tmpFromToken, fromTokenAmount, tmpFromToken == ETH_ADDRESS);
+        _deposit(msg.sender, address(this), tmpFromToken, fromTokenAmount);
         
         for (uint256 i = 0; i < layers.length; i++) {
             _mixSwap(request[i], layers[i]);
@@ -192,7 +192,9 @@ contract DexRoute is OwnableUpgradeable, ReentrancyGuardUpgradeable {
                     SafeERC20.safeTransfer(IERC20(tmpFromToken), msg.sender, IERC20(tmpFromToken).universalBalanceOf(address(this)));
                 }
             }
-            SafeERC20.safeTransfer(IERC20(toToken), msg.sender, IERC20(toToken).universalBalanceOf(address(this)));
+            if (IERC20(toToken).universalBalanceOf(address(this)) > 0) {
+                SafeERC20.safeTransfer(IERC20(toToken), msg.sender, IERC20(toToken).universalBalanceOf(address(this)));
+            }
         }
 
         returnAmount = IERC20(toToken).universalBalanceOf(msg.sender).sub(toTokenOriginBalance);
