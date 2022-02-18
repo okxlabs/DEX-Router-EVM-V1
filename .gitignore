@@ -9,4 +9,4 @@ abi/
 *.iml
 *.log
 
-./.openzeppelin/unknown-31337.json
+.openzeppelin/unknown-31337.json

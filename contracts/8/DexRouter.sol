@@ -80,7 +80,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable {
       if (isRelay) {
         _fromTokenAmount = preForkAmount.mul(path.weight[i]).div(10000);
       } else {
-        _fromTokenAmount = request.fromTokenAmount[0];
+        _fromTokenAmount = request.fromTokenAmount[i];
       }
       SafeERC20.safeApprove(IERC20(request.fromToken), tokenApprove, _fromTokenAmount);
       // send the asset to adapter

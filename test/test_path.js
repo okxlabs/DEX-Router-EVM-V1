@@ -1,4 +1,4 @@
-const { ethers } = require('hardhat')
+const { ethers, BigNumber } = require('hardhat')
 
 describe("Smart route path test", function() {
 
@@ -34,7 +34,7 @@ describe("Smart route path test", function() {
     }
   });
 
-  xit("mixSwap with single path", async () => {
+  it("mixSwap with single path", async () => {
     // wbtc -> weth -> usdt
     console.log("before: " + await usdt.balanceOf(alice.address));
 
@@ -101,7 +101,7 @@ describe("Smart route path test", function() {
     console.log("after: " + await usdt.balanceOf(alice.address));
   });
 
-  xit("mixSwap with two fork path", async () => {
+  it("mixSwap with two fork path", async () => {
     // wbtc -> weth -> usdt
     //      -> dot  -> usdt
 
@@ -206,7 +206,7 @@ describe("Smart route path test", function() {
     );
   });
 
-  xit("mixSwap with three fork path", async () => {
+  it("mixSwap with three fork path", async () => {
     //       -> weth -> usdt
     //  wbtc -> dot  -> usdt
     //       -> bnb  -> weth -> usdt
