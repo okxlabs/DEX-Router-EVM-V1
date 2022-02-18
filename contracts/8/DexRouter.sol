@@ -17,7 +17,6 @@ import "./libraries/SafeERC20.sol";
 import "hardhat/console.sol";
 
 /// @title DexRoute
-/// @author Oker
 /// @notice Entrance of Split trading in Dex platform
 /// @dev Entrance of Split trading in Dex platform
 contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable {

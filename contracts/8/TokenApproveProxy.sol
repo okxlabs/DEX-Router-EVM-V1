@@ -7,7 +7,6 @@ import "./interfaces/IApprove.sol";
 import "./interfaces/IApproveProxy.sol";
 
 /// @title Allow different version dexproxy to claim from Approve
-/// @author Oker
 /// @notice Explain to an end user what this does
 /// @dev Explain to a developer any extra details
 contract TokenApproveProxy is IApproveProxy, OwnableUpgradeable {

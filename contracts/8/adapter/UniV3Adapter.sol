@@ -13,7 +13,6 @@ import "../libraries/TickMath.sol";
 import "../interfaces/IWETH.sol";
 
 /// @title UniV3Adapter
-/// @author Oker
 /// @notice Explain to an end user what this does
 /// @dev Explain to a developer any extra details
 contract UniV3Adapter is IAdapter, IUniswapV3SwapCallback {
