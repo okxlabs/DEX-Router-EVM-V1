@@ -17,31 +17,28 @@ import "./libraries/SafeERC20.sol";
 import "hardhat/console.sol";
 
 /// @title DexRoute
-/// @author The name of the author
 /// @notice Entrance of Split trading in Dex platform
 /// @dev Entrance of Split trading in Dex platform
 contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable {
   using SafeMath for uint256;
   using UniversalERC20 for IERC20;
 
-  address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
   address public WETH;
   address public approveProxy;
   address public tokenApprove;
 
   struct SwapRequest {
-    address[] fromToken;
-    address[] toToken;
+    address fromToken;
     uint256[] fromTokenAmount;
   }
 
   struct RouterPath {
-    address[][] mixAdapters;
-    address[][] mixPairs;
-    address[][] assetTo;
-    uint256[][] weight;
-    uint256[][] directions;
-    bytes[][] extraData;
+    address[] mixAdapters;
+    address[] mixPairs;
+    address[] assetTo;
+    uint256[] weight;
+    uint256[] directions;
+    bytes[] extraData;
   }
 
   receive() external payable {}
@@ -76,35 +73,32 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     RouterPath calldata path,
     bool isRelay
   ) internal {
-    uint256 preForkAmount = IERC20(request.fromToken[0]).universalBalanceOf(address(this));
+    uint256 preForkAmount = IERC20(request.fromToken).universalBalanceOf(address(this));
+    // execute multiple Adapters for a transaction pair
     for (uint256 i = 0; i < path.mixAdapters.length; i++) {
-      for (uint256 j = 0; j < path.mixAdapters[i].length; j++) {
-        uint256 _fromTokenAmount = 0;
-        if (isRelay) {
-          _fromTokenAmount = preForkAmount.mul(path.weight[i][j]).div(10000);
-        } else {
-          _fromTokenAmount = request.fromTokenAmount[i];
-        }
-        SafeERC20.safeApprove(IERC20(request.fromToken[j]), tokenApprove, _fromTokenAmount);
-        // Send the asset to adapter
-        _deposit(address(this), path.assetTo[i][j], request.fromToken[j], _fromTokenAmount);
-        if (path.directions[i][j] == 1) {
-          IAdapter(path.mixAdapters[i][j]).sellBase(address(this), path.mixPairs[i][j], path.extraData[i][j]);
-        } else {
-          IAdapter(path.mixAdapters[i][j]).sellQuote(address(this), path.mixPairs[i][j], path.extraData[i][j]);
-        }
-        SafeERC20.safeApprove(IERC20(request.fromToken[j]), tokenApprove, 0);
+      uint256 _fromTokenAmount = 0;
+      if (isRelay) {
+        _fromTokenAmount = preForkAmount.mul(path.weight[i]).div(10000);
+      } else {
+        _fromTokenAmount = request.fromTokenAmount[i];
       }
+      SafeERC20.safeApprove(IERC20(request.fromToken), tokenApprove, _fromTokenAmount);
+      // send the asset to adapter
+      _deposit(address(this), path.assetTo[i], request.fromToken, _fromTokenAmount);
+      if (path.directions[i] == 1) {
+        IAdapter(path.mixAdapters[i]).sellBase(address(this), path.mixPairs[i], path.extraData[i]);
+      } else {
+        IAdapter(path.mixAdapters[i]).sellQuote(address(this), path.mixPairs[i], path.extraData[i]);
+      }
+      SafeERC20.safeApprove(IERC20(request.fromToken), tokenApprove, 0);
     }
   }
 
-  function _mixSwap(SwapRequest[] calldata request, RouterPath[] calldata layer) internal {
+  function _preExeSwap(SwapRequest[] calldata request, RouterPath[] calldata layer) internal {
     for (uint256 i = 0; i < layer.length; i++) {
       require(layer[i].mixPairs.length > 0, "Route: pairs empty");
       require(layer[i].mixPairs.length == layer[i].mixAdapters.length, "Route: pair adapter not match");
-      for (uint256 j = 0; j < layer[i].mixPairs.length; j++) {
-        require(layer[i].mixPairs[j].length == layer[i].assetTo[j].length - 1, "Route: pair assetto not match");
-      }
+      require(layer[i].mixPairs.length == layer[i].assetTo.length, "Route: pair assetto not match");
       require(layer[i].weight.length == layer[i].mixPairs.length, "Route: weight not match");
       _exeSwap(request[i], layer[i], i != 0);
     }
@@ -116,8 +110,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     address token,
     uint256 amount
   ) internal {
-    bool isGasToken = token == ETH_ADDRESS;
-    if (isGasToken) {
+    if (UniversalERC20.isETH(IERC20(token))) {
       if (amount > 0) {
         IWETH(WETH).deposit{ value: amount }();
         if (to != address(this)) {
@@ -159,7 +152,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     _deposit(msg.sender, address(this), fromToken, fromTokenAmount);
 
     for (uint256 i = 0; i < layers.length; i++) {
-      _mixSwap(request[i], layers[i]);
+      _preExeSwap(request[i], layers[i]);
     }
 
     returnAmount = IERC20(toToken).universalBalanceOf(msg.sender).sub(toTokenOriginBalance);
@@ -168,7 +161,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     {
       address tmpFromToken = fromToken;
       address tmpToToken = toToken;
-      if (tmpToToken == ETH_ADDRESS) {
+      if (UniversalERC20.isETH(IERC20(tmpToToken))) {
         uint256 remainAmount = IERC20(tmpFromToken).universalBalanceOf(address(this));
         IWETH(WETH).withdraw(remainAmount);
         payable(msg.sender).transfer(remainAmount);
@@ -180,7 +173,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable {
           );
         }
       } else {
-        if (tmpFromToken == ETH_ADDRESS) {
+        if (UniversalERC20.isETH(IERC20(tmpToToken))) {
           uint256 gasFromAmount = IERC20(tmpFromToken).universalBalanceOf(address(this));
           IWETH(WETH).withdraw(gasFromAmount);
           payable(msg.sender).transfer(gasFromAmount);

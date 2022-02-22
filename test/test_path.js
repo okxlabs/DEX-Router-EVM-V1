@@ -1,4 +1,4 @@
-const { ethers } = require('hardhat')
+const { ethers, BigNumber } = require('hardhat')
 
 describe("Smart route path test", function() {
 
@@ -48,42 +48,40 @@ describe("Smart route path test", function() {
 
     // node1
     const requestParam1 = [
-      [wbtc.address],
-      [weth.address],
+      wbtc.address,
       [fromTokenAmount]
     ];
     const mixAdapter1 = [
-      [uniAdapter.address]
+      uniAdapter.address
     ];
     const mixPair1 = [
-      [lpWBTCWETH.address]
+      lpWBTCWETH.address
     ];
     const assertTo1 = [
-      [lpWBTCWETH.address, dexRouter.address]
+      lpWBTCWETH.address
     ];
-    const weight1 = [[10000]];
-    const directions1 = [[direction(wbtc.address, weth.address)]];
-    const extraData1 = [[0x0]];
+    const weight1 = [10000];
+    const directions1 = [direction(wbtc.address, weth.address)];
+    const extraData1 = [0x0];
     const router1 = [mixAdapter1, mixPair1, assertTo1, weight1, directions1, extraData1];
 
     // node2
     const requestParam2 = [
-      [weth.address],
-      [usdt.address],
+      weth.address,
       [0],
     ];
     const mixAdapter2 = [
-      [uniAdapter.address],
+      uniAdapter.address
     ];
     const mixPair2 = [
-      [lpWETHUSDT.address],
+      lpWETHUSDT.address,
     ];
     const assertTo2 = [
-      [lpWETHUSDT.address, dexRouter.address],
+      lpWETHUSDT.address,
     ];
-    const weight2 = [[10000]];
-    const directions2 = [[direction(weth.address, usdt.address)]];
-    const extraData2 = [[0x0]];
+    const weight2 = [10000];
+    const directions2 = [direction(weth.address, usdt.address)];
+    const extraData2 = [0x0];
     const router2 = [mixAdapter2, mixPair2, assertTo2, weight2, directions2, extraData2];
 
     // layer1
@@ -119,80 +117,76 @@ describe("Smart route path test", function() {
 
     // node1
     const requestParam1 = [
-      [wbtc.address],
-      [weth.address],
+      wbtc.address,
       [fromTokenAmount1]
     ];
     const mixAdapter1 = [
-      [uniAdapter.address]
-    ];
+      uniAdapter.address
+    ]
     const mixPair1 = [
-      [lpWBTCWETH.address]
+      lpWBTCWETH.address
     ];
     const assertTo1 = [
-      [lpWBTCWETH.address, dexRouter.address]
+      lpWBTCWETH.address
     ];
-    const weight1 = [[10000]];
-    const directions1 = [[direction(wbtc.address, weth.address)]];
-    const extraData1 = [[0x0]];
+    const weight1 = [10000];
+    const directions1 = [direction(wbtc.address, weth.address)];
+    const extraData1 = [0x0];
     const router1 = [mixAdapter1, mixPair1, assertTo1, weight1, directions1, extraData1];
 
     // node2
     const requestParam2 = [
-      [wbtc.address],
-      [dot.address],
+      wbtc.address,
       [fromTokenAmount2],
     ];
     const mixAdapter2 = [
-      [uniAdapter.address],
+      uniAdapter.address,
     ];
     const mixPair2 = [
-      [lpWBTCDOT.address],
+      lpWBTCDOT.address,
     ];
     const assertTo2 = [
-      [lpWBTCDOT.address, dexRouter.address],
+      lpWBTCDOT.address,
     ];
-    const weight2 = [[10000]];
+    const weight2 = [10000];
     const directions2 = [[direction(wbtc.address, dot.address)]];
     const extraData2 = [[0x0]];
     const router2 = [mixAdapter2, mixPair2, assertTo2, weight2, directions2, extraData2];
 
     const requestParam3 = [
-      [weth.address],
-      [usdt.address],
+      weth.address,
       [0],
     ];
     const mixAdapter3 = [
-      [uniAdapter.address],
+      uniAdapter.address,
     ];
     const mixPair3 = [
-      [lpWETHUSDT.address],
+      lpWETHUSDT.address,
     ];
     const assertTo3 = [
-      [lpWETHUSDT.address, dexRouter.address],
+      lpWETHUSDT.address,
     ];
-    const weight3 = [[10000]];
-    const directions3 = [[direction(weth.address, usdt.address)]];
-    const extraData3 = [[0x0]];
+    const weight3 = [10000];
+    const directions3 = [direction(weth.address, usdt.address)];
+    const extraData3 = [0x0];
     const router3 = [mixAdapter3, mixPair3, assertTo3, weight3, directions3, extraData3];
 
     const requestParam4 = [
-      [dot.address],
-      [usdt.address],
+      dot.address,
       [0],
     ];
     const mixAdapter4 = [
-      [uniAdapter.address],
+      uniAdapter.address,
     ];
     const mixPair4 = [
-      [lpDOTUSDT.address],
+      lpDOTUSDT.address,
     ];
     const assertTo4 = [
-      [lpDOTUSDT.address, dexRouter.address],
+      lpDOTUSDT.address,
     ];
-    const weight4 = [[10000]];
-    const directions4 = [[direction(dot.address, usdt.address)]];
-    const extraData4 = [[0x0]];
+    const weight4 = [10000];
+    const directions4 = [direction(dot.address, usdt.address)];
+    const extraData4 = [0x0];
     const router4 = [mixAdapter4, mixPair4, assertTo4, weight4, directions4, extraData4];
 
     // layer1
@@ -231,154 +225,147 @@ describe("Smart route path test", function() {
 
     // wbtc -> weth
     const requestParam1 = [
-      [wbtc.address],
-      [weth.address],
+      wbtc.address,
       [fromTokenAmount1]
     ];
     const mixAdapter1 = [
-      [uniAdapter.address]
+      uniAdapter.address
     ];
     const mixPair1 = [
-      [lpWBTCWETH.address]
+      lpWBTCWETH.address
     ];
     const assertTo1 = [
-      [lpWBTCWETH.address, dexRouter.address]
+      lpWBTCWETH.address
     ];
-    const weight1 = [[10000]];
-    const directions1 = [[direction(wbtc.address, weth.address)]];
-    const extraData1 = [[0x0]];
+    const weight1 = [10000];
+    const directions1 = [direction(wbtc.address, weth.address)];
+    const extraData1 = [0x0];
     const router1 = [mixAdapter1, mixPair1, assertTo1, weight1, directions1, extraData1];
 
     // weth -> usdt
     const requestParam3 = [
-      [weth.address],
-      [usdt.address],
+      weth.address,
       [0],
     ];
     const mixAdapter3 = [
-      [uniAdapter.address],
+      uniAdapter.address,
     ];
     const mixPair3 = [
-      [lpWETHUSDT.address],
+      lpWETHUSDT.address,
     ];
     const assertTo3 = [
-      [lpWETHUSDT.address, dexRouter.address],
+      lpWETHUSDT.address,
     ];
-    const weight3 = [[10000]];
-    const directions3 = [[direction(weth.address, usdt.address)]];
-    const extraData3 = [[0x0]];
+    const weight3 = [10000];
+    const directions3 = [direction(weth.address, usdt.address)];
+    const extraData3 = [0x0];
     const router3 = [mixAdapter3, mixPair3, assertTo3, weight3, directions3, extraData3];
 
     // wbtc -> dot
     const requestParam2 = [
-      [wbtc.address],
-      [dot.address],
+      wbtc.address,
       [fromTokenAmount2],
     ];
     const mixAdapter2 = [
-      [uniAdapter.address],
+      uniAdapter.address,
     ];
     const mixPair2 = [
-      [lpWBTCDOT.address],
+      lpWBTCDOT.address
     ];
     const assertTo2 = [
-      [lpWBTCDOT.address, dexRouter.address],
+      lpWBTCDOT.address,
     ];
-    const weight2 = [[10000]];
-    const directions2 = [[direction(wbtc.address, dot.address)]];
-    const extraData2 = [[0x0]];
+    const weight2 = [10000];
+    const directions2 = [direction(wbtc.address, dot.address)];
+    const extraData2 = [0x0];
     const router2 = [mixAdapter2, mixPair2, assertTo2, weight2, directions2, extraData2];
 
     // dot -> usdt
     const requestParam4 = [
-      [dot.address],
-      [usdt.address],
+      dot.address,
       [0],
     ];
     const mixAdapter4 = [
-      [uniAdapter.address],
+      uniAdapter.address,
     ];
     const mixPair4 = [
-      [lpDOTUSDT.address],
+      lpDOTUSDT.address,
     ];
     const assertTo4 = [
-      [lpDOTUSDT.address, dexRouter.address],
+      lpDOTUSDT.address
     ];
-    const weight4 = [[10000]];
-    const directions4 = [[direction(dot.address, usdt.address)]];
-    const extraData4 = [[0x0]];
+    const weight4 = [10000];
+    const directions4 = [direction(dot.address, usdt.address)];
+    const extraData4 = [0x0];
     const router4 = [mixAdapter4, mixPair4, assertTo4, weight4, directions4, extraData4];
 
     // wbtc -> bnb
     const requestParam5 = [
-      [wbtc.address],
-      [bnb.address],
+      wbtc.address,
       [fromTokenAmount3],
     ];
     const mixAdapter5 = [
-      [uniAdapter.address],
+      uniAdapter.address
     ];
     const mixPair5 = [
-      [lpWBTCBNB.address],
+      lpWBTCBNB.address
     ];
     const assertTo5 = [
-      [lpWBTCBNB.address, dexRouter.address],
+      lpWBTCBNB.address
     ];
-    const weight5 = [[10000]];
-    const directions5 = [[direction(wbtc.address, bnb.address)]];
-    const extraData5 = [[0x0]];
+    const weight5 = [10000];
+    const directions5 = [direction(wbtc.address, bnb.address)];
+    const extraData5 = [0x0];
     const router5 = [mixAdapter5, mixPair5, assertTo5, weight5, directions5, extraData5];
 
     // bnb -> weth
     const requestParam6 = [
-      [bnb.address, bnb.address],
-      [weth.address, weth.address],
+      bnb.address,
       [0, 0],
     ];
     const mixAdapter6 = [
-      [uniAdapter.address],
-      [uniAdapter.address],
+      uniAdapter.address,
+      uniAdapter.address,
     ];
     const mixPair6 = [
-      [lpBNBWETH.address],
-      [lpBNBWETH.address]
+      lpBNBWETH.address,
+      lpBNBWETH.address
     ];
     const assertTo6 = [
-      [lpBNBWETH.address, dexRouter.address],
-      [lpBNBWETH.address, dexRouter.address]
+      lpBNBWETH.address,
+      lpBNBWETH.address
     ];
-    const weight6 = [[8000], [2000]];
-    const directions6 = [[direction(bnb.address, weth.address)], [direction(bnb.address, weth.address)]];
-    const extraData6 = [[0x0], [0x0]];
+    const weight6 = [8000, 2000];
+    const directions6 = [direction(bnb.address, weth.address), direction(bnb.address, weth.address)];
+    const extraData6 = [0x0, 0x0];
     const router6 = [mixAdapter6, mixPair6, assertTo6, weight6, directions6, extraData6];
 
     // weth -> usdt
     const requestParam7 = [
-      [weth.address],
-      [usdt.address],
-      [0],
+      weth.address,
+      [0]
     ];
     const mixAdapter7 = [
-      [uniAdapter.address],
+      uniAdapter.address,
     ];
     const mixPair7 = [
-      [lpWETHUSDT.address],
+      lpWETHUSDT.address,
     ];
     const assertTo7 = [
-      [lpWETHUSDT.address, dexRouter.address],
+      lpWETHUSDT.address,
     ];
-    const weight7 = [[10000]];
-    const directions7 = [[direction(weth.address, usdt.address)]];
-    const extraData7 = [[0x0]];
+    const weight7 = [10000];
+    const directions7 = [direction(weth.address, usdt.address)];
+    const extraData7 = [0x0];
     const router7 = [mixAdapter7, mixPair7, assertTo7, weight7, directions7, extraData7];
 
     // layer1
     const request1 = [requestParam1, requestParam3];
-    const layer1 = [router1, router3];
+    const layer1 =   [router1, router3];
     const request2 = [requestParam2, requestParam4];
-    const layer2 = [router2, router4];
+    const layer2 =   [router2, router4];
     const request3 = [requestParam5, requestParam6, requestParam7];
-    const layer3 = [router5, router6, router7];
+    const layer3 =   [router5, router6, router7];
 
     await dexRouter.connect(alice).smartSwap(
       fromToken.address,
@@ -411,34 +398,33 @@ describe("Smart route path test", function() {
 
     // node1
     const requestParam1 = [
-      [wbtc.address, wbtc.address, wbtc.address],
-      [weth.address, weth.address, weth.address],
+      wbtc.address,
       [fromTokenAmount1, fromTokenAmount2, fromTokenAmount3]
     ];
 
     const mixAdapter1 = [
-      [uniAdapter.address],
-      [uniAdapter.address], // change curve adapter
-      [uniAdapter.address]  // change dodo  adapter
+      uniAdapter.address,
+      uniAdapter.address, // change curve adapter
+      uniAdapter.address  // change dodo  adapter
     ];
     const mixPair1 = [
-      [lpWBTCWETH.address],
-      [lpWBTCWETH.address],
-      [lpWBTCWETH.address]
+      lpWBTCWETH.address,
+      lpWBTCWETH.address,
+      lpWBTCWETH.address
     ];
     const assertTo1 = [
-      [lpWBTCWETH.address, dexRouter.address],
-      [lpWBTCWETH.address, dexRouter.address],
-      [lpWBTCWETH.address, dexRouter.address]
+      lpWBTCWETH.address,
+      lpWBTCWETH.address,
+      lpWBTCWETH.address
     ];
     // The first flash swap weight does not work
-    const weight1 = [[10000], [10000], [10000]];
+    const weight1 = [10000, 10000, 10000];
     const directions1 = [
       [direction(wbtc.address, weth.address)],
       [direction(wbtc.address, weth.address)],
       [direction(wbtc.address, weth.address)]
     ];
-    const extraData1 = [[0x0], [0x0], [0x0]];
+    const extraData1 = [0x0, 0x0, 0x0];
     const router1 = [mixAdapter1, mixPair1, assertTo1, weight1, directions1, extraData1];
 
     // layer1
