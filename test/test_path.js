@@ -1,4 +1,4 @@
-const { ethers, BigNumber } = require('hardhat')
+const { ethers } = require('hardhat')
 
 describe("Smart route path test", function() {
 
@@ -38,8 +38,8 @@ describe("Smart route path test", function() {
     // wbtc -> weth -> usdt
     console.log("before: " + await usdt.balanceOf(alice.address));
 
-    const fromToken = wbtc;
-    const toToken = usdt;
+    fromToken = wbtc;
+    toToken = usdt;
     const fromTokenAmount = ethers.utils.parseEther('10');
     const minReturnAmount = ethers.utils.parseEther('0');
     const deadLine = FOREVER;
@@ -88,20 +88,23 @@ describe("Smart route path test", function() {
     const request1 = [requestParam1, requestParam2];
     const layer1 = [router1, router2];
 
-    await dexRouter.connect(alice).smartSwap(
+    const baseRequest = [
       fromToken.address,
       toToken.address,
       fromTokenAmount,
       minReturnAmount,
       deadLine,
+    ]
+    await dexRouter.connect(alice).smartSwap(
+      baseRequest,
+      [fromTokenAmount],
       [request1],
       [layer1],
     );
-
     console.log("after: " + await usdt.balanceOf(alice.address));
   });
 
-  it("mixSwap with two fork path", async () => {
+  xit("mixSwap with two fork path", async () => {
     // wbtc -> weth -> usdt
     //      -> dot  -> usdt
 
@@ -134,6 +137,24 @@ describe("Smart route path test", function() {
     const extraData1 = [0x0];
     const router1 = [mixAdapter1, mixPair1, assertTo1, weight1, directions1, extraData1];
 
+    const requestParam3 = [
+      weth.address,
+      [0],
+    ];
+    const mixAdapter3 = [
+      uniAdapter.address,
+    ];
+    const mixPair3 = [
+      lpWETHUSDT.address,
+    ];
+    const assertTo3 = [
+      lpWETHUSDT.address,
+    ];
+    const weight3 = [10000];
+    const directions3 = [direction(weth.address, usdt.address)];
+    const extraData3 = [0x0];
+    const router3 = [mixAdapter3, mixPair3, assertTo3, weight3, directions3, extraData3];
+
     // node2
     const requestParam2 = [
       wbtc.address,
@@ -152,24 +173,6 @@ describe("Smart route path test", function() {
     const directions2 = [[direction(wbtc.address, dot.address)]];
     const extraData2 = [[0x0]];
     const router2 = [mixAdapter2, mixPair2, assertTo2, weight2, directions2, extraData2];
-
-    const requestParam3 = [
-      weth.address,
-      [0],
-    ];
-    const mixAdapter3 = [
-      uniAdapter.address,
-    ];
-    const mixPair3 = [
-      lpWETHUSDT.address,
-    ];
-    const assertTo3 = [
-      lpWETHUSDT.address,
-    ];
-    const weight3 = [10000];
-    const directions3 = [direction(weth.address, usdt.address)];
-    const extraData3 = [0x0];
-    const router3 = [mixAdapter3, mixPair3, assertTo3, weight3, directions3, extraData3];
 
     const requestParam4 = [
       dot.address,
@@ -206,7 +209,7 @@ describe("Smart route path test", function() {
     );
   });
 
-  it("mixSwap with three fork path", async () => {
+  xit("mixSwap with three fork path", async () => {
     //       -> weth -> usdt
     //  wbtc -> dot  -> usdt
     //       -> bnb  -> weth -> usdt
@@ -378,7 +381,7 @@ describe("Smart route path test", function() {
     );
   });
 
-  it("mixSwap with four path, same token", async () => {
+  xit("mixSwap with four path, same token", async () => {
     // wbtc -> weth(uni)
     //      -> weth(curve)
     //      -> weth(dodo)
