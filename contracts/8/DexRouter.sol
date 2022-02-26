@@ -6,20 +6,21 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import "./TokenApproveProxy.sol";
-import "./interfaces/IERC20.sol";
+import "./UnxswapRouter.sol";
+
+// import "./interfaces/IERC20.sol";
 import "./interfaces/IWETH.sol";
 import "./interfaces/IAdapter.sol";
 import "./interfaces/IApproveProxy.sol";
 
 import "./libraries/SafeMath.sol";
-import "./libraries/UniversalERC20.sol";
-import "./libraries/SafeERC20.sol";
+// import "./libraries/SafeERC20.sol";
 import "hardhat/console.sol";
 
-/// @title DexRoute
+/// @title DexRouter
 /// @notice Entrance of Split trading in Dex platform
 /// @dev Entrance of Split trading in Dex platform
-contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable {
+contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   using SafeMath for uint256;
   using UniversalERC20 for IERC20;
 
@@ -49,7 +50,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     bytes[] extraData;
   }
 
-  receive() external payable {}
+  // receive() external payable {}
 
   function initialize(address payable _weth) public initializer {
     __Ownable_init();
