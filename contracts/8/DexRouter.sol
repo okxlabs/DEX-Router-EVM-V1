@@ -8,14 +8,11 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import "./TokenApproveProxy.sol";
 import "./UnxswapRouter.sol";
 
-// import "./interfaces/IERC20.sol";
 import "./interfaces/IWETH.sol";
 import "./interfaces/IAdapter.sol";
 import "./interfaces/IApproveProxy.sol";
 
 import "./libraries/SafeMath.sol";
-// import "./libraries/SafeERC20.sol";
-import "hardhat/console.sol";
 
 /// @title DexRouter
 /// @notice Entrance of Split trading in Dex platform

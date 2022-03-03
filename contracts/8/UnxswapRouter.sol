@@ -6,7 +6,7 @@ import "./libraries/RevertReasonParser.sol";
 
 import "./interfaces/IERC20Permit.sol";
 import "./interfaces/IDaiLikePermit.sol";
-import "hardhat/console.sol";
+
 /// @title Base contract with common payable logics
 abstract contract EthReceiver {
     receive() external payable {
@@ -48,13 +48,13 @@ contract UnxswapRouter is EthReceiver, Permitable {
     uint256 private constant _NUMERATOR_MASK = 0x0000000000000000ffffffff0000000000000000000000000000000000000000;
     /// @dev WETH address is network-specific and needs to be changed before deployment.
     /// It can not be moved to immutable as immutables are not supported in assembly
-    uint256 private constant _WETH = 0x0000000000000000000000005FbDB2315678afecb367f032d93F642f64180aa3;
+    uint256 private constant _WETH = 0x000000000000000000000000bb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
     uint256 private constant _UNISWAP_PAIR_RESERVES_CALL_SELECTOR_32 = 0x0902f1ac00000000000000000000000000000000000000000000000000000000;
     uint256 private constant _UNISWAP_PAIR_SWAP_CALL_SELECTOR_32 = 0x022c0d9f00000000000000000000000000000000000000000000000000000000;
     uint256 private constant _DENOMINATOR = 1000000000;
     uint256 private constant _NUMERATOR_OFFSET = 160;
     // TODO replace deployed address
-    uint256 private constant _APPROVE_PROXY_32 = 0x000000000000000000000000e7f1725E7734CE288F8367e1Bb143E90bb3F0512;
+    uint256 private constant _APPROVE_PROXY_32 = 0x000000000000000000000000d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98;
 
     /// @notice Same as `unoswap` but calls permit first,
     /// allowing to approve token spending and make a swap in one transaction.
