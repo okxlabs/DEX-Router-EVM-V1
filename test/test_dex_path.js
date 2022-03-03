@@ -504,7 +504,7 @@ describe("Smart route path test", function() {
   }
 
   const initDexRouter = async () => {
-    const WETH9 = await ethers.getContractFactory("MockWBNB");
+    const WETH9 = await ethers.getContractFactory("WETH9");
     weth9 = await WETH9.deploy();
 
     TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");

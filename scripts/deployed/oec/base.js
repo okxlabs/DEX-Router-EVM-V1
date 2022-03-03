@@ -3,5 +3,5 @@ module.exports = {
     WBNB: "",
     tokenApprove: "",
     tokenApproveProxy: "",
-    dexRoute: ""
+    dexRouter: ""
 }

@@ -1,14 +1,31 @@
 const { ethers } = require("hardhat");
-const address = require("./deployed");
+const deployed = require('./deployed');
 
 async function main() {
-  console.log(address.base.dexRoute)
-  const dexRouteProxy = await ethers.getContractAt(
-    "DexRouteProxy",
-    deployed.dexRoute
-  );
+  console.log(deployed);
 
-  await dexRouteProxy.setApproveProxy(address.tokenApprove);
+  const tokenApprove = await ethers.getContractAt(
+    "TokenApprove",
+    deployed.base.tokenApprove
+  )
+
+  const tokenApproveProxy = await ethers.getContractAt(
+    "TokenApproveProxy",
+    deployed.base.tokenApproveProxy
+  )
+
+  await tokenApprove.setApproveProxy(deployed.base.tokenApproveProxy);
+  console.log("tokenApprove init");
+
+  await tokenApproveProxy.addProxy(deployed.base.dexRouter);
+  console.log("tokenApproveProxy add dexProxy")
+
+  const dexRouter = await ethers.getContractAt(
+    "DexRouter",
+    deployed.base.dexRouter
+  )
+  await dexRouter.setApproveProxy(tokenApproveProxy.address);
+  await dexRouter.setTokenAprrove(tokenApprove.address);
 }
 
 main()
