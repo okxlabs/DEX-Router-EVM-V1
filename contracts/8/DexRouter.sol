@@ -134,6 +134,40 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     }
   }
 
+  function _transferTokenToUser(BaseRequest memory baseRequest) internal {
+    address tmpFromToken = baseRequest.fromToken;
+    address tmpToToken = baseRequest.toToken;
+    if (UniversalERC20.isETH(IERC20(tmpToToken))) {
+      uint256 remainAmount = IERC20(tmpFromToken).universalBalanceOf(address(this));
+      IWETH(WETH).withdraw(remainAmount);
+      payable(msg.sender).transfer(remainAmount);
+      if (IERC20(tmpFromToken).universalBalanceOf(address(this)) > 0) {
+        SafeERC20.safeTransfer(
+          IERC20(tmpFromToken),
+          msg.sender,
+          IERC20(tmpFromToken).universalBalanceOf(address(this))
+        );
+      }
+    } else {
+      if (IERC20(tmpToToken).universalBalanceOf(address(this)) > 0) {
+        SafeERC20.safeTransfer(IERC20(tmpToToken), msg.sender, IERC20(tmpToToken).universalBalanceOf(address(this)));
+      }
+      if (UniversalERC20.isETH(IERC20(tmpFromToken))) {
+        uint256 remainAmount = IERC20(tmpFromToken).universalBalanceOf(address(this));
+        IWETH(WETH).withdraw(remainAmount);
+        payable(msg.sender).transfer(remainAmount);
+      } else {
+        if (IERC20(tmpFromToken).universalBalanceOf(address(this)) > 0) {
+          SafeERC20.safeTransfer(
+            IERC20(tmpFromToken),
+            msg.sender,
+            IERC20(tmpFromToken).universalBalanceOf(address(this))
+          );
+        }
+      }
+    }
+  }
+
   //-------------------------------
   //------- Admin functions -------
   //-------------------------------
@@ -181,37 +215,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     returnAmount = IERC20(localBaseRequest.toToken).universalBalanceOf(msg.sender).sub(toTokenOriginBalance);
     require(returnAmount >= localBaseRequest.minReturnAmount, "Route: Return amount is not enough");
 
-    address tmpFromToken = localBaseRequest.fromToken;
-    address tmpToToken = localBaseRequest.toToken;
-    if (UniversalERC20.isETH(IERC20(tmpToToken))) {
-      uint256 remainAmount = IERC20(tmpFromToken).universalBalanceOf(address(this));
-      IWETH(WETH).withdraw(remainAmount);
-      payable(msg.sender).transfer(remainAmount);
-      if (IERC20(tmpFromToken).universalBalanceOf(address(this)) > 0) {
-        SafeERC20.safeTransfer(
-          IERC20(tmpFromToken),
-          msg.sender,
-          IERC20(tmpFromToken).universalBalanceOf(address(this))
-        );
-      }
-    } else {
-      if (IERC20(tmpToToken).universalBalanceOf(address(this)) > 0) {
-        SafeERC20.safeTransfer(IERC20(tmpToToken), msg.sender, IERC20(tmpToToken).universalBalanceOf(address(this)));
-      }
-      if (UniversalERC20.isETH(IERC20(tmpFromToken))) {
-        uint256 remainAmount = IERC20(tmpFromToken).universalBalanceOf(address(this));
-        IWETH(WETH).withdraw(remainAmount);
-        payable(msg.sender).transfer(remainAmount);
-      } else {
-        if (IERC20(tmpFromToken).universalBalanceOf(address(this)) > 0) {
-          SafeERC20.safeTransfer(
-            IERC20(tmpFromToken),
-            msg.sender,
-            IERC20(tmpFromToken).universalBalanceOf(address(this))
-          );
-        }
-      }
-    }
+    _transferTokenToUser(localBaseRequest);
 
     emit OrderRecord(
       localBaseRequest.fromToken,
