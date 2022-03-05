@@ -104,7 +104,7 @@ describe("Smart route path test", function() {
     console.log("after: " + await usdt.balanceOf(alice.address));
   });
 
-  xit("mixSwap with two fork path", async () => {
+  it("mixSwap with two fork path", async () => {
     // wbtc -> weth -> usdt
     //      -> dot  -> usdt
 
@@ -209,7 +209,7 @@ describe("Smart route path test", function() {
     );
   });
 
-  xit("mixSwap with three fork path", async () => {
+  it("mixSwap with three fork path", async () => {
     //       -> weth -> usdt
     //  wbtc -> dot  -> usdt
     //       -> bnb  -> weth -> usdt
@@ -381,7 +381,7 @@ describe("Smart route path test", function() {
     );
   });
 
-  xit("mixSwap with four path, same token", async () => {
+  it("mixSwap with four path, same token", async () => {
     // wbtc -> weth(uni)
     //      -> weth(curve)
     //      -> weth(dodo)

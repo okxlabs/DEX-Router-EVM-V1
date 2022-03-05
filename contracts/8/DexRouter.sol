@@ -74,14 +74,21 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   //------- Internal Functions ----
   //-------------------------------
 
-  function _exeSwap(
+function _exeSwap(
     uint256 layerAmount,
     SwapRequest calldata request,
-    RouterPath calldata path
+    RouterPath calldata path,
+    bool isRelay
   ) internal {
     // execute multiple Adapters for a transaction pair
     for (uint256 i = 0; i < path.mixAdapters.length; i++) {
-      uint256 _fromTokenAmount = layerAmount.mul(path.weight[i]).div(10000);
+      uint256 _fromTokenAmount = 0;
+      if (isRelay) {
+        _fromTokenAmount = layerAmount.mul(path.weight[i]).div(10000);
+      } else {
+        uint256 bal = IERC20(request.fromToken).universalBalanceOf(address(this));
+        _fromTokenAmount = bal.mul(path.weight[i]).div(10000);
+      }
       SafeERC20.safeApprove(IERC20(request.fromToken), tokenApprove, _fromTokenAmount);
       // send the asset to adapter
       _deposit(address(this), path.assetTo[i], request.fromToken, _fromTokenAmount);
@@ -100,7 +107,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       require(layer[i].mixPairs.length == layer[i].mixAdapters.length, "Route: pair adapter not match");
       require(layer[i].mixPairs.length == layer[i].assetTo.length, "Route: pair assetto not match");
       require(layer[i].mixPairs.length == layer[i].weight.length, "Route: weight not match");
-      _exeSwap(layerAmount, request[i], layer[i]);
+      _exeSwap(layerAmount, request[i], layer[i], i == 0);
     }
   }
 
