@@ -74,7 +74,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   //------- Internal Functions ----
   //-------------------------------
 
-function _exeSwap(
+  function _exeForks(
     uint256 layerAmount,
     SwapRequest calldata request,
     RouterPath calldata path,
@@ -101,13 +101,18 @@ function _exeSwap(
     }
   }
 
-  function _preExeSwap(uint256 layerAmount, SwapRequest[] calldata request, RouterPath[] calldata layer) internal {
+  function _exeHop(
+    uint256 layerAmount,
+    SwapRequest[] calldata request,
+    RouterPath[] calldata layer
+  ) internal {
+    // execute forks
     for (uint256 i = 0; i < layer.length; i++) {
       require(layer[i].mixPairs.length > 0, "Route: pairs empty");
       require(layer[i].mixPairs.length == layer[i].mixAdapters.length, "Route: pair adapter not match");
       require(layer[i].mixPairs.length == layer[i].assetTo.length, "Route: pair assetto not match");
       require(layer[i].mixPairs.length == layer[i].weight.length, "Route: weight not match");
-      _exeSwap(layerAmount, request[i], layer[i], i == 0);
+      _exeForks(layerAmount, request[i], layer[i], i == 0);
     }
   }
 
@@ -160,12 +165,17 @@ function _exeSwap(
     for (uint256 i = 0; i < layers.length; i++) {
       totalBranchAmount += branchesAmount[i];
     }
-    require(totalBranchAmount <= localBaseRequest.fromTokenAmount, "Route: number of branches should be <= fromTokenAmount");
+    require(
+      totalBranchAmount <= localBaseRequest.fromTokenAmount,
+      "Route: number of branches should be <= fromTokenAmount"
+    );
 
+    // execute batch
     for (uint256 i = 0; i < layers.length; i++) {
       uint256 layerAmount = branchesAmount[i];
       // uint256 layerAmount = localBaseRequest.fromTokenAmount.mul(branchesAmount[i]).div(10000);
-      _preExeSwap(layerAmount, request[i], layers[i]);
+      // execute hop
+      _exeHop(layerAmount, request[i], layers[i]);
     }
 
     returnAmount = IERC20(localBaseRequest.toToken).universalBalanceOf(msg.sender).sub(toTokenOriginBalance);
@@ -203,6 +213,12 @@ function _exeSwap(
       }
     }
 
-    emit OrderRecord(localBaseRequest.fromToken, localBaseRequest.toToken, msg.sender, localBaseRequest.fromTokenAmount, returnAmount);
+    emit OrderRecord(
+      localBaseRequest.fromToken,
+      localBaseRequest.toToken,
+      msg.sender,
+      localBaseRequest.fromTokenAmount,
+      returnAmount
+    );
   }
 }
