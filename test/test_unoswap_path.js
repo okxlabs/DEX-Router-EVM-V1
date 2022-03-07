@@ -181,6 +181,14 @@ describe("Unoswap swap test", function() {
   });
 
   it("if the target token is ETH, it should be successfully converted", async () => {
+
+    WNativeRelayer = await ethers.getContractFactory("WNativeRelayer");
+    wNativeRelayer = await WNativeRelayer.deploy();
+    await wNativeRelayer.deployed();
+    await wNativeRelayer.initialize(weth.address);
+    console.log("wnative " + wNativeRelayer.address)
+    await wNativeRelayer.setCallerOk([dexRouter.address], [true]);
+
     const token0 = await lpWETHUSDT.token0();
     const reserves = await lpWETHUSDT.getReserves();
     if (token0 == weth.address) {
@@ -403,11 +411,13 @@ describe("Unoswap swap test", function() {
     await weth.connect(liquidity).deposit({ value: ethers.utils.parseEther('1000') });
     await weth.connect(liquidity).transfer(bob.address, ethers.utils.parseEther('1000'));
     await weth.connect(bob).deposit({ value: ethers.utils.parseEther('1000') });
+    console.log("weth " + weth.address)
 
     TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
     tokenApproveProxy = await TokenApproveProxy.deploy();
     await tokenApproveProxy.initialize();
     await tokenApproveProxy.deployed();
+    console.log("tokenApproveProxy " + tokenApproveProxy.address)
 
     TokenApprove = await ethers.getContractFactory("TokenApprove");
     tokenApprove = await TokenApprove.deploy();

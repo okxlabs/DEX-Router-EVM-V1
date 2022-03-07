@@ -50,21 +50,23 @@ contract UnxswapRouter is EthReceiver, Permitable {
   uint256 private constant _REVERSE_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;
   uint256 private constant _WETH_MASK = 0x4000000000000000000000000000000000000000000000000000000000000000;
   uint256 private constant _NUMERATOR_MASK = 0x0000000000000000ffffffff0000000000000000000000000000000000000000;
-  /// @dev WETH address is network-specific and needs to be changed before deployment.
-  /// It can not be moved to immutable as immutables are not supported in assembly
-  // BSC: bb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c
-  // LOCAL: 5FbDB2315678afecb367f032d93F642f64180aa3
-  uint256 private constant _WETH = 0x0000000000000000000000005FbDB2315678afecb367f032d93F642f64180aa3;
   uint256 private constant _UNISWAP_PAIR_RESERVES_CALL_SELECTOR_32 =
     0x0902f1ac00000000000000000000000000000000000000000000000000000000;
   uint256 private constant _UNISWAP_PAIR_SWAP_CALL_SELECTOR_32 =
     0x022c0d9f00000000000000000000000000000000000000000000000000000000;
   uint256 private constant _DENOMINATOR = 1000000000;
   uint256 private constant _NUMERATOR_OFFSET = 160;
-  // TODO replace deployed address
-  // BSC: d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98
+  /// @dev WETH address is network-specific and needs to be changed before deployment.
+  /// It can not be moved to immutable as immutables are not supported in assembly
+  // BSC:   bb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c
+  // LOCAL: 5FbDB2315678afecb367f032d93F642f64180aa3
+  uint256 private constant _WETH =             0x000000000000000000000000bb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
+  // BSC:   d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98
   // LOCAL: e7f1725E7734CE288F8367e1Bb143E90bb3F0512
-  uint256 private constant _APPROVE_PROXY_32 = 0x000000000000000000000000e7f1725E7734CE288F8367e1Bb143E90bb3F0512;
+  uint256 private constant _APPROVE_PROXY_32 = 0x000000000000000000000000d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98;
+  // BSC:   d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98
+  // LOCAL: 0B5f474ad0e3f7ef629BD10dbf9e4a8Fd60d9A48
+  uint256 private constant _WNATIVE_RELAY_32 = 0x0000000000000000000000000B5f474ad0e3f7ef629BD10dbf9e4a8Fd60d9A48;
 
   /// @notice Same as `unoswap` but calls permit first,
   /// allowing to approve token spending and make a swap in one transaction.
@@ -232,9 +234,16 @@ contract UnxswapRouter is EthReceiver, Permitable {
           address()
         )
 
+        mstore(emptyPtr, _ERC20_TRANSFER_CALL_SELECTOR_32)
+        mstore(add(emptyPtr, 0x4), _WNATIVE_RELAY_32)
+        mstore(add(emptyPtr, 0x24), returnAmount)
+        if iszero(call(gas(), _WETH, 0, emptyPtr, 0x44, 0, 0)) {
+          reRevert()
+        }
+
         mstore(emptyPtr, _WETH_WITHDRAW_CALL_SELECTOR_32)
         mstore(add(emptyPtr, 0x04), returnAmount)
-        if iszero(call(gas(), _WETH, 0, emptyPtr, 0x24, 0, 0)) {
+        if iszero(call(gas(), _WNATIVE_RELAY_32, 0, emptyPtr, 0x24, 0, 0)) {
           reRevert()
         }
 
