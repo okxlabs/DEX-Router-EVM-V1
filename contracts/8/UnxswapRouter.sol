@@ -60,7 +60,7 @@ contract UnxswapRouter is EthReceiver, Permitable {
   /// It can not be moved to immutable as immutables are not supported in assembly
   // BSC:   bb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c
   // LOCAL: 5FbDB2315678afecb367f032d93F642f64180aa3
-  uint256 private constant _WETH =             0x000000000000000000000000bb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
+  uint256 private constant _WETH = 0x000000000000000000000000bb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
   // BSC:   d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98
   // LOCAL: e7f1725E7734CE288F8367e1Bb143E90bb3F0512
   uint256 private constant _APPROVE_PROXY_32 = 0x000000000000000000000000d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98;

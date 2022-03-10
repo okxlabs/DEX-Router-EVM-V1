@@ -47,8 +47,6 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     bytes[] extraData;
   }
 
-  // receive() external payable {}
-
   function initialize(address payable _weth) public initializer {
     __Ownable_init();
     __ReentrancyGuard_init();
@@ -134,6 +132,26 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     }
   }
 
+  function _withdraw(
+    address from,
+    address to,
+    address token,
+    uint256 amount
+  ) internal {
+    if (UniversalERC20.isETH(IERC20(token))) {
+      if (amount > 0) {
+        IWETH(WETH).withdraw(amount);
+        if (to != address(this)) {
+          SafeERC20.safeTransfer(IERC20(WETH), to, amount);
+        }
+      }
+    } else {
+      if (to != address(this)) {
+        SafeERC20.safeTransfer(IERC20(WETH), to, amount);
+      }
+    }
+  }
+
   function _transferTokenToUser(BaseRequest memory baseRequest) internal {
     address tmpFromToken = baseRequest.fromToken;
     address tmpToToken = baseRequest.toToken;
@@ -186,7 +204,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
   function smartSwap(
     BaseRequest calldata baseRequest,
-    uint256[] calldata branchesAmount,
+    uint256[] calldata batchAmount,
     SwapRequest[][] calldata request,
     RouterPath[][] calldata layers
   ) external payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) {
@@ -195,19 +213,20 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     uint256 toTokenOriginBalance = IERC20(baseRequest.toToken).universalBalanceOf(msg.sender);
     _deposit(msg.sender, address(this), localBaseRequest.fromToken, localBaseRequest.fromTokenAmount);
 
-    uint256 totalBranchAmount = 0;
+    // check
+    uint256 totalBatchAmount = 0;
     for (uint256 i = 0; i < layers.length; i++) {
-      totalBranchAmount += branchesAmount[i];
+      totalBatchAmount += batchAmount[i];
     }
     require(
-      totalBranchAmount <= localBaseRequest.fromTokenAmount,
+      totalBatchAmount <= localBaseRequest.fromTokenAmount,
       "Route: number of branches should be <= fromTokenAmount"
     );
 
     // execute batch
     for (uint256 i = 0; i < layers.length; i++) {
-      uint256 layerAmount = branchesAmount[i];
-      // uint256 layerAmount = localBaseRequest.fromTokenAmount.mul(branchesAmount[i]).div(10000);
+      uint256 layerAmount = batchAmount[i];
+      // uint256 layerAmount = localBaseRequest.fromTokenAmount.mul(batchAmount[i]).div(10000);
       // execute hop
       _exeHop(layerAmount, request[i], layers[i]);
     }
