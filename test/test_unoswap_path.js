@@ -1,8 +1,11 @@
 const { ethers } = require('hardhat')
 const { BigNumber} = require('ethers')
 const { expect } = require('chai')
-const { PERMIT_TYPEHASH, getPermitDigest, getDomainSeparator, sign } = require('./signatures')
+const { getPermitDigest, sign } = require('./signatures')
 
+// 
+// You need to change the address in the Unxswap contract before running the test case
+// 
 describe("Unoswap swap test", function() {
 
   const ETH = { address: '0x0000000000000000000000000000000000000000' }
