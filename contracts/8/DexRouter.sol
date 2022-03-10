@@ -47,8 +47,6 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     bytes[] extraData;
   }
 
-  // receive() external payable {}
-
   function initialize(address payable _weth) public initializer {
     __Ownable_init();
     __ReentrancyGuard_init();
@@ -74,14 +72,21 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   //------- Internal Functions ----
   //-------------------------------
 
-  function _exeSwap(
+  function _exeForks(
     uint256 layerAmount,
     SwapRequest calldata request,
-    RouterPath calldata path
+    RouterPath calldata path,
+    bool isRelay
   ) internal {
     // execute multiple Adapters for a transaction pair
     for (uint256 i = 0; i < path.mixAdapters.length; i++) {
-      uint256 _fromTokenAmount = layerAmount.mul(path.weight[i]).div(10000);
+      uint256 _fromTokenAmount = 0;
+      if (isRelay) {
+        _fromTokenAmount = layerAmount.mul(path.weight[i]).div(10000);
+      } else {
+        uint256 bal = IERC20(request.fromToken).universalBalanceOf(address(this));
+        _fromTokenAmount = bal.mul(path.weight[i]).div(10000);
+      }
       SafeERC20.safeApprove(IERC20(request.fromToken), tokenApprove, _fromTokenAmount);
       // send the asset to adapter
       _deposit(address(this), path.assetTo[i], request.fromToken, _fromTokenAmount);
@@ -94,13 +99,18 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     }
   }
 
-  function _preExeSwap(uint256 layerAmount, SwapRequest[] calldata request, RouterPath[] calldata layer) internal {
+  function _exeHop(
+    uint256 layerAmount,
+    SwapRequest[] calldata request,
+    RouterPath[] calldata layer
+  ) internal {
+    // execute forks
     for (uint256 i = 0; i < layer.length; i++) {
       require(layer[i].mixPairs.length > 0, "Route: pairs empty");
       require(layer[i].mixPairs.length == layer[i].mixAdapters.length, "Route: pair adapter not match");
       require(layer[i].mixPairs.length == layer[i].assetTo.length, "Route: pair assetto not match");
       require(layer[i].mixPairs.length == layer[i].weight.length, "Route: weight not match");
-      _exeSwap(layerAmount, request[i], layer[i]);
+      _exeForks(layerAmount, request[i], layer[i], i == 0);
     }
   }
 
@@ -122,50 +132,29 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     }
   }
 
-  //-------------------------------
-  //------- Admin functions -------
-  //-------------------------------
-
-  function setApproveProxy(address newApproveProxy) external onlyOwner {
-    approveProxy = newApproveProxy;
+  function _withdraw(
+    address from,
+    address to,
+    address token,
+    uint256 amount
+  ) internal {
+    if (UniversalERC20.isETH(IERC20(token))) {
+      if (amount > 0) {
+        IWETH(WETH).withdraw(amount);
+        if (to != address(this)) {
+          SafeERC20.safeTransfer(IERC20(WETH), to, amount);
+        }
+      }
+    } else {
+      if (to != address(this)) {
+        SafeERC20.safeTransfer(IERC20(WETH), to, amount);
+      }
+    }
   }
 
-  function setTokenAprrove(address newTokenApprove) external onlyOwner {
-    tokenApprove = newTokenApprove;
-  }
-
-  //-------------------------------
-  //------- Users Functions -------
-  //-------------------------------
-
-  function smartSwap(
-    BaseRequest calldata baseRequest,
-    uint256[] calldata branchesAmount,
-    SwapRequest[][] calldata request,
-    RouterPath[][] calldata layers
-  ) external payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) {
-    require(baseRequest.fromTokenAmount > 0, "Route: fromTokenAmount must be > 0");
-    BaseRequest memory localBaseRequest = baseRequest;
-    uint256 toTokenOriginBalance = IERC20(baseRequest.toToken).universalBalanceOf(msg.sender);
-    _deposit(msg.sender, address(this), localBaseRequest.fromToken, localBaseRequest.fromTokenAmount);
-
-    uint256 totalBranchAmount = 0;
-    for (uint256 i = 0; i < layers.length; i++) {
-      totalBranchAmount += branchesAmount[i];
-    }
-    require(totalBranchAmount <= localBaseRequest.fromTokenAmount, "Route: number of branches should be <= fromTokenAmount");
-
-    for (uint256 i = 0; i < layers.length; i++) {
-      uint256 layerAmount = branchesAmount[i];
-      // uint256 layerAmount = localBaseRequest.fromTokenAmount.mul(branchesAmount[i]).div(10000);
-      _preExeSwap(layerAmount, request[i], layers[i]);
-    }
-
-    returnAmount = IERC20(localBaseRequest.toToken).universalBalanceOf(msg.sender).sub(toTokenOriginBalance);
-    require(returnAmount >= localBaseRequest.minReturnAmount, "Route: Return amount is not enough");
-
-    address tmpFromToken = localBaseRequest.fromToken;
-    address tmpToToken = localBaseRequest.toToken;
+  function _transferTokenToUser(BaseRequest memory baseRequest) internal {
+    address tmpFromToken = baseRequest.fromToken;
+    address tmpToToken = baseRequest.toToken;
     if (UniversalERC20.isETH(IERC20(tmpToToken))) {
       uint256 remainAmount = IERC20(tmpFromToken).universalBalanceOf(address(this));
       IWETH(WETH).withdraw(remainAmount);
@@ -195,7 +184,64 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
         }
       }
     }
+  }
 
-    emit OrderRecord(localBaseRequest.fromToken, localBaseRequest.toToken, msg.sender, localBaseRequest.fromTokenAmount, returnAmount);
+  //-------------------------------
+  //------- Admin functions -------
+  //-------------------------------
+
+  function setApproveProxy(address newApproveProxy) external onlyOwner {
+    approveProxy = newApproveProxy;
+  }
+
+  function setTokenAprrove(address newTokenApprove) external onlyOwner {
+    tokenApprove = newTokenApprove;
+  }
+
+  //-------------------------------
+  //------- Users Functions -------
+  //-------------------------------
+
+  function smartSwap(
+    BaseRequest calldata baseRequest,
+    uint256[] calldata batchAmount,
+    SwapRequest[][] calldata request,
+    RouterPath[][] calldata layers
+  ) external payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) {
+    require(baseRequest.fromTokenAmount > 0, "Route: fromTokenAmount must be > 0");
+    BaseRequest memory localBaseRequest = baseRequest;
+    uint256 toTokenOriginBalance = IERC20(baseRequest.toToken).universalBalanceOf(msg.sender);
+    _deposit(msg.sender, address(this), localBaseRequest.fromToken, localBaseRequest.fromTokenAmount);
+
+    // check
+    uint256 totalBatchAmount = 0;
+    for (uint256 i = 0; i < layers.length; i++) {
+      totalBatchAmount += batchAmount[i];
+    }
+    require(
+      totalBatchAmount <= localBaseRequest.fromTokenAmount,
+      "Route: number of branches should be <= fromTokenAmount"
+    );
+
+    // execute batch
+    for (uint256 i = 0; i < layers.length; i++) {
+      uint256 layerAmount = batchAmount[i];
+      // uint256 layerAmount = localBaseRequest.fromTokenAmount.mul(batchAmount[i]).div(10000);
+      // execute hop
+      _exeHop(layerAmount, request[i], layers[i]);
+    }
+
+    returnAmount = IERC20(localBaseRequest.toToken).universalBalanceOf(msg.sender).sub(toTokenOriginBalance);
+    require(returnAmount >= localBaseRequest.minReturnAmount, "Route: Return amount is not enough");
+
+    _transferTokenToUser(localBaseRequest);
+
+    emit OrderRecord(
+      localBaseRequest.fromToken,
+      localBaseRequest.toToken,
+      msg.sender,
+      localBaseRequest.fromTokenAmount,
+      returnAmount
+    );
   }
 }
