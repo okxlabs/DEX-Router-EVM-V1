@@ -12,13 +12,11 @@ import "./interfaces/IWETH.sol";
 import "./interfaces/IAdapter.sol";
 import "./interfaces/IApproveProxy.sol";
 
-import "./libraries/SafeMath.sol";
 
 /// @title DexRouter
 /// @notice Entrance of Split trading in Dex platform
 /// @dev Entrance of Split trading in Dex platform
 contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradeable {
-  using SafeMath for uint256;
   using UniversalERC20 for IERC20;
 
   address public WETH;
@@ -82,10 +80,10 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     for (uint256 i = 0; i < path.mixAdapters.length; i++) {
       uint256 _fromTokenAmount = 0;
       if (isRelay) {
-        _fromTokenAmount = layerAmount.mul(path.weight[i]).div(10000);
+        _fromTokenAmount = layerAmount * path.weight[i] / 10000;
       } else {
         uint256 bal = IERC20(request.fromToken).universalBalanceOf(address(this));
-        _fromTokenAmount = bal.mul(path.weight[i]).div(10000);
+        _fromTokenAmount = bal * path.weight[i] / 10000;
       }
       SafeERC20.safeApprove(IERC20(request.fromToken), tokenApprove, _fromTokenAmount);
       // send the asset to adapter
@@ -129,26 +127,6 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       }
     } else {
       IApproveProxy(approveProxy).claimTokens(token, from, to, amount);
-    }
-  }
-
-  function _withdraw(
-    address from,
-    address to,
-    address token,
-    uint256 amount
-  ) internal {
-    if (UniversalERC20.isETH(IERC20(token))) {
-      if (amount > 0) {
-        IWETH(WETH).withdraw(amount);
-        if (to != address(this)) {
-          SafeERC20.safeTransfer(IERC20(WETH), to, amount);
-        }
-      }
-    } else {
-      if (to != address(this)) {
-        SafeERC20.safeTransfer(IERC20(WETH), to, amount);
-      }
     }
   }
 
@@ -231,7 +209,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       _exeHop(layerAmount, request[i], layers[i]);
     }
 
-    returnAmount = IERC20(localBaseRequest.toToken).universalBalanceOf(msg.sender).sub(toTokenOriginBalance);
+    returnAmount = IERC20(localBaseRequest.toToken).universalBalanceOf(msg.sender) - toTokenOriginBalance;
     require(returnAmount >= localBaseRequest.minReturnAmount, "Route: Return amount is not enough");
 
     _transferTokenToUser(localBaseRequest);

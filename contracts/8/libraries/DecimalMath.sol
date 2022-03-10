@@ -12,7 +12,7 @@ library DecimalMath {
     uint256 internal constant ONE2 = 10**36;
 
     function mulFloor(uint256 target, uint256 d) internal pure returns (uint256) {
-        return target.mul(d) / (10**18);
+        return target * d / (10**18);
     }
 
     function mulCeil(uint256 target, uint256 d) internal pure returns (uint256) {
@@ -20,7 +20,7 @@ library DecimalMath {
     }
 
     function divFloor(uint256 target, uint256 d) internal pure returns (uint256) {
-        return target.mul(10**18).div(d);
+        return target * 10**18 / d;
     }
 
     function divCeil(uint256 target, uint256 d) internal pure returns (uint256) {
@@ -28,7 +28,7 @@ library DecimalMath {
     }
 
     function reciprocalFloor(uint256 target) internal pure returns (uint256) {
-        return uint256(10**36).div(target);
+        return uint256(10**36) / target;
     }
 
     function reciprocalCeil(uint256 target) internal pure returns (uint256) {

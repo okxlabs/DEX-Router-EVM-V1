@@ -4,13 +4,11 @@ pragma solidity ^0.8.0;
 import "../interfaces/IAdapter.sol";
 import "../interfaces/ICurve.sol";
 import "../interfaces/IERC20.sol";
-import "../libraries/SafeMath.sol";
 import "../libraries/UniversalERC20.sol";
 import "../libraries/SafeERC20.sol";
 
 // for two tokens
 contract CurveAdapter is IAdapter {
-    using SafeMath for uint;
 
     function _curveSwap(address to, address pool, bytes memory moreInfo) internal {
         (address fromToken, address toToken, int128 i, int128 j) = abi.decode(moreInfo, (address, address, int128, int128));

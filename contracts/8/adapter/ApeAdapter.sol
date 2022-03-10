@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { IAdapter } from "../interfaces/IAdapter.sol";
-import { IUni } from "../interfaces/IUni.sol";
-import { IERC20 } from "../interfaces/IERC20.sol";
-import { SafeMath } from "../libraries/SafeMath.sol";
+import "../interfaces/IAdapter.sol";
+import "../interfaces/IUni.sol";
+import "../interfaces/IERC20.sol";
 
 contract ApeAdapter is IAdapter {
-    using SafeMath for uint;
 
     // fromToken == token0
     function sellBase(address to, address pool, bytes memory) external override {
@@ -18,9 +16,9 @@ contract ApeAdapter is IAdapter {
         uint balance0 = IERC20(baseToken).balanceOf(pool);
         uint sellBaseAmount = balance0 - reserveIn;
 
-        uint sellBaseAmountWithFee = sellBaseAmount.mul(998);
-        uint numerator = sellBaseAmountWithFee.mul(reserveOut);
-        uint denominator = reserveIn.mul(1000).add(sellBaseAmountWithFee);
+        uint sellBaseAmountWithFee = sellBaseAmount * 998;
+        uint numerator = sellBaseAmountWithFee * reserveOut;
+        uint denominator = reserveIn * 1000 + sellBaseAmountWithFee;
         uint receiveQuoteAmount = numerator / denominator;
         IUni(pool).swap(0, receiveQuoteAmount, to, new bytes(0));
     }
@@ -34,9 +32,9 @@ contract ApeAdapter is IAdapter {
         uint balance1 = IERC20(quoteToken).balanceOf(pool);
         uint sellQuoteAmount = balance1 - reserveIn;
 
-        uint sellQuoteAmountWithFee = sellQuoteAmount.mul(998);
-        uint numerator = sellQuoteAmountWithFee.mul(reserveOut);
-        uint denominator = reserveIn.mul(1000).add(sellQuoteAmountWithFee);
+        uint sellQuoteAmountWithFee = sellQuoteAmount * 998;
+        uint numerator = sellQuoteAmountWithFee * reserveOut;
+        uint denominator = reserveIn * 1000 + sellQuoteAmountWithFee;
         uint receiveBaseAmount = numerator / denominator;
         IUni(pool).swap(receiveBaseAmount, 0, to, new bytes(0));
     }
