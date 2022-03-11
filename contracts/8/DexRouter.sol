@@ -6,27 +6,30 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import "./TokenApproveProxy.sol";
-import "./interfaces/IERC20.sol";
+import "./UnxswapRouter.sol";
+
 import "./interfaces/IWETH.sol";
 import "./interfaces/IAdapter.sol";
 import "./interfaces/IApproveProxy.sol";
 
-import "./libraries/SafeMath.sol";
-import "./libraries/UniversalERC20.sol";
-import "./libraries/SafeERC20.sol";
-import "hardhat/console.sol";
 
-/// @title DexRoute
-/// @author Oker
+/// @title DexRouter
 /// @notice Entrance of Split trading in Dex platform
 /// @dev Entrance of Split trading in Dex platform
-contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable {
-  using SafeMath for uint256;
+contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   using UniversalERC20 for IERC20;
 
   address public WETH;
   address public approveProxy;
   address public tokenApprove;
+
+  struct BaseRequest {
+    address fromToken;
+    address toToken;
+    uint256 fromTokenAmount;
+    uint256 minReturnAmount;
+    uint256 deadLine;
+  }
 
   struct SwapRequest {
     address fromToken;
@@ -41,8 +44,6 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     uint256[] directions;
     bytes[] extraData;
   }
-
-  receive() external payable {}
 
   function initialize(address payable _weth) public initializer {
     __Ownable_init();
@@ -69,19 +70,20 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable {
   //------- Internal Functions ----
   //-------------------------------
 
-  function _exeSwap(
+  function _exeForks(
+    uint256 layerAmount,
     SwapRequest calldata request,
     RouterPath calldata path,
     bool isRelay
   ) internal {
-    uint256 preForkAmount = IERC20(request.fromToken).universalBalanceOf(address(this));
     // execute multiple Adapters for a transaction pair
     for (uint256 i = 0; i < path.mixAdapters.length; i++) {
       uint256 _fromTokenAmount = 0;
       if (isRelay) {
-        _fromTokenAmount = preForkAmount.mul(path.weight[i]).div(10000);
+        _fromTokenAmount = layerAmount * path.weight[i] / 10000;
       } else {
-        _fromTokenAmount = request.fromTokenAmount[0];
+        uint256 bal = IERC20(request.fromToken).universalBalanceOf(address(this));
+        _fromTokenAmount = bal * path.weight[i] / 10000;
       }
       SafeERC20.safeApprove(IERC20(request.fromToken), tokenApprove, _fromTokenAmount);
       // send the asset to adapter
@@ -95,13 +97,18 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
   }
 
-  function _preExeSwap(SwapRequest[] calldata request, RouterPath[] calldata layer) internal {
+  function _exeHop(
+    uint256 layerAmount,
+    SwapRequest[] calldata request,
+    RouterPath[] calldata layer
+  ) internal {
+    // execute forks
     for (uint256 i = 0; i < layer.length; i++) {
       require(layer[i].mixPairs.length > 0, "Route: pairs empty");
       require(layer[i].mixPairs.length == layer[i].mixAdapters.length, "Route: pair adapter not match");
       require(layer[i].mixPairs.length == layer[i].assetTo.length, "Route: pair assetto not match");
-      require(layer[i].weight.length == layer[i].mixPairs.length, "Route: weight not match");
-      _exeSwap(request[i], layer[i], i != 0);
+      require(layer[i].mixPairs.length == layer[i].weight.length, "Route: weight not match");
+      _exeForks(layerAmount, request[i], layer[i], i == 0);
     }
   }
 
@@ -123,6 +130,40 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
   }
 
+  function _transferTokenToUser(BaseRequest memory baseRequest) internal {
+    address tmpFromToken = baseRequest.fromToken;
+    address tmpToToken = baseRequest.toToken;
+    if (UniversalERC20.isETH(IERC20(tmpToToken))) {
+      uint256 remainAmount = IERC20(tmpFromToken).universalBalanceOf(address(this));
+      IWETH(WETH).withdraw(remainAmount);
+      payable(msg.sender).transfer(remainAmount);
+      if (IERC20(tmpFromToken).universalBalanceOf(address(this)) > 0) {
+        SafeERC20.safeTransfer(
+          IERC20(tmpFromToken),
+          msg.sender,
+          IERC20(tmpFromToken).universalBalanceOf(address(this))
+        );
+      }
+    } else {
+      if (IERC20(tmpToToken).universalBalanceOf(address(this)) > 0) {
+        SafeERC20.safeTransfer(IERC20(tmpToToken), msg.sender, IERC20(tmpToToken).universalBalanceOf(address(this)));
+      }
+      if (UniversalERC20.isETH(IERC20(tmpFromToken))) {
+        uint256 remainAmount = IERC20(tmpFromToken).universalBalanceOf(address(this));
+        IWETH(WETH).withdraw(remainAmount);
+        payable(msg.sender).transfer(remainAmount);
+      } else {
+        if (IERC20(tmpFromToken).universalBalanceOf(address(this)) > 0) {
+          SafeERC20.safeTransfer(
+            IERC20(tmpFromToken),
+            msg.sender,
+            IERC20(tmpFromToken).universalBalanceOf(address(this))
+          );
+        }
+      }
+    }
+  }
+
   //-------------------------------
   //------- Admin functions -------
   //-------------------------------
@@ -140,59 +181,45 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable {
   //-------------------------------
 
   function smartSwap(
-    address fromToken,
-    address toToken,
-    uint256 fromTokenAmount,
-    uint256 minReturnAmount,
-    uint256 deadLine,
+    BaseRequest calldata baseRequest,
+    uint256[] calldata batchAmount,
     SwapRequest[][] calldata request,
     RouterPath[][] calldata layers
-  ) external payable isExpired(deadLine) nonReentrant returns (uint256 returnAmount) {
-    require(fromTokenAmount > 0, "Route: fromTokenAmount must be > 0");
-    uint256 toTokenOriginBalance = IERC20(toToken).universalBalanceOf(msg.sender);
-    _deposit(msg.sender, address(this), fromToken, fromTokenAmount);
+  ) external payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) {
+    require(baseRequest.fromTokenAmount > 0, "Route: fromTokenAmount must be > 0");
+    BaseRequest memory localBaseRequest = baseRequest;
+    uint256 toTokenOriginBalance = IERC20(baseRequest.toToken).universalBalanceOf(msg.sender);
+    _deposit(msg.sender, address(this), localBaseRequest.fromToken, localBaseRequest.fromTokenAmount);
 
+    // check
+    uint256 totalBatchAmount = 0;
     for (uint256 i = 0; i < layers.length; i++) {
-      _preExeSwap(request[i], layers[i]);
+      totalBatchAmount += batchAmount[i];
+    }
+    require(
+      totalBatchAmount <= localBaseRequest.fromTokenAmount,
+      "Route: number of branches should be <= fromTokenAmount"
+    );
+
+    // execute batch
+    for (uint256 i = 0; i < layers.length; i++) {
+      uint256 layerAmount = batchAmount[i];
+      // uint256 layerAmount = localBaseRequest.fromTokenAmount.mul(batchAmount[i]).div(10000);
+      // execute hop
+      _exeHop(layerAmount, request[i], layers[i]);
     }
 
-    returnAmount = IERC20(toToken).universalBalanceOf(msg.sender).sub(toTokenOriginBalance);
-    require(returnAmount >= minReturnAmount, "Route: Return amount is not enough");
+    returnAmount = IERC20(localBaseRequest.toToken).universalBalanceOf(msg.sender) - toTokenOriginBalance;
+    require(returnAmount >= localBaseRequest.minReturnAmount, "Route: Return amount is not enough");
 
-    {
-      address tmpFromToken = fromToken;
-      address tmpToToken = toToken;
-      if (UniversalERC20.isETH(IERC20(tmpToToken))) {
-        uint256 remainAmount = IERC20(tmpFromToken).universalBalanceOf(address(this));
-        IWETH(WETH).withdraw(remainAmount);
-        payable(msg.sender).transfer(remainAmount);
-        if (IERC20(tmpFromToken).universalBalanceOf(address(this)) > 0) {
-          SafeERC20.safeTransfer(
-            IERC20(tmpFromToken),
-            msg.sender,
-            IERC20(tmpFromToken).universalBalanceOf(address(this))
-          );
-        }
-      } else {
-        if (UniversalERC20.isETH(IERC20(tmpToToken))) {
-          uint256 gasFromAmount = IERC20(tmpFromToken).universalBalanceOf(address(this));
-          IWETH(WETH).withdraw(gasFromAmount);
-          payable(msg.sender).transfer(gasFromAmount);
-        } else {
-          if (IERC20(tmpFromToken).universalBalanceOf(address(this)) > 0) {
-            SafeERC20.safeTransfer(
-              IERC20(tmpFromToken),
-              msg.sender,
-              IERC20(tmpFromToken).universalBalanceOf(address(this))
-            );
-          }
-        }
-        if (IERC20(tmpToToken).universalBalanceOf(address(this)) > 0) {
-          SafeERC20.safeTransfer(IERC20(tmpToToken), msg.sender, IERC20(tmpToToken).universalBalanceOf(address(this)));
-        }
-      }
-    }
+    _transferTokenToUser(localBaseRequest);
 
-    emit OrderRecord(fromToken, toToken, msg.sender, fromTokenAmount, returnAmount);
+    emit OrderRecord(
+      localBaseRequest.fromToken,
+      localBaseRequest.toToken,
+      msg.sender,
+      localBaseRequest.fromTokenAmount,
+      returnAmount
+    );
   }
 }

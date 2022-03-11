@@ -182,7 +182,6 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     require(amount0Out > 0 || amount1Out > 0, "UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT");
     (uint112 _reserve0, uint112 _reserve1, ) = getReserves(); // gas savings
     require(amount0Out < _reserve0 && amount1Out < _reserve1, "UniswapV2: INSUFFICIENT_LIQUIDITY");
-
     uint256 balance0;
     uint256 balance1;
     {

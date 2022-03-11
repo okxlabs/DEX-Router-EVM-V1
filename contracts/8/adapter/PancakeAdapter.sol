@@ -4,10 +4,8 @@ pragma solidity ^0.8.0;
 import "../interfaces/IAdapter.sol";
 import "../interfaces/IUni.sol";
 import "../interfaces/IERC20.sol";
-import "../libraries/SafeMath.sol";
 
 contract PancakeAdapter is IAdapter {
-    using SafeMath for uint;
 
     // fromToken == token0
     function sellBase(address to, address pool, bytes memory) external override {
@@ -18,9 +16,9 @@ contract PancakeAdapter is IAdapter {
         uint balance0 = IERC20(baseToken).balanceOf(pool);
         uint sellBaseAmount = balance0 - reserveIn;
         
-        uint sellBaseAmountWithFee = sellBaseAmount.mul(9975);
-        uint numerator = sellBaseAmountWithFee.mul(reserveOut);
-        uint denominator = reserveIn.mul(10000).add(sellBaseAmountWithFee);
+        uint sellBaseAmountWithFee = sellBaseAmount * 9975;
+        uint numerator = sellBaseAmountWithFee * reserveOut;
+        uint denominator = reserveIn * 10000 + sellBaseAmountWithFee;
         uint receiveQuoteAmount = numerator / denominator;
         IUni(pool).swap(0, receiveQuoteAmount, to, new bytes(0));
     }
@@ -34,9 +32,9 @@ contract PancakeAdapter is IAdapter {
         uint balance1 = IERC20(quoteToken).balanceOf(pool);
         uint sellQuoteAmount = balance1 - reserveIn;
 
-        uint sellQuoteAmountWithFee = sellQuoteAmount.mul(9975);
-        uint numerator = sellQuoteAmountWithFee.mul(reserveOut);
-        uint denominator = reserveIn.mul(10000).add(sellQuoteAmountWithFee);
+        uint sellQuoteAmountWithFee = sellQuoteAmount * 9975;
+        uint numerator = sellQuoteAmountWithFee * reserveOut;
+        uint denominator = reserveIn * 10000 + sellQuoteAmountWithFee;
         uint receiveBaseAmount = numerator / denominator;
         IUni(pool).swap(receiveBaseAmount, 0, to, new bytes(0));
     }

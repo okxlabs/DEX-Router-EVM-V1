@@ -1,4 +1,5 @@
 const { ethers } = require('hardhat')
+const { expect } = require('chai')
 
 describe("Smart route path test", function() {
 
@@ -34,12 +35,12 @@ describe("Smart route path test", function() {
     }
   });
 
-  xit("mixSwap with single path", async () => {
+  it("mixSwap with single path", async () => {
     // wbtc -> weth -> usdt
     console.log("before: " + await usdt.balanceOf(alice.address));
 
-    const fromToken = wbtc;
-    const toToken = usdt;
+    fromToken = wbtc;
+    toToken = usdt;
     const fromTokenAmount = ethers.utils.parseEther('10');
     const minReturnAmount = ethers.utils.parseEther('0');
     const deadLine = FOREVER;
@@ -88,20 +89,25 @@ describe("Smart route path test", function() {
     const request1 = [requestParam1, requestParam2];
     const layer1 = [router1, router2];
 
-    await dexRouter.connect(alice).smartSwap(
+    const baseRequest = [
       fromToken.address,
       toToken.address,
       fromTokenAmount,
       minReturnAmount,
       deadLine,
+    ]
+    await dexRouter.connect(alice).smartSwap(
+      baseRequest,
+      [fromTokenAmount],
       [request1],
       [layer1],
     );
 
+    expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
     console.log("after: " + await usdt.balanceOf(alice.address));
   });
 
-  xit("mixSwap with two fork path", async () => {
+  it("mixSwap with two fork path", async () => {
     // wbtc -> weth -> usdt
     //      -> dot  -> usdt
 
@@ -134,6 +140,24 @@ describe("Smart route path test", function() {
     const extraData1 = [0x0];
     const router1 = [mixAdapter1, mixPair1, assertTo1, weight1, directions1, extraData1];
 
+    const requestParam3 = [
+      weth.address,
+      [0],
+    ];
+    const mixAdapter3 = [
+      uniAdapter.address,
+    ];
+    const mixPair3 = [
+      lpWETHUSDT.address,
+    ];
+    const assertTo3 = [
+      lpWETHUSDT.address,
+    ];
+    const weight3 = [10000];
+    const directions3 = [direction(weth.address, usdt.address)];
+    const extraData3 = [0x0];
+    const router3 = [mixAdapter3, mixPair3, assertTo3, weight3, directions3, extraData3];
+
     // node2
     const requestParam2 = [
       wbtc.address,
@@ -152,24 +176,6 @@ describe("Smart route path test", function() {
     const directions2 = [[direction(wbtc.address, dot.address)]];
     const extraData2 = [[0x0]];
     const router2 = [mixAdapter2, mixPair2, assertTo2, weight2, directions2, extraData2];
-
-    const requestParam3 = [
-      weth.address,
-      [0],
-    ];
-    const mixAdapter3 = [
-      uniAdapter.address,
-    ];
-    const mixPair3 = [
-      lpWETHUSDT.address,
-    ];
-    const assertTo3 = [
-      lpWETHUSDT.address,
-    ];
-    const weight3 = [10000];
-    const directions3 = [direction(weth.address, usdt.address)];
-    const extraData3 = [0x0];
-    const router3 = [mixAdapter3, mixPair3, assertTo3, weight3, directions3, extraData3];
 
     const requestParam4 = [
       dot.address,
@@ -195,18 +201,24 @@ describe("Smart route path test", function() {
     const request2 = [requestParam2, requestParam4];
     const layer2 = [router2, router4];
 
-    await dexRouter.connect(alice).smartSwap(
+    const baseRequest = [
       fromToken.address,
       toToken.address,
       fromTokenAmount,
       minReturnAmount,
       deadLine,
+    ]
+    await dexRouter.connect(alice).smartSwap(
+      baseRequest,
+      [fromTokenAmount1, fromTokenAmount2],
       [request1, request2],
       [layer1, layer2],
     );
+
+    expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
   });
 
-  xit("mixSwap with three fork path", async () => {
+  it("mixSwap with three fork path", async () => {
     //       -> weth -> usdt
     //  wbtc -> dot  -> usdt
     //       -> bnb  -> weth -> usdt
@@ -216,8 +228,8 @@ describe("Smart route path test", function() {
     const toToken = usdt;
     const fromTokenAmount = ethers.utils.parseEther('10');
     const fromTokenAmount1 = ethers.utils.parseEther('2');
-    const fromTokenAmount2 = ethers.utils.parseEther('6');
-    const fromTokenAmount3 = ethers.utils.parseEther('2');
+    const fromTokenAmount2 = ethers.utils.parseEther('3');
+    const fromTokenAmount3 = ethers.utils.parseEther('5');
     const minReturnAmount = ethers.utils.parseEther('0');
     const deadLine = FOREVER;
 
@@ -226,7 +238,7 @@ describe("Smart route path test", function() {
     // wbtc -> weth
     const requestParam1 = [
       wbtc.address,
-      [fromTokenAmount1]
+      [0]
     ];
     const mixAdapter1 = [
       uniAdapter.address
@@ -264,7 +276,7 @@ describe("Smart route path test", function() {
     // wbtc -> dot
     const requestParam2 = [
       wbtc.address,
-      [fromTokenAmount2],
+      [0],
     ];
     const mixAdapter2 = [
       uniAdapter.address,
@@ -302,7 +314,7 @@ describe("Smart route path test", function() {
     // wbtc -> bnb
     const requestParam5 = [
       wbtc.address,
-      [fromTokenAmount3],
+      [0],
     ];
     const mixAdapter5 = [
       uniAdapter.address
@@ -367,15 +379,22 @@ describe("Smart route path test", function() {
     const request3 = [requestParam5, requestParam6, requestParam7];
     const layer3 =   [router5, router6, router7];
 
-    await dexRouter.connect(alice).smartSwap(
+    const baseRequest = [
       fromToken.address,
       toToken.address,
       fromTokenAmount,
       minReturnAmount,
       deadLine,
+    ]
+    await dexRouter.connect(alice).smartSwap(
+      baseRequest,
+      [fromTokenAmount1, fromTokenAmount2, fromTokenAmount3],
       [request1, request2, request3],
       [layer1, layer2, layer3],
     );
+
+    expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
+    console.log("after: " + await usdt.balanceOf(alice.address));
   });
 
   it("mixSwap with four path, same token", async () => {
@@ -385,16 +404,16 @@ describe("Smart route path test", function() {
 
     console.log("before: " + await weth.balanceOf(alice.address));
 
-    const fromToken = wbtc.address;
-    const toToken = weth.address;
-    const fromTokenAmount = ethers.utils.parseEther('10');
+    fromToken = wbtc;
+    toToken = weth;
+    fromTokenAmount = ethers.utils.parseEther('10');
     const fromTokenAmount1 = ethers.utils.parseEther('2');
     const fromTokenAmount2 = ethers.utils.parseEther('3');
     const fromTokenAmount3 = ethers.utils.parseEther('5');
-    const minReturnAmount = ethers.utils.parseEther('0');
-    const deadLine = FOREVER;
+    minReturnAmount = 0;
+    deadLine = FOREVER;
 
-    await wbtc.connect(alice).approve(tokenApprove.address, fromTokenAmount);
+    await wbtc.connect(alice).approve(tokenApprove.address, ethers.constants.MaxUint256);
 
     // node1
     const requestParam1 = [
@@ -418,7 +437,7 @@ describe("Smart route path test", function() {
       lpWBTCWETH.address
     ];
     // The first flash swap weight does not work
-    const weight1 = [10000, 10000, 10000];
+    const weight1 = [2000, 3000, 5000];
     const directions1 = [
       [direction(wbtc.address, weth.address)],
       [direction(wbtc.address, weth.address)],
@@ -431,16 +450,22 @@ describe("Smart route path test", function() {
     const request1 = [requestParam1];
     const layer1 = [router1];
 
-    await dexRouter.connect(alice).smartSwap(
-      fromToken,
-      toToken,
+    baseRequest = [
+      fromToken.address,
+      toToken.address,
       fromTokenAmount,
       minReturnAmount,
-      deadLine,
+      deadLine
+    ]
+
+    await dexRouter.connect(alice).smartSwap(
+      baseRequest,
+      [fromTokenAmount],
       [request1],
       [layer1],
     );
 
+    expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
     console.log("after: " + await weth.balanceOf(alice.address));
   });
 
@@ -477,7 +502,7 @@ describe("Smart route path test", function() {
   
     wbtc = await MockERC20.deploy('WBTC', 'WBTC', ethers.utils.parseEther('10000000000'));
     await wbtc.deployed();
-    await wbtc.transfer(alice.address, ethers.utils.parseEther('10'));
+    await wbtc.transfer(alice.address, ethers.utils.parseEther('100'));
     await wbtc.transfer(bob.address, ethers.utils.parseEther('100000000'));
   
     dot = await MockERC20.deploy('DOT', 'DOT', ethers.utils.parseEther('10000000000'));
@@ -501,7 +526,7 @@ describe("Smart route path test", function() {
   }
 
   const initDexRouter = async () => {
-    const WETH9 = await ethers.getContractFactory("MockWBNB");
+    const WETH9 = await ethers.getContractFactory("WETH9");
     weth9 = await WETH9.deploy();
 
     TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");

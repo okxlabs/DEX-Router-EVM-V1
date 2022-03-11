@@ -1,7 +1,8 @@
 module.exports = {
     owner: "",
     WBNB: "",
+    wNativeRelayer: "",
     tokenApprove: "",
     tokenApproveProxy: "",
-    dexRoute: ""
+    dexRouter: ""
 }

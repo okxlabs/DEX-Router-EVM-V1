@@ -6,18 +6,15 @@ import "../interfaces/IAdapter.sol";
 import "../interfaces/IUniswapV3SwapCallback.sol";
 import "../interfaces/IUniV3.sol";
 import "../interfaces/IERC20.sol";
-import "../libraries/SafeMath.sol";
 import "../libraries/UniversalERC20.sol";
 import "../libraries/SafeERC20.sol";
 import "../libraries/TickMath.sol";
 import "../interfaces/IWETH.sol";
 
 /// @title UniV3Adapter
-/// @author Oker
 /// @notice Explain to an end user what this does
 /// @dev Explain to a developer any extra details
 contract UniV3Adapter is IAdapter, IUniswapV3SwapCallback {
-    using SafeMath for uint256;
 
     // ============ Storage ============
 
