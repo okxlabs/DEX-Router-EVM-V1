@@ -12,7 +12,6 @@ import "./interfaces/IWETH.sol";
 import "./interfaces/IAdapter.sol";
 import "./interfaces/IApproveProxy.sol";
 
-
 /// @title DexRouter
 /// @notice Entrance of Split trading in Dex platform
 /// @dev Entrance of Split trading in Dex platform
@@ -55,7 +54,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   //------- Events ----------------
   //-------------------------------
 
-  event OrderRecord(address fromToken, address toToken, address sender, uint256 fromAmount, uint256 returnAmount);
+  // event OrderRecord(address fromToken, address toToken, address sender, uint256 fromAmount, uint256 returnAmount);
 
   //-------------------------------
   //------- Modifier --------------
