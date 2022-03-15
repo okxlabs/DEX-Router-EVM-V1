@@ -6,6 +6,12 @@ import "./libraries/RevertReasonParser.sol";
 
 import "./interfaces/IERC20Permit.sol";
 import "./interfaces/IDaiLikePermit.sol";
+import "hardhat/console.sol";
+
+interface IUniswapV2Pair {
+  function token0() external returns (address);
+  function token1() external returns (address);
+}
 
 /// @title Base contract with common payable logics
 abstract contract EthReceiver {
@@ -60,13 +66,15 @@ contract UnxswapRouter is EthReceiver, Permitable {
   /// It can not be moved to immutable as immutables are not supported in assembly
   // BSC:   bb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c
   // LOCAL: 5FbDB2315678afecb367f032d93F642f64180aa3
-  uint256 private constant _WETH = 0x000000000000000000000000bb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
+  uint256 private constant _WETH = 0x0000000000000000000000005FbDB2315678afecb367f032d93F642f64180aa3;
   // BSC:   d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98
   // LOCAL: e7f1725E7734CE288F8367e1Bb143E90bb3F0512
-  uint256 private constant _APPROVE_PROXY_32 = 0x000000000000000000000000d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98;
+  uint256 private constant _APPROVE_PROXY_32 = 0x000000000000000000000000e7f1725E7734CE288F8367e1Bb143E90bb3F0512;
   // BSC:   d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98
   // LOCAL: 0B5f474ad0e3f7ef629BD10dbf9e4a8Fd60d9A48
   uint256 private constant _WNATIVE_RELAY_32 = 0x0000000000000000000000000B5f474ad0e3f7ef629BD10dbf9e4a8Fd60d9A48;
+
+  event OrderRecord(address fromToken, address toToken, address sender, uint256 fromAmount, uint256 returnAmount);
 
   /// @notice Same as `unoswap` but calls permit first,
   /// allowing to approve token spending and make a swap in one transaction.
@@ -256,5 +264,16 @@ contract UnxswapRouter is EthReceiver, Permitable {
         revertWithReason(0x000000164d696e2072657475726e206e6f742072656163686564000000000000, 0x5a) // "Min return not reached"
       }
     }
+
+    // the last pool
+    bytes32 rawPair = pools[pools.length - 1];
+    address pair;
+    bool reserve;
+    assembly {
+      pair := and(rawPair, _ADDRESS_MASK)
+      reserve := and(rawPair, _REVERSE_MASK)
+    }
+    pair = reserve ? IUniswapV2Pair(pair).token0() : IUniswapV2Pair(pair).token1();
+    emit OrderRecord(address(srcToken), pair, msg.sender, amount, minReturn);
   }
 }
