@@ -27,7 +27,6 @@ contract BalancerAdapter is IAdapter {
         require(isTokenOutInCurrentToken == true, "BalancerAdapter: Wrong ToToken");
 
         uint256 tokenAmountIn = IERC20(tokenIn).balanceOf(address(this));
-        IERC20(tokenIn).approve(pool, tokenAmountIn);
         SafeERC20.safeApprove(IERC20(tokenIn), pool, tokenAmountIn);
 
         uint minAmountOut = 0; //Slippage
