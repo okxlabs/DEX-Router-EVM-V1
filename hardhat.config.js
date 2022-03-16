@@ -39,6 +39,16 @@ module.exports = {
       allowUnlimitedContractSize: true,
       timeout: 1800000,
     },
+    kovan: {
+      url: "https://kovan.infura.io/v3/2e250de311a54d8da61d7e256fa1df4a",
+      accounts: [`${privateKey}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
+    },
     oec: {
       url: "https://exchainrpc.okex.org",
       chainId: 66,
