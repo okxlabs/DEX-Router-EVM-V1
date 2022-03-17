@@ -18,6 +18,8 @@ import "./interfaces/IApproveProxy.sol";
 contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   using UniversalERC20 for IERC20;
 
+  uint256 private constant _WEIGHT_MASK = 0x00000000000000000000ffff0000000000000000000000000000000000000000;
+
   address public WETH;
   address public approveProxy;
   address public tokenApprove;
@@ -37,10 +39,8 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
   struct RouterPath {
     address[] mixAdapters;
-    address[] mixPairs;
     address[] assetTo;
     uint256[] weight;
-    uint256[] directions;
     bytes[] extraData;
   }
 
@@ -77,20 +77,30 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   ) internal {
     // execute multiple Adapters for a transaction pair
     for (uint256 i = 0; i < path.mixAdapters.length; i++) {
-      uint256 _fromTokenAmount = 0;
+      bytes32 rawData = bytes32(path.weight[i]);
+      address poolAddress;
+      bool reserves;
+      uint256 weight;
+      assembly {
+        poolAddress := and(rawData, _ADDRESS_MASK)
+        reserves := and(rawData, _REVERSE_MASK)
+        weight := shr(160, and(rawData, _WEIGHT_MASK))
+      }
+      require(weight >= 0 && weight <= 10000, "weight out of range");
+      uint256 _fromTokenAmount;
       if (isRelay) {
-        _fromTokenAmount = layerAmount * path.weight[i] / 10000;
+        _fromTokenAmount = (layerAmount * weight) / 10000;
       } else {
         uint256 bal = IERC20(request.fromToken).universalBalanceOf(address(this));
-        _fromTokenAmount = bal * path.weight[i] / 10000;
+        _fromTokenAmount = (bal * weight) / 10000;
       }
       SafeERC20.safeApprove(IERC20(request.fromToken), tokenApprove, _fromTokenAmount);
-      // send the asset to adapter
+      // send the asset to the adapter
       _deposit(address(this), path.assetTo[i], request.fromToken, _fromTokenAmount);
-      if (path.directions[i] == 1) {
-        IAdapter(path.mixAdapters[i]).sellBase(address(this), path.mixPairs[i], path.extraData[i]);
+      if (reserves) {
+        IAdapter(path.mixAdapters[i]).sellBase(address(this), poolAddress, path.extraData[i]);
       } else {
-        IAdapter(path.mixAdapters[i]).sellQuote(address(this), path.mixPairs[i], path.extraData[i]);
+        IAdapter(path.mixAdapters[i]).sellQuote(address(this), poolAddress, path.extraData[i]);
       }
       SafeERC20.safeApprove(IERC20(request.fromToken), tokenApprove, 0);
     }
@@ -103,10 +113,9 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   ) internal {
     // execute forks
     for (uint256 i = 0; i < layer.length; i++) {
-      require(layer[i].mixPairs.length > 0, "Route: pairs empty");
-      require(layer[i].mixPairs.length == layer[i].mixAdapters.length, "Route: pair adapter not match");
-      require(layer[i].mixPairs.length == layer[i].assetTo.length, "Route: pair assetto not match");
-      require(layer[i].mixPairs.length == layer[i].weight.length, "Route: weight not match");
+      uint256 length = layer[i].mixAdapters.length;
+      require(length == layer[i].assetTo.length, "Route: pair assetto not match");
+      require(length == layer[i].weight.length, "Route: weight not match");
       _exeForks(layerAmount, request[i], layer[i], i == 0);
     }
   }
@@ -119,9 +128,9 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   ) internal {
     if (UniversalERC20.isETH(IERC20(token))) {
       if (amount > 0) {
-        IWETH(WETH).deposit{ value: amount }();
+        IWETH(address(uint160(_WETH))).deposit{ value: amount }();
         if (to != address(this)) {
-          SafeERC20.safeTransfer(IERC20(WETH), to, amount);
+          SafeERC20.safeTransfer(IERC20(address(uint160(_WETH))), to, amount);
         }
       }
     } else {

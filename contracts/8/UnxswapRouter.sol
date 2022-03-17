@@ -6,10 +6,10 @@ import "./libraries/RevertReasonParser.sol";
 
 import "./interfaces/IERC20Permit.sol";
 import "./interfaces/IDaiLikePermit.sol";
-import "hardhat/console.sol";
 
 interface IUniswapV2Pair {
   function token0() external returns (address);
+
   function token1() external returns (address);
 }
 
@@ -52,8 +52,8 @@ contract UnxswapRouter is EthReceiver, Permitable {
     0x2e1a7d4d00000000000000000000000000000000000000000000000000000000;
   uint256 private constant _ERC20_TRANSFER_CALL_SELECTOR_32 =
     0xa9059cbb00000000000000000000000000000000000000000000000000000000;
-  uint256 private constant _ADDRESS_MASK = 0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff;
-  uint256 private constant _REVERSE_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;
+  uint256 public constant _ADDRESS_MASK = 0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff;
+  uint256 public constant _REVERSE_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;
   uint256 private constant _WETH_MASK = 0x4000000000000000000000000000000000000000000000000000000000000000;
   uint256 private constant _NUMERATOR_MASK = 0x0000000000000000ffffffff0000000000000000000000000000000000000000;
   uint256 private constant _UNISWAP_PAIR_RESERVES_CALL_SELECTOR_32 =
@@ -66,7 +66,7 @@ contract UnxswapRouter is EthReceiver, Permitable {
   /// It can not be moved to immutable as immutables are not supported in assembly
   // BSC:   bb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c
   // LOCAL: 5FbDB2315678afecb367f032d93F642f64180aa3
-  uint256 private constant _WETH = 0x0000000000000000000000005FbDB2315678afecb367f032d93F642f64180aa3;
+  uint256 public constant _WETH = 0x0000000000000000000000005FbDB2315678afecb367f032d93F642f64180aa3;
   // BSC:   d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98
   // LOCAL: e7f1725E7734CE288F8367e1Bb143E90bb3F0512
   uint256 private constant _APPROVE_PROXY_32 = 0x000000000000000000000000e7f1725E7734CE288F8367e1Bb143E90bb3F0512;
