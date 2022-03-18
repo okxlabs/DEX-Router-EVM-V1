@@ -2,7 +2,7 @@ const { ethers, upgrades } = require("hardhat");
 const deployed = require('./deployed');
 
 async function main() {
-  console.log(deployed);
+  console.log(deployed.base);
 
   DexRouter = await ethers.getContractFactory("DexRouter");
   dexRouter = await upgrades.deployProxy(

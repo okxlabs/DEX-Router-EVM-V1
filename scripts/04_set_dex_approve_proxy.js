@@ -14,8 +14,8 @@ async function main() {
     deployed.base.tokenApproveProxy
   )
 
-  // await tokenApprove.setApproveProxy(deployed.base.tokenApproveProxy);
-  // console.log("tokenApprove init");
+  await tokenApprove.setApproveProxy(deployed.base.tokenApproveProxy);
+  console.log("tokenApprove init");
 
   await tokenApproveProxy.addProxy(deployed.base.dexRouter);
   console.log("tokenApproveProxy add dexProxy")
