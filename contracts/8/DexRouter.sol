@@ -20,7 +20,6 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
   uint256 private constant _WEIGHT_MASK = 0x00000000000000000000ffff0000000000000000000000000000000000000000;
 
-  address public WETH;
   address public approveProxy;
   address public tokenApprove;
 
@@ -44,10 +43,9 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     bytes[] extraData;
   }
 
-  function initialize(address payable _weth) public initializer {
+  function initialize() public initializer {
     __Ownable_init();
     __ReentrancyGuard_init();
-    WETH = _weth;
   }
 
   //-------------------------------
@@ -143,7 +141,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     address tmpToToken = baseRequest.toToken;
     if (UniversalERC20.isETH(IERC20(tmpToToken))) {
       uint256 remainAmount = IERC20(tmpFromToken).universalBalanceOf(address(this));
-      IWETH(WETH).withdraw(remainAmount);
+      IWETH(address(uint160(_WETH))).withdraw(remainAmount);
       payable(msg.sender).transfer(remainAmount);
       if (IERC20(tmpFromToken).universalBalanceOf(address(this)) > 0) {
         SafeERC20.safeTransfer(
@@ -158,7 +156,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       }
       if (UniversalERC20.isETH(IERC20(tmpFromToken))) {
         uint256 remainAmount = IERC20(tmpFromToken).universalBalanceOf(address(this));
-        IWETH(WETH).withdraw(remainAmount);
+        IWETH(address(uint160(_WETH))).withdraw(remainAmount);
         payable(msg.sender).transfer(remainAmount);
       } else {
         if (IERC20(tmpFromToken).universalBalanceOf(address(this)) > 0) {
