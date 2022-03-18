@@ -15,12 +15,12 @@ describe("Smart route path test", function() {
     await initDexRouter();
 
     const pairs = [
-      [weth, usdt, ethers.utils.parseEther('10'), ethers.utils.parseEther('30000')],
-      [wbtc, usdt, ethers.utils.parseEther('10'), ethers.utils.parseEther('300000')],
-      [wbtc, weth, ethers.utils.parseEther('10'), ethers.utils.parseEther('100')],
-      [weth, dot, ethers.utils.parseEther('10'), ethers.utils.parseEther('100')],
-      [dot,  usdt, ethers.utils.parseEther('10'), ethers.utils.parseEther('300')],
-      [wbtc, dot, ethers.utils.parseEther('10'), ethers.utils.parseEther('10000')],
+      [weth, usdt, ethers.utils.parseEther('100'), ethers.utils.parseEther('300000')],
+      [wbtc, usdt, ethers.utils.parseEther('100'), ethers.utils.parseEther('3000000')],
+      [wbtc, weth, ethers.utils.parseEther('1000'), ethers.utils.parseEther('10000')],
+      [weth, dot, ethers.utils.parseEther('100'), ethers.utils.parseEther('1000')],
+      [dot,  usdt, ethers.utils.parseEther('100'), ethers.utils.parseEther('3000')],
+      [wbtc, dot, ethers.utils.parseEther('100'), ethers.utils.parseEther('100000')],
       [usdt, usdc, ethers.utils.parseEther('10000'), ethers.utils.parseEther('10000')],
       [bnb, weth, ethers.utils.parseEther('100'), ethers.utils.parseEther('10000')],
       [bnb, wbtc, ethers.utils.parseEther('100'), ethers.utils.parseEther('100000')],
@@ -55,16 +55,15 @@ describe("Smart route path test", function() {
     const mixAdapter1 = [
       uniAdapter.address
     ];
-    const mixPair1 = [
-      lpWBTCWETH.address
-    ];
     const assertTo1 = [
       lpWBTCWETH.address
     ];
-    const weight1 = [10000];
-    const directions1 = [direction(wbtc.address, weth.address)];
+
+    const weight1 = Number(10000).toString(16).replace('0x', '');
+    const rawData1 = [
+      "0x" + direction(wbtc.address, weth.address) + "0000000000000000000" + weight1 + lpWBTCWETH.address.replace("0x", "")];
     const extraData1 = [0x0];
-    const router1 = [mixAdapter1, mixPair1, assertTo1, weight1, directions1, extraData1];
+    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1];
 
     // node2
     const requestParam2 = [
@@ -74,16 +73,13 @@ describe("Smart route path test", function() {
     const mixAdapter2 = [
       uniAdapter.address
     ];
-    const mixPair2 = [
-      lpWETHUSDT.address,
-    ];
     const assertTo2 = [
       lpWETHUSDT.address,
     ];
-    const weight2 = [10000];
-    const directions2 = [direction(weth.address, usdt.address)];
+    const weight2 = Number(10000).toString(16)
+    const rawData2 = ["0x" + direction(weth.address, usdt.address) + "0000000000000000000" + weight2 + lpWETHUSDT.address.replace("0x", "")];
     const extraData2 = [0x0];
-    const router2 = [mixAdapter2, mixPair2, assertTo2, weight2, directions2, extraData2];
+    const router2 = [mixAdapter2, assertTo2, rawData2, extraData2];
 
     // layer1
     const request1 = [requestParam1, requestParam2];
@@ -104,7 +100,13 @@ describe("Smart route path test", function() {
     );
 
     expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
-    console.log("after: " + await usdt.balanceOf(alice.address));
+    // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
+    // wbtc -> weth 1:10
+    // 10000000000000000000 * 997 * 10000000000000000000000 / (1000000000000000000000 * 1000 +  10000000000000000000 * 997) = 98715803439706130000
+    // weth -> usdt 1:3000
+    // 98715803439706130000 * 997 * 300000000000000000000000 / (100000000000000000000 * 1000 +  98715803439706130000 * 997) = 148805301851965514608651
+    expect(await usdt.balanceOf(alice.address)).to.be.eq("148805301851965514608651");
+    // console.log("after: " + await usdt.balanceOf(alice.address));
   });
 
   it("mixSwap with two fork path", async () => {
@@ -129,16 +131,13 @@ describe("Smart route path test", function() {
     const mixAdapter1 = [
       uniAdapter.address
     ]
-    const mixPair1 = [
-      lpWBTCWETH.address
-    ];
     const assertTo1 = [
       lpWBTCWETH.address
     ];
-    const weight1 = [10000];
-    const directions1 = [direction(wbtc.address, weth.address)];
+    const weight1 = Number(10000).toString(16).replace('0x', '');
+    const rawData1 = ["0x" + direction(wbtc.address, weth.address) + "0000000000000000000" + weight1 + lpWBTCWETH.address.replace("0x", "")];
     const extraData1 = [0x0];
-    const router1 = [mixAdapter1, mixPair1, assertTo1, weight1, directions1, extraData1];
+    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1];
 
     const requestParam3 = [
       weth.address,
@@ -147,16 +146,13 @@ describe("Smart route path test", function() {
     const mixAdapter3 = [
       uniAdapter.address,
     ];
-    const mixPair3 = [
-      lpWETHUSDT.address,
-    ];
     const assertTo3 = [
       lpWETHUSDT.address,
     ];
-    const weight3 = [10000];
-    const directions3 = [direction(weth.address, usdt.address)];
+    const weight3 = Number(10000).toString(16).replace('0x', '');
+    const rawData3 = ["0x" + direction(weth.address, usdt.address) + "0000000000000000000" + weight3 + lpWETHUSDT.address.replace("0x", "")];
     const extraData3 = [0x0];
-    const router3 = [mixAdapter3, mixPair3, assertTo3, weight3, directions3, extraData3];
+    const router3 = [mixAdapter3, assertTo3, rawData3, extraData3];
 
     // node2
     const requestParam2 = [
@@ -166,16 +162,13 @@ describe("Smart route path test", function() {
     const mixAdapter2 = [
       uniAdapter.address,
     ];
-    const mixPair2 = [
-      lpWBTCDOT.address,
-    ];
     const assertTo2 = [
       lpWBTCDOT.address,
     ];
-    const weight2 = [10000];
-    const directions2 = [[direction(wbtc.address, dot.address)]];
-    const extraData2 = [[0x0]];
-    const router2 = [mixAdapter2, mixPair2, assertTo2, weight2, directions2, extraData2];
+    const weight2 = Number(10000).toString(16).replace('0x', '');
+    const rawData2 = ["0x" + direction(wbtc.address, dot.address) + "0000000000000000000" + weight2 + lpWBTCDOT.address.replace("0x", "")];
+    const extraData2 = [0x0];
+    const router2 = [mixAdapter2, assertTo2, rawData2, extraData2];
 
     const requestParam4 = [
       dot.address,
@@ -184,16 +177,13 @@ describe("Smart route path test", function() {
     const mixAdapter4 = [
       uniAdapter.address,
     ];
-    const mixPair4 = [
-      lpDOTUSDT.address,
-    ];
     const assertTo4 = [
       lpDOTUSDT.address,
     ];
-    const weight4 = [10000];
-    const directions4 = [direction(dot.address, usdt.address)];
+    const weight4 = Number(10000).toString(16).replace('0x', '');
+    const rawData4 = ["0x" + direction(dot.address, usdt.address) + "0000000000000000000" + weight4 + lpDOTUSDT.address.replace("0x", "")];
     const extraData4 = [0x0];
-    const router4 = [mixAdapter4, mixPair4, assertTo4, weight4, directions4, extraData4];
+    const router4 = [mixAdapter4, assertTo4, rawData4, extraData4];
 
     // layer1
     const request1 = [requestParam1, requestParam3];
@@ -216,185 +206,16 @@ describe("Smart route path test", function() {
     );
 
     expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
-  });
-
-  it("mixSwap with three fork path", async () => {
-    //       -> weth -> usdt
-    //  wbtc -> dot  -> usdt
-    //       -> bnb  -> weth -> usdt
-    //               -> weth -> usdt
-
-    const fromToken = wbtc;
-    const toToken = usdt;
-    const fromTokenAmount = ethers.utils.parseEther('10');
-    const fromTokenAmount1 = ethers.utils.parseEther('2');
-    const fromTokenAmount2 = ethers.utils.parseEther('3');
-    const fromTokenAmount3 = ethers.utils.parseEther('5');
-    const minReturnAmount = ethers.utils.parseEther('0');
-    const deadLine = FOREVER;
-
-    await fromToken.connect(alice).approve(tokenApprove.address, ethers.constants.MaxUint256);
-
     // wbtc -> weth
-    const requestParam1 = [
-      wbtc.address,
-      [0]
-    ];
-    const mixAdapter1 = [
-      uniAdapter.address
-    ];
-    const mixPair1 = [
-      lpWBTCWETH.address
-    ];
-    const assertTo1 = [
-      lpWBTCWETH.address
-    ];
-    const weight1 = [10000];
-    const directions1 = [direction(wbtc.address, weth.address)];
-    const extraData1 = [0x0];
-    const router1 = [mixAdapter1, mixPair1, assertTo1, weight1, directions1, extraData1];
-
+    // 5000000000000000000 * 997 * 10000000000000000000000 / (1000000000000000000000 * 1000 +  5000000000000000000 * 997) = 49602730389010784000
     // weth -> usdt
-    const requestParam3 = [
-      weth.address,
-      [0],
-    ];
-    const mixAdapter3 = [
-      uniAdapter.address,
-    ];
-    const mixPair3 = [
-      lpWETHUSDT.address,
-    ];
-    const assertTo3 = [
-      lpWETHUSDT.address,
-    ];
-    const weight3 = [10000];
-    const directions3 = [direction(weth.address, usdt.address)];
-    const extraData3 = [0x0];
-    const router3 = [mixAdapter3, mixPair3, assertTo3, weight3, directions3, extraData3];
-
+    // 49602730389010784000 * 997 * 300000000000000000000000 / (100000000000000000000 * 1000 +  49602730389010784000 * 997) = 9.926923590344674e+22
     // wbtc -> dot
-    const requestParam2 = [
-      wbtc.address,
-      [0],
-    ];
-    const mixAdapter2 = [
-      uniAdapter.address,
-    ];
-    const mixPair2 = [
-      lpWBTCDOT.address
-    ];
-    const assertTo2 = [
-      lpWBTCDOT.address,
-    ];
-    const weight2 = [10000];
-    const directions2 = [direction(wbtc.address, dot.address)];
-    const extraData2 = [0x0];
-    const router2 = [mixAdapter2, mixPair2, assertTo2, weight2, directions2, extraData2];
-
+    // 5000000000000000000 * 997 * 100000000000000000000000 / (100000000000000000000 * 1000 +  5000000000000000000 * 997) = 4748297375815592703719
     // dot -> usdt
-    const requestParam4 = [
-      dot.address,
-      [0],
-    ];
-    const mixAdapter4 = [
-      uniAdapter.address,
-    ];
-    const mixPair4 = [
-      lpDOTUSDT.address,
-    ];
-    const assertTo4 = [
-      lpDOTUSDT.address
-    ];
-    const weight4 = [10000];
-    const directions4 = [direction(dot.address, usdt.address)];
-    const extraData4 = [0x0];
-    const router4 = [mixAdapter4, mixPair4, assertTo4, weight4, directions4, extraData4];
-
-    // wbtc -> bnb
-    const requestParam5 = [
-      wbtc.address,
-      [0],
-    ];
-    const mixAdapter5 = [
-      uniAdapter.address
-    ];
-    const mixPair5 = [
-      lpWBTCBNB.address
-    ];
-    const assertTo5 = [
-      lpWBTCBNB.address
-    ];
-    const weight5 = [10000];
-    const directions5 = [direction(wbtc.address, bnb.address)];
-    const extraData5 = [0x0];
-    const router5 = [mixAdapter5, mixPair5, assertTo5, weight5, directions5, extraData5];
-
-    // bnb -> weth
-    const requestParam6 = [
-      bnb.address,
-      [0, 0],
-    ];
-    const mixAdapter6 = [
-      uniAdapter.address,
-      uniAdapter.address,
-    ];
-    const mixPair6 = [
-      lpBNBWETH.address,
-      lpBNBWETH.address
-    ];
-    const assertTo6 = [
-      lpBNBWETH.address,
-      lpBNBWETH.address
-    ];
-    const weight6 = [8000, 2000];
-    const directions6 = [direction(bnb.address, weth.address), direction(bnb.address, weth.address)];
-    const extraData6 = [0x0, 0x0];
-    const router6 = [mixAdapter6, mixPair6, assertTo6, weight6, directions6, extraData6];
-
-    // weth -> usdt
-    const requestParam7 = [
-      weth.address,
-      [0]
-    ];
-    const mixAdapter7 = [
-      uniAdapter.address,
-    ];
-    const mixPair7 = [
-      lpWETHUSDT.address,
-    ];
-    const assertTo7 = [
-      lpWETHUSDT.address,
-    ];
-    const weight7 = [10000];
-    const directions7 = [direction(weth.address, usdt.address)];
-    const extraData7 = [0x0];
-    const router7 = [mixAdapter7, mixPair7, assertTo7, weight7, directions7, extraData7];
-
-    // layer1
-    const request1 = [requestParam1, requestParam3];
-    const layer1 =   [router1, router3];
-    const request2 = [requestParam2, requestParam4];
-    const layer2 =   [router2, router4];
-    const request3 = [requestParam5, requestParam6, requestParam7];
-    const layer3 =   [router5, router6, router7];
-
-    const baseRequest = [
-      fromToken.address,
-      toToken.address,
-      fromTokenAmount,
-      minReturnAmount,
-      deadLine,
-    ]
-    await dexRouter.connect(alice).smartSwap(
-      baseRequest,
-      [fromTokenAmount1, fromTokenAmount2, fromTokenAmount3],
-      [request1, request2, request3],
-      [layer1, layer2, layer3],
-    );
-
-    expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
-    console.log("after: " + await usdt.balanceOf(alice.address));
+    // 4748297375815592703719 * 997 * 3000000000000000000000 / (100000000000000000000 * 1000 +  4748297375815592703719 * 997) = 2.937940268333389e+21
+    // usdt: 9.926923590344674e+22 + 2.937940268333389e+21 = 10220717617178012e+23 (102207176171780117650753)
+    expect(await usdt.balanceOf(alice.address)).to.be.eq("102207176171780117650753");
   });
 
   it("mixSwap with four path, same token", async () => {
@@ -426,25 +247,22 @@ describe("Smart route path test", function() {
       uniAdapter.address, // change curve adapter
       uniAdapter.address  // change dodo  adapter
     ];
-    const mixPair1 = [
-      lpWBTCWETH.address,
-      lpWBTCWETH.address,
-      lpWBTCWETH.address
-    ];
     const assertTo1 = [
       lpWBTCWETH.address,
       lpWBTCWETH.address,
       lpWBTCWETH.address
     ];
     // The first flash swap weight does not work
-    const weight1 = [2000, 3000, 5000];
-    const directions1 = [
-      [direction(wbtc.address, weth.address)],
-      [direction(wbtc.address, weth.address)],
-      [direction(wbtc.address, weth.address)]
+    const weight1 = Number(2000).toString(16).replace('0x', '');
+    const weight2 = Number(3000).toString(16).replace('0x', '');
+    const weight3 = Number(5000).toString(16).replace('0x', '');
+    const rawData1 = [
+      "0x" + direction(wbtc.address, weth.address) + "0000000000000000000" + weight1 + lpWBTCWETH.address.replace("0x", ""),
+      "0x" + direction(wbtc.address, weth.address) + "0000000000000000000" + weight2 + lpWBTCWETH.address.replace("0x", ""),
+      "0x" + direction(wbtc.address, weth.address) + "0000000000000000000" + weight3 + lpWBTCWETH.address.replace("0x", ""),
     ];
     const extraData1 = [0x0, 0x0, 0x0];
-    const router1 = [mixAdapter1, mixPair1, assertTo1, weight1, directions1, extraData1];
+    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1];
 
     // layer1
     const request1 = [requestParam1];
@@ -464,17 +282,179 @@ describe("Smart route path test", function() {
       [request1],
       [layer1],
     );
+    
+    // wbtc -> weth
+    // 2000000000000000000 * 997 * 10000000000000000000000 / (1000000000000000000000 * 1000 +  2000000000000000000 * 997) = 19900318764383818000
+    // 3000000000000000000 * 997 * 9980099681235616181335 / (1002000000000000000000 * 1000 +  3000000000000000000 * 997) = 29702234295208346000
+    // 5000000000000000000 * 997 * 9950397446940407838178 / (1005000000000000000000 * 1000 +  5000000000000000000 * 997) = 49112344513035270000
+    // 19900318764383818000 + 29820805969345690000 + 49602730389010784000 = 98714897572627430000 ~> 98714897572627437666
+    expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
+    expect(await weth.balanceOf(alice.address)).to.be.eq("98714897572627437666");
+  });
+
+  it("mixSwap with three fork path", async () => {
+    //       -> weth -> usdt
+    //  wbtc -> dot  -> usdt
+    //       -> bnb  -> weth -> usdt
+    //               -> weth -> usdt
+
+    const fromToken = wbtc;
+    const toToken = usdt;
+    const fromTokenAmount = ethers.utils.parseEther('10');
+    const fromTokenAmount1 = ethers.utils.parseEther('2');
+    const fromTokenAmount2 = ethers.utils.parseEther('3');
+    const fromTokenAmount3 = ethers.utils.parseEther('5');
+    const minReturnAmount = ethers.utils.parseEther('0');
+    const deadLine = FOREVER;
+
+    await fromToken.connect(alice).approve(tokenApprove.address, ethers.constants.MaxUint256);
+
+    // wbtc -> weth
+    const requestParam1 = [
+      wbtc.address,
+      [0]
+    ];
+    const mixAdapter1 = [
+      uniAdapter.address
+    ];
+    const assertTo1 = [
+      lpWBTCWETH.address
+    ];
+    const weight1 = Number(10000).toString(16).replace('0x', '');
+    const rawData1 = ["0x" + direction(wbtc.address, weth.address) + "0000000000000000000" + weight1 + lpWBTCWETH.address.replace("0x", "")];
+    const extraData1 = [0x0];
+    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1];
+
+    // weth -> usdt
+    const requestParam3 = [
+      weth.address,
+      [0],
+    ];
+    const mixAdapter3 = [
+      uniAdapter.address,
+    ];
+    const assertTo3 = [
+      lpWETHUSDT.address,
+    ];
+    const weight3 = Number(10000).toString(16).replace('0x', '');
+    const rawData3 = ["0x" + direction(weth.address, usdt.address) + "0000000000000000000" + weight3 + lpWETHUSDT.address.replace("0x", "")];
+    const extraData3 = [0x0];
+    const router3 = [mixAdapter3, assertTo3, rawData3, extraData3];
+
+    // wbtc -> dot
+    const requestParam2 = [
+      wbtc.address,
+      [0],
+    ];
+    const mixAdapter2 = [
+      uniAdapter.address,
+    ];
+    const assertTo2 = [
+      lpWBTCDOT.address,
+    ];
+    const weight2 = Number(10000).toString(16).replace('0x', '');
+    const rawData2 = ["0x" + direction(wbtc.address, dot.address) + "0000000000000000000" + weight2 + lpWBTCDOT.address.replace("0x", "")];
+    const extraData2 = [0x0];
+    const router2 = [mixAdapter2, assertTo2, rawData2, extraData2];
+
+    // dot -> usdt
+    const requestParam4 = [
+      dot.address,
+      [0],
+    ];
+    const mixAdapter4 = [
+      uniAdapter.address,
+    ];
+    const assertTo4 = [
+      lpDOTUSDT.address
+    ];
+    const weight4 = Number(10000).toString(16).replace('0x', '');
+    const rawData4 = ["0x" + direction(dot.address, usdt.address) + "0000000000000000000" + weight4 + lpDOTUSDT.address.replace("0x", "")];
+    const extraData4 = [0x0];
+    const router4 = [mixAdapter4, assertTo4, rawData4, extraData4];
+
+    // wbtc -> bnb
+    const requestParam5 = [
+      wbtc.address,
+      [0],
+    ];
+    const mixAdapter5 = [
+      uniAdapter.address
+    ];
+    const assertTo5 = [
+      lpWBTCBNB.address
+    ];
+    const weight5 = Number(10000).toString(16).replace('0x', '');
+    const rawData5 = ["0x" + direction(wbtc.address, bnb.address) + "0000000000000000000" + weight5 + lpWBTCBNB.address.replace("0x", "")];
+    const extraData5 = [0x0];
+    const router5 = [mixAdapter5, assertTo5, rawData5, extraData5];
+
+    // bnb -> weth
+    const requestParam6 = [
+      bnb.address,
+      [0, 0],
+    ];
+    const mixAdapter6 = [
+      uniAdapter.address,
+      uniAdapter.address,
+    ];
+    const assertTo6 = [
+      lpBNBWETH.address,
+      lpBNBWETH.address
+    ];
+    const weight61 = Number(8000).toString(16).replace('0x', '');
+    const weight62 = Number(2000).toString(16).replace('0x', '');
+    const rawData6 = [
+      "0x" + direction(bnb.address, weth.address) + "0000000000000000000" + weight61 + lpBNBWETH.address.replace("0x", ""),
+      "0x" + direction(bnb.address, weth.address) + "0000000000000000000" + weight62 + lpBNBWETH.address.replace("0x", "")
+    ];
+    const extraData6 = [0x0, 0x0];
+    const router6 = [mixAdapter6, assertTo6, rawData6, extraData6];
+
+    // weth -> usdt
+    const requestParam7 = [
+      weth.address,
+      [0]
+    ];
+    const mixAdapter7 = [
+      uniAdapter.address,
+    ];
+    const assertTo7 = [
+      lpWETHUSDT.address,
+    ];
+    const weight7 = Number(10000).toString(16).replace('0x', '');
+    const rawData7 = ["0x" + direction(weth.address, usdt.address) + "0000000000000000000" + weight7 + lpWETHUSDT.address.replace("0x", "")];
+    const extraData7 = [0x0];
+    const router7 = [mixAdapter7, assertTo7, rawData7, extraData7];
+
+    // layer1
+    const request1 = [requestParam1, requestParam3];
+    const layer1 =   [router1, router3];
+    const request2 = [requestParam2, requestParam4];
+    const layer2 =   [router2, router4];
+    const request3 = [requestParam5, requestParam6, requestParam7];
+    const layer3 =   [router5, router6, router7];
+
+    const baseRequest = [
+      fromToken.address,
+      toToken.address,
+      fromTokenAmount,
+      minReturnAmount,
+      deadLine,
+    ]
+    await dexRouter.connect(alice).smartSwap(
+      baseRequest,
+      [fromTokenAmount1, fromTokenAmount2, fromTokenAmount3],
+      [request1, request2, request3],
+      [layer1, layer2, layer3],
+    );
 
     expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
-    console.log("after: " + await weth.balanceOf(alice.address));
+    console.log("after: " + await usdt.balanceOf(alice.address));
   });
 
   const direction = function(token0, token1) {
-    if (token0 > token1) {
-      return 0
-    } else {
-      return 1
-    }
+    return token0 > token1 ? 0 : 8;
   }
 
   const addLiquidity = async (token0, token1, amount0, amount1) => {

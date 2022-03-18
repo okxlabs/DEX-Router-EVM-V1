@@ -6,8 +6,7 @@ async function main() {
 
   DexRouter = await ethers.getContractFactory("DexRouter");
   dexRouter = await upgrades.deployProxy(
-    DexRouter, 
-    [deployed.base.WBNB]
+    DexRouter, []
   );
   await dexRouter.deployed();
 
