@@ -38,6 +38,10 @@ module.exports = {
       blockGasLimit: 0x1fffffffffffff,
       allowUnlimitedContractSize: true,
       timeout: 1800000,
+      forking: {
+        url: "https://eth-mainnet.alchemyapi.io/v2/VHBzLDpGJ5_yS0fMJZ-APXoWBFJIONZh",
+        // blockNumber: 14395835
+      }
     },
     oec: {
       url: "https://exchainrpc.okex.org",
@@ -82,6 +86,16 @@ module.exports = {
           runs: 200
         },
       },
+    },
+    eth: {
+      url: "https://mainnet.infura.io/v3/2e250de311a54d8da61d7e256fa1df4a",
+      accounts: [`${privateKey}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
     }
   },
   paths: {
