@@ -2,7 +2,7 @@ const { ethers } = require("hardhat");
 const deployed = require('./deployed');
 
 async function main() {
-  console.log(deployed);
+  console.log(deployed.base);
 
   WNativeRelayer = await ethers.getContractFactory("WNativeRelayer");
   wNativeRelayer = await WNativeRelayer.deploy();

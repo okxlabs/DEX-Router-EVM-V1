@@ -6,10 +6,10 @@ import "./libraries/RevertReasonParser.sol";
 
 import "./interfaces/IERC20Permit.sol";
 import "./interfaces/IDaiLikePermit.sol";
-import "hardhat/console.sol";
 
 interface IUniswapV2Pair {
   function token0() external returns (address);
+
   function token1() external returns (address);
 }
 
@@ -52,8 +52,8 @@ contract UnxswapRouter is EthReceiver, Permitable {
     0x2e1a7d4d00000000000000000000000000000000000000000000000000000000;
   uint256 private constant _ERC20_TRANSFER_CALL_SELECTOR_32 =
     0xa9059cbb00000000000000000000000000000000000000000000000000000000;
-  uint256 private constant _ADDRESS_MASK = 0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff;
-  uint256 private constant _REVERSE_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;
+  uint256 public constant _ADDRESS_MASK = 0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff;
+  uint256 public constant _REVERSE_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;
   uint256 private constant _WETH_MASK = 0x4000000000000000000000000000000000000000000000000000000000000000;
   uint256 private constant _NUMERATOR_MASK = 0x0000000000000000ffffffff0000000000000000000000000000000000000000;
   uint256 private constant _UNISWAP_PAIR_RESERVES_CALL_SELECTOR_32 =
@@ -64,15 +64,18 @@ contract UnxswapRouter is EthReceiver, Permitable {
   uint256 private constant _NUMERATOR_OFFSET = 160;
   /// @dev WETH address is network-specific and needs to be changed before deployment.
   /// It can not be moved to immutable as immutables are not supported in assembly
+  // ETH:   C02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
   // BSC:   bb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c
   // LOCAL: 5FbDB2315678afecb367f032d93F642f64180aa3
-  uint256 private constant _WETH = 0x0000000000000000000000005FbDB2315678afecb367f032d93F642f64180aa3;
+  uint256 public constant _WETH = 0x000000000000000000000000C02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+  // ETH:   70cBb871E8f30Fc8Ce23609E9E0Ea87B6b222F58
   // BSC:   d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98
   // LOCAL: e7f1725E7734CE288F8367e1Bb143E90bb3F0512
-  uint256 private constant _APPROVE_PROXY_32 = 0x000000000000000000000000e7f1725E7734CE288F8367e1Bb143E90bb3F0512;
+  uint256 private constant _APPROVE_PROXY_32 = 0x00000000000000000000000070cBb871E8f30Fc8Ce23609E9E0Ea87B6b222F58;
+  // ETH:   5703B683c7F928b721CA95Da988d73a3299d4757
   // BSC:   d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98
   // LOCAL: 0B5f474ad0e3f7ef629BD10dbf9e4a8Fd60d9A48
-  uint256 private constant _WNATIVE_RELAY_32 = 0x0000000000000000000000000B5f474ad0e3f7ef629BD10dbf9e4a8Fd60d9A48;
+  uint256 private constant _WNATIVE_RELAY_32 = 0x0000000000000000000000005703B683c7F928b721CA95Da988d73a3299d4757;
 
   event OrderRecord(address fromToken, address toToken, address sender, uint256 fromAmount, uint256 returnAmount);
 
