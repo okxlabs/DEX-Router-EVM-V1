@@ -8,5 +8,6 @@ abi/
 *.xml
 *.iml
 *.log
+.vscode
 
 .openzeppelin/unknown-31337.json
