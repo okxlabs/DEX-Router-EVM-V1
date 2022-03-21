@@ -30,7 +30,7 @@ contract BalancerAdapter is IAdapter {
         SafeERC20.safeApprove(IERC20(tokenIn), pool, tokenAmountIn);
 
         uint minAmountOut = 0; //Slippage
-        uint maxPrice = 115792089237316195423570985008687907853269984665640564039457584007913129639935; //Slippage
+        uint maxPrice = type(uint256).max; //Slippage
         
         IBalancer(pool).swapExactAmountIn(tokenIn, tokenAmountIn, tokenOut, minAmountOut, maxPrice);
 
