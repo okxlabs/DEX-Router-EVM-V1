@@ -1,8 +1,8 @@
-const { ethers, upgrades } = require("hardhat");
+const { ethers } = require("hardhat");
 
 async function main() {
   PancakeAdapter = await ethers.getContractFactory("PancakeAdapter");
-  pancakeAdapter = await upgrades.deployProxy(PancakeAdapter);
+  pancakeAdapter = await PancakeAdapter.deploy();
   await pancakeAdapter.deployed();
 
   console.log(`pancakeAdapter deployed: ${pancakeAdapter.address}`);

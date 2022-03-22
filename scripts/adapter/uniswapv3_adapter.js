@@ -1,8 +1,8 @@
-const { ethers, upgrades } = require("hardhat");
+const { ethers } = require("hardhat");
 
 async function main() {
     UniV3Adapter = await ethers.getContractFactory("UniV3Adapter");
-    uniV3Adapter = await upgrades.deployProxy(UniV3Adapter);
+    uniV3Adapter = await UniV3Adapter.deploy();
     await uniV3Adapter.deployed();
 
     console.log(`uniV3Adapter deployed: ${uniV3Adapter.address}`);

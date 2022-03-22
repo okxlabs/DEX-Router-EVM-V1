@@ -97,7 +97,6 @@ async function main() {
     data.pools,
     {
       // value: ethers.utils.parseEther('1')
-      // gasLimit: 500000
     }
   );
   console.log(r)

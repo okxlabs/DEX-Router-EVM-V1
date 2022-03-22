@@ -1,8 +1,8 @@
-const { ethers, upgrades } = require("hardhat");
+const { ethers } = require("hardhat");
 
 async function main() {
     UniAdapter = await ethers.getContractFactory("UniAdapter");
-    uniAdapter = await upgrades.deployProxy(UniAdapter);
+    uniAdapter = await UniAdapter.deploy();
     await uniAdapter.deployed();
 
     console.log(`uniAdapter deployed: ${uniAdapter.address}`);

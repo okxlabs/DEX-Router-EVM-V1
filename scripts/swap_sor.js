@@ -41,7 +41,7 @@ async function main() {
     deadLine,
   ]
 
-  
+  layersAmount = [];
   data = []
 
   // r = await wbnb.approve(tokenApprove.address, ethers.utils.parseEther('100000000'));
@@ -49,6 +49,7 @@ async function main() {
 
   r = await dexRouter.smartSwap(
     baseRequest,
+    layersAmount,
     data[0],
     data[1]
   );
