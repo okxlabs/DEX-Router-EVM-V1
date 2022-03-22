@@ -11,9 +11,9 @@ import "../interfaces/IWETH.sol";
 
 contract BancorAdapter is IAdapter {
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    address BANCOR_ADDRESS;
-    address WETH_ADDRESS;
-
+    address public immutable BANCOR_ADDRESS;
+    address public immutable WETH_ADDRESS;
+ 
     constructor(address _bancor_network, address _weth) {
         BANCOR_ADDRESS = _bancor_network;
         WETH_ADDRESS = _weth;
