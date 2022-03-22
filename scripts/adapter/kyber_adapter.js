@@ -1,8 +1,8 @@
-const { ethers, upgrades } = require("hardhat");
+const { ethers } = require("hardhat");
 
 async function main() {
   KyberAdapter = await ethers.getContractFactory("KyberAdapter");
-  kyberAdapter = await upgrades.deployProxy(KyberAdapter);
+  kyberAdapter = await KyberAdapter.deploy();
   await kyberAdapter.deployed();
 
   console.log(`kyberAdapter deployed: ${kyberAdapter.address}`);
