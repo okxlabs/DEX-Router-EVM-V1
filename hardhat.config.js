@@ -6,7 +6,9 @@ require('hardhat-contract-sizer');
 require("@nomiclabs/hardhat-solhint");
 require('dotenv').config();
 
-const privateKey = process.env.privateKey;
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const ALCHEMY_KEY = process.env.ALCHEMY_KEY || '';
+const INFURA_KEY = process.env.INFURA_KEY || '';
 
 module.exports = {
   solidity: {
@@ -38,14 +40,15 @@ module.exports = {
       blockGasLimit: 0x1fffffffffffff,
       allowUnlimitedContractSize: true,
       timeout: 1800000,
-      forking: {
-        url: "https://eth-mainnet.alchemyapi.io/v2/VHBzLDpGJ5_yS0fMJZ-APXoWBFJIONZh",
-        // blockNumber: 14395835
-      }
+      // forking:
+      // {
+      //   url: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}`,
+      //   // blockNumber: 14395835
+      // }
     },
     kovan: {
-      url: "https://kovan.infura.io/v3/2e250de311a54d8da61d7e256fa1df4a",
-      accounts: [`${privateKey}`],
+      url: `https://kovan.infura.io/v3/${INFURA_KEY}`,
+      accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
           enabled: true,
@@ -56,7 +59,7 @@ module.exports = {
     oec: {
       url: "https://exchainrpc.okex.org",
       chainId: 66,
-      accounts: [`${privateKey}`],
+      accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
           enabled: true,
@@ -67,7 +70,7 @@ module.exports = {
     oec_test: {
       url: "https://exchaintestrpc.okex.org",
       chainId: 65,
-      accounts: [`${privateKey}`],
+      accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
           enabled: true,
@@ -78,7 +81,7 @@ module.exports = {
     bsc: {
       url: "https://bsc-dataseed1.defibit.io",
       chainId: 56,
-      accounts: [`${privateKey}`],
+      accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
           enabled: true,
@@ -89,7 +92,7 @@ module.exports = {
     bsc_test: {
       url: "https://data-seed-prebsc-1-s1.binance.org:8545",
       chainId: 97,
-      accounts: [`${privateKey}`],
+      accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
           enabled: true,
@@ -98,8 +101,8 @@ module.exports = {
       },
     },
     eth: {
-      url: "https://mainnet.infura.io/v3/2e250de311a54d8da61d7e256fa1df4a",
-      accounts: [`${privateKey}`],
+      url: `https://mainnet.infura.io/v3/${INFURA_KEY}`,
+      accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
           enabled: true,
