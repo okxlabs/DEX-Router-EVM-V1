@@ -10,9 +10,7 @@ import "../libraries/SafeERC20.sol";
 import "../interfaces/IWETH.sol";
 
 contract BancorAdapter is IAdapter {
-    using SafeMath for uint;
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
     address BANCOR_ADDRESS;
     address WETH_ADDRESS;
 
@@ -59,6 +57,10 @@ contract BancorAdapter is IAdapter {
             0
         );
         if(to != address(this)) {
+            if(targetToken == ETH_ADDRESS) {
+                IWETH(WETH_ADDRESS).deposit{ value: returnAmount }();
+                targetToken = WETH_ADDRESS;
+            }
             SafeERC20.safeTransfer(IERC20(targetToken), to, IERC20(targetToken).balanceOf(address(this)));
         }
 
