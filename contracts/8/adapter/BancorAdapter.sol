@@ -11,10 +11,15 @@ import "../interfaces/IWETH.sol";
 
 contract BancorAdapter is IAdapter {
     using SafeMath for uint;
-
-    address constant BANCOR_ADDRESS = 0x2F9EC37d6CcFFf1caB21733BdaDEdE11c823cCB0;
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    address constant WETH_ADDRESS = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+
+    address BANCOR_ADDRESS;
+    address WETH_ADDRESS;
+
+    constructor(address _bancor_network, address _weth) {
+        BANCOR_ADDRESS = _bancor_network;
+        WETH_ADDRESS = _weth;
+    }
 
     function _bancorTrade(address to, address pool, bytes memory moreInfo) internal {
         IBancorNetwork bancorNetwork = IBancorNetwork(BANCOR_ADDRESS);
