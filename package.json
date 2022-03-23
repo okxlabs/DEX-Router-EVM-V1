@@ -19,7 +19,7 @@
     "chai": "^4.3.4",
     "dotenv": "^8.2.0",
     "ethereum-waffle": "^3.4.0",
-    "hardhat": "^2.8.2",
+    "hardhat": "^2.9.0",
     "hardhat-abi-exporter": "^2.2.1",
     "hardhat-gas-reporter": "^1.0.7",
     "prettier-plugin-solidity": "^1.0.0-beta.19"
