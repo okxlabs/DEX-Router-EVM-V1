@@ -51,13 +51,15 @@ async function executeMPH2BNT() {
     );
     // console.log(rxResult);
 
+    // targetReserveBalance * sourceAmount / sourceReserveBalance + sourceAmount
+    // 
     console.log("after mph balance: " + await MPH.balanceOf(bancorAdapter.address));
     console.log("after btn balance: " + await BNT.balanceOf(bancorAdapter.address));
 }
 
 // blocknumber 14429782
 async function executeETH2BNT() {
-    await setForkBlockNumber(14429782)
+    await setForkBlockNumber(14429782);
 
     // impersonateAccount account
     const accountAddr = "0x49ce02683191fb39490583a7047b280109cab9c1"
@@ -84,10 +86,21 @@ async function executeETH2BNT() {
 
     // console.log(`bancorAdapter deployed: ${bancorAdapter.address}`);
 
+    mockBancor = await ethers.getContractAt(
+        "MockBancor",
+        "0x4c9a2bd661d640da3634a4988a9bd2bc0f18e5a9"
+    );
+    r = await mockBancor.reserveBalance(ETH.address + "");
+    console.log(r + "");
+    r = await mockBancor.reserveBalance(BNT.address + "");
+    console.log(r + "");
+    r = await mockBancor.conversionFee();
+    console.log(r + "");
+
     await WETH.connect(account).transfer(bancorAdapter.address, ethers.utils.parseEther('0.4'));
 
-    console.log("before weth balance: " + await WETH.balanceOf(bancorAdapter.address) + "");
-    console.log("before bnt  balance: " + await BNT.balanceOf(bancorAdapter.address) + "");
+    console.log("before weth balance: " + await WETH.balanceOf(bancorAdapter.address));
+    console.log("before bnt  balance: " + await BNT.balanceOf(bancorAdapter.address));
 
     rxResult = await bancorAdapter.sellBase(
         bancorAdapter.address,
@@ -102,12 +115,20 @@ async function executeETH2BNT() {
     );
     // console.log(rxResult);
 
+    // targetAmount: targetReserveBalance * sourceAmount / (sourceReserveBalance + sourceAmount)
+    // 50501462456674053205716100 * 400000000000000000 / (41536194569038260154218 + 400000000000000000) = 486332237687278140000
+    // fee: targetAmount.mul(_conversionFee) / PPM_RESOLUTION
+    // 486332237687278140000 * 1000 / 1000000 = 486332237687278140
+    // user receive amount
+    // 486332237687278140000 - 486332237687278140 = 485845905449590850000
+    // after weth balance: 0
     console.log("after weth balance: " + await WETH.balanceOf(bancorAdapter.address));
+    // after bnt  balance: 485845905449590857665
     console.log("after bnt  balance: " + await BNT.balanceOf(bancorAdapter.address));
 }
 
 async function main() {
-    await executeMPH2BNT();
+    // await executeMPH2BNT();
 
     await executeETH2BNT();
 }
