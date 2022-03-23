@@ -20,6 +20,7 @@ contract CurveAdapter is IAdapter {
         IERC20(fromToken).approve(pool, sellAmount);
         // swap
         ICurve(pool).exchange_underlying(i, j, sellAmount, 0);
+        
         if(to != address(this)) {
             SafeERC20.safeTransfer(IERC20(toToken), to, IERC20(toToken).balanceOf(address(this)));
         }

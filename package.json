@@ -15,16 +15,17 @@
     "@openzeppelin/contracts": "^4.5.0",
     "@openzeppelin/contracts-upgradeable": "^4.1.0",
     "@openzeppelin/hardhat-upgrades": "^1.9.0",
-    "ethereumjs-util": "^7.0.3",
     "chai": "^4.3.4",
     "dotenv": "^8.2.0",
     "ethereum-waffle": "^3.4.0",
+    "ethereumjs-util": "^7.0.3",
     "hardhat": "^2.8.2",
     "hardhat-abi-exporter": "^2.2.1",
     "hardhat-gas-reporter": "^1.0.7",
     "prettier-plugin-solidity": "^1.0.0-beta.19"
   },
   "dependencies": {
+    "bignumber.js": "^9.0.2",
     "hardhat-contract-sizer": "^2.4.0"
   }
 }
