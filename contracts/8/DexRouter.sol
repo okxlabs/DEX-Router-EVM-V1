@@ -156,7 +156,6 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       }
       if (UniversalERC20.isETH(IERC20(tmpFromToken))) {
         uint256 remainAmount = IERC20(tmpFromToken).universalBalanceOf(address(this));
-        IWETH(address(uint160(_WETH))).withdraw(remainAmount);
         payable(msg.sender).transfer(remainAmount);
       } else {
         if (IERC20(tmpFromToken).universalBalanceOf(address(this)) > 0) {
