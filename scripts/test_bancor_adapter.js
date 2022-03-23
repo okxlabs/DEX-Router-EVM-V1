@@ -57,7 +57,7 @@ async function executeMPH2BNT() {
     console.log("after btn balance: " + await BNT.balanceOf(bancorAdapter.address));
 }
 
-// blocknumber 14429782
+// blocknumber: 14429782
 async function executeETH2BNT() {
     await setForkBlockNumber(14429782);
 
