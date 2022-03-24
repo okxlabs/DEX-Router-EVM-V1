@@ -25,8 +25,7 @@ async function main() {
     deployed.base.dexRouter
   )
   await dexRouter.setApproveProxy(tokenApproveProxy.address);
-  await dexRouter.setTokenAprrove(tokenApprove.address);
-  
+
   const wNativeRelayer = await ethers.getContractAt(
     "WNativeRelayer",
     deployed.base.wNativeRelayer
