@@ -11,7 +11,7 @@ import "./interfaces/IApproveProxy.sol";
 /// @dev Explain to a developer any extra details
 contract TokenApproveProxy is IApproveProxy, OwnableUpgradeable {
   mapping(address => bool) public allowedApprove;
-  address public tokenApprove;
+  address public override tokenApprove;
 
   function initialize() public initializer {
     __Ownable_init();
