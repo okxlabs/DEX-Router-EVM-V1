@@ -15,7 +15,7 @@ contract KyberAdapter is IAdapter {
     // fromToken == token0
     function sellBase(address to, address pool, bytes memory) external override {
         IERC20 baseToken = IKyber(pool).token0();
-        (uint reserveIn, uint reserveOut,uint vReserveIn,uint vReserveOut,uint feeInPrecision) = IKyber(pool).getTradeInfo();
+        (uint reserveIn, uint reserveOut, uint vReserveIn, uint vReserveOut, uint feeInPrecision) = IKyber(pool).getTradeInfo();
         require(reserveIn > 0 && reserveOut > 0, "KyberAdapter: INSUFFICIENT_LIQUIDITY");
 
         // if is amp pool, vReserveIn = reserveIn, vReserveOut = reserveOut
@@ -24,14 +24,14 @@ contract KyberAdapter is IAdapter {
 
         uint sellBaseAmountWithFee = (balance0 - reserveIn) * (PRECISION - feeInPrecision);
         uint receiveQuoteAmount = sellBaseAmountWithFee * vReserveOut / (vReserveIn * PRECISION + sellBaseAmountWithFee);
-        
+
         IKyber(pool).swap(0, receiveQuoteAmount, to, new bytes(0));
     }
 
     // fromToken == token1
     function sellQuote(address to, address pool, bytes memory) external override {
         IERC20 quoteToken = IKyber(pool).token1();
-        (uint reserveOut, uint reserveIn,uint vReserveOut,uint vReserveIn,uint feeInPrecision) = IKyber(pool).getTradeInfo();
+        (uint reserveOut, uint reserveIn, uint vReserveOut, uint vReserveIn, uint feeInPrecision) = IKyber(pool).getTradeInfo();
         require(reserveIn > 0 && reserveOut > 0, "KyberAdapter: INSUFFICIENT_LIQUIDITY");
         
         uint balance1 = quoteToken.balanceOf(pool);
