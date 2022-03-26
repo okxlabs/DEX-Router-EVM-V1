@@ -7,14 +7,12 @@ require("./utils");
 // # Pool for USDT/WBTC/WETH or similar
 // triCrypto address: 0x80466c64868E1ab14a1Ddf27A676C3fcBE638Fe5
 
-// https://etherscan.io/tx/0x13eb2d711be3ae0625b06ea685e2e55e148868fa88494770d61183251ba479bd
 // block: 14063215 
 // 0	i	uint256	0
 // 1	j	uint256	1
 // 2	dx	uint256	4769164346
 // 3	min_dy	uint256	13380240
 // 4	use_eth	bool	true
-
 // 4,769.164346 USDT
 // 0.13515394 WBTC
 

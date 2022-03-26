@@ -9,13 +9,11 @@ import "../libraries/SafeERC20.sol";
 import "hardhat/console.sol";
 
 
-// for two tokens
 contract CurveAdapter is IAdapter {
 
     function _curveSwap(address to, address pool, bytes memory moreInfo) internal {
         (address fromToken, address toToken, int128 i, int128 j) = abi.decode(moreInfo, (address, address, int128, int128));
         uint256 sellAmount = IERC20(fromToken).balanceOf(address(this));
-        console.log("sellAmount: ", sellAmount);
         // // approve
         SafeERC20.safeApprove(IERC20(fromToken),  pool, sellAmount);
         // // swap

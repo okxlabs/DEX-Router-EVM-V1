@@ -22,7 +22,7 @@ module.exports = impersonateAccount = async (accounts) => {
 }
 
 module.exports = setBalance = async (user, amount) => {
-    await network.provider.send("hardhat_setBalance", [
+    await hre.network.provider.send("hardhat_setBalance", [
         user,
         amount,
     ]);
