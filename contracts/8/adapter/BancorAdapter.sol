@@ -19,7 +19,7 @@ contract BancorAdapter is IAdapter {
         WETH_ADDRESS = _weth;
     }
 
-    function _bancorTrade(address to, address pool, bytes memory moreInfo) internal {
+    function _bancorTrade(address to, address /*pool*/, bytes memory moreInfo) internal {
         IBancorNetwork bancorNetwork = IBancorNetwork(BANCOR_ADDRESS);
         (address sourceToken, address targetToken) = abi.decode(moreInfo, (address, address));
         address[] memory path = bancorNetwork.conversionPath(
@@ -36,7 +36,7 @@ contract BancorAdapter is IAdapter {
             sellAmount = IWETH(WETH_ADDRESS).balanceOf(address(this));
             IWETH(WETH_ADDRESS).withdraw(sellAmount);
             sendValue = sellAmount;
-        } else{
+        } else {
             sellAmount = IERC20(sourceToken).balanceOf(address(this));
             // approve
             IERC20(sourceToken).approve(BANCOR_ADDRESS, sellAmount);
@@ -56,6 +56,8 @@ contract BancorAdapter is IAdapter {
             address(0),
             0
         );
+        // approve 0
+        SafeERC20.safeApprove(IERC20(sourceToken == ETH_ADDRESS ? WETH_ADDRESS : sourceToken), BANCOR_ADDRESS, 0);
         if(to != address(this)) {
             if(targetToken == ETH_ADDRESS) {
                 IWETH(WETH_ADDRESS).deposit{ value: returnAmount }();
@@ -63,7 +65,6 @@ contract BancorAdapter is IAdapter {
             }
             SafeERC20.safeTransfer(IERC20(targetToken), to, IERC20(targetToken).balanceOf(address(this)));
         }
-
     }
 
     function sellBase(address to, address pool, bytes memory moreInfo) external override {

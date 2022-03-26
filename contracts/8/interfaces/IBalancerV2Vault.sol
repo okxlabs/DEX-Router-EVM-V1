@@ -26,7 +26,7 @@ interface IBalancerV2Vault {
         SingleSwap memory singleSwap, 
         FundManagement memory funds, 
         uint256 limit, uint256 deadline
-    ) external returns (uint256 amountCalculated);
+    ) external payable returns (uint256 amountCalculated);
 
     function getPool(bytes32 poolId) external view returns (address, PoolSpecialization);
 }
