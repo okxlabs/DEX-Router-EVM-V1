@@ -16,8 +16,6 @@ import "../interfaces/IWETH.sol";
 /// @dev Explain to a developer any extra details
 contract UniV3Adapter is IAdapter, IUniswapV3SwapCallback {
 
-    // ============ Storage ============
-
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address public immutable WETH;
 

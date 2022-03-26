@@ -21,7 +21,6 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   uint256 private constant _WEIGHT_MASK = 0x00000000000000000000ffff0000000000000000000000000000000000000000;
 
   address public approveProxy;
-  address public tokenApprove;
 
   struct BaseRequest {
     address fromToken;
@@ -92,6 +91,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
         uint256 bal = IERC20(request.fromToken).universalBalanceOf(address(this));
         _fromTokenAmount = (bal * weight) / 10000;
       }
+      address tokenApprove = IApproveProxy(approveProxy).tokenApprove();
       SafeERC20.safeApprove(IERC20(request.fromToken), tokenApprove, _fromTokenAmount);
       // send the asset to the adapter
       _deposit(address(this), path.assetTo[i], request.fromToken, _fromTokenAmount);
@@ -139,8 +139,9 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   function _transferTokenToUser(BaseRequest memory baseRequest) internal {
     address tmpFromToken = baseRequest.fromToken;
     address tmpToToken = baseRequest.toToken;
+    // fromToken is NativeToken
     if (UniversalERC20.isETH(IERC20(tmpToToken))) {
-      uint256 remainAmount = IERC20(tmpFromToken).universalBalanceOf(address(this));
+      uint256 remainAmount = IERC20(address(uint160(_WETH))).universalBalanceOf(address(this));
       IWETH(address(uint160(_WETH))).withdraw(remainAmount);
       payable(msg.sender).transfer(remainAmount);
       if (IERC20(tmpFromToken).universalBalanceOf(address(this)) > 0) {
@@ -156,7 +157,6 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       }
       if (UniversalERC20.isETH(IERC20(tmpFromToken))) {
         uint256 remainAmount = IERC20(tmpFromToken).universalBalanceOf(address(this));
-        IWETH(address(uint160(_WETH))).withdraw(remainAmount);
         payable(msg.sender).transfer(remainAmount);
       } else {
         if (IERC20(tmpFromToken).universalBalanceOf(address(this)) > 0) {
@@ -176,10 +176,6 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
   function setApproveProxy(address newApproveProxy) external onlyOwner {
     approveProxy = newApproveProxy;
-  }
-
-  function setTokenAprrove(address newTokenApprove) external onlyOwner {
-    tokenApprove = newTokenApprove;
   }
 
   //-------------------------------
