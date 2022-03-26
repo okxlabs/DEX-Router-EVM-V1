@@ -13,29 +13,26 @@ contract BalancerAdapter is IAdapter {
     using UniversalERC20 for IERC20;
 
     function _balancerSwap(address to, address pool, bytes memory moreInfo) internal {
-        (address tokenIn, address tokenOut) = abi.decode(moreInfo, (address, address));
+        (address sourceToken, address targetToken) = abi.decode(moreInfo, (address, address));
         address[] memory currentToken = IBalancer(pool).getCurrentTokens();
 
         bool isTokenInInCurrentToken = false;
         bool isTokenOutInCurrentToken = false;
 
-        for (uint i=0; i<currentToken.length; i++){
-            if( currentToken[i] == tokenIn){ isTokenInInCurrentToken = true; }
-            if( currentToken[i] == tokenOut){ isTokenOutInCurrentToken = true; }
+        for (uint256 i = 0; i < currentToken.length; i++) {
+            if(currentToken[i] == sourceToken) { isTokenInInCurrentToken = true; }
+            if(currentToken[i] == targetToken) { isTokenOutInCurrentToken = true; }
         }
         require(isTokenInInCurrentToken == true, "BalancerAdapter: Wrong FromToken");
         require(isTokenOutInCurrentToken == true, "BalancerAdapter: Wrong ToToken");
 
-        uint256 tokenAmountIn = IERC20(tokenIn).balanceOf(address(this));
-        SafeERC20.safeApprove(IERC20(tokenIn), pool, tokenAmountIn);
-
-        uint minAmountOut = 0; //Slippage
-        uint maxPrice = type(uint256).max; //Slippage
+        uint256 tokenAmountIn = IERC20(sourceToken).balanceOf(address(this));
+        SafeERC20.safeApprove(IERC20(sourceToken), pool, tokenAmountIn);
         
-        IBalancer(pool).swapExactAmountIn(tokenIn, tokenAmountIn, tokenOut, minAmountOut, maxPrice);
+        IBalancer(pool).swapExactAmountIn(sourceToken, tokenAmountIn, targetToken, 0, type(uint256).max);
 
         if(to != address(this)) {
-            SafeERC20.safeTransfer(IERC20(tokenOut), to, IERC20(tokenOut).balanceOf(address(this)));
+            SafeERC20.safeTransfer(IERC20(targetToken), to, IERC20(targetToken).balanceOf(address(this)));
         }
     }
 
