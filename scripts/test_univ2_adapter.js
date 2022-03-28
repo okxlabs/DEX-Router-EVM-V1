@@ -2,7 +2,61 @@ const { ethers } = require("hardhat");
 require("./tools");
 
 async function execute() {
+    // Compare TX
+    // https://cn.etherscan.com/tx/0x64a48e25fd9a664dce496f5e804002b980a414f6f2ef2b00928abce78275afc9
 
+    // Network Main
+    await setForkBlockNumber(14446603);
+
+    const accountAddress = "0x9199Cc44CF7850FE40081ea6F2b010Fee1088270";
+    await startMockAccount([accountAddress]);
+    const account = await ethers.getSigner(accountAddress);
+
+    WETH = await ethers.getContractAt(
+        "MockERC20",
+        "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    )
+    RND = await ethers.getContractAt(
+        "MockERC20",
+        "0x1c7E83f8C581a967940DBfa7984744646AE46b29"
+    )
+
+    UniV2Adapter = await ethers.getContractFactory("UniAdapter");
+    univ2Adapter = await UniV2Adapter.deploy();
+    await univ2Adapter.deployed();
+
+    const poolAddr = "0x5449bd1a97296125252db2d9cf23d5d6e30ca3c1";
+
+    console.log("before WETH Balance: " + await WETH.balanceOf(account.address));
+    console.log("before RND Balance: " + await RND.balanceOf(account.address));
+
+    // transfer 0.0625 WETH to poolAddr
+    await WETH.connect(account).transfer(poolAddr, ethers.utils.parseEther('0.0625'));
+
+    // WETH to RND token pool
+    rxResult = await univ2Adapter.sellQuote(
+        account.address,                                // receive token address
+        poolAddr,                                       // WETH-RND Pool
+        "0x"
+    );
+    console.log(rxResult);
+
+    console.log("after WETH Balance: " + await WETH.balanceOf(account.address));
+    console.log("after RND Balance: " + await RND.balanceOf(account.address));
+
+    // transfer 462571280 RND to poolAddr
+    await RND.connect(account).transfer(poolAddr, ethers.utils.parseEther('462571280'));
+
+    // USDT to WETH token pool
+    rxResult = await univ2Adapter.sellBase(
+        account.address,                                // receive token address
+        poolAddr,                                       // WETH-RND Pool
+        "0x"
+    );
+    // console.log(rxResult);
+
+    console.log("after WETH Balance: " + await WETH.balanceOf(account.address));
+    console.log("after RND Balance: " + await RND.balanceOf(account.address));
 }
 
 async function main() {
