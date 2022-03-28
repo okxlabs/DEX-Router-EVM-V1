@@ -31,7 +31,8 @@ async function execute() {
     console.log("before RND Balance: " + await RND.balanceOf(account.address));
 
     // transfer 0.0625 WETH to poolAddr
-    await WETH.connect(account).transfer(poolAddr, ethers.utils.parseEther('0.0625'));
+    
+    await WETH.connect(account).transfer(poolAddr, ethers.utils.parseEther('100'));
 
     // WETH to RND token pool
     rxResult = await univ2Adapter.sellQuote(
@@ -39,13 +40,13 @@ async function execute() {
         poolAddr,                                       // WETH-RND Pool
         "0x"
     );
-    console.log(rxResult);
+    // console.log(rxResult);
 
     console.log("after WETH Balance: " + await WETH.balanceOf(account.address));
     console.log("after RND Balance: " + await RND.balanceOf(account.address));
 
     // transfer 462571280 RND to poolAddr
-    await RND.connect(account).transfer(poolAddr, ethers.utils.parseEther('462571280'));
+    await RND.connect(account).transfer(poolAddr, ethers.utils.parseEther('16306887544.577753070502043886'));
 
     // USDT to WETH token pool
     rxResult = await univ2Adapter.sellBase(
