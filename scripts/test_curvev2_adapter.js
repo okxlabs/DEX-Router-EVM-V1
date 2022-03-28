@@ -1,7 +1,5 @@
 const { ethers } = require("hardhat");
-const fs = require("fs");
-const { hrtime } = require("process");
-require("./utils");
+require("./tools");
 
 
 // # Pool for USDT/WBTC/WETH or similar
@@ -17,15 +15,14 @@ require("./utils");
 // 0.13515394 WBTC
 
 async function execute() {  
-    provider = new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545/");
     UserAddress = "0x3DdfA8eC3052539b6C9549F12cEA2C295cfF5296"
     UsdtAddress = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
     WBTCAddress = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
-
     triCryptoAddress = "0x80466c64868E1ab14a1Ddf27A676C3fcBE638Fe5"
-    await provider.send("hardhat_impersonateAccount",[UserAddress]);
 
-    signer = await provider.getSigner(UserAddress)
+    startMockAccount([UserAddress])
+
+    signer = await ethers.getSigner(UserAddress)
 
     // 获得
     CurveV2Adapter = await ethers.getContractFactory("CurveV2Adapter");
@@ -33,25 +30,26 @@ async function execute() {
     await CurveV2Adapter.deployed();
 
     // USDT
-    usetABI = JSON.parse(fs.readFileSync('./test/adapter/usdt.json', 'utf8'));
-    USDTContract = new ethers.Contract(UsdtAddress, usetABI, provider);
+    USDTContract = await ethers.getContractAt(
+      "MockERC20",
+      UsdtAddress
+    )
+    WBTCContract = await ethers.getContractAt(
+      "MockERC20",
+      WBTCAddress
+    )
 
-    wbtcABI = JSON.parse(fs.readFileSync('./test/adapter/wbtc.json', 'utf8'));
-    WBTCContract = new ethers.Contract(WBTCAddress, wbtcABI, provider);
-
-    // // check user token
+    // check user token
     beforeBalance = await USDTContract.balanceOf(UserAddress);
     console.log("user balance: ", beforeBalance.toString());
-
-    // //transfer token
+    
+    // transfer token
+    await USDTContract.connect(signer).transfer(CurveV2Adapter.address, ethers.utils.parseUnits('1000', 6));
     beforeBalance = await USDTContract.balanceOf(CurveV2Adapter.address);
-    await USDTContract.connect(signer).transfer(CurveV2Adapter.address, 1000000000);
-    afterBalance = await USDTContract.balanceOf(CurveV2Adapter.address);
 
     console.log("USDT beforeBalance: ", beforeBalance.toString());
-    console.log("USDT afterBalance: ", afterBalance.toString());
 
-    // // swap
+    // swap
     beforeBalance = await WBTCContract.balanceOf(CurveV2Adapter.address);
     console.log("WBTC beforeBalance: ", beforeBalance.toString());
 
@@ -70,17 +68,12 @@ async function execute() {
       triCryptoAddress,
       moreinfo
     );
-    
-    console.log(" ===== for debug =====")
-    console.log(rxResult)
-    console.log(" ===== for debug =====")
+    // console.log(rxResult)
 
     afterBalance = await WBTCContract.balanceOf(CurveV2Adapter.address);
     usdtBalance = await USDTContract.balanceOf(CurveV2Adapter.address);
     console.log("USDT afterBalance: ", usdtBalance.toString());
     console.log("WBTC afterBalance: ", afterBalance.toString());
-
-
 }
 
 async function main() {

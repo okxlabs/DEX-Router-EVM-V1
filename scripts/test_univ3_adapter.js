@@ -1,5 +1,5 @@
 const { ethers } = require("hardhat");
-require("./utils");
+require("./tools");
 
 async function execute() {
 

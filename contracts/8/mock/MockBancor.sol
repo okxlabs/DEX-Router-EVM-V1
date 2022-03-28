@@ -10,4 +10,8 @@ contract MockBancor {
     function conversionFee() external view returns (uint32) {
         return 0;
     }
+
+    function setConversionFee(uint32 fee) external {
+        
+    }
 }

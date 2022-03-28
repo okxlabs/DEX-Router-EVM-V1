@@ -4,6 +4,7 @@
   "license": "MIT",
   "description": "Yao Swap For Multi-chain",
   "scripts": {
+    "size": "hardhat size-contracts",
     "compile": "npx hardhat --config hardhat.config.js compile",
     "compile5": "npx hardhat --config hardhat.config.5.js compile",
     "prettier:solidity": "./node_modules/.bin/prettier --write contracts/**/*.sol"
@@ -24,7 +25,6 @@
     "prettier-plugin-solidity": "^1.0.0-beta.19"
   },
   "dependencies": {
-    "bignumber.js": "^9.0.2",
     "hardhat-contract-sizer": "^2.4.0"
   }
 }
