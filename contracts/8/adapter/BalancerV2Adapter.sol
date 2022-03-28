@@ -4,35 +4,60 @@ pragma solidity ^0.8.0;
 import "../interfaces/IAdapter.sol";
 import "../interfaces/IERC20.sol";
 import "../interfaces/IBalancerV2Vault.sol";
+import "../interfaces/IWETH.sol";
 
 import "../libraries/SafeERC20.sol";
-
+import "hardhat/console.sol";
 // for two tokens
 contract BalancerV2Adapter is IAdapter {
+    address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address public immutable VAULT_ADDRESS;
+    address public immutable WETH_ADDRESS;
 
-    function _balancerV2Swap(address to, address vault, bytes memory moreInfo) internal {
-        (address fromToken, address toToken, bytes32 poolId) = abi.decode(moreInfo, (address, address, bytes32));
+    constructor(address _balancerVault, address _weth) {
+        VAULT_ADDRESS = _balancerVault;
+        WETH_ADDRESS = _weth;
+    }
 
-        // fromToken ！= toToken, The Balancer Vault will check
+    function _balancerV2Swap(address to, address /*vault*/, bytes memory moreInfo) internal {
+        (address sourceToken, address targetToken, bytes32 poolId) = abi.decode(moreInfo, (address, address, bytes32));
 
-        uint256 sellAmount = IERC20(fromToken).balanceOf(address(this));
+        // fromToken ！= targetToken, The Balancer Vault will check
+        // In balancer eth or weth are exchanged for other tokens using the same pool,
+        // The dex router will only transfer weth here
+        uint256 sellAmount = 0;
+        if(sourceToken == ETH_ADDRESS) {
+            sellAmount = IWETH(WETH_ADDRESS).balanceOf(address(this));
+        } else {
+            sellAmount = IERC20(sourceToken).balanceOf(address(this));
+        }
+
         IBalancerV2Vault.SingleSwap memory singleSwap;
         singleSwap.poolId = poolId;
         singleSwap.kind = IBalancerV2Vault.SwapKind.GIVEN_IN;
-        singleSwap.assetIn = fromToken;
-        singleSwap.assetOut = toToken;
+        singleSwap.assetIn = sourceToken == ETH_ADDRESS ? WETH_ADDRESS : sourceToken;
+        singleSwap.assetOut = targetToken == ETH_ADDRESS ? WETH_ADDRESS : targetToken;
         singleSwap.amount = sellAmount;
 
         IBalancerV2Vault.FundManagement memory fund;
         fund.sender = address(this);
         fund.recipient = to;
 
-        // approve sell amount
-        SafeERC20.safeApprove(IERC20(fromToken), vault, sellAmount);
+        // approve
+        SafeERC20.safeApprove(IERC20(sourceToken == ETH_ADDRESS ? WETH_ADDRESS : sourceToken), VAULT_ADDRESS, sellAmount);
         // swap, the limit parameter is 0 for the time being, and the slippage point is not considered for the time being
-        IBalancerV2Vault(vault).swap(singleSwap, fund, 0, block.timestamp + 30 seconds);
+        IBalancerV2Vault(VAULT_ADDRESS).swap(
+            singleSwap, 
+            fund, 
+            0, 
+            block.timestamp
+        );
         // approve 0
-        SafeERC20.safeApprove(IERC20(fromToken), vault, 0);
+        SafeERC20.safeApprove(IERC20(sourceToken == ETH_ADDRESS ? WETH_ADDRESS : sourceToken), VAULT_ADDRESS, 0);
+        if(to != address(this)) {
+            if(targetToken == ETH_ADDRESS) targetToken = WETH_ADDRESS;
+            SafeERC20.safeTransfer(IERC20(targetToken), to, IERC20(targetToken).balanceOf(address(this)));
+        }
     }
 
     function sellBase(address to, address vault, bytes memory moreInfo) external override {
@@ -41,5 +66,9 @@ contract BalancerV2Adapter is IAdapter {
 
     function sellQuote(address to, address vault, bytes memory moreInfo) external override {
         _balancerV2Swap(to, vault, moreInfo);
+    }
+
+    receive() external payable {
+        require(msg.value > 0, "receive error");
     }
 }
