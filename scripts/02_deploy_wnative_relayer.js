@@ -7,7 +7,7 @@ async function main() {
   WNativeRelayer = await ethers.getContractFactory("WNativeRelayer");
   wNativeRelayer = await WNativeRelayer.deploy();
   await wNativeRelayer.deployed();
-  await wNativeRelayer.initialize(deployed.base.WBNB);
+  await wNativeRelayer.initialize(deployed.base.wNativeToken);
   console.log("wNativeRelayer " + wNativeRelayer.address);
 }
 
