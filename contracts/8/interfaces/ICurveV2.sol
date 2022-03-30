@@ -7,7 +7,7 @@ interface ICurveV2 {
     function exchange(uint256 i, uint256 j, uint256 dx, uint256 minDy) external;
 
     // For two crypto pools
-    function exchange(int128 i, int128 j, uint256 dx, uint256 minDy) external payable;
+    function exchange(int128 i, int128 j, uint256 dx, uint256 minDy) external payable returns(uint256);
 }
 
 

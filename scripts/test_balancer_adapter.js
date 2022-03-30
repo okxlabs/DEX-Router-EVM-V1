@@ -1,9 +1,9 @@
 const { ethers } = require("hardhat");
 require("./tools");
-require("../config");
+const {getConfig} = require("./config");
 
 async function executeWETH2AAVE() {
-  config = getConfig("eth")
+  tokenConfig = getConfig("eth")
 
   // Network Main
   await setForkBlockNumber(14436484);
@@ -17,11 +17,11 @@ async function executeWETH2AAVE() {
 
   WETH = await ethers.getContractAt(
     "MockERC20",
-    config.token.WETH
+    tokenConfig.tokens.WETH.baseTokenAddress
   )
   AAVE = await ethers.getContractAt(
     "MockERC20",
-    config.token.AAVE
+    tokenConfig.tokens.AAVE.baseTokenAddress
   )
 
   BalancerAdapter = await ethers.getContractFactory("BalancerAdapter");
