@@ -18,5 +18,4 @@ interface ICurve {
     // view coins address
     function underlying_coins(int128 arg0) external view returns(address out);
     function coins(int128 arg0) external view returns(address out);
-
 }
