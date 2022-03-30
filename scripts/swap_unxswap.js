@@ -2,26 +2,26 @@ const { ethers } = require("hardhat");
 const deployed = require('./deployed');
 
 async function main() {  
-  usdt = await ethers.getContractAt(
-    'MockERC20',
-    deployed.tokens.usdt
-  )
-  weth = await ethers.getContractAt(
-    "MockERC20",
-    deployed.tokens.weth
-  )
-  wbnb = await ethers.getContractAt(
-    "MockERC20",
-    deployed.tokens.wbnb
-  )
-  dot = await ethers.getContractAt(
-    "MockERC20",
-    deployed.tokens.dot
-  )
-  shib = await ethers.getContractAt(
-    "MockERC20",
-    deployed.tokens.shib
-  )
+  // usdt = await ethers.getContractAt(
+  //   'MockERC20',
+  //   deployed.tokens.usdt
+  // )
+  // weth = await ethers.getContractAt(
+  //   "MockERC20",
+  //   deployed.tokens.weth
+  // )
+  // wbnb = await ethers.getContractAt(
+  //   "MockERC20",
+  //   deployed.tokens.wbnb
+  // )
+  // dot = await ethers.getContractAt(
+  //   "MockERC20",
+  //   deployed.tokens.dot
+  // )
+  // shib = await ethers.getContractAt(
+  //   "MockERC20",
+  //   deployed.tokens.shib
+  // )
   tokenApprove = await ethers.getContractAt(
     "TokenApprove",
     deployed.base.tokenApprove
@@ -78,13 +78,24 @@ async function main() {
   // }
 
   // case5 PASS
+  // data = {
+  //   "amount": "100000000000000000000000",
+  //   "minReturn": "31152569945948133",
+  //   "pools": [
+  //       "0x00000000000000003b6d03403d5fc47bfa9afb772dd49daf98f5f4ca994d6fc9",
+  //       "0x80000000000000003b6d034038153dae67b364dc2639717b5458461598762e0a",
+  //       "0x80000000000000003b6d034074c4da0daca1a9e52faec732d96bc7dea9fb3ac1"
+  //   ],
+  //   "srcToken": "0x2859e4544c4bb03966803b044a93563bd2d0dd4d"
+  // }
+
   data = {
-    "amount": "100000000000000000000000",
-    "minReturn": "31152569945948133",
+    "amount": "100000000000000000000",
+    "minReturn": "0",
     "pools": [
-        "0x00000000000000003b6d03403d5fc47bfa9afb772dd49daf98f5f4ca994d6fc9",
-        "0x80000000000000003b6d034038153dae67b364dc2639717b5458461598762e0a",
-        "0x80000000000000003b6d034074c4da0daca1a9e52faec732d96bc7dea9fb3ac1"
+        "0x80000000000000003b7c4580ce7ebee972325da6576cc7b97bab319ac4e9006a",
+        "0x00000000000000003b8b87c063b30de1a998e9e64fd58a21f68d323b9bcd8f85",
+        "0x00000000000000003b7c45809da5fe6d575aa838fc24d2943e46d2d537a31a05"
     ],
     "srcToken": "0x2859e4544c4bb03966803b044a93563bd2d0dd4d"
   }

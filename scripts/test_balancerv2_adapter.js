@@ -1,5 +1,6 @@
 const { ethers } = require("hardhat");
 require("./tools");
+const { getConfig } = require("./config");
 
 async function executeWETH2IPAL() {
   // Network Main
@@ -134,7 +135,7 @@ async function executeDAI2ETH() {
   
   // mock DAI holder
   const daiHolderAddr = "0x28C6c06298d514Db089934071355E5743bf21d60"
-  await impersonateAccount([daiHolderAddr]);
+  startMockAccount([daiHolderAddr])
   const daiHolder = await ethers.getSigner(daiHolderAddr)
 
   // transfer 100 DAI to balancerV2Adapter
