@@ -6,7 +6,6 @@ import "../interfaces/ICurveV2.sol";
 import "../interfaces/IERC20.sol";
 import "../libraries/UniversalERC20.sol";
 import "../libraries/SafeERC20.sol";
-import "hardhat/console.sol";
 
 contract CurveV2Adapter is IAdapter {
 
