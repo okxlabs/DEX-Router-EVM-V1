@@ -1,6 +1,8 @@
+const { config } = require("dotenv");
 const { ethers } = require("hardhat");
 require("./tools");
 const { getConfig } = require("./config");
+config = getConfig("eth");
 
 async function executeWETH2IPAL() {
   // Network Main
@@ -16,11 +18,11 @@ async function executeWETH2IPAL() {
 
   WETH = await ethers.getContractAt(
     "MockERC20",
-    "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    config.token.WETH
   )
   IPAL = await ethers.getContractAt(
     "MockERC20",
-    "0x12E457a5FC7707d0FDDA849068DF6e664d7a8569"
+    config.token.IPAL
   )
 
   const balancerVault = "0xBA12222222228d8Ba445958a75a0704d566BF2C8";
@@ -68,12 +70,13 @@ async function executeETH2DAI() {
 
   WETH = await ethers.getContractAt(
     "MockERC20",
-    "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    config.token.WETH
   )
   DAI = await ethers.getContractAt(
     "MockERC20",
-    "0x6B175474E89094C44Da98b954EedeAC495271d0F"
+    config.token.DAI
   )
+  config.token.ETH
   const ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
   const balancerVault = "0xBA12222222228d8Ba445958a75a0704d566BF2C8";
 
@@ -120,11 +123,11 @@ async function executeDAI2ETH() {
 
   WETH = await ethers.getContractAt(
     "MockERC20",
-    "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    config.token.WETH
   )
   DAI = await ethers.getContractAt(
     "MockERC20",
-    "0x6B175474E89094C44Da98b954EedeAC495271d0F"
+    config.token.DAI 
   )
   const ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
   const balancerVault = "0xBA12222222228d8Ba445958a75a0704d566BF2C8";

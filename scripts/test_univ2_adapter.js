@@ -1,5 +1,7 @@
 const { ethers } = require("hardhat");
 require("./tools");
+const { getConfig } = require("./config");
+config = getConfig("eth");
 
 async function execute() {
     // Compare TX
@@ -14,11 +16,11 @@ async function execute() {
 
     WETH = await ethers.getContractAt(
         "MockERC20",
-        "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+        config.token.WETH
     )
     RND = await ethers.getContractAt(
         "MockERC20",
-        "0x1c7E83f8C581a967940DBfa7984744646AE46b29"
+        config.token.RND
     )
 
     UniV2Adapter = await ethers.getContractFactory("UniAdapter");
