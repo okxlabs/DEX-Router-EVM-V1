@@ -11,7 +11,7 @@ const DOT = {
 const USDC = {
   name: "USDC",
   decimals: 6,
-  baseTokenAddress: '0x64715Ed6c2B49dfcc823bC0D1af39A9731C56F83',
+  baseTokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
 }
 const USDT = {
   name: "USDT",
@@ -93,6 +93,13 @@ const WUST = {
   baseTokenAddress: "0xa47c8bf37f92aBed4A126BDA807A7b7498661acD"
 }
 
+const RND = {
+  name: "RND",
+  decimals: 18,
+  baseTokenAddress: "0x1c7E83f8C581a967940DBfa7984744646AE46b29"
+
+}
+
 
 module.exports = {
   BTCB,
@@ -111,5 +118,6 @@ module.exports = {
   DAI,
   MPH,
   BNT,
-  WUST
+  WUST,
+  RND
 }

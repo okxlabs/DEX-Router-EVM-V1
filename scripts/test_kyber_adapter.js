@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
 require("./tools");
 const { getConfig } = require("./config");
-config = getConfig("eth");
+tokenConfig = getConfig("eth");
 
 async function executeWETH2USDT() {
   // Network Main
@@ -16,11 +16,11 @@ async function executeWETH2USDT() {
 
   WETH = await ethers.getContractAt(
     "MockERC20",
-    config.token.WETH
+    tokenConfig.tokens.WETH.baseTokenAddress
   )
   USDT = await ethers.getContractAt(
     "MockERC20",
-    config.token.USDT
+    tokenConfig.tokens.USDT.baseTokenAddress
   )
 
   KyberAdapter = await ethers.getContractFactory("KyberAdapter");

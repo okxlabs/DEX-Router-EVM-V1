@@ -2,6 +2,7 @@ const { config } = require("dotenv");
 const { ethers } = require("hardhat");
 require("./tools");
 const { getConfig } = require("./config");
+const { ETH } = require("./config/eth/tokens");
 const tokenConfig = getConfig("eth")
 // lido: 
 // ETH/stETH
@@ -31,15 +32,6 @@ async function deployContract() {
 
 
 async function executeTwoCrypto(CurveV2Adapter) {
-  await setForkBlockNumber(14436483);
-
-  const accountAddress = "0x260edfea92898a3c918a80212e937e6033f8489e"
-  await startMockAccount([accountAddress]);
-  const account = await ethers.getSigner(accountAddress)
-
-  await setBalance(accountAddress, "0x53444835ec580000");
-  await setBalance(CurveV2Adapter.address, "0x53444835ec580000");
-
   ETH_SETHPool = "0xc5424b857f758e906013f3555dad202e4bdb4567"  
 
   WETH = await ethers.getContractAt(
@@ -50,7 +42,6 @@ async function executeTwoCrypto(CurveV2Adapter) {
     "MockERC20",
     tokenConfig.tokens.SETH.baseTokenAddress
   )
-  await WETH.connect(account).transfer(CurveV2Adapter.address, ethers.utils.parseEther('3.5'));
 
   WETHBeforeBalance = await WETH.balanceOf(CurveV2Adapter.address);
   SETHAfterBalance = await SETHContract.balanceOf(CurveV2Adapter.address);
@@ -58,9 +49,6 @@ async function executeTwoCrypto(CurveV2Adapter) {
   console.log("SETH before balance: ", SETHAfterBalance.toString());
 
   beforeBalance = await SETHContract.balanceOf(CurveV2Adapter.address);
-  
-  
-
   moreinfo =  ethers.utils.defaultAbiCoder.encode(
     ["address", "address", "int128", "int128"],
     [
@@ -76,25 +64,10 @@ async function executeTwoCrypto(CurveV2Adapter) {
     moreinfo
   );
 
-
-
-
-
-
-
-
-
-
-
-
-
-
   wETHafterBalance = await WETH.balanceOf(CurveV2Adapter.address)
   afterBalance = await SETHContract.balanceOf(CurveV2Adapter.address)
   console.log("WETH after balance: ", wETHafterBalance.toString());
   console.log("SETH after balance: ", afterBalance.toString());
-
-
 }
 
 async function executeTricrypto(CurveV2Adapter) {  
@@ -113,9 +86,9 @@ async function executeTricrypto(CurveV2Adapter) {
       "MockERC20",
       tokenConfig.tokens.USDT.baseTokenAddress
     )
-    WBTCContract = await ethers.getContractAt(
+    WETH = await ethers.getContractAt(
       "MockERC20",
-      tokenConfig.tokens.WBTC.baseTokenAddress
+      tokenConfig.tokens.WETH.baseTokenAddress
     )
 
     // check user token
@@ -129,16 +102,16 @@ async function executeTricrypto(CurveV2Adapter) {
     console.log("USDT beforeBalance: ", beforeBalance.toString());
 
     // swap
-    beforeBalance = await WBTCContract.balanceOf(CurveV2Adapter.address);
-    console.log("WBTC beforeBalance: ", beforeBalance.toString());
+    beforeBalance = await WETH.balanceOf(CurveV2Adapter.address);
+    console.log("WETH beforeBalance: ", beforeBalance.toString());
 
     moreinfo =  ethers.utils.defaultAbiCoder.encode(
       ["address", "address", "int128", "int128"],
       [
           tokenConfig.tokens.USDT.baseTokenAddress,
-          tokenConfig.tokens.WBTC.baseTokenAddress,
+          tokenConfig.tokens.WETH.baseTokenAddress,
           0,
-          1
+          2
       ]
     )
     rxResult = await CurveV2Adapter.sellQuote(
@@ -148,7 +121,7 @@ async function executeTricrypto(CurveV2Adapter) {
     );
     // console.log(rxResult)
 
-    afterBalance = await WBTCContract.balanceOf(CurveV2Adapter.address);
+    afterBalance = await WETH.balanceOf(CurveV2Adapter.address);
     usdtBalance = await USDTContract.balanceOf(CurveV2Adapter.address);
     console.log("USDT afterBalance: ", usdtBalance.toString());
     console.log("WBTC afterBalance: ", afterBalance.toString());

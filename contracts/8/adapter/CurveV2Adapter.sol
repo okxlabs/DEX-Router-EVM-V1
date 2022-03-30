@@ -6,7 +6,6 @@ import "../interfaces/ICurveV2.sol";
 import "../interfaces/IERC20.sol";
 import "../libraries/UniversalERC20.sol";
 import "../libraries/SafeERC20.sol";
-import "hardhat/console.sol";
 import "../interfaces/IWETH.sol";
 
 contract CurveV2Adapter is IAdapter {
@@ -23,16 +22,10 @@ contract CurveV2Adapter is IAdapter {
         
         uint256 sellAmount = 0;
         uint256 returnAmount = 0;
-
-        console.log(fromToken);
-        console.log(ETH_ADDRESS);
         if(fromToken == ETH_ADDRESS) {
-            // sellAmount = IWETH(WETH_ADDRESS).balanceOf(address(this));
-            // IWETH(WETH_ADDRESS).withdraw(sellAmount);
-            // returnAmount = ICurveV2(pool).exchange{value: sellAmount}(i, j, sellAmount, 0);
-            // console.log(sellAmount);
-            // console.log(returnAmount);
-
+            sellAmount = IWETH(WETH_ADDRESS).balanceOf(address(this));
+            IWETH(WETH_ADDRESS).withdraw(sellAmount);
+            returnAmount = ICurveV2(pool).exchange{value: sellAmount}(i, j, sellAmount, 0);
         } else {
             sellAmount = IERC20(fromToken).balanceOf(address(this));
             SafeERC20.safeApprove(IERC20(fromToken),  pool, sellAmount);
