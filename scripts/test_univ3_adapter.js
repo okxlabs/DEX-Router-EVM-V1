@@ -1,5 +1,8 @@
+const { config } = require("dotenv");
 const { ethers } = require("hardhat");
 require("./tools");
+const { getConfig } = require("./config");
+config = getConfig("eth");
 
 async function execute_10000_InEth() {
     // Compare TX
@@ -12,7 +15,7 @@ async function execute_10000_InEth() {
 
     WETH = await ethers.getContractAt(
         "MockERC20",
-        "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+        config.token.WETH
     )
 
     UniV3Adapter = await ethers.getContractFactory("UniV3Adapter");
@@ -21,7 +24,7 @@ async function execute_10000_InEth() {
 
     RND = await ethers.getContractAt(
         "MockERC20",
-        "0x1c7E83f8C581a967940DBfa7984744646AE46b29"
+        config.token.RND
     )
 
     const poolAddr = "0x96b0837489d046A4f5aA9ac2FC9e086bD14Bac1E";
@@ -73,7 +76,7 @@ async function execute_10000_OutE() {
 
     WETH = await ethers.getContractAt(
         "MockERC20",
-        "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+        config.token.WETH
     )
 
     UniV3Adapter = await ethers.getContractFactory("UniV3Adapter");
@@ -82,7 +85,7 @@ async function execute_10000_OutE() {
 
     RND = await ethers.getContractAt(
         "MockERC20",
-        "0x1c7E83f8C581a967940DBfa7984744646AE46b29"
+        config.token.RND
     )
 
     const poolAddr = "0x96b0837489d046A4f5aA9ac2FC9e086bD14Bac1E";
@@ -130,7 +133,7 @@ async function execute_3000() {
 
     WETH = await ethers.getContractAt(
         "MockERC20",
-        "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+        config.token.WETH
     )
 
     UniV3Adapter = await ethers.getContractFactory("UniV3Adapter");
@@ -139,7 +142,7 @@ async function execute_3000() {
 
     USDC = await ethers.getContractAt(
         "MockERC20",
-        "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+        config.token.USDC
     )
 
     const poolAddr = "0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8";
@@ -215,7 +218,7 @@ async function execute_500() {
 
     WETH = await ethers.getContractAt(
         "MockERC20",
-        "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+        config.token.WETH
     )
 
     UniV3Adapter = await ethers.getContractFactory("UniV3Adapter");
@@ -224,7 +227,7 @@ async function execute_500() {
 
     USDC = await ethers.getContractAt(
         "MockERC20",
-        "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+        config.token.USDC
     )
 
     const poolAddr = "0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640";
@@ -300,7 +303,7 @@ async function execute_100() {
 
     WETH = await ethers.getContractAt(
         "MockERC20",
-        "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+        config.token.WETH
     )
 
     UniV3Adapter = await ethers.getContractFactory("UniV3Adapter");
@@ -309,11 +312,11 @@ async function execute_100() {
 
     USDT = await ethers.getContractAt(
         "MockERC20",
-        "0xdac17f958d2ee523a2206206994597c13d831ec7"
+        config.token.USDT
     )
     USDC = await ethers.getContractAt(
         "MockERC20",
-        "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+        config.token.USDC
     )
 
     const poolAddr = "0x3416cf6c708da44db2624d63ea0aaef7113527c6";

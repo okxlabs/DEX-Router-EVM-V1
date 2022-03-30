@@ -1,5 +1,8 @@
+const { config } = require("dotenv");
 const { ethers } = require("hardhat");
 require("./tools");
+const { getConfig } = require("./config");
+config = getConfig("eth");
 
 // blocknumber: 14395835
 async function executeMPH2BNT() {
@@ -14,7 +17,7 @@ async function executeMPH2BNT() {
 
     WETH = await ethers.getContractAt(
         "MockERC20",
-        "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+        config.token.WETH
     )
 
     BancorAdapter = await ethers.getContractFactory("BancorAdapter");
@@ -25,11 +28,11 @@ async function executeMPH2BNT() {
 
     MPH = await ethers.getContractAt(
         "MockERC20",
-        "0x8888801aF4d980682e47f1A9036e589479e835C5"
+        config.token.MPH
     )
     BNT = await ethers.getContractAt(
         "MockERC20",
-        "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
+        config.token.BNT
     )
 
     // transfer 100 MPH to bancorAdapter
@@ -74,11 +77,11 @@ async function executeETH2BNT() {
 
     WETH = await ethers.getContractAt(
         "MockERC20",
-        "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+        config.token.WETH
     )
     BNT = await ethers.getContractAt(
         "MockERC20",
-        "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
+        config.token.BNT
     )
 
     BancorAdapter = await ethers.getContractFactory("BancorAdapter");
@@ -162,11 +165,11 @@ async function executeBNT2ETH() {
     
     WETH = await ethers.getContractAt(
         "MockERC20",
-        "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+        config.token.WETH
     )
     BNT = await ethers.getContractAt(
         "MockERC20",
-        "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
+        config.token.BNT
     )
 
     BancorAdapter = await ethers.getContractFactory("BancorAdapter");
