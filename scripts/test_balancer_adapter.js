@@ -1,12 +1,11 @@
 const { ethers } = require("hardhat");
 require("./tools");
 const {getConfig} = require("./config");
+tokenConfig = getConfig("eth")
 
 async function executeWETH2AAVE() {
-  tokenConfig = getConfig("eth")
 
-  // Network Main
-  await setForkBlockNumber(14436484);
+  await setForkBlockNumber(14436483);
 
   const accountAddress = "0x260edfea92898a3c918a80212e937e6033f8489e";
   await startMockAccount([accountAddress]);
@@ -19,16 +18,17 @@ async function executeWETH2AAVE() {
     "MockERC20",
     tokenConfig.tokens.WETH.baseTokenAddress
   )
+  
   AAVE = await ethers.getContractAt(
     "MockERC20",
     tokenConfig.tokens.AAVE.baseTokenAddress
   )
 
-  BalancerAdapter = await ethers.getContractFactory("BalancerAdapter");
-  balancerAdapter = await BalancerAdapter.deploy();
+  balancerAdapter = await ethers.getContractFactory("BalancerAdapter");
+  balancerAdapter = await balancerAdapter.deploy();
   await balancerAdapter.deployed();
 
-  // transfer 100 WETH to balancerAdapter
+  // transfer 100 WETH to bancorAdapter
   await WETH.connect(account).transfer(balancerAdapter.address, ethers.utils.parseEther('3.5'));
 
   console.log("before WETH Balance: " + await WETH.balanceOf(balancerAdapter.address));
