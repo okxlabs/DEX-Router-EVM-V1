@@ -2,7 +2,7 @@ const { config } = require("dotenv");
 const { ethers } = require("hardhat");
 require("./tools");
 const { getConfig } = require("./config");
-config = getConfig("eth");
+tokenConfig = getConfig("eth");
 
 // blocknumber: 14395835
 async function executeMPH2BNT() {
@@ -17,7 +17,7 @@ async function executeMPH2BNT() {
 
     WETH = await ethers.getContractAt(
         "MockERC20",
-        config.token.WETH
+        tokenConfig.tokens.WETH.baseTokenAddress
     )
 
     BancorAdapter = await ethers.getContractFactory("BancorAdapter");
@@ -28,11 +28,11 @@ async function executeMPH2BNT() {
 
     MPH = await ethers.getContractAt(
         "MockERC20",
-        config.token.MPH
+        tokenConfig.tokens.MPH.baseTokenAddress
     )
     BNT = await ethers.getContractAt(
         "MockERC20",
-        config.token.BNT
+        tokenConfig.tokens.BNT.baseTokenAddress
     )
 
     // transfer 100 MPH to bancorAdapter
@@ -77,11 +77,11 @@ async function executeETH2BNT() {
 
     WETH = await ethers.getContractAt(
         "MockERC20",
-        config.token.WETH
+        tokenConfig.tokens.WETH.baseTokenAddress
     )
     BNT = await ethers.getContractAt(
         "MockERC20",
-        config.token.BNT
+        tokenConfig.tokens.BNT.baseTokenAddress
     )
 
     BancorAdapter = await ethers.getContractFactory("BancorAdapter");
@@ -165,11 +165,11 @@ async function executeBNT2ETH() {
     
     WETH = await ethers.getContractAt(
         "MockERC20",
-        config.token.WETH
+        tokenConfig.tokens.WETH.baseTokenAddress
     )
     BNT = await ethers.getContractAt(
         "MockERC20",
-        config.token.BNT
+        tokenConfig.tokens.BNT.baseTokenAddress
     )
 
     BancorAdapter = await ethers.getContractFactory("BancorAdapter");
