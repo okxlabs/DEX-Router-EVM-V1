@@ -35,8 +35,7 @@ contract CurveAdapter is IAdapter {
         _curveSwap(to, pool, moreInfo);
     }
 
-    event Received(address, uint);
     receive() external payable {
-        emit Received(msg.sender, msg.value);
+        require(msg.value > 0, "receive error");
     }
 }

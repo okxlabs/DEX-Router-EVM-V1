@@ -1,6 +1,7 @@
 const { ethers } = require("hardhat");
 require("./tools");
-
+const { getConfig } = require("./config");
+tokenConfig = getConfig("eth");
 
 // 3pool address: 0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7
 
@@ -23,8 +24,6 @@ async function deployContract() {
 
 async function execute(CurveAdapter) {
     userAddress = "0x3DdfA8eC3052539b6C9549F12cEA2C295cfF5296"
-    USDTAddress = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
-    DAIAddress= "0x6B175474E89094C44Da98b954EedeAC495271d0F"
     therepoolAddress = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7"
 
     startMockAccount([userAddress]);
@@ -34,13 +33,13 @@ async function execute(CurveAdapter) {
     // USDT
     USDTContract = await ethers.getContractAt(
       "MockERC20",
-      USDTAddress
+      tokenConfig.tokens.USDT.baseTokenAddress
     )
 
     // DAI
     DaiContract = await ethers.getContractAt(
       "MockERC20",
-      DAIAddress
+      tokenConfig.tokens.DAI.baseTokenAddress
     )
 
     // check user token
@@ -60,8 +59,8 @@ async function execute(CurveAdapter) {
     moreinfo =  ethers.utils.defaultAbiCoder.encode(
       ["address", "address", "int128", "int128", "bool"],
       [
-          USDTAddress,
-          DAIAddress,
+          USDTContract.address,
+          DaiContract.address,
           2,
           0,
           false
@@ -95,8 +94,6 @@ async function execute(CurveAdapter) {
 
 async function execute_underlying(CurveAdapter) {
   userAddress = "0x3DdfA8eC3052539b6C9549F12cEA2C295cfF5296"
-  DAIAddress= "0x6B175474E89094C44Da98b954EedeAC495271d0F"
-  WUSTAddress = "0xa47c8bf37f92aBed4A126BDA807A7b7498661acD"
   USTMETAPoolAddress = "0x890f4e345b1daed0367a877a1612f86a1f86985f"
 
   startMockAccount([userAddress]);
@@ -106,13 +103,13 @@ async function execute_underlying(CurveAdapter) {
   // USDT
   DAIContract = await ethers.getContractAt(
     "MockERC20",
-    DAIAddress
+    tokenConfig.tokens.DAI.baseTokenAddress
   )
 
   // DAI
   WUSTContract = await ethers.getContractAt(
     "MockERC20",
-    WUSTAddress
+    tokenConfig.tokens.WUST.baseTokenAddress
   )
 
   // check user token
@@ -126,8 +123,8 @@ async function execute_underlying(CurveAdapter) {
   moreinfo =  ethers.utils.defaultAbiCoder.encode(
     ["address", "address", "int128", "int128","bool"],
     [
-        DAIAddress,
-        WUSTAddress,
+        DAIContract.address,
+        WUSTContract.address,
         1,
         0,
         true
