@@ -2,7 +2,7 @@ const { config } = require("dotenv");
 const { ethers } = require("hardhat");
 require("./tools");
 const { getConfig } = require("./config");
-config = getConfig("eth");
+tokenConfig = getConfig("eth");
 
 async function execute_10000_InEth() {
     // Compare TX
@@ -15,7 +15,7 @@ async function execute_10000_InEth() {
 
     WETH = await ethers.getContractAt(
         "MockERC20",
-        config.token.WETH
+        tokenConfig.tokens.WETH.baseTokenAddress
     )
 
     UniV3Adapter = await ethers.getContractFactory("UniV3Adapter");
@@ -24,7 +24,7 @@ async function execute_10000_InEth() {
 
     RND = await ethers.getContractAt(
         "MockERC20",
-        config.token.RND
+        tokenConfig.token.RND.baseTokenAddress
     )
 
     const poolAddr = "0x96b0837489d046A4f5aA9ac2FC9e086bD14Bac1E";
@@ -76,7 +76,7 @@ async function execute_10000_OutE() {
 
     WETH = await ethers.getContractAt(
         "MockERC20",
-        config.token.WETH
+        tokenConfig.tokens.WETH.baseTokenAddress
     )
 
     UniV3Adapter = await ethers.getContractFactory("UniV3Adapter");
@@ -133,7 +133,7 @@ async function execute_3000() {
 
     WETH = await ethers.getContractAt(
         "MockERC20",
-        config.token.WETH
+        tokenConfig.tokens.WETH.baseTokenAddress
     )
 
     UniV3Adapter = await ethers.getContractFactory("UniV3Adapter");
@@ -142,7 +142,7 @@ async function execute_3000() {
 
     USDC = await ethers.getContractAt(
         "MockERC20",
-        config.token.USDC
+        tokenConfig.tokens.USDC.baseTokenAddress
     )
 
     const poolAddr = "0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8";
@@ -218,7 +218,7 @@ async function execute_500() {
 
     WETH = await ethers.getContractAt(
         "MockERC20",
-        config.token.WETH
+        tokenConfig.tokens.WETH.baseTokenAddress
     )
 
     UniV3Adapter = await ethers.getContractFactory("UniV3Adapter");
@@ -227,7 +227,7 @@ async function execute_500() {
 
     USDC = await ethers.getContractAt(
         "MockERC20",
-        config.token.USDC
+        tokenConfig.tokens.USDC.baseTokenAddress
     )
 
     const poolAddr = "0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640";
@@ -303,7 +303,7 @@ async function execute_100() {
 
     WETH = await ethers.getContractAt(
         "MockERC20",
-        config.token.WETH
+        tokenConfig.tokens.WETH.baseTokenAddress
     )
 
     UniV3Adapter = await ethers.getContractFactory("UniV3Adapter");
@@ -312,11 +312,11 @@ async function execute_100() {
 
     USDT = await ethers.getContractAt(
         "MockERC20",
-        config.token.USDT
+        tokenConfig.tokens.USDT.baseTokenAddress
     )
     USDC = await ethers.getContractAt(
         "MockERC20",
-        config.token.USDC
+        tokenConfig.tokens.USDC.baseTokenAddress
     )
 
     const poolAddr = "0x3416cf6c708da44db2624d63ea0aaef7113527c6";

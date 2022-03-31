@@ -6,19 +6,39 @@ import "../interfaces/ICurveV2.sol";
 import "../interfaces/IERC20.sol";
 import "../libraries/UniversalERC20.sol";
 import "../libraries/SafeERC20.sol";
+import "../interfaces/IWETH.sol";
 
 contract CurveV2Adapter is IAdapter {
+    address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address public immutable WETH_ADDRESS;
+
+    constructor(address _weth) {
+        WETH_ADDRESS = _weth;
+    }
 
     function _curveSwap(address to, address pool, bytes memory moreInfo) internal {
-        (address fromToken, address toToken, uint256 i, uint256 j, bool use_eth) = abi.decode(moreInfo, (address, address, uint256, uint256, bool));
-        uint256 sellAmount = IERC20(fromToken).balanceOf(address(this));
-
-        // // approve
-        SafeERC20.safeApprove(IERC20(fromToken),  pool, sellAmount);
-        // // swap
-        ICurveV2(pool).exchange(i, j, sellAmount, 0, use_eth);
         
+        (address fromToken, address toToken, int128 i, int128 j) = abi.decode(moreInfo, (address, address, int128, int128));
+        
+        uint256 sellAmount = 0;
+        uint256 returnAmount = 0;
+        if(fromToken == ETH_ADDRESS) {
+            sellAmount = IWETH(WETH_ADDRESS).balanceOf(address(this));
+            IWETH(WETH_ADDRESS).withdraw(sellAmount);
+            returnAmount = ICurveV2(pool).exchange{value: sellAmount}(i, j, sellAmount, 0);
+        } else {
+            sellAmount = IERC20(fromToken).balanceOf(address(this));
+            SafeERC20.safeApprove(IERC20(fromToken),  pool, sellAmount);
+            ICurveV2(pool).exchange(uint256(int256(i)),uint256(int256(j)), sellAmount, 0);
+        }
+
+        // approve 0
+        SafeERC20.safeApprove(IERC20(fromToken == ETH_ADDRESS ? WETH_ADDRESS : fromToken), pool, 0);
         if(to != address(this)) {
+            if(fromToken == ETH_ADDRESS) {
+                IWETH(WETH_ADDRESS).deposit{ value: returnAmount }();
+                toToken = WETH_ADDRESS;
+            }
             SafeERC20.safeTransfer(IERC20(toToken), to, IERC20(toToken).balanceOf(address(this)));
         }
     }
@@ -29,10 +49,9 @@ contract CurveV2Adapter is IAdapter {
 
     function sellQuote(address to, address pool, bytes memory moreInfo) external override {
         _curveSwap(to, pool, moreInfo);
-    }
-
-    event Received(address, uint);
+    }    
+    
     receive() external payable {
-        emit Received(msg.sender, msg.value);
+        require(msg.value > 0, "receive error");
     }
 }

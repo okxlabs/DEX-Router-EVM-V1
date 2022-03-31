@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
 require("./tools");
 const { getConfig } = require("./config");
-config = getConfig("eth");
+tokenConfig = getConfig("eth");
 
 async function execute() {
     // Compare TX
@@ -15,12 +15,12 @@ async function execute() {
     const account = await ethers.getSigner(accountAddress);
 
     WETH = await ethers.getContractAt(
-        "MockERC20",
-        config.token.WETH
+      "MockERC20",
+      tokenConfig.tokens.WETH.baseTokenAddress
     )
     RND = await ethers.getContractAt(
         "MockERC20",
-        config.token.RND
+        tokenConfig.tokens.RND.baseTokenAddress
     )
 
     UniV2Adapter = await ethers.getContractFactory("UniAdapter");
