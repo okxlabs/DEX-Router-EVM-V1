@@ -1,5 +1,5 @@
 const { ethers } = require('hardhat')
-const { BigNumber} = require('ethers')
+const { BigNumber } = require('ethers')
 const { expect } = require('chai')
 const { getPermitDigest, sign } = require('./signatures')
 
@@ -71,7 +71,6 @@ describe("Unoswap swap test", function() {
       0,
       [pool0]
     );
-    
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
     expect(await usdt.balanceOf(alice.address)).to.be.equal("3984027924159612865972");
   });
@@ -113,13 +112,23 @@ describe("Unoswap swap test", function() {
   it("multi-pool token exchange", async () => {
     const token00 = await lpWBTCUSDT.token0();
     let reserves = await lpWBTCUSDT.getReserves();
-    expect(reserves[1]).to.be.eq("4000000000000000000000000");
-    expect(reserves[0]).to.be.eq("100000000000000000000");
+    if (await lpWBTCUSDT.token0() == wbtc.address) {
+      expect(reserves[0]).to.be.eq("100000000000000000000");
+      expect(reserves[1]).to.be.eq("4000000000000000000000000");
+    } else {
+      expect(reserves[1]).to.be.eq("100000000000000000000");
+      expect(reserves[0]).to.be.eq("4000000000000000000000000");
+    }
 
     const token10 = await lpWETHUSDT.token0();
     reserves = await lpWETHUSDT.getReserves();
-    expect(reserves[0]).to.be.eq("100000000000000000000");
-    expect(reserves[1]).to.be.eq("300000000000000000000000");
+    if (token10 == weth.address) {
+      expect(reserves[1]).to.be.eq("300000000000000000000000");
+      expect(reserves[0]).to.be.eq("100000000000000000000");
+    } else {
+      expect(reserves[0]).to.be.eq("300000000000000000000000");
+      expect(reserves[1]).to.be.eq("100000000000000000000");
+    }
 
     sourceToken = wbtc;
     middleToken = usdt;
@@ -189,8 +198,8 @@ describe("Unoswap swap test", function() {
     wNativeRelayer = await WNativeRelayer.deploy();
     await wNativeRelayer.deployed();
     await wNativeRelayer.initialize(weth.address);
-    console.log("wnative " + wNativeRelayer.address)
     await wNativeRelayer.setCallerOk([dexRouter.address], [true]);
+    expect(await dexRouter._WNATIVE_RELAY_32()).to.be.equal(wNativeRelayer.address);
 
     const token0 = await lpWETHUSDT.token0();
     const reserves = await lpWETHUSDT.getReserves();
@@ -206,7 +215,7 @@ describe("Unoswap swap test", function() {
     targetToken = ETH;
     const fromTokenAmount = ethers.utils.parseEther('3000');
     // 0x4 WETH -> ETH 0x8 reverse pair
-    flag = '0x4'
+    flag = '0xc'
     poolAddr = lpWETHUSDT.address.toString().replace('0x', '');
     poolFee = Number(997000000).toString(16).replace('0x', '');
     pool0 = flag + '000000000000000' + poolFee + poolAddr;
@@ -429,13 +438,9 @@ describe("Unoswap swap test", function() {
 
     DexRouter = await ethers.getContractFactory("DexRouter");
     dexRouter = await upgrades.deployProxy(
-      DexRouter,
-      [
-        weth.address,
-      ]  
+      DexRouter
     )
     await dexRouter.deployed();
-    await dexRouter.setTokenAprrove(tokenApprove.address);
     await dexRouter.setApproveProxy(tokenApproveProxy.address);
 
     await tokenApproveProxy.addProxy(dexRouter.address);

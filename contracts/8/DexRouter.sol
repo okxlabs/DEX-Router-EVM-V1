@@ -70,8 +70,9 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     uint256 layerAmount,
     SwapRequest calldata request,
     RouterPath calldata path,
-    bool isRelay
+    bool isFirstHop
   ) internal {
+    uint256 bal = IERC20(request.fromToken).universalBalanceOf(address(this));
     // execute multiple Adapters for a transaction pair
     for (uint256 i = 0; i < path.mixAdapters.length; i++) {
       bytes32 rawData = bytes32(path.weight[i]);
@@ -85,11 +86,15 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       }
       require(weight >= 0 && weight <= 10000, "weight out of range");
       uint256 _fromTokenAmount;
-      if (isRelay) {
+      if (isFirstHop) {
         _fromTokenAmount = (layerAmount * weight) / 10000;
       } else {
-        uint256 bal = IERC20(request.fromToken).universalBalanceOf(address(this));
-        _fromTokenAmount = (bal * weight) / 10000;
+        if (i == path.mixAdapters.length - 1) {
+          // There will be one drop left over from the last fork in percentage, fix it here
+          _fromTokenAmount = IERC20(request.fromToken).universalBalanceOf(address(this));
+        } else {
+          _fromTokenAmount = (bal * weight) / 10000;
+        }
       }
       address tokenApprove = IApproveProxy(approveProxy).tokenApprove();
       SafeERC20.safeApprove(IERC20(request.fromToken), tokenApprove, _fromTokenAmount);
@@ -107,14 +112,14 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   function _exeHop(
     uint256 layerAmount,
     SwapRequest[] calldata request,
-    RouterPath[] calldata layer
+    RouterPath[] calldata hops
   ) internal {
     // execute forks
-    for (uint256 i = 0; i < layer.length; i++) {
-      uint256 length = layer[i].mixAdapters.length;
-      require(length == layer[i].assetTo.length, "Route: pair assetto not match");
-      require(length == layer[i].weight.length, "Route: weight not match");
-      _exeForks(layerAmount, request[i], layer[i], i == 0);
+    for (uint256 i = 0; i < hops.length; i++) {
+      uint256 length = hops[i].mixAdapters.length;
+      require(length == hops[i].assetTo.length, "Route: pair assetto not match");
+      require(length == hops[i].weight.length, "Route: weight not match");
+      _exeForks(layerAmount, request[i], hops[i], i == 0);
     }
   }
 
