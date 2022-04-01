@@ -19,7 +19,7 @@ contract PMMAdapter is Ownable, EIP712("METAX PMM Adapter", "1.0") {
 //    uint256 private constant UINT_128_MASK = (1 << 128) - 1;
 //    uint256 private constant UINT_64_MASK = (1 << 64) - 1;
     uint256 private constant ADDRESS_MASK = (1 << 160) - 1;         
-
+    uint256 private constant VALID_PERIOD_MAX = 3600;
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address immutable WETH;
 
@@ -218,7 +218,10 @@ contract PMMAdapter is Ownable, EIP712("METAX PMM Adapter", "1.0") {
             mstore(add(mem, 0xC0), mload(add(order, 0xA0)))
             // order.deadLine;
             mstore(add(mem, 0xE0), mload(add(order, 0xC0)))
-            structHash := keccak256(mem, 0x100)
+            // order.isPushOrder;
+            mstore(add(mem, 0x100), mload(add(order, 0xE0)))
+
+            structHash := keccak256(mem, 0x120)
         }
     }
 
@@ -239,7 +242,7 @@ contract PMMAdapter is Ownable, EIP712("METAX PMM Adapter", "1.0") {
         uint256 actualAmountRequest,
         PMMSwapRequest memory order
     ) internal returns (bool) {
-        if (order.deadLine < block.timestamp) {     
+        if (order.deadLine < block.timestamp || order.salt + VALID_PERIOD_MAX < block.timestamp) {     
             return false;
         }
 
