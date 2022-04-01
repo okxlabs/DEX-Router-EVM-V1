@@ -1,5 +1,5 @@
 const { ethers } = require("hardhat");
-const { deployed } = require("deployed")
+const deployed = require('../deployed');
 
 async function main() {
 
