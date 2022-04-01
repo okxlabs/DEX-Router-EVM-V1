@@ -321,7 +321,9 @@ describe("Smart route path test", function() {
       lpWBTCWETH.address
     ];
     const weight1 = Number(10000).toString(16).replace('0x', '');
-    const rawData1 = ["0x" + direction(wbtc.address, weth.address) + "0000000000000000000" + weight1 + lpWBTCWETH.address.replace("0x", "")];
+    const rawData1 = [
+      "0x" + direction(wbtc.address, weth.address) + "0000000000000000000" + weight1 + lpWBTCWETH.address.replace("0x", "")
+    ];
     const extraData1 = [0x0];
     const router1 = [mixAdapter1, assertTo1, rawData1, extraData1];
 
@@ -414,17 +416,23 @@ describe("Smart route path test", function() {
     // weth -> usdt
     const requestParam7 = [
       weth.address,
-      [0]
+      [0, 0]
     ];
     const mixAdapter7 = [
+      uniAdapter.address,
       uniAdapter.address,
     ];
     const assertTo7 = [
       lpWETHUSDT.address,
+      lpWETHUSDT.address
     ];
-    const weight7 = Number(10000).toString(16).replace('0x', '');
-    const rawData7 = ["0x" + direction(weth.address, usdt.address) + "0000000000000000000" + weight7 + lpWETHUSDT.address.replace("0x", "")];
-    const extraData7 = [0x0];
+    const weight70 = Number(5000).toString(16).replace('0x', '');
+    const weight71 = Number(5000).toString(16).replace('0x', '');
+    const rawData7 = [
+      "0x" + direction(weth.address, usdt.address) + "0000000000000000000" + weight70 + lpWETHUSDT.address.replace("0x", ""),
+      "0x" + direction(weth.address, usdt.address) + "0000000000000000000" + weight71 + lpWETHUSDT.address.replace("0x", "")
+    ];
+    const extraData7 = [0x0, 0x0];
     const router7 = [mixAdapter7, assertTo7, rawData7, extraData7];
 
     // layer1
@@ -521,13 +529,9 @@ describe("Smart route path test", function() {
 
     DexRouter = await ethers.getContractFactory("DexRouter");
     dexRouter = await upgrades.deployProxy(
-      DexRouter,
-      [
-        weth9.address,
-      ]  
+      DexRouter
     )
     await dexRouter.deployed();
-    await dexRouter.setTokenAprrove(tokenApprove.address);
     await dexRouter.setApproveProxy(tokenApproveProxy.address);
 
     await tokenApproveProxy.addProxy(dexRouter.address);
