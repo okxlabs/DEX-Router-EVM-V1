@@ -1,6 +1,6 @@
 const { ethers } = require("hardhat");
-require("./tools");
-const { getConfig } = require("./config");
+require("../../tools");
+const { getConfig } = require("../../config");
 tokenConfig = getConfig("eth");
 
 // 3pool address: 0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7
