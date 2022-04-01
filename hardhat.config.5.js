@@ -6,7 +6,7 @@ require('hardhat-contract-sizer');
 require("@nomiclabs/hardhat-solhint");
 require('dotenv').config();
 
-const privateKey = process.env.privateKey;
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
 
 module.exports = {
   solidity: {
@@ -42,7 +42,7 @@ module.exports = {
     oec: {
       url: "https://exchainrpc.okex.org",
       chainId: 66,
-      accounts: [`${privateKey}`],
+      accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
           enabled: true,
@@ -53,7 +53,7 @@ module.exports = {
     oec_test: {
       url: "https://exchaintestrpc.okex.org",
       chainId: 65,
-      accounts: [`${privateKey}`],
+      accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
           enabled: true,
@@ -64,7 +64,7 @@ module.exports = {
     bsc: {
       url: "https://bsc-dataseed1.defibit.io",
       chainId: 56,
-      accounts: [`${privateKey}`],
+      accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
           enabled: true,
@@ -76,7 +76,7 @@ module.exports = {
       url: "https://data-seed-prebsc-1-s1.binance.org:8545",
       chainId: 97,
       gasPrice: 20000000000,
-      accounts: [`${privateKey}`],
+      accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
           enabled: true,
