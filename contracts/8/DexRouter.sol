@@ -11,6 +11,7 @@ import "./UnxswapRouter.sol";
 import "./interfaces/IWETH.sol";
 import "./interfaces/IAdapter.sol";
 import "./interfaces/IApproveProxy.sol";
+import "./interfaces/IPMMAdapter.sol";
 
 /// @title DexRouter
 /// @notice Entrance of Split trading in Dex platform
@@ -21,6 +22,8 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   uint256 private constant _WEIGHT_MASK = 0x00000000000000000000ffff0000000000000000000000000000000000000000;
 
   address public approveProxy;
+  address public tokenApprove;
+  address public pmmAdapter;
 
   struct BaseRequest {
     address fromToken;
@@ -52,6 +55,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   //-------------------------------
 
   // event OrderRecord(address fromToken, address toToken, address sender, uint256 fromAmount, uint256 returnAmount);
+  event PMMOrderRecord(address fromToken, address toToken, address sender, uint256 fromAmount, uint256 returnAmount);
 
   //-------------------------------
   //------- Modifier --------------
@@ -69,10 +73,11 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   function _exeForks(
     uint256 layerAmount,
     SwapRequest calldata request,
-    RouterPath calldata path,
-    bool isFirstHop
+    RouterPath calldata path
   ) internal {
-    uint256 bal = IERC20(request.fromToken).universalBalanceOf(address(this));
+    uint256 length = path.mixAdapters.length;
+    require(length == path.assetTo.length, "Route: pair assetto not match");
+    require(length == path.weight.length, "Route: weight not match");
     // execute multiple Adapters for a transaction pair
     for (uint256 i = 0; i < path.mixAdapters.length; i++) {
       bytes32 rawData = bytes32(path.weight[i]);
@@ -85,18 +90,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
         weight := shr(160, and(rawData, _WEIGHT_MASK))
       }
       require(weight >= 0 && weight <= 10000, "weight out of range");
-      uint256 _fromTokenAmount;
-      if (isFirstHop) {
-        _fromTokenAmount = (layerAmount * weight) / 10000;
-      } else {
-        if (i == path.mixAdapters.length - 1) {
-          // There will be one drop left over from the last fork in percentage, fix it here
-          _fromTokenAmount = IERC20(request.fromToken).universalBalanceOf(address(this));
-        } else {
-          _fromTokenAmount = (bal * weight) / 10000;
-        }
-      }
-      address tokenApprove = IApproveProxy(approveProxy).tokenApprove();
+      uint256 _fromTokenAmount = (layerAmount * weight) / 10000;
       SafeERC20.safeApprove(IERC20(request.fromToken), tokenApprove, _fromTokenAmount);
       // send the asset to the adapter
       _deposit(address(this), path.assetTo[i], request.fromToken, _fromTokenAmount);
@@ -112,14 +106,34 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   function _exeHop(
     uint256 layerAmount,
     SwapRequest[] calldata request,
-    RouterPath[] calldata hops
+    RouterPath[] calldata layer,
+    IPMMAdapter.PMMSwapRequest[] calldata pmmRequest,
+    bytes[] calldata pmmSignature
   ) internal {
-    // execute forks
-    for (uint256 i = 0; i < hops.length; i++) {
-      uint256 length = hops[i].mixAdapters.length;
-      require(length == hops[i].assetTo.length, "Route: pair assetto not match");
-      require(length == hops[i].weight.length, "Route: weight not match");
-      _exeForks(layerAmount, request[i], hops[i], i == 0);
+    // 1. try to replace this hop by pmm
+    if (_tryPmmSwap(address(this), layerAmount, pmmRequest[0], pmmSignature[0])){
+        return;
+    }
+
+    // 2. if this hop is a single swap
+    if (layer.length == 1){
+        _exeForks(layerAmount, request[0], layer[0]);
+        return;
+    }
+
+    // 3. execute forks
+    for (uint256 i = 0; i < layer.length; i++) {
+      if (i >0){
+        layerAmount = IERC20(pmmRequest[i+1].fromToken).universalBalanceOf(address(this));
+      }
+
+      // 3.1 try to replace this fork by pmm
+      if(_tryPmmSwap(address(this), layerAmount, pmmRequest[i+1], pmmSignature[i+1])){  
+          continue;
+        }
+        
+      // 3.2 execute forks
+      _exeForks(layerAmount, request[i], layer[i]);
     }
   }
 
@@ -141,38 +155,60 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     }
   }
 
-  function _transferTokenToUser(BaseRequest memory baseRequest) internal {
-    address tmpFromToken = baseRequest.fromToken;
-    address tmpToToken = baseRequest.toToken;
-    // fromToken is NativeToken
-    if (UniversalERC20.isETH(IERC20(tmpToToken))) {
-      uint256 remainAmount = IERC20(address(uint160(_WETH))).universalBalanceOf(address(this));
-      IWETH(address(uint160(_WETH))).withdraw(remainAmount);
-      payable(msg.sender).transfer(remainAmount);
-      if (IERC20(tmpFromToken).universalBalanceOf(address(this)) > 0) {
-        SafeERC20.safeTransfer(
-          IERC20(tmpFromToken),
-          msg.sender,
-          IERC20(tmpFromToken).universalBalanceOf(address(this))
-        );
-      }
-    } else {
-      if (IERC20(tmpToToken).universalBalanceOf(address(this)) > 0) {
-        SafeERC20.safeTransfer(IERC20(tmpToToken), msg.sender, IERC20(tmpToToken).universalBalanceOf(address(this)));
-      }
-      if (UniversalERC20.isETH(IERC20(tmpFromToken))) {
-        uint256 remainAmount = IERC20(tmpFromToken).universalBalanceOf(address(this));
-        payable(msg.sender).transfer(remainAmount);
+  function _transferChips(BaseRequest memory baseRequest) internal{
+    _transferTokenToUser(baseRequest.fromToken);
+    _transferTokenToUser(baseRequest.toToken);
+  }
+
+  function _transferTokenToUser(address token) internal{
+      if ((IERC20(token).isETH())){
+        uint256 wethBal = IERC20(address(uint160(_WETH))).balanceOf(address(this));
+        if (wethBal > 0){
+          IWETH(address(uint160(_WETH))).withdraw(wethBal);
+        }
+        uint256 ethBal = (address(this).balance);
+        if (ethBal > 0){
+          payable(msg.sender).transfer(ethBal);
+        }
       } else {
-        if (IERC20(tmpFromToken).universalBalanceOf(address(this)) > 0) {
+        uint256 bal = IERC20(token).balanceOf(address(this));
+        if (bal > 0){
           SafeERC20.safeTransfer(
-            IERC20(tmpFromToken),
+            IERC20(token),
             msg.sender,
-            IERC20(tmpFromToken).universalBalanceOf(address(this))
+            bal
           );
         }
       }
+  }
+
+  function _tryPmmSwap(address to, uint256 actualRequest, IPMMAdapter.PMMSwapRequest memory pmmRequest, bytes memory signature) internal returns (bool){
+    if (pmmRequest.fromTokenAmountMax >= actualRequest){
+      if (IPMMAdapter(pmmAdapter).swap(
+        to, 
+        actualRequest, 
+        pmmRequest, 
+        signature
+      )){  
+          //transfer user's assets to maker
+          SafeERC20.safeTransfer(IERC20(pmmRequest.fromToken), pmmRequest.payer, actualRequest);
+
+          return true;
+      }
     }
+    return false;
+  }
+
+  function _checkReturnAmountAndEmitEvent(uint256 toTokenOriginBalance, address sender, BaseRequest memory baseRequest) internal returns(uint256 returnAmount) {
+    returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(sender) - toTokenOriginBalance;
+    require(returnAmount >= baseRequest.minReturnAmount, "Route: Return amount is not enough");
+    emit OrderRecord(
+      baseRequest.fromToken,
+      baseRequest.toToken,
+      sender,
+      baseRequest.fromTokenAmount,
+      returnAmount
+    );
   }
 
   //-------------------------------
@@ -183,6 +219,14 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     approveProxy = newApproveProxy;
   }
 
+  function setTokenAprrove(address newTokenApprove) external onlyOwner {
+    tokenApprove = newTokenApprove;
+  }
+
+  function setPMMAdapter(address newPMMAdapter) external onlyOwner {
+    pmmAdapter = newPMMAdapter;
+  }
+
   //-------------------------------
   //------- Users Functions -------
   //-------------------------------
@@ -190,15 +234,18 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   function smartSwap(
     BaseRequest calldata baseRequest,
     uint256[] calldata batchAmount,
-    SwapRequest[][] calldata request,
-    RouterPath[][] calldata layers
+    SwapRequest[][] calldata requests,
+    RouterPath[][] calldata layers,
+    IPMMAdapter.PMMSwapRequest[][] calldata pmmRequests,
+    bytes[][] calldata pmmSignatures
   ) external payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) {
+    // 1. transfer from token in
     require(baseRequest.fromTokenAmount > 0, "Route: fromTokenAmount must be > 0");
     BaseRequest memory localBaseRequest = baseRequest;
-    uint256 toTokenOriginBalance = IERC20(baseRequest.toToken).universalBalanceOf(msg.sender);
+    returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(msg.sender);
     _deposit(msg.sender, address(this), localBaseRequest.fromToken, localBaseRequest.fromTokenAmount);
 
-    // check
+    // 2. check total batch amount
     uint256 totalBatchAmount = 0;
     for (uint256 i = 0; i < layers.length; i++) {
       totalBatchAmount += batchAmount[i];
@@ -208,25 +255,46 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       "Route: number of branches should be <= fromTokenAmount"
     );
 
-    // execute batch
-    for (uint256 i = 0; i < layers.length; i++) {
-      uint256 layerAmount = batchAmount[i];
-      // uint256 layerAmount = localBaseRequest.fromTokenAmount.mul(batchAmount[i]).div(10000);
-      // execute hop
-      _exeHop(layerAmount, request[i], layers[i]);
+    // 3. try to replace the whole swap by pmm
+    if (_tryPmmSwap(
+        msg.sender, 
+        localBaseRequest.fromTokenAmount, 
+        pmmRequests[0][0], 
+        pmmSignatures[0][0]
+    )){
+      // 3.1 transfer chips to user
+      _transferTokenToUser(localBaseRequest.fromToken);
+      returnAmount = _checkReturnAmountAndEmitEvent(returnAmount, msg.sender, localBaseRequest);
+
+      return returnAmount;
     }
 
-    returnAmount = IERC20(localBaseRequest.toToken).universalBalanceOf(msg.sender) - toTokenOriginBalance;
-    require(returnAmount >= localBaseRequest.minReturnAmount, "Route: Return amount is not enough");
+    // 4. the situation that the whole swap is a single swap
+    if (layers.length == 1 && layers[0].length == 1){
+        // 4.1 excute fork
+        _exeForks(baseRequest.fromTokenAmount, requests[0][0], layers[0][0]);
 
-    _transferTokenToUser(localBaseRequest);
+        // 4.2 transfer chips
+        _transferChips(baseRequest);
 
-    emit OrderRecord(
-      localBaseRequest.fromToken,
-      localBaseRequest.toToken,
-      msg.sender,
-      localBaseRequest.fromTokenAmount,
-      returnAmount
-    );
+        // 4.3 check minReturnAmount
+        returnAmount = _checkReturnAmountAndEmitEvent(returnAmount, msg.sender, localBaseRequest);
+
+        return returnAmount;
+    }
+
+    // 5. execute batch
+    for (uint256 i = 0; i < layers.length; i++) {
+      uint256 layerAmount = batchAmount[i];
+      // execute hop
+      _exeHop(layerAmount, requests[i], layers[i], pmmRequests[i+1], pmmSignatures[i+1]);
+    }
+
+    // 6. transfer tokens to user
+    _transferChips(baseRequest);
+
+    // 7. check minReturnAmount
+    returnAmount = _checkReturnAmountAndEmitEvent(returnAmount, msg.sender, localBaseRequest);
   }
+
 }
