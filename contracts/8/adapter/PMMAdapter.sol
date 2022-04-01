@@ -110,7 +110,7 @@ contract PMMAdapter is Ownable, EIP712("METAX PMM Adapter", "1.0") {
 
     }
 
-    function cancelQuotes(bytes32[] digest, bytes[] memory signature) external returns(bool[]) {
+    function cancelQuotes(bytes32[] memory digest, bytes[] memory signature) external returns(bool[] memory) {
         require(digest.length == signature.length, "PMM Adapter: length not match");
         bool[] memory result = new bool[] (digest.length);
         for (uint256 i = 0; i < digest.length; i++){
