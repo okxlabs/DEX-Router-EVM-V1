@@ -3,7 +3,7 @@ const { dexRouter } = require("../../deployed/oec/base");
 require("../../tools");
 const { getConfig } = require("../../config");
 tokenConfig = getConfig("eth")
-const FOREVER = '2000000000';
+const { initDexRouter, direction, FOREVER } = require("./utils")
 
 async function executeWETH2AAVE() {
 
@@ -38,7 +38,7 @@ async function executeWETH2AAVE() {
   const minReturnAmount = 0;
   const deadLine = FOREVER;
 
-  console.log("before WETH Balance: " + await WETH.balanceOf(balancerAdapter.address));
+  console.log("before WETH Balance: " + await WETH.balanceOf(account.address));
   console.log("before AAVE Balance: " + await AAVE.balanceOf(account.address));
 
   // node1
@@ -95,35 +95,6 @@ async function executeWETH2AAVE() {
 
 async function main() {
   await executeWETH2AAVE();
-}
-
-async function initDexRouter(WETH9) {
-
-  TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
-  tokenApproveProxy = await TokenApproveProxy.deploy();
-  await tokenApproveProxy.initialize();
-  await tokenApproveProxy.deployed();
-
-  TokenApprove = await ethers.getContractFactory("TokenApprove");
-  tokenApprove = await TokenApprove.deploy();
-  await tokenApprove.initialize(tokenApproveProxy.address);
-  await tokenApprove.deployed();
-
-  DexRouter = await ethers.getContractFactory("DexRouter");
-  const dexRouter = await upgrades.deployProxy(
-    DexRouter
-  )
-  await dexRouter.deployed();
-  await dexRouter.setApproveProxy(tokenApproveProxy.address);
-
-  await tokenApproveProxy.addProxy(dexRouter.address);
-  await tokenApproveProxy.setTokenApprove(tokenApprove.address);
-
-  return { dexRouter, tokenApprove }
-}
-
-const direction = function(token0, token1) {
-  return token0 > token1 ? 0 : 8;
 }
 
 main()
