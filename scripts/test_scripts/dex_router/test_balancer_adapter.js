@@ -1,5 +1,4 @@
 const { ethers } = require("hardhat");
-const { dexRouter } = require("../../deployed/oec/base");
 require("../../tools");
 const { getConfig } = require("../../config");
 tokenConfig = getConfig("eth")
@@ -37,7 +36,7 @@ async function executeWETH2AAVE() {
   const fromTokenAmount = ethers.utils.parseEther('3.5');
   const minReturnAmount = 0;
   const deadLine = FOREVER;
-
+  const balancerPoolAddr = "0xc697051d1c6296c24ae3bcef39aca743861d9a81"; // AAVE-WETH Pool
   console.log("before WETH Balance: " + await WETH.balanceOf(account.address));
   console.log("before AAVE Balance: " + await AAVE.balanceOf(account.address));
 
@@ -58,7 +57,7 @@ async function executeWETH2AAVE() {
     direction(tokenConfig.tokens.AAVE.baseTokenAddress, tokenConfig.tokens.AAVE.baseTokenAddress) + 
     "0000000000000000000" + 
     weight1 + 
-    "0xc697051d1c6296c24ae3bcef39aca743861d9a81".replace("0x", "")  // AAVE-WETH Pool
+    balancerPoolAddr.replace("0x", "")  // AAVE-WETH Pool
   ];
   const moreInfo = ethers.utils.defaultAbiCoder.encode(
     ["address", "address"],
