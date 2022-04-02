@@ -78,7 +78,7 @@ contract UnxswapRouter is EthReceiver, Permitable {
   // BSC:   d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98
   // OEC:   d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98
   // LOCAL: D49a0e9A4CD5979aE36840f542D2d7f02C4817Be
-  uint256 public constant _WNATIVE_RELAY_32 = 0x00000000000000000000000005703B683c7F928b721CA95Da988d73a3299d4757;
+  uint256 public constant _WNATIVE_RELAY_32 = 0x0000000000000000000000005703B683c7F928b721CA95Da988d73a3299d4757;
 
   event OrderRecord(address fromToken, address toToken, address sender, uint256 fromAmount, uint256 returnAmount);
 
