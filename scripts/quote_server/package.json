@@ -1,0 +1,21 @@
+{
+  "name": "mmq",
+  "version": "1.0.0",
+  "description": "",
+  "main": "mmQuote.js",
+  "scripts": {
+    "test": "mocha test/**/*.test.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "ethereumjs-util": "^7.1.4",
+    "hardhat": "^2.9.2",
+    "nodemon": "^2.0.15",
+    "web3": "^1.7.1"
+  },
+  "devDependencies": {
+    "mocha": "^9.2.2"
+  }
+}
