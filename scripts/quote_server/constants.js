@@ -1,8 +1,9 @@
 // account who pays the making assets
-const PAYER = '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC';
+const PAYER = '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC'; // third account of hardhat network
 
 // private key of the account who sign the quotes
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
+// const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const PRIVATE_KEY = '5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a'; // third account of hardhat network
 
 // valid period of quotes for pulling rfq
 const RFQ_VALID_PERIOD = 60;
