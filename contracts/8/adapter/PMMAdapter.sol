@@ -149,8 +149,13 @@ contract PMMAdapter is Ownable, EIP712("METAX PMM Adapter", "1.0") {
         PMMSwapRequest memory request,
         bytes memory signature
     ) external onlyRouter returns(bool) { // TODO After this, Router transfer fromTokenAmount to payer
-        bytes32 digest = _hashTypedDataV4(hashOrder(request));
+        
+        bytes32 hashed = hashOrder(request);
         console.log("1");
+        console.logBytes32(hashed);
+        bytes32 digest = _hashTypedDataV4(hashed);
+        console.log("121");
+        console.logBytes32(digest);
         if (!validateSig(digest, request.payer, signature)) {
             return false;
         }
@@ -194,42 +199,44 @@ contract PMMAdapter is Ownable, EIP712("METAX PMM Adapter", "1.0") {
     /// @return structHash The struct hash of the order.
     function hashOrder(PMMSwapRequest memory order)
         internal
-        pure
+        view
         returns (bytes32 structHash)
     {
-        // The struct hash is:
-        // keccak256(abi.encode(
+        // bytes memory abiEncoded = abi.encode(
         //   _ORDER_TYPEHASH,
+        //   order.pathIndex,
         //   order.payer,
         //   order.fromToken,
         //   order.toToken,
-        //   order.fromTokenAmount,
-        //   order.toTokenAmount,
+        //   order.fromTokenAmountMax,
+        //   order.toTokenAmountMax,
         //   order.salt,
         //   order.deadLine,
         //   order.isPushOrder
-        // ))
+        // );
         assembly {
             let mem := mload(0x40)
             mstore(mem, _ORDER_TYPEHASH)
-            // order.payer;
+            // order.pathIndex;
             mstore(add(mem, 0x20), and(ADDRESS_MASK, mload(order)))
-            // order.fromToken;
+            // order.payer;
             mstore(add(mem, 0x40), and(ADDRESS_MASK, mload(add(order, 0x20))))
-            // order.toToken;
+            // order.fromToken;
             mstore(add(mem, 0x60), and(ADDRESS_MASK, mload(add(order, 0x40))))
-            // order.fromTokenAmount;
+            // order.toToken;
             mstore(add(mem, 0x80), mload(add(order, 0x60)))
-            // order.toTokenAmount;
+            // order.fromTokenAmountMax;
             mstore(add(mem, 0xA0), mload(add(order, 0x80)))
-            // order.salt;
+            // order.toTokenAmountMax;
             mstore(add(mem, 0xC0), mload(add(order, 0xA0)))
-            // order.deadLine;
+            // order.salt;
             mstore(add(mem, 0xE0), mload(add(order, 0xC0)))
-            // order.isPushOrder;
+            // order.deadLine;
             mstore(add(mem, 0x100), mload(add(order, 0xE0)))
+            // order.isPushOrder;
+            mstore(add(mem, 0x120), mload(add(order, 0x100)))
 
-            structHash := keccak256(mem, 0x120)
+            structHash := keccak256(mem, 0x140)
         }
     }
 
@@ -239,6 +246,7 @@ contract PMMAdapter is Ownable, EIP712("METAX PMM Adapter", "1.0") {
         bytes memory signature
     ) internal view returns (bool) {
         address signatureAddress = ECDSA.recover(digest, signature);
+        console.log("signatureAddress", signatureAddress);
         if (signatureAddress == payer || signatureAddress == operator[payer]) {
             return true;
         }

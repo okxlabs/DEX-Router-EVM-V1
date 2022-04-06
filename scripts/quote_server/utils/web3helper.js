@@ -65,6 +65,7 @@ var abiEncodeMessage = function(obj){
             "isPushOrder" : obj.isPushOrder   
         }
     );
+    console.log("abiEncodedMessage",abiEncodedMessage);
     return abiEncodedMessage;
 }
 

@@ -35,8 +35,8 @@ const NAME_HASH = '0xb62baa298dba2097375700cb4111f22d2780f2b74a67bd22ae424889eea
 // keccak256("1.0")
 const VERSION_HASH = '0xe6bbd6277e1bf288eed5e8d1780f9a50b239e86b153736bceebccf4ea79d90b3';
 
-// keccak256("SwapRequest(address payer,address fromToken,address toToken,uint256 fromTokenAmount,uint256 toTokenAmount,bytes32 salt,uint256 deadLine)")
-const ORDER_TYPEHASH = '0xe1fce3a3913fd90b2538674cd4e405e3960199c2869b49f61f7e532cb3f7fce0';
+// keccak256("PMMSwapRequest(address payer,address fromToken,address toToken,uint256 fromTokenAmount,uint256 toTokenAmount,uint256 salt,uint256 deadLine,bool isPushOrder)")
+const ORDER_TYPEHASH = '0x4a40b70e4ae0155dd898ee90c3175d87bc1fa4f090f96b782f2cfc670bc98f8c';
 
 // path index of pushing quotes
 const PUSH_QUOTE_PATH_INDEX = 0;

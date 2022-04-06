@@ -86,7 +86,9 @@ var getPushInfosToBeSigned = function (push_data){
 var singleQuote = function (domain_separator, infosToBeSigned){
     try{
         let hashOrder = keccak256(abiEncodeMessage(infosToBeSigned));
+        console.log("hashOrder", hashOrder);
         let hash = hashToSign(domain_separator, hashOrder);
+        console.log("digest",hash);
         let signature = sign(hash);
         let quote = {
             "infos":{
