@@ -1,10 +1,10 @@
 /// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-
-interface IPMMAdapter{
+interface IMarketMaker{
 
   struct PMMSwapRequest {
+    uint256 pathIndex;
     address payer;
     address fromToken;
     address toToken;
@@ -14,11 +14,11 @@ interface IPMMAdapter{
     uint256 deadLine;
     bool    isPushOrder;
   }
-    
-    function swap(
-        address to,                 
-        uint256 actualAmountRequest,  
-        PMMSwapRequest memory pmmRequest,
-        bytes memory signature
-    ) external returns(bool);
+
+  function swap(
+      address to,                 
+      uint256 actualAmountRequest,  
+      PMMSwapRequest memory pmmRequest,
+      bytes memory signature
+  ) external returns(bool);
 }
