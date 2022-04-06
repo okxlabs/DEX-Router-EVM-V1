@@ -11,7 +11,7 @@ import "./UnxswapRouter.sol";
 import "./interfaces/IWETH.sol";
 import "./interfaces/IAdapter.sol";
 import "./interfaces/IApproveProxy.sol";
-import "./interfaces/IPMMAdapter.sol";
+import "./interfaces/IMarketMaker.sol";
 
 /// @title DexRouter
 /// @notice Entrance of Split trading in Dex platform
@@ -107,31 +107,31 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     uint256 layerAmount,
     SwapRequest[] calldata request,
     RouterPath[] calldata layer,
-    IPMMAdapter.PMMSwapRequest[] calldata pmmRequest,
+    IMarketMaker.PMMSwapRequest[] calldata pmmRequest,
     bytes[] calldata pmmSignature
   ) internal {
     // 1. try to replace this hop by pmm
-    if (_tryPmmSwap(address(this), layerAmount, pmmRequest[0], pmmSignature[0])){
+    if (_tryPmmSwap(address(this), layerAmount, pmmRequest[0], pmmSignature[0])) {
         return;
     }
 
     // 2. if this hop is a single swap
-    if (layer.length == 1){
+    if (layer.length == 1) {
         _exeForks(layerAmount, request[0], layer[0]);
         return;
     }
 
     // 3. execute forks
     for (uint256 i = 0; i < layer.length; i++) {
-      if (i >0){
+      if (i > 0) {
         layerAmount = IERC20(pmmRequest[i+1].fromToken).universalBalanceOf(address(this));
       }
 
       // 3.1 try to replace this fork by pmm
-      if(_tryPmmSwap(address(this), layerAmount, pmmRequest[i+1], pmmSignature[i+1])){  
-          continue;
-        }
-        
+      if(_tryPmmSwap(address(this), layerAmount, pmmRequest[i+1], pmmSignature[i+1])) {  
+        continue;
+      }
+
       // 3.2 execute forks
       _exeForks(layerAmount, request[i], layer[i]);
     }
@@ -172,7 +172,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
         }
       } else {
         uint256 bal = IERC20(token).balanceOf(address(this));
-        if (bal > 0){
+        if (bal > 0) {
           SafeERC20.safeTransfer(
             IERC20(token),
             msg.sender,
@@ -182,15 +182,20 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       }
   }
 
-  function _tryPmmSwap(address to, uint256 actualRequest, IPMMAdapter.PMMSwapRequest memory pmmRequest, bytes memory signature) internal returns (bool){
-    if (pmmRequest.fromTokenAmountMax >= actualRequest){
-      if (IPMMAdapter(pmmAdapter).swap(
+  function _tryPmmSwap(
+    address to, 
+    uint256 actualRequest, 
+    IMarketMaker.PMMSwapRequest memory pmmRequest, 
+    bytes memory signature
+  ) internal returns (bool) {
+    if (pmmRequest.fromTokenAmountMax >= actualRequest) {
+      if (IMarketMaker(pmmAdapter).swap(
         to, 
         actualRequest, 
         pmmRequest, 
         signature
-      )){  
-          //transfer user's assets to maker
+      )) {
+          // transfer user's assets to maker
           SafeERC20.safeTransfer(IERC20(pmmRequest.fromToken), pmmRequest.payer, actualRequest);
 
           return true;
@@ -236,7 +241,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     uint256[] calldata batchAmount,
     SwapRequest[][] calldata requests,
     RouterPath[][] calldata layers,
-    IPMMAdapter.PMMSwapRequest[][] calldata pmmRequests,
+    IMarketMaker.PMMSwapRequest[][] calldata pmmRequests,
     bytes[][] calldata pmmSignatures
   ) external payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) {
     // 1. transfer from token in
@@ -259,9 +264,9 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     if (_tryPmmSwap(
         msg.sender, 
         localBaseRequest.fromTokenAmount, 
-        pmmRequests[0][0], 
+        pmmRequests[0][0],
         pmmSignatures[0][0]
-    )){
+    )) {
       // 3.1 transfer chips to user
       _transferTokenToUser(localBaseRequest.fromToken);
       returnAmount = _checkReturnAmountAndEmitEvent(returnAmount, msg.sender, localBaseRequest);
@@ -270,7 +275,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     }
 
     // 4. the situation that the whole swap is a single swap
-    if (layers.length == 1 && layers[0].length == 1){
+    if (layers.length == 1 && layers[0].length == 1) {
         // 4.1 excute fork
         _exeForks(baseRequest.fromTokenAmount, requests[0][0], layers[0][0]);
 
