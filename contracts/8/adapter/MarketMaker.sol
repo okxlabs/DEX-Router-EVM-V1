@@ -7,10 +7,12 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 
 import "../libraries/SafeERC20.sol";
-/// @title PMM Adapter
+import "../interfaces/IApproveProxy.sol";
+
+/// @title MarketMaker
 /// @notice Explain to an end user what this does
 /// @dev Explain to a developer any extra detailsq
-contract PMMAdapter is Ownable, EIP712("METAX PMM Adapter", "1.0") {
+contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
     using SafeERC20 for IERC20;
     // ============ Storage ============
     // keccak256("PMMSwapRequest(address payer,address fromToken,address toToken,uint256 fromTokenAmount,uint256 toTokenAmount,uint256 salt,uint256 deadLine,bool isPushOrder)")
@@ -19,15 +21,27 @@ contract PMMAdapter is Ownable, EIP712("METAX PMM Adapter", "1.0") {
 //    uint256 private constant UINT_128_MASK = (1 << 128) - 1;
 //    uint256 private constant UINT_64_MASK = (1 << 64) - 1;
     uint256 private constant ADDRESS_MASK = (1 << 160) - 1;         
-    uint256 private constant VALID_PERIOD_MAX = 3600;
+    uint256 private constant VALID_PERIOD_MIN = 3600;
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address immutable WETH;
 
     mapping(address => address) public operator;
     mapping(bytes32 => OrderStatus) public orderStatus;
+    address public approveProxy;
     address public router;
     address public feeTo;
     uint256 public feeRate;
+
+    enum ERROR{
+        NO_ERROR,
+        INVALID_SIGNATURE,
+        QUOTE_EXPIRED,
+        REQUEST_TOO_MUCH,
+        ORDER_CANCELLED_OR_FINALIZED,
+        REMAINING_AMOUNT_NOT_ENOUGH,
+        FAIL_TO_CLAIM_TOKEN
+    }
+
 
     // ============ Struct ============
 
@@ -102,6 +116,10 @@ contract PMMAdapter is Ownable, EIP712("METAX PMM Adapter", "1.0") {
 
     }
 
+    function setApproveProxy(address newApproveProxy) external onlyOwner {
+        approveProxy = newApproveProxy;
+    }
+
     // ============ External ============
 
     function setOperator(address _operator) external {          
@@ -110,13 +128,17 @@ contract PMMAdapter is Ownable, EIP712("METAX PMM Adapter", "1.0") {
 
     }
 
-    function cancelQuotes(bytes32[] memory digest, bytes[] memory signature) external returns(bool[] memory) {
-        require(digest.length == signature.length, "PMM Adapter: length not match");
-        bool[] memory result = new bool[] (digest.length);
-        for (uint256 i = 0; i < digest.length; i++){
-            if (validateSig(digest[i], msg.sender, signature[i])) {
-                orderStatus[digest[i]].cancelledOrFinalized = true;
-                emit CancelOrder(msg.sender, digest[i]);
+    function cancelQuotes(PMMSwapRequest[] memory request, bytes[] memory signature) external returns(bool[] memory) {
+        require(request.length == signature.length, "PMM Adapter: length not match");
+        bool[] memory result = new bool[] (request.length);
+        for (uint256 i = 0; i < request.length; i++){
+            if (block.timestamp < request[i].salt + VALID_PERIOD_MIN){
+                continue;
+            }
+            bytes32 digest = _hashTypedDataV4(hashOrder(request[i]));
+            if (validateSig(digest, msg.sender, signature[i])) {
+                orderStatus[digest].cancelledOrFinalized = true;
+                emit CancelOrder(msg.sender, digest);
                 result[i] = true;
             }
         }
@@ -142,16 +164,16 @@ contract PMMAdapter is Ownable, EIP712("METAX PMM Adapter", "1.0") {
         uint256 actualAmountRequest,                   
         PMMSwapRequest memory request,
         bytes memory signature
-    ) external onlyRouter returns(bool) { // TODO After this, Router transfer fromTokenAmount to payer
+    ) external onlyRouter returns(uint256) { // TODO After this, Router transfer fromTokenAmount to payer
 
         bytes32 digest = _hashTypedDataV4(hashOrder(request));
 
         if (!validateSig(digest, request.payer, signature)) {
-            return false;
+            return uint256(ERROR.INVALID_SIGNATURE);
         }
-
-        if (!updateOrder(digest, actualAmountRequest, request)){
-            return false;
+        uint256 errorCode = updateOrder(digest, actualAmountRequest, request);
+        if (errorCode > 0){
+            return errorCode;
         }
 
         // get transfer Amount and Token Address  
@@ -162,7 +184,7 @@ contract PMMAdapter is Ownable, EIP712("METAX PMM Adapter", "1.0") {
         }
         
         // transfer maker's funds to "to"
-        try token.transferFrom(request.payer, address(this), amount) {
+        try IApproveProxy(approveProxy).claimTokens(address(token), request.payer, address(this), amount) {
             if (feeTo != address(0) && feeRate != 0) {
                 uint256 fee = amount * feeRate / 10000;
                 token.safeTransfer(feeTo, fee);
@@ -172,9 +194,9 @@ contract PMMAdapter is Ownable, EIP712("METAX PMM Adapter", "1.0") {
 
             emit Swap(request.payer, request.fromToken, request.toToken, actualAmountRequest, amount);
 
-            return true;
+            return uint256(ERROR.NO_ERROR);
         } catch {
-            return false;
+            return uint256(ERROR.FAIL_TO_CLAIM_TOKEN);
         }
 
     }
@@ -242,25 +264,25 @@ contract PMMAdapter is Ownable, EIP712("METAX PMM Adapter", "1.0") {
         bytes32 digest, 
         uint256 actualAmountRequest,
         PMMSwapRequest memory order
-    ) internal returns (bool) {
-        if (order.deadLine < block.timestamp || order.salt + VALID_PERIOD_MAX < block.timestamp) {     
-            return false;
+    ) internal returns (uint256) {
+        if (order.deadLine < block.timestamp) {     
+            return uint256(ERROR.QUOTE_EXPIRED);
         }
 
         if (actualAmountRequest > order.fromTokenAmountMax){
-            return false;
+            return uint256(ERROR.REQUEST_TOO_MUCH);
         }
 
         OrderStatus storage status = orderStatus[digest];
         // in case of canceled or finalized order
         if (status.cancelledOrFinalized) {
-            return false;
+            return uint256(ERROR.ORDER_CANCELLED_OR_FINALIZED);
         }
 
         // in case of pull order
         if (!order.isPushOrder) {
             status.cancelledOrFinalized = true;
-            return true;
+            return uint256(ERROR.NO_ERROR);
         }
 
         // in case of push order
@@ -269,11 +291,11 @@ contract PMMAdapter is Ownable, EIP712("METAX PMM Adapter", "1.0") {
             status.fromTokenAmountMax = order.fromTokenAmountMax;
         }
         if (status.fromTokenAmountUsed + actualAmountRequest > order.fromTokenAmountMax){
-            return false;
+            return uint256(ERROR.REMAINING_AMOUNT_NOT_ENOUGH);
         }
         status.fromTokenAmountUsed += actualAmountRequest;
         
-        return true;
+        return uint256(ERROR.NO_ERROR);
     }
 
 }
