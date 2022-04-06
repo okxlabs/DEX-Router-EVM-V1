@@ -70,7 +70,7 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
     event ChangeFeeConfig(address indexed sender, address newFeeTo, uint256 newFeeRate);
     event ChangeOperator(address indexed payer, address operator);
     event CancelOrder(address indexed sender, bytes32 orderHash);
-    event Swap(address indexed payer, address fromToken, address toToken, uint256 fromAmount, uint256 toAmount);
+    event Swap(uint256 indexed pathIndex, address payer, address fromToken, address toToken, uint256 fromAmount, uint256 toAmount);
 
     constructor (
         address _weth,
@@ -91,7 +91,7 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
 
     // ============ Modifier ============
 
-    modifier onlyRouter() {
+    modifier onlyPMMAdapter() {
         require(msg.sender == router, "OR!");
         _;
     }
@@ -162,7 +162,7 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
         uint256 actualAmountRequest,                   
         PMMSwapRequest memory request,
         bytes memory signature
-    ) external onlyRouter returns(uint256) { // TODO After this, Router transfer fromTokenAmount to payer
+    ) external onlyPMMAdapter returns(uint256) { // TODO After this, Router transfer fromTokenAmount to payer
 
         bytes32 digest = _hashTypedDataV4(hashOrder(request));
 
@@ -190,7 +190,7 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
             }
             token.safeTransfer(to, amount);                         
 
-            emit Swap(request.payer, request.fromToken, request.toToken, actualAmountRequest, amount);
+            emit Swap(request.pathIndex, request.payer, request.fromToken, request.toToken, actualAmountRequest, amount);
 
             return uint256(ERROR.NO_ERROR);
         } catch {
@@ -212,11 +212,12 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
         // The struct hash is:
         // keccak256(abi.encode(
         //   _ORDER_TYPEHASH,
+        //   order.pathIndex,
         //   order.payer,
         //   order.fromToken,
         //   order.toToken,
-        //   order.fromTokenAmount,
-        //   order.toTokenAmount,
+        //   order.fromTokenAmountMax,
+        //   order.toTokenAmountMax,
         //   order.salt,
         //   order.deadLine,
         //   order.isPushOrder
@@ -226,22 +227,24 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
             mstore(mem, _ORDER_TYPEHASH)
             // order.payer;
             mstore(add(mem, 0x20), and(ADDRESS_MASK, mload(order)))
-            // order.fromToken;
+            // order.pathIndex;
             mstore(add(mem, 0x40), and(ADDRESS_MASK, mload(add(order, 0x20))))
-            // order.toToken;
+            // order.fromToken;
             mstore(add(mem, 0x60), and(ADDRESS_MASK, mload(add(order, 0x40))))
-            // order.fromTokenAmount;
+            // order.toToken;
             mstore(add(mem, 0x80), mload(add(order, 0x60)))
-            // order.toTokenAmount;
+            // order.fromTokenAmountMax;
             mstore(add(mem, 0xA0), mload(add(order, 0x80)))
-            // order.salt;
+            // order.toTokenAmountMax;
             mstore(add(mem, 0xC0), mload(add(order, 0xA0)))
-            // order.deadLine;
+            // order.salt;
             mstore(add(mem, 0xE0), mload(add(order, 0xC0)))
-            // order.isPushOrder;
+            // order.deadLine;
             mstore(add(mem, 0x100), mload(add(order, 0xE0)))
+            // order.isPushOrder;
+            mstore(add(mem, 0x120), mload(add(order, 0x100)))
 
-            structHash := keccak256(mem, 0x120)
+            structHash := keccak256(mem, 0x140)
         }
     }
 
