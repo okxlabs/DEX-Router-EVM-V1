@@ -6,7 +6,7 @@ const { initDexRouter, direction, FOREVER } = require("./utils")
 
 async function executeWETH2RND() {
 
-    await setForkBlockNumber(14446603);
+    await setForkBlockNumber(14480328);
 
     const accountAddress = "0x9199Cc44CF7850FE40081ea6F2b010Fee1088270";
     await startMockAccount([accountAddress]);
@@ -23,14 +23,14 @@ async function executeWETH2RND() {
 
     const { dexRouter, tokenApprove } = await initDexRouter(WETH.address);
 
-    UniV2Adapter = await ethers.getContractFactory("UniAdapter");
-    univ2Adapter = await UniV2Adapter.deploy();
-    await univ2Adapter.deployed();
+    UniV3Adapter = await ethers.getContractFactory("UniV3Adapter");
+    univ3Adapter = await UniV3Adapter.deploy(WETH.address);
+    await univ3Adapter.deployed();
 
-    const fromTokenAmount = ethers.utils.parseEther('0.0625');
+    const fromTokenAmount = ethers.utils.parseEther('0.27');
     const minReturnAmount = 0;
     const deadLine = FOREVER;
-    const uniV2PoolAddr = "0x5449bd1a97296125252db2d9cf23d5d6e30ca3c1"; // RND-WETH Pool
+    const uniV3PoolAddr = "0x96b0837489d046A4f5aA9ac2FC9e086bD14Bac1E"; // RND-WETH Pool
     console.log("before WETH Balance: " + await WETH.balanceOf(account.address));
     console.log("before RND Balance: " + await RND.balanceOf(account.address));
 
@@ -40,10 +40,10 @@ async function executeWETH2RND() {
         [fromTokenAmount]
     ];
     const mixAdapter1 = [
-        univ2Adapter.address
+        univ3Adapter.address
     ];
     const assertTo1 = [
-        uniV2PoolAddr
+        univ3Adapter.address
     ];
     const weight1 = Number(10000).toString(16).replace('0x', '');
     const rawData1 = [
@@ -51,9 +51,23 @@ async function executeWETH2RND() {
         direction(tokenConfig.tokens.WETH.baseTokenAddress, tokenConfig.tokens.RND.baseTokenAddress) +
         "0000000000000000000" +
         weight1 +
-        uniV2PoolAddr.replace("0x", "")  // RND-WETH Pool
+        uniV3PoolAddr.replace("0x", "")  // RND-WETH Pool
     ];
-    const moreInfo = "0x"
+    const moreInfo = ethers.utils.defaultAbiCoder.encode(
+        ["uint160", "bytes"],
+        [
+            // "888971540474059905480051",
+            0,
+            ethers.utils.defaultAbiCoder.encode(
+                ["address", "address", "uint24"],
+                [
+                    WETH.address,
+                    RND.address,
+                    10000
+                ]
+            )
+        ]
+    )
     const extraData1 = [moreInfo];
     const router1 = [mixAdapter1, assertTo1, rawData1, extraData1];
 
@@ -76,7 +90,7 @@ async function executeWETH2RND() {
         [layer1],
     );
 
-    console.log("after WETH Balance: " + await WETH.balanceOf(univ2Adapter.address));
+    console.log("after WETH Balance: " + await WETH.balanceOf(univ3Adapter.address));
     console.log("after RND Balance: " + await RND.balanceOf(account.address));
 }
 

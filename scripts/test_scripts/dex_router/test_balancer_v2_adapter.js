@@ -4,35 +4,40 @@ const { getConfig } = require("../../config");
 tokenConfig = getConfig("eth")
 const { initDexRouter, direction, FOREVER } = require("./utils")
 
-async function executeWETH2RND() {
+async function executeWETH2IPAL() {
 
-    await setForkBlockNumber(14446603);
+    await setForkBlockNumber(14436483);
 
-    const accountAddress = "0x9199Cc44CF7850FE40081ea6F2b010Fee1088270";
+    const accountAddress = "0x260edfea92898a3c918a80212e937e6033f8489e";
     await startMockAccount([accountAddress]);
     const account = await ethers.getSigner(accountAddress);
+
+    // set account balance 0.6 eth
+    await setBalance(accountAddress, "0x53444835ec580000");
 
     WETH = await ethers.getContractAt(
         "MockERC20",
         tokenConfig.tokens.WETH.baseTokenAddress
     )
-    RND = await ethers.getContractAt(
+    IPAL = await ethers.getContractAt(
         "MockERC20",
-        tokenConfig.tokens.RND.baseTokenAddress
+        tokenConfig.tokens.IPAL.baseTokenAddress
     )
+
+    const balancerVault = "0xBA12222222228d8Ba445958a75a0704d566BF2C8";
 
     const { dexRouter, tokenApprove } = await initDexRouter(WETH.address);
 
-    UniV2Adapter = await ethers.getContractFactory("UniAdapter");
-    univ2Adapter = await UniV2Adapter.deploy();
-    await univ2Adapter.deployed();
+    BalancerV2Adapter = await ethers.getContractFactory("BalancerV2Adapter");
+    balancerV2Adapter = await BalancerV2Adapter.deploy(balancerVault ,WETH.address);
+    await balancerV2Adapter.deployed();
 
-    const fromTokenAmount = ethers.utils.parseEther('0.0625');
+    const fromTokenAmount = ethers.utils.parseEther('3.5');
     const minReturnAmount = 0;
     const deadLine = FOREVER;
-    const uniV2PoolAddr = "0x5449bd1a97296125252db2d9cf23d5d6e30ca3c1"; // RND-WETH Pool
+    const balancerV2PoolAddr = balancerVault; // IPAL-WETH Pool
     console.log("before WETH Balance: " + await WETH.balanceOf(account.address));
-    console.log("before RND Balance: " + await RND.balanceOf(account.address));
+    console.log("before IPAL Balance: " + await IPAL.balanceOf(account.address));
 
     // node1
     const requestParam1 = [
@@ -40,20 +45,27 @@ async function executeWETH2RND() {
         [fromTokenAmount]
     ];
     const mixAdapter1 = [
-        univ2Adapter.address
+        balancerV2Adapter.address
     ];
     const assertTo1 = [
-        uniV2PoolAddr
+        balancerV2Adapter.address
     ];
     const weight1 = Number(10000).toString(16).replace('0x', '');
     const rawData1 = [
         "0x" +
-        direction(tokenConfig.tokens.WETH.baseTokenAddress, tokenConfig.tokens.RND.baseTokenAddress) +
+        direction(tokenConfig.tokens.WETH.baseTokenAddress, tokenConfig.tokens.IPAL.baseTokenAddress) +
         "0000000000000000000" +
         weight1 +
-        uniV2PoolAddr.replace("0x", "")  // RND-WETH Pool
+        balancerV2PoolAddr.replace("0x", "")  // IPAL-WETH Pool
     ];
-    const moreInfo = "0x"
+    const moreInfo = ethers.utils.defaultAbiCoder.encode(
+        ["address", "address", "bytes32"],
+        [
+            WETH.address,                               // from token address
+            IPAL.address,                               // to token address
+            "0x54b7d8cbb8057c5990ed5a7a94febee61d6b583700020000000000000000016f"  // pool id
+        ]
+    )
     const extraData1 = [moreInfo];
     const router1 = [mixAdapter1, assertTo1, rawData1, extraData1];
 
@@ -63,7 +75,7 @@ async function executeWETH2RND() {
 
     const baseRequest = [
         WETH.address,
-        RND.address,
+        IPAL.address,
         fromTokenAmount,
         minReturnAmount,
         deadLine,
@@ -76,12 +88,12 @@ async function executeWETH2RND() {
         [layer1],
     );
 
-    console.log("after WETH Balance: " + await WETH.balanceOf(univ2Adapter.address));
-    console.log("after RND Balance: " + await RND.balanceOf(account.address));
+    console.log("after WETH Balance: " + await WETH.balanceOf(balancerV2Adapter.address));
+    console.log("after IPAL Balance: " + await IPAL.balanceOf(account.address));
 }
 
 async function main() {
-    await executeWETH2RND();
+    await executeWETH2IPAL();
 }
 
 main()
