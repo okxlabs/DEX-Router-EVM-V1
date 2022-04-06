@@ -9,6 +9,14 @@ import "../libraries/SafeERC20.sol";
 
 contract PMMAdapter is IAdapterWithResult {
 
+    address public marketMaker;
+    address public tokenApprove;
+
+    constructor(address _marketMaker, address _tokenApprove) {
+        marketMaker = _marketMaker;
+        tokenApprove = _tokenApprove;
+    }
+
     function _pmmSwap(address to, address pool, bytes memory moreInfo) internal {
         (
             uint256 pathIndex,
@@ -25,7 +33,7 @@ contract PMMAdapter is IAdapterWithResult {
         uint256 sellAmount = IERC20(fromToken).balanceOf(address(this));
 
         // approve
-        SafeERC20.safeApprove(IERC20(fromToken),  pool, sellAmount);
+        SafeERC20.safeApprove(IERC20(fromToken),  tokenApprove, sellAmount);
 
         // uint256 pathIndex;
         // address payer;
@@ -47,7 +55,7 @@ contract PMMAdapter is IAdapterWithResult {
         request.deadLine = dealline;
         request.isPushOrder = isPushOrder;
 
-        IMarketMaker(pool).swap(
+        IMarketMaker(marketMaker).swap(
             address(this), sellAmount, request, signature
         );
 
