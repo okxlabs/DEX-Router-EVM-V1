@@ -6,20 +6,22 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 
-import "../libraries/SafeERC20.sol";
-import "../interfaces/IApproveProxy.sol";
+import "./libraries/SafeERC20.sol";
+import "./interfaces/IApproveProxy.sol";
 
 /// @title MarketMaker
 /// @notice Explain to an end user what this does
 /// @dev Explain to a developer any extra detailsq
 contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
     using SafeERC20 for IERC20;
+
     // ============ Storage ============
     // keccak256("PMMSwapRequest(address payer,address fromToken,address toToken,uint256 fromTokenAmount,uint256 toTokenAmount,uint256 salt,uint256 deadLine,bool isPushOrder)")
     bytes32 private constant _ORDER_TYPEHASH = 0x4a40b70e4ae0155dd898ee90c3175d87bc1fa4f090f96b782f2cfc670bc98f8c;
-            
+
 //    uint256 private constant UINT_128_MASK = (1 << 128) - 1;
 //    uint256 private constant UINT_64_MASK = (1 << 64) - 1;
+
     uint256 private constant ADDRESS_MASK = (1 << 160) - 1;         
     uint256 private constant VALID_PERIOD_MIN = 3600;
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -32,7 +34,7 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
     address public feeTo;
     uint256 public feeRate;
 
-    enum ERROR{
+    enum ERROR {
         NO_ERROR,
         INVALID_SIGNATURE,
         QUOTE_EXPIRED,
@@ -41,7 +43,6 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
         REMAINING_AMOUNT_NOT_ENOUGH,
         FAIL_TO_CLAIM_TOKEN
     }
-
 
     // ============ Struct ============
 
@@ -57,7 +58,7 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
         bool    isPushOrder;
     }
 
-    struct OrderStatus{
+    struct OrderStatus {
         uint256 fromTokenAmountMax;
         uint256 fromTokenAmountUsed;
         bool cancelledOrFinalized;
@@ -71,8 +72,7 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
     event CancelOrder(address indexed sender, bytes32 orderHash);
     event Swap(address indexed payer, address fromToken, address toToken, uint256 fromAmount, uint256 toAmount);
 
-
-    constructor (                               
+    constructor (
         address _weth,
         address _router,
         address _feeTo,
@@ -106,14 +106,13 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
 
     }
 
-    function feeConfig(address _feeTo, uint256 _feeRate) external onlyOwner {       
+    function feeConfig(address _feeTo, uint256 _feeRate) external onlyOwner {
         require(_feeTo != address(0), "Wrong Address!");
         require(_feeRate <= 100, 'fee Rate cannot exceed 1%');
         feeTo = _feeTo;
         feeRate = _feeRate;
 
         emit ChangeFeeConfig(msg.sender, feeTo, feeRate);
-
     }
 
     function setApproveProxy(address newApproveProxy) external onlyOwner {
@@ -122,17 +121,16 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
 
     // ============ External ============
 
-    function setOperator(address _operator) external {          
+    function setOperator(address _operator) external {
         operator[msg.sender] = _operator;
         emit ChangeOperator(msg.sender, _operator);
-
     }
 
     function cancelQuotes(PMMSwapRequest[] memory request, bytes[] memory signature) external returns(bool[] memory) {
         require(request.length == signature.length, "PMM Adapter: length not match");
         bool[] memory result = new bool[] (request.length);
-        for (uint256 i = 0; i < request.length; i++){
-            if (block.timestamp < request[i].salt + VALID_PERIOD_MIN){
+        for (uint256 i = 0; i < request.length; i++) {
+            if (block.timestamp < request[i].salt + VALID_PERIOD_MIN) {
                 continue;
             }
             bytes32 digest = _hashTypedDataV4(hashOrder(request[i]));
@@ -145,7 +143,7 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
         return result;
     }
 
-    function queryOrderStatus(bytes32[] calldata digests) external view returns (OrderStatus[] memory){
+    function queryOrderStatus(bytes32[] calldata digests) external view returns (OrderStatus[] memory) {
         uint256 len = digests.length;
         OrderStatus[] memory status = new OrderStatus[](len);
         for (uint256 i = 0; i < len; i++){
@@ -154,7 +152,7 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
         return status;
     }
 
-    function getDomainSeparator() external view returns (bytes32){
+    function getDomainSeparator() external view returns (bytes32) {
       return _domainSeparatorV4();
     }
 
@@ -172,14 +170,14 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
             return uint256(ERROR.INVALID_SIGNATURE);
         }
         uint256 errorCode = updateOrder(digest, actualAmountRequest, request);
-        if (errorCode > 0){
+        if (errorCode > 0) {
             return errorCode;
         }
 
         // get transfer Amount and Token Address  
         uint256 amount = actualAmountRequest * request.toTokenAmountMax / request.fromTokenAmountMax;
         IERC20 token = IERC20(request.toToken);
-        if (request.toToken == ETH_ADDRESS) {       
+        if (request.toToken == ETH_ADDRESS) {
             token = IERC20(WETH);
         }
         
@@ -198,7 +196,6 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
         } catch {
             return uint256(ERROR.FAIL_TO_CLAIM_TOKEN);
         }
-
     }
     
 
