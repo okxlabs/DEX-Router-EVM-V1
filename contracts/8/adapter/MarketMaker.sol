@@ -128,13 +128,17 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
 
     }
 
-    function cancelQuotes(bytes32[] memory digest, bytes[] memory signature) external returns(bool[] memory) {
-        require(digest.length == signature.length, "PMM Adapter: length not match");
-        bool[] memory result = new bool[] (digest.length);
-        for (uint256 i = 0; i < digest.length; i++){
-            if (validateSig(digest[i], msg.sender, signature[i])) {
-                orderStatus[digest[i]].cancelledOrFinalized = true;
-                emit CancelOrder(msg.sender, digest[i]);
+    function cancelQuotes(PMMSwapRequest[] memory request, bytes[] memory signature) external returns(bool[] memory) {
+        require(request.length == signature.length, "PMM Adapter: length not match");
+        bool[] memory result = new bool[] (request.length);
+        for (uint256 i = 0; i < request.length; i++){
+            if (block.timestamp < request[i].salt + VALID_PERIOD_MIN){
+                continue;
+            }
+            bytes32 digest = _hashTypedDataV4(hashOrder(request[i]));
+            if (validateSig(digest, msg.sender, signature[i])) {
+                orderStatus[digest].cancelledOrFinalized = true;
+                emit CancelOrder(msg.sender, digest);
                 result[i] = true;
             }
         }
