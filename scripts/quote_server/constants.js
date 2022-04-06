@@ -1,8 +1,8 @@
 // account who pays the making assets
-const PAYER = '0x488aa52C39A4ED0291F50C147886221322DbEB68';
+const PAYER = '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC';
 
 // private key of the account who sign the quotes
-const PRIVATE_KEY = 'f9adc1675174d7723ab15dd3e7b427af0030e0a16d1a0baa5b9ba206610ad8fb';
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
 
 // valid period of quotes for pulling rfq
 const RFQ_VALID_PERIOD = 60;
@@ -10,7 +10,8 @@ const RFQ_VALID_PERIOD = 60;
 // chain_id => adapter_address
 const ADAPTER_ADDRESS = {
     1:'0x488aa52C39A4ED0291F50C147886221322DbEB68',
-    56:'0x488aa52C39A4ED0291F50C147886221322DbEB68'
+    56:'0x488aa52C39A4ED0291F50C147886221322DbEB68',
+    31337:'0x8A791620dd6260079BF849Dc5567aDC3F2FdC318'
 }
 
 

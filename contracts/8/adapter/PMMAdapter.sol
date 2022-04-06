@@ -7,6 +7,8 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 
 import "../libraries/SafeERC20.sol";
+import "hardhat/console.sol";
+
 /// @title PMM Adapter
 /// @notice Explain to an end user what this does
 /// @dev Explain to a developer any extra detailsq
@@ -147,16 +149,17 @@ contract PMMAdapter is Ownable, EIP712("METAX PMM Adapter", "1.0") {
         PMMSwapRequest memory request,
         bytes memory signature
     ) external onlyRouter returns(bool) { // TODO After this, Router transfer fromTokenAmount to payer
-
         bytes32 digest = _hashTypedDataV4(hashOrder(request));
-
+        console.log("1");
         if (!validateSig(digest, request.payer, signature)) {
             return false;
         }
+        console.log("2");
 
         if (!updateOrder(digest, actualAmountRequest, request)){
             return false;
         }
+        console.log("3");
 
         // get transfer Amount and Token Address  
         uint256 amount = actualAmountRequest * request.toTokenAmountMax / request.fromTokenAmountMax;

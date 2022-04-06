@@ -36,7 +36,7 @@ var abiEncodeDomainSeparator = function(chain_id, adapter_address){
 
 // object => string
 var abiEncodeMessage = function(obj){
-    console.log("obj", obj);
+    // console.log("obj", obj);
     let abiEncodedMessage = web3.eth.abi.encodeParameter(
         {
             "" : {
@@ -84,7 +84,7 @@ var sign = function (digest){
     // r = '0x' + r.toString('hex');
     // s = '0x' + s.toString('hex');
     signature ='0x' + r.toString('hex') + s.toString('hex') + parseInt(v).toString(16);
-    console.log("signature",signature);
+    // console.log("signature",signature);
     return signature;
 }
 
