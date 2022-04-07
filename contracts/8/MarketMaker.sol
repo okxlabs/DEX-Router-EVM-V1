@@ -81,7 +81,7 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
         require(_weth !=  address(0), "Wrong Address!");
         require(_pmmAdapter !=  address(0), "Wrong Address!");
         require(_feeTo != address(0), "Wrong Address!");
-        require(_feeRate <= 100, 'fee Rate cannot exceed 1%');
+        require(_feeRate <= 100, "fee Rate cannot exceed 1%");
         require(_ORDER_TYPEHASH == keccak256("PMMSwapRequest(address payer,address fromToken,address toToken,uint256 fromTokenAmount,uint256 toTokenAmount,uint256 salt,uint256 deadLine,bool isPushOrder)"), "Wrong _ORDER_TYPEHASH");
         WETH = _weth;
         pmmAdapter = _pmmAdapter;
