@@ -19,6 +19,8 @@ import "./interfaces/IMarketMaker.sol";
 contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   using UniversalERC20 for IERC20;
 
+  address public approveProxy;
+
   struct BaseRequest {
     address fromToken;
     address toToken;
@@ -47,9 +49,6 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   //-------------------------------
   //------- Events ----------------
   //-------------------------------
-
-  // event OrderRecord(address fromToken, address toToken, address sender, uint256 fromAmount, uint256 returnAmount);
-  // event PMMOrderRecord(address fromToken, address toToken, address sender, uint256 fromAmount, uint256 returnAmount);
 
   //-------------------------------
   //------- Modifier --------------
