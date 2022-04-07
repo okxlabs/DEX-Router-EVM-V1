@@ -18,10 +18,6 @@ import "./interfaces/IApproveProxy.sol";
 contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   using UniversalERC20 for IERC20;
 
-  uint256 private constant _WEIGHT_MASK = 0x00000000000000000000ffff0000000000000000000000000000000000000000;
-
-  address public approveProxy;
-
   struct BaseRequest {
     address fromToken;
     address toToken;

@@ -1,9 +1,8 @@
-const { config } = require("dotenv");
 const { ethers } = require("hardhat");
-require("./tools");
-const { getConfig } = require("./config");
-const { ETH } = require("./config/eth/tokens");
+require("../../tools");
+const { getConfig } = require("../../config");
 const tokenConfig = getConfig("eth")
+
 // lido: 
 // ETH/stETH
 // https://etherscan.io/address/0xDC24316b9AE028F1497c275EB9192a3Ea0f67022#code
