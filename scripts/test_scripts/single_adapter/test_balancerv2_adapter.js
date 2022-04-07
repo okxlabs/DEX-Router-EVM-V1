@@ -1,7 +1,7 @@
 const { config } = require("dotenv");
 const { ethers } = require("hardhat");
-require("./tools");
-const { getConfig } = require("./config");
+require("../../tools");
+const { getConfig } = require("../../config");
 tokenConfig = getConfig("eth");
 
 async function executeWETH2IPAL() {

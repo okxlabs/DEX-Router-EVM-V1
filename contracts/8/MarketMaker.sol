@@ -169,6 +169,7 @@ contract MarketMaker is OwnableUpgradeable, EIP712("METAX PMM Adapter", "1.0") {
         if (!validateSig(digest, request.payer, signature)) {
             return uint256(ERROR.INVALID_SIGNATURE);
         }
+
         uint256 errorCode = updateOrder(digest, actualAmountRequest, request);
         if (errorCode > 0) {
             return errorCode;

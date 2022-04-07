@@ -66,7 +66,7 @@ contract PMMAdapter is IAdapterWithResult {
         return _pmmSwap(to, pool, moreInfo);
     }
 
-    receive() external payable {
-        require(msg.value > 0, "receive error");
-    }
+    // receive() external payable {
+    //     require(msg.value > 0, "receive error");
+    // }
 }
