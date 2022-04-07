@@ -14,11 +14,20 @@ interface IMarketMaker{
     uint256 deadLine;
     bool    isPushOrder;
   }
+  enum ERROR {
+    NO_ERROR,
+    INVALID_SIGNATURE,
+    QUOTE_EXPIRED,
+    REQUEST_TOO_MUCH,
+    ORDER_CANCELLED_OR_FINALIZED,
+    REMAINING_AMOUNT_NOT_ENOUGH,
+    FAIL_TO_CLAIM_TOKEN
+  }
 
   function swap(
       address to,                 
       uint256 actualAmountRequest,  
       PMMSwapRequest memory pmmRequest,
       bytes memory signature
-  ) external returns(bool);
+  ) external returns(uint256);
 }

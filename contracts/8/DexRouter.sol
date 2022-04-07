@@ -10,6 +10,7 @@ import "./UnxswapRouter.sol";
 
 import "./interfaces/IWETH.sol";
 import "./interfaces/IAdapter.sol";
+import "./interfaces/IAdapterWithResult.sol";
 import "./interfaces/IApproveProxy.sol";
 import "./interfaces/IMarketMaker.sol";
 
@@ -111,7 +112,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     bytes[] calldata pmmSignature
   ) internal {
     // 1. try to replace this hop by pmm
-    if (_tryPmmSwap(address(this), layerAmount, pmmRequest[0], pmmSignature[0])) {
+    if (_tryPmmSwap(address(this), layerAmount, pmmRequest[0], pmmSignature[0])==0) {
         return;
     }
 
@@ -128,7 +129,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       }
 
       // 3.1 try to replace this fork by pmm
-      if(_tryPmmSwap(address(this), layerAmount, pmmRequest[i+1], pmmSignature[i+1])) {
+      if(_tryPmmSwap(address(this), layerAmount, pmmRequest[i+1], pmmSignature[i+1])==0) {
         continue;
       }
 
@@ -187,21 +188,23 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     uint256 actualRequest, 
     IMarketMaker.PMMSwapRequest memory pmmRequest, 
     bytes memory signature
-  ) internal returns (bool) {
+  ) internal returns (uint256) {
     if (pmmRequest.fromTokenAmountMax >= actualRequest) {
-      if (IMarketMaker(pmmAdapter).swap(
-        to, 
-        actualRequest, 
-        pmmRequest, 
+      bytes memory moreInfo = abi.encode(
+        actualRequest,
+        pmmRequest,
         signature
-      )) {
-          // transfer user's assets to maker
-          SafeERC20.safeTransfer(IERC20(pmmRequest.fromToken), pmmRequest.payer, actualRequest);
+      );
 
-          return true;
+      uint256 errorCode = IAdapterWithResult(pmmAdapter).sellBase(to, address(0), moreInfo);
+      if (errorCode == 0){
+        // transfer user's assets to maker
+        SafeERC20.safeTransfer(IERC20(pmmRequest.fromToken), pmmRequest.payer, actualRequest);
+        return 0;
       }
+      return errorCode;
     }
-    return false;
+    return uint256(IMarketMaker.ERROR.REQUEST_TOO_MUCH);
   }
 
   function _checkReturnAmountAndEmitEvent(uint256 toTokenOriginBalance, address sender, BaseRequest memory baseRequest) internal returns(uint256 returnAmount) {
@@ -266,7 +269,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       localBaseRequest.fromTokenAmount, 
       pmmRequests[0][0],
       pmmSignatures[0][0]
-    )) {
+    )==0) {
       // 3.1 transfer chips to user
       _transferTokenToUser(localBaseRequest.fromToken);
       returnAmount = _checkReturnAmountAndEmitEvent(returnAmount, msg.sender, localBaseRequest);

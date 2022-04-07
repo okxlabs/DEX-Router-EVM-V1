@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 
@@ -12,7 +12,7 @@ import "./interfaces/IApproveProxy.sol";
 /// @title MarketMaker
 /// @notice Explain to an end user what this does
 /// @dev Explain to a developer any extra detailsq
-contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
+contract MarketMaker is OwnableUpgradeable, EIP712("METAX PMM Adapter", "1.0") {
     using SafeERC20 for IERC20;
 
     // ============ Storage ============
@@ -25,10 +25,10 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
     uint256 private constant ADDRESS_MASK = (1 << 160) - 1;         
     uint256 private constant VALID_PERIOD_MIN = 3600;
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    address immutable WETH;
 
     mapping(address => address) public operator;
     mapping(bytes32 => OrderStatus) public orderStatus;
+    address public weth;
     address public approveProxy;
     address public pmmAdapter;
     address public feeTo;
@@ -43,7 +43,6 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
         REMAINING_AMOUNT_NOT_ENOUGH,
         FAIL_TO_CLAIM_TOKEN
     }
-
     // ============ Struct ============
 
     struct PMMSwapRequest {
@@ -72,18 +71,19 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
     event CancelOrder(address indexed sender, bytes32 orderHash);
     event Swap(uint256 indexed pathIndex, address payer, address fromToken, address toToken, uint256 fromAmount, uint256 toAmount);
 
-    constructor (
+    function initialize(
         address _weth,
         address _pmmAdapter,
         address _feeTo,
         uint256 _feeRate
-    ) {
+    ) public initializer {
+        __Ownable_init();
         require(_weth !=  address(0), "Wrong Address!");
         require(_pmmAdapter !=  address(0), "Wrong Address!");
         require(_feeTo != address(0), "Wrong Address!");
         require(_feeRate <= 100, 'fee Rate cannot exceed 1%');
         require(_ORDER_TYPEHASH == keccak256("PMMSwapRequest(address payer,address fromToken,address toToken,uint256 fromTokenAmount,uint256 toTokenAmount,uint256 salt,uint256 deadLine,bool isPushOrder)"), "Wrong _ORDER_TYPEHASH");
-        WETH = _weth;
+        weth = _weth;
         pmmAdapter = _pmmAdapter;
         feeTo = _feeTo;
         feeRate = _feeRate;
@@ -177,7 +177,7 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
         uint256 amount = actualAmountRequest * request.toTokenAmountMax / request.fromTokenAmountMax;
         IERC20 token = IERC20(request.toToken);
         if (request.toToken == ETH_ADDRESS) {
-            token = IERC20(WETH);
+            token = IERC20(weth);
         }
         
         // transfer maker's funds to "to"
