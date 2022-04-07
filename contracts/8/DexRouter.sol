@@ -49,7 +49,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   //-------------------------------
 
   // event OrderRecord(address fromToken, address toToken, address sender, uint256 fromAmount, uint256 returnAmount);
-  event PMMOrderRecord(address fromToken, address toToken, address sender, uint256 fromAmount, uint256 returnAmount);
+  // event PMMOrderRecord(address fromToken, address toToken, address sender, uint256 fromAmount, uint256 returnAmount);
 
   //-------------------------------
   //------- Modifier --------------

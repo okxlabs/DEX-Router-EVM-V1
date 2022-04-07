@@ -30,7 +30,7 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
     mapping(address => address) public operator;
     mapping(bytes32 => OrderStatus) public orderStatus;
     address public approveProxy;
-    address public router;
+    address public pmmAdapter;
     address public feeTo;
     uint256 public feeRate;
 
@@ -66,7 +66,7 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
 
     // ============ Event ============
 
-    event ChangeRouter(address indexed sender, address newRouter);
+    event ChangePmmAdapter(address indexed sender, address newPmmAdapter);
     event ChangeFeeConfig(address indexed sender, address newFeeTo, uint256 newFeeRate);
     event ChangeOperator(address indexed payer, address operator);
     event CancelOrder(address indexed sender, bytes32 orderHash);
@@ -74,17 +74,17 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
 
     constructor (
         address _weth,
-        address _router,
+        address _pmmAdapter,
         address _feeTo,
         uint256 _feeRate
     ) {
         require(_weth !=  address(0), "Wrong Address!");
-        require(_router !=  address(0), "Wrong Address!");
+        require(_pmmAdapter !=  address(0), "Wrong Address!");
         require(_feeTo != address(0), "Wrong Address!");
         require(_feeRate <= 100, 'fee Rate cannot exceed 1%');
         require(_ORDER_TYPEHASH == keccak256("PMMSwapRequest(address payer,address fromToken,address toToken,uint256 fromTokenAmount,uint256 toTokenAmount,uint256 salt,uint256 deadLine,bool isPushOrder)"), "Wrong _ORDER_TYPEHASH");
         WETH = _weth;
-        router = _router;
+        pmmAdapter = _pmmAdapter;
         feeTo = _feeTo;
         feeRate = _feeRate;
     }
@@ -92,17 +92,17 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
     // ============ Modifier ============
 
     modifier onlyPMMAdapter() {
-        require(msg.sender == router, "OR!");
+        require(msg.sender == pmmAdapter, "OR!");
         _;
     }
 
     // ============ OnlyOwner ============
 
-    function changeRouter(address _router) external onlyOwner {
-        require(_router !=  address(0), "Wrong Address!");
-        router = _router;
+    function changePmmAdapter(address _pmmAdapter) external onlyOwner {
+        require(_pmmAdapter !=  address(0), "Wrong Address!");
+        pmmAdapter = _pmmAdapter;
 
-        emit ChangeRouter(msg.sender, _router);
+        emit ChangePmmAdapter(msg.sender, _pmmAdapter);
 
     }
 
@@ -173,7 +173,6 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
         if (errorCode > 0) {
             return errorCode;
         }
-
         // get transfer Amount and Token Address  
         uint256 amount = actualAmountRequest * request.toTokenAmountMax / request.fromTokenAmountMax;
         IERC20 token = IERC20(request.toToken);
@@ -209,8 +208,7 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
         pure
         returns (bytes32 structHash)
     {
-        // The struct hash is:
-        // keccak256(abi.encode(
+        // bytes memory abiEncoded = abi.encode(
         //   _ORDER_TYPEHASH,
         //   order.pathIndex,
         //   order.payer,
@@ -221,13 +219,13 @@ contract MarketMaker is Ownable, EIP712("METAX PMM Adapter", "1.0") {
         //   order.salt,
         //   order.deadLine,
         //   order.isPushOrder
-        // ))
+        // );
         assembly {
             let mem := mload(0x40)
             mstore(mem, _ORDER_TYPEHASH)
-            // order.payer;
-            mstore(add(mem, 0x20), and(ADDRESS_MASK, mload(order)))
             // order.pathIndex;
+            mstore(add(mem, 0x20), and(ADDRESS_MASK, mload(order)))
+            // order.payer;
             mstore(add(mem, 0x40), and(ADDRESS_MASK, mload(add(order, 0x20))))
             // order.fromToken;
             mstore(add(mem, 0x60), and(ADDRESS_MASK, mload(add(order, 0x40))))
