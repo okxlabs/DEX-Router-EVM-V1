@@ -19,12 +19,6 @@ import "./interfaces/IMarketMaker.sol";
 contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   using UniversalERC20 for IERC20;
 
-  uint256 private constant _WEIGHT_MASK = 0x00000000000000000000ffff0000000000000000000000000000000000000000;
-
-  address public approveProxy;
-  address public tokenApprove;
-  address public pmmAdapter;
-
   struct BaseRequest {
     address fromToken;
     address toToken;
@@ -73,11 +67,10 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   function _exeForks(
     uint256 layerAmount,
     SwapRequest calldata request,
-    RouterPath calldata path
+    RouterPath calldata path,
+    bool isFirstHop
   ) internal {
-    uint256 length = path.mixAdapters.length;
-    require(length == path.assetTo.length, "Route: pair assetto not match");
-    require(length == path.weight.length, "Route: weight not match");
+    uint256 bal = IERC20(request.fromToken).universalBalanceOf(address(this));
     // execute multiple Adapters for a transaction pair
     for (uint256 i = 0; i < path.mixAdapters.length; i++) {
       bytes32 rawData = bytes32(path.weight[i]);
@@ -90,7 +83,18 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
         weight := shr(160, and(rawData, _WEIGHT_MASK))
       }
       require(weight >= 0 && weight <= 10000, "weight out of range");
-      uint256 _fromTokenAmount = (layerAmount * weight) / 10000;
+      uint256 _fromTokenAmount;
+      if (isFirstHop) {
+        _fromTokenAmount = (layerAmount * weight) / 10000;
+      } else {
+        if (i == path.mixAdapters.length - 1) {
+          // There will be one drop left over from the last fork in percentage, fix it here
+          _fromTokenAmount = IERC20(request.fromToken).universalBalanceOf(address(this));
+        } else {
+          _fromTokenAmount = (bal * weight) / 10000;
+        }
+      }
+      address tokenApprove = IApproveProxy(approveProxy).tokenApprove();
       SafeERC20.safeApprove(IERC20(request.fromToken), tokenApprove, _fromTokenAmount);
       // send the asset to the adapter
       _deposit(address(this), path.assetTo[i], request.fromToken, _fromTokenAmount);
@@ -117,7 +121,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
     // 2. if this hop is a single swap
     if (layer.length == 1) {
-        _exeForks(layerAmount, request[0], layer[0]);
+        _exeForks(layerAmount, request[0], layer[0], true);
         return;
     }
 
@@ -133,7 +137,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       }
 
       // 3.2 execute forks
-      _exeForks(layerAmount, request[i], layer[i]);
+      _exeForks(layerAmount, request[i], layer[i], i == 0);
     }
   }
 
@@ -189,17 +193,17 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     bytes memory signature
   ) internal returns (bool) {
     if (pmmRequest.fromTokenAmountMax >= actualRequest) {
-      if (IMarketMaker(pmmAdapter).swap(
-        to, 
-        actualRequest, 
-        pmmRequest, 
-        signature
-      )) {
-          // transfer user's assets to maker
-          SafeERC20.safeTransfer(IERC20(pmmRequest.fromToken), pmmRequest.payer, actualRequest);
+      // if (IMarketMaker(pmmAdapter).swap(
+      //   to, 
+      //   actualRequest, 
+      //   pmmRequest, 
+      //   signature
+      // )) {
+      //     // transfer user's assets to maker
+      //     SafeERC20.safeTransfer(IERC20(pmmRequest.fromToken), pmmRequest.payer, actualRequest);
 
           return true;
-      }
+      // }
     }
     return false;
   }
@@ -222,14 +226,6 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
   function setApproveProxy(address newApproveProxy) external onlyOwner {
     approveProxy = newApproveProxy;
-  }
-
-  function setTokenAprrove(address newTokenApprove) external onlyOwner {
-    tokenApprove = newTokenApprove;
-  }
-
-  function setPMMAdapter(address newPMMAdapter) external onlyOwner {
-    pmmAdapter = newPMMAdapter;
   }
 
   //-------------------------------
@@ -277,7 +273,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     // 4. the situation that the whole swap is a single swap
     if (layers.length == 1 && layers[0].length == 1) {
         // 4.1 excute fork
-        _exeForks(baseRequest.fromTokenAmount, requests[0][0], layers[0][0]);
+        _exeForks(baseRequest.fromTokenAmount, requests[0][0], layers[0][0], true);
 
         // 4.2 transfer chips
         _transferChips(baseRequest);

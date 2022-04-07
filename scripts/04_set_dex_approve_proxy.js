@@ -18,6 +18,7 @@ async function main() {
   console.log("tokenApprove init");
 
   await tokenApproveProxy.addProxy(deployed.base.dexRouter);
+  await tokenApproveProxy.setTokenApprove(deployed.base.tokenApprove);
   console.log("tokenApproveProxy add dexProxy")
 
   const dexRouter = await ethers.getContractAt(
