@@ -4,32 +4,33 @@ pragma solidity ^0.8.0;
 import "../interfaces/IAdapterWithResult.sol";
 import "../interfaces/IMarketMaker.sol";
 import "../interfaces/IERC20.sol";
+import "../interfaces/IApproveProxy.sol";
 import "../libraries/UniversalERC20.sol";
 import "../libraries/SafeERC20.sol";
 
 contract PMMAdapter is IAdapterWithResult {
 
     address public marketMaker;
-    address public tokenApprove;
     address public dexRouter;
 
-    constructor(address _marketMaker, address _tokenApprove, address _dexRouter){
+    constructor(address _marketMaker, address _dexRouter){
         marketMaker = _marketMaker;
-        tokenApprove = _tokenApprove;
         dexRouter = _dexRouter;
     }
 
-    function _pmmSwap(address to, address pool, bytes memory moreInfo) internal returns (uint256) {
-        (   
+    function _pmmSwap(address to, address /*pool*/, bytes memory moreInfo) internal returns (uint256) {
+        (
             uint256 actualRequestAmount,
             IMarketMaker.PMMSwapRequest memory request,
             bytes memory signature  
         ) = abi.decode(moreInfo, (uint256, IMarketMaker.PMMSwapRequest, bytes));
 
-        // uint256 sellAmount = IERC20(request.fromToken).balanceOf(address(this));
+        uint256 sellAmount = IERC20(request.fromToken).balanceOf(address(this));
 
-        // // approve
-        // SafeERC20.safeApprove(IERC20(request.fromToken),  tokenApprove, sellAmount);
+        // approve
+        address approveProxy = IMarketMaker(marketMaker).approveProxy();
+        address tokenApprove = IApproveProxy(approveProxy).tokenApprove();
+        SafeERC20.safeApprove(IERC20(request.fromToken),  tokenApprove, sellAmount);
 
         // uint256 pathIndex;
         // address payer;
@@ -51,13 +52,15 @@ contract PMMAdapter is IAdapterWithResult {
         // request.deadLine = dealline;
         // request.isPushOrder = isPushOrder;
 
-        return IMarketMaker(marketMaker).swap(
+        uint256 result = IMarketMaker(marketMaker).swap(
             to, actualRequestAmount, request, signature
         );
 
-        // if(to != address(this)) {
-        //     SafeERC20.safeTransfer(IERC20(request.toToken), to, IERC20(request.toToken).balanceOf(address(this)));
-        // }
+        if(to != address(this)) {
+            SafeERC20.safeTransfer(IERC20(request.toToken), to, IERC20(request.toToken).balanceOf(address(this)));
+        }
+
+        return result;
     }
 
     function sellBase(address to, address pool, bytes memory moreInfo) external override returns (uint256) {
