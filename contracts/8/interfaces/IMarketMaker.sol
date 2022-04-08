@@ -15,18 +15,18 @@ interface IMarketMaker {
     bool    isPushOrder;
   }
 
-  enum ERROR {
+  enum PMM_ERROR {
     NO_ERROR,
     INVALID_SIGNATURE,
     QUOTE_EXPIRED,
     REQUEST_TOO_MUCH,
     ORDER_CANCELLED_OR_FINALIZED,
     REMAINING_AMOUNT_NOT_ENOUGH,
-    FAIL_TO_CLAIM_TOKEN
+    FAIL_TO_CLAIM_TOKEN,
+    WRONG_FROM_TOKEN
   }
 
   function swap(
-      address to,                 
       uint256 actualAmountRequest,  
       PMMSwapRequest memory pmmRequest,
       bytes memory signature

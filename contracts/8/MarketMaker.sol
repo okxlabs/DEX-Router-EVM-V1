@@ -5,6 +5,7 @@ pragma abicoder v2;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import "./libraries/SafeERC20.sol";
 import "./interfaces/IApproveProxy.sol";
@@ -12,7 +13,7 @@ import "./interfaces/IApproveProxy.sol";
 /// @title MarketMaker
 /// @notice Explain to an end user what this does
 /// @dev Explain to a developer any extra detailsq
-contract MarketMaker is OwnableUpgradeable, EIP712("METAX PMM Adapter", "1.0") {
+contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("METAX PMM Adapter", "1.0") {
     using SafeERC20 for IERC20;
 
     // ============ Storage ============
@@ -28,20 +29,23 @@ contract MarketMaker is OwnableUpgradeable, EIP712("METAX PMM Adapter", "1.0") {
 
     mapping(address => address) public operator;
     mapping(bytes32 => OrderStatus) public orderStatus;
+    //TODO change pmmAdapter to mapping type
+    mapping(address => bool) public pmmAdapter;
+
     address public weth;
     address public approveProxy;
-    address public pmmAdapter;
     address public feeTo;
     uint256 public feeRate;
 
-    enum ERROR {
+    enum PMM_ERROR {
         NO_ERROR,
         INVALID_SIGNATURE,
         QUOTE_EXPIRED,
         REQUEST_TOO_MUCH,
         ORDER_CANCELLED_OR_FINALIZED,
         REMAINING_AMOUNT_NOT_ENOUGH,
-        FAIL_TO_CLAIM_TOKEN
+        FAIL_TO_CLAIM_TOKEN,
+        WRONG_FROM_TOKEN
     }
     // ============ Struct ============
 
@@ -65,10 +69,12 @@ contract MarketMaker is OwnableUpgradeable, EIP712("METAX PMM Adapter", "1.0") {
 
     // ============ Event ============
 
-    event ChangePmmAdapter(address indexed sender, address newPmmAdapter);
+    event AddPmmAdapter(address indexed sender, address pmmAdapter);
+    event RemovePmmAdapter(address indexed sender, address pmmAdapter);
     event ChangeFeeConfig(address indexed sender, address newFeeTo, uint256 newFeeRate);
+    event SetApproveProxy(address indexed sender, address approveProxy);
     event ChangeOperator(address indexed payer, address operator);
-    event CancelOrder(address indexed sender, bytes32 orderHash);
+    event CancelQuotes(address sender, uint256[] pathIndex, bool[] result);
     event Swap(uint256 indexed pathIndex, address payer, address fromToken, address toToken, uint256 fromAmount, uint256 toAmount);
 
     function initialize(
@@ -84,7 +90,7 @@ contract MarketMaker is OwnableUpgradeable, EIP712("METAX PMM Adapter", "1.0") {
         require(_feeRate <= 100, 'fee Rate cannot exceed 1%');
         require(_ORDER_TYPEHASH == keccak256("PMMSwapRequest(address payer,address fromToken,address toToken,uint256 fromTokenAmount,uint256 toTokenAmount,uint256 salt,uint256 deadLine,bool isPushOrder)"), "Wrong _ORDER_TYPEHASH");
         weth = _weth;
-        pmmAdapter = _pmmAdapter;
+        pmmAdapter[_pmmAdapter] = true;
         feeTo = _feeTo;
         feeRate = _feeRate;
     }
@@ -92,17 +98,27 @@ contract MarketMaker is OwnableUpgradeable, EIP712("METAX PMM Adapter", "1.0") {
     // ============ Modifier ============
 
     modifier onlyPMMAdapter() {
-        require(msg.sender == pmmAdapter, "OR!");
+        require(pmmAdapter[msg.sender], "Only PMMAdapter!");
         _;
     }
 
     // ============ OnlyOwner ============
 
-    function changePmmAdapter(address _pmmAdapter) external onlyOwner {
+    function addPmmAdapter(address _pmmAdapter) external onlyOwner {
         require(_pmmAdapter !=  address(0), "Wrong Address!");
-        pmmAdapter = _pmmAdapter;
+        require(!pmmAdapter[_pmmAdapter], "PMMAdapter already exist!");
+        pmmAdapter[_pmmAdapter] = true;
 
-        emit ChangePmmAdapter(msg.sender, _pmmAdapter);
+        emit AddPmmAdapter(msg.sender, _pmmAdapter);
+
+    }
+
+    function removePmmAdapter(address _pmmAdapter) external onlyOwner {
+        require(_pmmAdapter !=  address(0), "Wrong Address!");
+        require(pmmAdapter[_pmmAdapter], "PMMAdapter dose not exist!");
+        pmmAdapter[_pmmAdapter] = false;
+
+        emit RemovePmmAdapter(msg.sender, _pmmAdapter);
 
     }
 
@@ -117,6 +133,7 @@ contract MarketMaker is OwnableUpgradeable, EIP712("METAX PMM Adapter", "1.0") {
 
     function setApproveProxy(address newApproveProxy) external onlyOwner {
         approveProxy = newApproveProxy;
+        emit SetApproveProxy(msg.sender, approveProxy);
     }
 
     // ============ External ============
@@ -129,17 +146,19 @@ contract MarketMaker is OwnableUpgradeable, EIP712("METAX PMM Adapter", "1.0") {
     function cancelQuotes(PMMSwapRequest[] memory request, bytes[] memory signature) external returns(bool[] memory) {
         require(request.length == signature.length, "PMM Adapter: length not match");
         bool[] memory result = new bool[] (request.length);
+        uint256[] memory pathIndex = new uint256[] (request.length);
         for (uint256 i = 0; i < request.length; i++) {
+            pathIndex[i] = request[i].pathIndex;
             if (block.timestamp < request[i].salt + VALID_PERIOD_MIN) {
                 continue;
             }
             bytes32 digest = _hashTypedDataV4(hashOrder(request[i]));
             if (validateSig(digest, msg.sender, signature[i])) {
                 orderStatus[digest].cancelledOrFinalized = true;
-                emit CancelOrder(msg.sender, digest);
                 result[i] = true;
             }
         }
+        emit CancelQuotes(msg.sender, pathIndex, result);
         return result;
     }
 
@@ -152,22 +171,16 @@ contract MarketMaker is OwnableUpgradeable, EIP712("METAX PMM Adapter", "1.0") {
         return status;
     }
 
-    function getDomainSeparator() external view returns (bytes32) {
-      return _domainSeparatorV4();
-    }
-
-    // reentrancy locked in dex router
     function swap(
-        address to,    
         uint256 actualAmountRequest,                   
         PMMSwapRequest memory request,
         bytes memory signature
-    ) external onlyPMMAdapter returns(uint256) { // TODO After this, Router transfer fromTokenAmount to payer
+    ) external onlyPMMAdapter nonReentrant returns(uint256) { // TODO After this, Router transfer fromTokenAmount to payer
 
         bytes32 digest = _hashTypedDataV4(hashOrder(request));
 
         if (!validateSig(digest, request.payer, signature)) {
-            return uint256(ERROR.INVALID_SIGNATURE);
+            return uint256(PMM_ERROR.INVALID_SIGNATURE);
         }
 
         uint256 errorCode = updateOrder(digest, actualAmountRequest, request);
@@ -181,20 +194,22 @@ contract MarketMaker is OwnableUpgradeable, EIP712("METAX PMM Adapter", "1.0") {
             token = IERC20(weth);
         }
         
-        // transfer maker's funds to "to"
+        // try to transfer market maker's funds to "this"
         try IApproveProxy(approveProxy).claimTokens(address(token), request.payer, address(this), amount) {
             if (feeTo != address(0) && feeRate != 0) {
                 uint256 fee = amount * feeRate / 10000;
                 token.safeTransfer(feeTo, fee);
                 amount -= fee;
             }
-            token.safeTransfer(to, amount);                         
+            token.safeTransfer(msg.sender, amount);
+            // transfer user's funds to market maker
+            IApproveProxy(approveProxy).claimTokens(request.fromToken, msg.sender, request.payer, actualAmountRequest);                         
 
             emit Swap(request.pathIndex, request.payer, request.fromToken, request.toToken, actualAmountRequest, amount);
 
-            return uint256(ERROR.NO_ERROR);
+            return uint256(PMM_ERROR.NO_ERROR);
         } catch {
-            return uint256(ERROR.FAIL_TO_CLAIM_TOKEN);
+            return uint256(PMM_ERROR.FAIL_TO_CLAIM_TOKEN);
         }
     }
     
@@ -209,18 +224,6 @@ contract MarketMaker is OwnableUpgradeable, EIP712("METAX PMM Adapter", "1.0") {
         pure
         returns (bytes32 structHash)
     {
-        // bytes memory abiEncoded = abi.encode(
-        //   _ORDER_TYPEHASH,
-        //   order.pathIndex,
-        //   order.payer,
-        //   order.fromToken,
-        //   order.toToken,
-        //   order.fromTokenAmountMax,
-        //   order.toTokenAmountMax,
-        //   order.salt,
-        //   order.deadLine,
-        //   order.isPushOrder
-        // );
         assembly {
             let mem := mload(0x40)
             mstore(mem, _ORDER_TYPEHASH)
@@ -265,23 +268,23 @@ contract MarketMaker is OwnableUpgradeable, EIP712("METAX PMM Adapter", "1.0") {
         PMMSwapRequest memory order
     ) internal returns (uint256) {
         if (order.deadLine < block.timestamp) {     
-            return uint256(ERROR.QUOTE_EXPIRED);
+            return uint256(PMM_ERROR.QUOTE_EXPIRED);
         }
 
         if (actualAmountRequest > order.fromTokenAmountMax){
-            return uint256(ERROR.REQUEST_TOO_MUCH);
+            return uint256(PMM_ERROR.REQUEST_TOO_MUCH);
         }
 
         OrderStatus storage status = orderStatus[digest];
         // in case of canceled or finalized order
         if (status.cancelledOrFinalized) {
-            return uint256(ERROR.ORDER_CANCELLED_OR_FINALIZED);
+            return uint256(PMM_ERROR.ORDER_CANCELLED_OR_FINALIZED);
         }
 
         // in case of pull order
         if (!order.isPushOrder) {
             status.cancelledOrFinalized = true;
-            return uint256(ERROR.NO_ERROR);
+            return uint256(PMM_ERROR.NO_ERROR);
         }
 
         // in case of push order
@@ -290,11 +293,11 @@ contract MarketMaker is OwnableUpgradeable, EIP712("METAX PMM Adapter", "1.0") {
             status.fromTokenAmountMax = order.fromTokenAmountMax;
         }
         if (status.fromTokenAmountUsed + actualAmountRequest > order.fromTokenAmountMax){
-            return uint256(ERROR.REMAINING_AMOUNT_NOT_ENOUGH);
+            return uint256(PMM_ERROR.REMAINING_AMOUNT_NOT_ENOUGH);
         }
         status.fromTokenAmountUsed += actualAmountRequest;
         
-        return uint256(ERROR.NO_ERROR);
+        return uint256(PMM_ERROR.NO_ERROR);
     }
 
 }
