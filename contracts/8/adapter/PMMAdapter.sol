@@ -18,6 +18,7 @@ contract PMMAdapter is IAdapterWithResult {
     }
 
     function _pmmSwap(address to, address pool, bytes memory moreInfo) internal returns (uint256) {
+        pool;  // unused
         (   
             uint256 actualRequestAmount,
             IMarketMaker.PMMSwapRequest memory request,
@@ -59,10 +60,12 @@ contract PMMAdapter is IAdapterWithResult {
     }
 
     function sellBase(address to, address pool, bytes memory moreInfo) external override returns (uint256) {
+        pool;   // unused
         return _pmmSwap(to, pool, moreInfo);
     }
 
     function sellQuote(address to, address pool, bytes memory moreInfo) external override returns (uint256){
+        pool;   // unused
         return _pmmSwap(to, pool, moreInfo);
     }
 

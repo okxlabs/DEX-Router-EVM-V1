@@ -117,7 +117,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     bytes[] calldata pmmSignature
   ) internal {
     // 1. try to replace this hop by pmm
-    if (_tryPmmSwap(pmmAdapter, address(this), layerAmount, pmmRequest[0], pmmSignature[0])==0) {
+    if (_tryPmmSwap(pmmAdapter, address(this), layerAmount, pmmRequest[0], pmmSignature[0]) == 0) {
         return;
     }
 
@@ -129,12 +129,13 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
     // 3. execute forks
     for (uint256 i = 0; i < layer.length; i++) {
+      // TODO 校验
       if (i > 0) {
         layerAmount = IERC20(pmmRequest[i + 1].fromToken).universalBalanceOf(address(this));
       }
 
       // 3.1 try to replace this fork by pmm
-      if(_tryPmmSwap(pmmAdapter, address(this), layerAmount, pmmRequest[i+1], pmmSignature[i+1])==0) {
+      if(_tryPmmSwap(pmmAdapter, address(this), layerAmount, pmmRequest[i + 1], pmmSignature[i + 1]) == 0) {
         continue;
       }
 
@@ -263,7 +264,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       localBaseRequest.fromTokenAmount, 
       pmmRequests[0][0],
       pmmSignatures[0][0]
-    )==0) {
+    ) == 0) {
       // 3.1 transfer chips to user
       _transferTokenToUser(localBaseRequest.fromToken);
       returnAmount = _checkReturnAmountAndEmitEvent(returnAmount, msg.sender, localBaseRequest);
