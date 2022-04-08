@@ -11,10 +11,12 @@ contract PMMAdapter is IAdapterWithResult {
 
     address public marketMaker;
     address public tokenApprove;
+    address public dexRouter;
 
-    constructor(address _marketMaker, address _tokenApprove) {
+    constructor(address _marketMaker, address _tokenApprove, address _dexRouter){
         marketMaker = _marketMaker;
         tokenApprove = _tokenApprove;
+        dexRouter = _dexRouter;
     }
 
     function _pmmSwap(address to, address pool, bytes memory moreInfo) internal returns (uint256) {
@@ -59,14 +61,12 @@ contract PMMAdapter is IAdapterWithResult {
     }
 
     function sellBase(address to, address pool, bytes memory moreInfo) external override returns (uint256) {
+        require(msg.sender == dexRouter, 'Only dexRouter can call this function');
         return _pmmSwap(to, pool, moreInfo);
     }
 
-    function sellQuote(address to, address pool, bytes memory moreInfo) external override returns (uint256){
+    function sellQuote(address to, address pool, bytes memory moreInfo) external override returns (uint256) {
+        require(msg.sender == dexRouter, 'Only dexRouter can call this function');
         return _pmmSwap(to, pool, moreInfo);
     }
-
-    // receive() external payable {
-    //     require(msg.value > 0, "receive error");
-    // }
 }
