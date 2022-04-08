@@ -1,7 +1,7 @@
 /// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-interface IMarketMaker{
+interface IMarketMaker {
 
   struct PMMSwapRequest {
     uint256 pathIndex;
@@ -14,6 +14,7 @@ interface IMarketMaker{
     uint256 deadLine;
     bool    isPushOrder;
   }
+
   enum ERROR {
     NO_ERROR,
     INVALID_SIGNATURE,
@@ -30,4 +31,6 @@ interface IMarketMaker{
       PMMSwapRequest memory pmmRequest,
       bytes memory signature
   ) external returns(uint256);
+
+  function approveProxy() external returns (address);
 }
