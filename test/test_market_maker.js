@@ -1,5 +1,6 @@
 const { getPullInfosToBeSigned, multipleQuotes } = require("./pmm/quoter");
 const { ethers } = require("hardhat");
+const { BigNumber } = require('ethers')
 const { expect } = require("chai");
 
 describe("Market Marker test", function() {
@@ -18,7 +19,7 @@ describe("Market Marker test", function() {
         await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
     });
 
-    xit("ERC20 Exchange By FixRate", async () => {
+    it("ERC20 Exchange By FixRate", async () => {
         const { chainId }  = await ethers.provider.getNetwork();
 
         // 3. prepare marketMaker
@@ -93,10 +94,13 @@ describe("Market Marker test", function() {
         // 8. check balance
         // console.log("alice get usdt: " + await usdt.balanceOf(alice.address));
         // console.log("after bob usdt: " + await usdt.balanceOf(bob.address));
-        expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
+        expect(await usdt.balanceOf(alice.address)).to.equal(0);
+        expect(await wbtc.balanceOf(alice.address)).to.equal(infos.toTokenAmountMax);
+        expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('50000'));
+        expect(await wbtc.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2').sub(BigNumber.from(infos.toTokenAmountMax)));
     });
 
-    xit("ERC20 Exchange By FixRate With PMMAdapter", async () => {
+    it("ERC20 Exchange By FixRate With PMMAdapter", async () => {
         const { chainId }  = await ethers.provider.getNetwork();
 
         // 3. prepare marketMaker

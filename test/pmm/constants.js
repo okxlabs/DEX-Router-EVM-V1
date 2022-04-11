@@ -12,7 +12,7 @@ const RFQ_VALID_PERIOD = 60;
 const ADAPTER_ADDRESS = {
     1:'0x488aa52C39A4ED0291F50C147886221322DbEB68',
     56:'0x488aa52C39A4ED0291F50C147886221322DbEB68',
-    31337:'0x8A791620dd6260079BF849Dc5567aDC3F2FdC318'
+    31337:'0x5FC8d32690cc91D4c39d9d3abcBD16989F875707'
 }
 
 // http provider
@@ -28,8 +28,8 @@ const EIP712_PREFIX = '\x19\x01';
 // keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
 const EIP_712_DOMAIN_TYPEHASH = '0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f';
 
-// keccak256("METAX PMM Adapter")
-const NAME_HASH = '0xb62baa298dba2097375700cb4111f22d2780f2b74a67bd22ae424889eea981f3';
+// keccak256("METAX MARKET MAKER")
+const NAME_HASH = '0x9569cad29571f225e7f2c73ecd677d78be383da74efd13f4af2bade05dc1a8de';
 
 // keccak256("1.0")
 const VERSION_HASH = '0xe6bbd6277e1bf288eed5e8d1780f9a50b239e86b153736bceebccf4ea79d90b3';

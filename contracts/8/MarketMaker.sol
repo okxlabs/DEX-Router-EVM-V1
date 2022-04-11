@@ -13,7 +13,7 @@ import "./interfaces/IApproveProxy.sol";
 /// @title MarketMaker
 /// @notice Explain to an end user what this does
 /// @dev Explain to a developer any extra detailsq
-contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("METAX PMM Adapter", "1.0") {
+contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("METAX MARKET MAKER", "1.0") {
   using SafeERC20 for IERC20;
 
   // ============ Storage ============
