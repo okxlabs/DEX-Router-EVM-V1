@@ -18,7 +18,7 @@ describe("Market Marker test", function() {
         await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
     });
 
-    it("ERC20 Exchange By FixRate", async () => {
+    xit("ERC20 Exchange By FixRate", async () => {
         const { chainId }  = await ethers.provider.getNetwork();
 
         // 3. prepare marketMaker
@@ -93,6 +93,192 @@ describe("Market Marker test", function() {
         // 8. check balance
         // console.log("alice get usdt: " + await usdt.balanceOf(alice.address));
         // console.log("after bob usdt: " + await usdt.balanceOf(bob.address));
+        expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
+    });
+
+    xit("ERC20 Exchange By FixRate With PMMAdapter", async () => {
+        const { chainId }  = await ethers.provider.getNetwork();
+
+        // 3. prepare marketMaker
+        let marketMaker;
+        MarketMaker = await ethers.getContractFactory("MarketMaker");
+        marketMaker = await MarketMaker.deploy();
+        await marketMaker.deployed();
+        marketMaker.initialize(weth.address, alice.address, owner.address, 0);
+        await marketMaker.connect(bob).setOperator(bob.address);
+
+        // 4. approve
+        const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
+        const tokenApproveProxy = await TokenApproveProxy.deploy();
+        await tokenApproveProxy.initialize();
+
+        const TokenApprove = await ethers.getContractFactory("TokenApprove");
+        const tokenApprove = await TokenApprove.deploy();
+        await tokenApprove.initialize(tokenApproveProxy.address);
+
+        await tokenApproveProxy.addProxy(marketMaker.address);
+        await tokenApproveProxy.setTokenApprove(tokenApprove.address);
+
+        await tokenApprove.setApproveProxy(tokenApproveProxy.address);
+        await marketMaker.setApproveProxy(tokenApproveProxy.address);
+
+        PMMAdapter = await ethers.getContractFactory("PMMAdapter");
+        pmmAdapter = await PMMAdapter.deploy(marketMaker.address, alice.address);
+
+        await marketMaker.addPmmAdapter(pmmAdapter.address);
+
+        // console.log("before bob usdt: " + await usdt.balanceOf(bob.address));
+        // console.log("before alice usdt: " + await usdt.balanceOf(alice.address));
+        expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
+        expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
+
+        // 5. prepare quotes
+        let rfq = [
+            {
+                "pathIndex": 100000000000000,
+                "fromTokenAddress": usdt.address, 
+                "toTokenAddress": wbtc.address, 
+                "fromTokenAmount": '50000000000000000000000', 
+                "toTokenAmountMin": '1000000000000000000',
+                "chainId": chainId
+            }
+        ]
+        let infosToBeSigned = getPullInfosToBeSigned(rfq);
+        let quote = multipleQuotes(infosToBeSigned.pullInfosToBeSigned, infosToBeSigned.chainId);
+
+        // 6. construct of input of funciton swap
+        let infos = quote[0].infos;
+        let request = [
+            infos.pathIndex, 
+            infos.payer, 
+            infos.fromTokenAddress, 
+            infos.toTokenAddress, 
+            infos.fromTokenAmountMax, 
+            infos.toTokenAmountMax, 
+            infos.salt, 
+            infos.deadLine, 
+            infos.isPushOrder
+        ];
+        let signature = quote[0].signature;
+
+        // 7. swap
+        let markerAmount = ethers.utils.parseEther('2');
+        await wbtc.connect(bob).approve(tokenApprove.address,markerAmount);
+        let swapAmount = ethers.utils.parseEther('50000');
+        await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
+        
+        data = ethers.utils.defaultAbiCoder.encode(
+            ['tuple(uint256,address,address,address,uint256,uint256,uint256,uint256,bool)', 'bytes'],
+            [request, signature]
+        )
+        await pmmAdapter.connect(alice).sellBase(alice.address, ethers.constants.AddressZero, data);
+
+        // 8. check balance
+        expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
+    });
+
+    it("ERC20 Exchange By FixRate With DEXRouter", async () => {
+        const { chainId }  = await ethers.provider.getNetwork();
+
+        // 3. prepare marketMaker
+        let marketMaker;
+        MarketMaker = await ethers.getContractFactory("MarketMaker");
+        marketMaker = await MarketMaker.deploy();
+        await marketMaker.deployed();
+        marketMaker.initialize(weth.address, alice.address, owner.address, 0);
+        await marketMaker.connect(bob).setOperator(bob.address);
+
+        // 4. approve
+        const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
+        const tokenApproveProxy = await TokenApproveProxy.deploy();
+        await tokenApproveProxy.initialize();
+
+        const TokenApprove = await ethers.getContractFactory("TokenApprove");
+        const tokenApprove = await TokenApprove.deploy();
+        await tokenApprove.initialize(tokenApproveProxy.address);
+
+        await tokenApproveProxy.addProxy(marketMaker.address);
+        await tokenApproveProxy.setTokenApprove(tokenApprove.address);
+
+        await tokenApprove.setApproveProxy(tokenApproveProxy.address);
+        await marketMaker.setApproveProxy(tokenApproveProxy.address);
+
+        DexRouter = await ethers.getContractFactory("DexRouter");
+        dexRouter = await DexRouter.deploy();
+        await dexRouter.deployed();
+        await dexRouter.initialize();
+        await dexRouter.setApproveProxy(tokenApproveProxy.address);
+        await tokenApproveProxy.addProxy(dexRouter.address);
+
+        PMMAdapter = await ethers.getContractFactory("PMMAdapter");
+        pmmAdapter = await PMMAdapter.deploy(marketMaker.address, dexRouter.address);
+        console.log("pmmAdapter: " + pmmAdapter.address);
+        await marketMaker.addPmmAdapter(pmmAdapter.address);
+
+        // console.log("before bob usdt: " + await usdt.balanceOf(bob.address));
+        // console.log("before alice usdt: " + await usdt.balanceOf(alice.address));
+        expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
+        expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
+
+        // 5. prepare quotes
+        let rfq = [
+            {
+                "pathIndex": 100000000000000,
+                "fromTokenAddress": usdt.address, 
+                "toTokenAddress": wbtc.address, 
+                "fromTokenAmount": '50000000000000000000000', 
+                "toTokenAmountMin": '1000000000000000000',
+                "chainId": chainId
+            }
+        ]
+        let infosToBeSigned = getPullInfosToBeSigned(rfq);
+        let quote = multipleQuotes(infosToBeSigned.pullInfosToBeSigned, infosToBeSigned.chainId);
+
+        // 6. construct of input of funciton swap
+        let infos = quote[0].infos;
+        let request = [
+            infos.pathIndex, 
+            infos.payer, 
+            infos.fromTokenAddress, 
+            infos.toTokenAddress, 
+            infos.fromTokenAmountMax, 
+            infos.toTokenAmountMax, 
+            infos.salt, 
+            infos.deadLine, 
+            infos.isPushOrder
+        ];
+        let signature = quote[0].signature;
+
+        // 7. swap
+        let markerAmount = ethers.utils.parseEther('2');
+        await wbtc.connect(bob).approve(tokenApprove.address, markerAmount);
+        let swapAmount = ethers.utils.parseEther('50000');
+        await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
+
+        const baseRequest = [
+            usdt.address,
+            wbtc.address,
+            swapAmount,
+            ethers.utils.parseEther('0'),
+            2000000000,
+            pmmAdapter.address
+        ]
+        const RouterPath = [
+            // address[] mixAdapters;
+            // address[] assetTo;
+            // uint256[] rawData;
+            // bytes[] extraData;
+            // address fromToken;
+            // [pmmAdapter.address]
+        ]
+        await dexRouter.connect(alice).smartSwap(
+            baseRequest,
+            [swapAmount],
+            [],
+            [[request]],
+            [[signature]]
+        );
+        // 8. check balance
         expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
     });
 

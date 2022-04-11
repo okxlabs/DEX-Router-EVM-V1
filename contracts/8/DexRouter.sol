@@ -64,10 +64,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   //------- Internal Functions ----
   //-------------------------------
 
-  function _exeForks(
-    uint256 batchAmount,
-    RouterPath calldata path
-  ) internal {
+  function _exeForks(uint256 batchAmount, RouterPath calldata path) internal {
     // TODO deleted isFirstHop
     // execute multiple Adapters for a transaction pair
     for (uint256 i = 0; i < path.mixAdapters.length; i++) {
@@ -110,7 +107,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   ) internal {
     // 1. try to replace this hop by pmm
     if (_tryPmmSwap(pmmAdapter, hops[0].fromToken, batchAmount, pmmRequest[0], pmmSignature[0]) == 0) {
-        return;
+      return;
     }
 
     // 2. if this hop is a single swap
@@ -126,7 +123,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       }
 
       // 3.1 try to replace this fork by pmm
-      if(_tryPmmSwap(pmmAdapter, hops[i].fromToken, batchAmount, pmmRequest[i + 1], pmmSignature[i + 1]) == 0) {
+      if (_tryPmmSwap(pmmAdapter, hops[i].fromToken, batchAmount, pmmRequest[i + 1], pmmSignature[i + 1]) == 0) {
         continue;
       }
 
@@ -253,13 +250,15 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     }
 
     // 3. try to replace the whole swap by pmm
-    if (_tryPmmSwap(
-      localBaseRequest.pmmAdapter,
-      localBaseRequest.fromToken,
-      localBaseRequest.fromTokenAmount, 
-      pmmRequests[0][0],
-      pmmSignatures[0][0]
-    ) == 0) {
+    if (
+      _tryPmmSwap(
+        localBaseRequest.pmmAdapter,
+        localBaseRequest.fromToken,
+        localBaseRequest.fromTokenAmount,
+        pmmRequests[0][0],
+        pmmSignatures[0][0]
+      ) == 0
+    ) {
       // 3.1 transfer chips to user
       _transferTokenToUser(localBaseRequest.fromToken);
       returnAmount = _checkReturnAmountAndEmitEvent(returnAmount, msg.sender, localBaseRequest);
