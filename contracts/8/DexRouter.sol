@@ -35,7 +35,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   struct RouterPath {
     address[] mixAdapters;
     address[] assetTo;
-    uint256[] weight;
+    uint256[] rawData;
     bytes[] extraData;
     address fromToken;
   }
@@ -48,6 +48,8 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   //-------------------------------
   //------- Events ----------------
   //-------------------------------
+
+  event ApproveProxyChanged(address _approveProxy);
 
   //-------------------------------
   //------- Modifier --------------
@@ -63,13 +65,13 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   //-------------------------------
 
   function _exeForks(
-    uint256 layerAmount,
+    uint256 batchAmount,
     RouterPath calldata path
   ) internal {
     // TODO deleted isFirstHop
     // execute multiple Adapters for a transaction pair
     for (uint256 i = 0; i < path.mixAdapters.length; i++) {
-      bytes32 rawData = bytes32(path.weight[i]);
+      bytes32 rawData = bytes32(path.rawData[i]);
       address poolAddress;
       bool reserves;
       uint256 weight;
@@ -84,8 +86,8 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
         // There will be one drop left over from the last fork in percentage, fix it here
         _fromTokenAmount = IERC20(path.fromToken).universalBalanceOf(address(this));
       } else {
-        _fromTokenAmount = (layerAmount * weight) / 10000;
-      } 
+        _fromTokenAmount = (batchAmount * weight) / 10000;
+      }
       address tokenApprove = IApproveProxy(approveProxy).tokenApprove();
       SafeERC20.safeApprove(IERC20(path.fromToken), tokenApprove, _fromTokenAmount);
       // send the asset to the adapter
@@ -101,35 +103,35 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
   function _exeHop(
     address pmmAdapter,
-    uint256 layerAmount,
-    RouterPath[] calldata layer,
+    uint256 batchAmount,
+    RouterPath[] calldata hops,
     IMarketMaker.PMMSwapRequest[] calldata pmmRequest,
     bytes[] calldata pmmSignature
   ) internal {
     // 1. try to replace this hop by pmm
-    if (_tryPmmSwap(pmmAdapter, layer[0].fromToken, layerAmount, pmmRequest[0], pmmSignature[0]) == 0) {
+    if (_tryPmmSwap(pmmAdapter, hops[0].fromToken, batchAmount, pmmRequest[0], pmmSignature[0]) == 0) {
         return;
     }
 
     // 2. if this hop is a single swap
-    if (layer.length == 1) {
-      _exeForks(layerAmount, layer[0]);
+    if (hops.length == 1) {
+      _exeForks(batchAmount, hops[0]);
       return;
     }
 
     // 3. execute forks
-    for (uint256 i = 0; i < layer.length; i++) {
+    for (uint256 i = 0; i < hops.length; i++) {
       if (i > 0) {
-        layerAmount = IERC20(pmmRequest[i + 1].fromToken).universalBalanceOf(address(this));
+        batchAmount = IERC20(pmmRequest[i + 1].fromToken).universalBalanceOf(address(this));
       }
 
       // 3.1 try to replace this fork by pmm
-      if(_tryPmmSwap(pmmAdapter, layer[i].fromToken, layerAmount, pmmRequest[i + 1], pmmSignature[i + 1]) == 0) {
+      if(_tryPmmSwap(pmmAdapter, hops[i].fromToken, batchAmount, pmmRequest[i + 1], pmmSignature[i + 1]) == 0) {
         continue;
       }
 
       // 3.2 execute forks
-      _exeForks(layerAmount, layer[i]);
+      _exeForks(batchAmount, hops[i]);
     }
   }
 
@@ -217,6 +219,8 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
   function setApproveProxy(address newApproveProxy) external onlyOwner {
     approveProxy = newApproveProxy;
+
+    emit ApproveProxyChanged(approveProxy);
   }
 
   //-------------------------------
@@ -225,8 +229,8 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
   function smartSwap(
     BaseRequest calldata baseRequest,
-    uint256[] calldata batchAmount,
-    RouterPath[][] calldata layers,
+    uint256[] calldata batchesAmount,
+    RouterPath[][] calldata batches,
     IMarketMaker.PMMSwapRequest[][] calldata pmmRequests,
     bytes[][] calldata pmmSignatures
   ) external payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) {
@@ -237,10 +241,10 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     _deposit(msg.sender, address(this), localBaseRequest.fromToken, localBaseRequest.fromTokenAmount);
 
     // 2. check total batch amount, invoid stack too deep
-    {    
+    {
       uint256 totalBatchAmount = 0;
-      for (uint256 i = 0; i < layers.length; i++) {
-        totalBatchAmount += batchAmount[i];
+      for (uint256 i = 0; i < batches.length; i++) {
+        totalBatchAmount += batchesAmount[i];
       }
       require(
         totalBatchAmount <= localBaseRequest.fromTokenAmount,
@@ -264,9 +268,9 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     }
 
     // 4. the situation that the whole swap is a single swap
-    if (layers.length == 1 && layers[0].length == 1) {
+    if (batches.length == 1 && batches[0].length == 1) {
       // 4.1 excute fork
-      _exeForks(baseRequest.fromTokenAmount, layers[0][0]);
+      _exeForks(baseRequest.fromTokenAmount, batches[0][0]);
 
       // 4.2 transfer chips
       _transferChips(baseRequest);
@@ -278,10 +282,9 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     }
 
     // 5. execute batch
-    for (uint256 i = 0; i < layers.length; i++) {
-      uint256 layerAmount = batchAmount[i];
+    for (uint256 i = 0; i < batches.length; i++) {
       // execute hop
-      _exeHop(localBaseRequest.pmmAdapter,layerAmount, layers[i], pmmRequests[i + 1], pmmSignatures[i + 1]);
+      _exeHop(localBaseRequest.pmmAdapter, batchesAmount[i], batches[i], pmmRequests[i + 1], pmmSignatures[i + 1]);
     }
 
     // 6. transfer tokens to user
