@@ -20,9 +20,8 @@ const {
     DEFAULT_QUOTE
 } = require("./constants");
 
-var getDomainSeparator = function (chainId){
-    let adapterAddress = ADAPTER_ADDRESS[chainId];
-    return keccak256(abiEncodeDomainSeparator(chainId, adapterAddress));
+var getDomainSeparator = function (chainId, marketMaker){
+    return keccak256(abiEncodeDomainSeparator(chainId, marketMaker));
 }
 
 // rfq => infos to be signed
@@ -31,6 +30,7 @@ var getPullInfosToBeSigned = function (pull_data){
     let localTs = getLocalTs();
     let pullInfosToBeSigned = [];
     let chainId = [];
+    let marketMaker = [];
 
     for (let i = 0; i < quantity; i++){
         let chunk = pull_data[i];
@@ -50,9 +50,10 @@ var getPullInfosToBeSigned = function (pull_data){
         };
 
         chainId[i] = chunk.chainId;
+        marketMaker[i] = chunk.marketMaker;
     }
 
-    return {pullInfosToBeSigned, chainId};
+    return {pullInfosToBeSigned, chainId, marketMaker};
 }
 
 // order to be pushed => infos to be signed
@@ -61,6 +62,7 @@ var getPushInfosToBeSigned = function (push_data){
     let localTs = getLocalTs();
     let pushInfosToBeSigned = [];
     let chainId = [];
+    let marketMaker = [];
 
     for (let i = 0; i < quantity; i++){
         let chunk = push_data[i];
@@ -77,9 +79,10 @@ var getPushInfosToBeSigned = function (push_data){
             "isPushOrder" : true
         };
         chainId[i] = chunk.chainId;
+        marketMaker[i] = ADAPTER_ADDRESS[chunk.chainId];
     }
 
-    return {pushInfosToBeSigned, chainId};
+    return {pushInfosToBeSigned, chainId, marketMaker};
 }
 
 // sign infos and return a single quote
@@ -110,11 +113,11 @@ var singleQuote = function (domain_separator, infosToBeSigned){
 }
 
 // sign infos and return multiple quotes
-var multipleQuotes = function (mulInfosToBeSigned, chainId){
+var multipleQuotes = function (mulInfosToBeSigned, chainId, marketMaker){
     let quantity = mulInfosToBeSigned.length;
     let quotes = [];
     for (let i = 0; i < quantity; i++){
-        let domain_separator = getDomainSeparator(chainId[i]);
+        let domain_separator = getDomainSeparator(chainId[i], marketMaker[i]);
         let quote = singleQuote(domain_separator, mulInfosToBeSigned[i]);
         quotes[i] = quote;
     }

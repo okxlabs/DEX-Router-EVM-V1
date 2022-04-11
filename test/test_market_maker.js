@@ -58,11 +58,12 @@ describe("Market Marker test", function() {
                 "toTokenAddress": wbtc.address, 
                 "fromTokenAmount": '50000000000000000000000', 
                 "toTokenAmountMin": '1000000000000000000',
-                "chainId": chainId
+                "chainId": chainId,
+                "marketMaker": marketMaker.address
             }
         ]
         let infosToBeSigned = getPullInfosToBeSigned(rfq);
-        let quote = multipleQuotes(infosToBeSigned.pullInfosToBeSigned, infosToBeSigned.chainId);
+        let quote = multipleQuotes(infosToBeSigned.pullInfosToBeSigned, infosToBeSigned.chainId, infosToBeSigned.marketMaker);
 
         // 6. construct of input of funciton swap
         let infos = quote[0].infos;
@@ -98,8 +99,6 @@ describe("Market Marker test", function() {
         expect(await wbtc.balanceOf(alice.address)).to.equal(infos.toTokenAmountMax);
         expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('50000'));
         expect(await wbtc.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2').sub(BigNumber.from(infos.toTokenAmountMax)));
-
-
 
     });
 
