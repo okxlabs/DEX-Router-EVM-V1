@@ -1,20 +1,25 @@
 const { getPullInfosToBeSigned, multipleQuotes } = require("./pmm/quoter");
 const { ethers } = require("hardhat");
+const { expect } = require("chai");
 
 describe("Market Marker test", function() {
 
-    it("ERC20 Exchange", async () => {
+    let wbtc, usdt, weth;
+    let owner, alice, bob;
 
+    beforeEach(async function() {
         // 1. prepare accounts and chain id
-        const [owner, alice, bob] = await ethers.getSigners();
-        const { chainId }  = await ethers.provider.getNetwork();
+        [owner, alice, bob] = await ethers.getSigners();
 
         // 2. prepare mock tokens
-        let wbtc, usdt, weth;
         await initMockTokens();
 
-        // const PMMAdapter = await ethers.getContractFactory("PMMAdapter");
-        // const pmmAdapter = await PMMAdapter.deploy();
+        await usdt.transfer(alice.address, ethers.utils.parseEther('50000'));
+        await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
+    });
+
+    it("ERC20 Exchange By FixRate", async () => {
+        const { chainId }  = await ethers.provider.getNetwork();
 
         // 3. prepare marketMaker
         let marketMaker;
@@ -23,7 +28,6 @@ describe("Market Marker test", function() {
         await marketMaker.deployed();
         marketMaker.initialize(weth.address, alice.address, owner.address, 0);
         await marketMaker.connect(bob).setOperator(bob.address);
-        console.log(marketMaker.address)
 
         // 4. approve
         const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
@@ -40,7 +44,10 @@ describe("Market Marker test", function() {
         await tokenApprove.setApproveProxy(tokenApproveProxy.address);
         await marketMaker.setApproveProxy(tokenApproveProxy.address);
 
-        await wbtc.connect(bob).approve(tokenApprove.address, ethers.utils.parseEther('2'));
+        // console.log("before bob usdt: " + await usdt.balanceOf(bob.address));
+        // console.log("before alice usdt: " + await usdt.balanceOf(alice.address));
+        expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
+        expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
 
         // 5. prepare quotes
         let rfq = [
@@ -72,39 +79,35 @@ describe("Market Marker test", function() {
         let signature = quote[0].signature;
 
         // 7. swap
-        r = await marketMaker.connect(alice).callStatic.swap(
-            ethers.utils.parseEther('50000'),
+        let markerAmount = ethers.utils.parseEther('2');
+        await wbtc.connect(bob).approve(tokenApprove.address,markerAmount);
+        let swapAmount = ethers.utils.parseEther('50000');
+        await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
+
+        await marketMaker.connect(alice).swap(
+            swapAmount,
             request,
             signature
         );
-        console.log("ErrorCode: " + r);
 
         // 8. check balance
-        console.log("alice get wbtc: " + await wbtc.balanceOf(alice.address));
-        console.log("bob paid wbtc: " + await wbtc.balanceOf(bob.address));
-
-        console.log("alice get usdt: " + await usdt.balanceOf(alice.address));
-        console.log("bob paid usdt: " + await usdt.balanceOf(bob.address));
-
-        async function initMockTokens() {
-            // alice has 50000 usdt, bob has 2 wbtc
-            // alice want to buy 1 wbtc with her 50000 usdt, and bob is willing to provide pmm liquidity
-            const MockERC20 = await ethers.getContractFactory("MockERC20");
-    
-            usdt = await MockERC20.deploy('USDT', 'USDT', ethers.utils.parseEther('10000000000'));
-            await usdt.deployed();
-            await usdt.transfer(alice.address, ethers.utils.parseEther('50000'));
-            await usdt.transfer(bob.address, ethers.utils.parseEther('0'));
-    
-            wbtc = await MockERC20.deploy('WBTC', 'WBTC', ethers.utils.parseEther('10000000000'));
-            await wbtc.deployed();
-            await wbtc.transfer(alice.address, ethers.utils.parseEther('0'));
-            await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
-    
-            weth = await MockERC20.deploy('WETH', 'WETH', ethers.utils.parseEther('10000000000'));
-            await wbtc.deployed();
-            await wbtc.transfer(alice.address, ethers.utils.parseEther('0'));
-            await wbtc.transfer(bob.address, ethers.utils.parseEther('0'));
-        }
+        // console.log("alice get usdt: " + await usdt.balanceOf(alice.address));
+        // console.log("after bob usdt: " + await usdt.balanceOf(bob.address));
+        expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
     });
+
+    async function initMockTokens() {
+        // alice has 50000 usdt, bob has 2 wbtc
+        // alice want to buy 1 wbtc with her 50000 usdt, and bob is willing to provide pmm liquidity
+        const MockERC20 = await ethers.getContractFactory("MockERC20");
+
+        usdt = await MockERC20.deploy('USDT', 'USDT', ethers.utils.parseEther('10000000000'));
+        await usdt.deployed();
+
+        wbtc = await MockERC20.deploy('WBTC', 'WBTC', ethers.utils.parseEther('10000000000'));
+        await wbtc.deployed();
+
+        weth = await MockERC20.deploy('WETH', 'WETH', ethers.utils.parseEther('10000000000'));
+        await wbtc.deployed();
+    }
 });
