@@ -19,16 +19,15 @@ describe("Market Marker test", function() {
         await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
     });
 
-    it("ERC20 Exchange By FixRate", async () => {
+    xit("ERC20 Exchange By FixRate", async () => {
         const { chainId }  = await ethers.provider.getNetwork();
 
         // 3. prepare marketMaker
-        let marketMaker;
         MarketMaker = await ethers.getContractFactory("MarketMaker");
-        marketMaker = await MarketMaker.deploy();
+        const marketMaker = await MarketMaker.deploy();
         await marketMaker.deployed();
         marketMaker.initialize(weth.address, alice.address, owner.address, 0);
-        await marketMaker.connect(bob).setOperator(bob.address);
+        // await marketMaker.connect(bob).setOperator(bob.address);
 
         // 4. approve
         const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
@@ -58,11 +57,13 @@ describe("Market Marker test", function() {
                 "toTokenAddress": wbtc.address, 
                 "fromTokenAmount": '50000000000000000000000', 
                 "toTokenAmountMin": '1000000000000000000',
-                "chainId": chainId
+                "chainId": chainId,
+                "marketMaker": marketMaker.address
             }
         ]
         let infosToBeSigned = getPullInfosToBeSigned(rfq);
-        let quote = multipleQuotes(infosToBeSigned.pullInfosToBeSigned, infosToBeSigned.chainId);
+        console.log(infosToBeSigned)
+        let quote = multipleQuotes(infosToBeSigned.pullInfosToBeSigned, infosToBeSigned.chainId, infosToBeSigned.marketMaker);
 
         // 6. construct of input of funciton swap
         let infos = quote[0].infos;
@@ -104,9 +105,8 @@ describe("Market Marker test", function() {
         const { chainId }  = await ethers.provider.getNetwork();
 
         // 3. prepare marketMaker
-        let marketMaker;
         MarketMaker = await ethers.getContractFactory("MarketMaker");
-        marketMaker = await MarketMaker.deploy();
+        const marketMaker = await MarketMaker.deploy();
         await marketMaker.deployed();
         marketMaker.initialize(weth.address, alice.address, owner.address, 0);
         await marketMaker.connect(bob).setOperator(bob.address);
@@ -144,11 +144,12 @@ describe("Market Marker test", function() {
                 "toTokenAddress": wbtc.address, 
                 "fromTokenAmount": '50000000000000000000000', 
                 "toTokenAmountMin": '1000000000000000000',
-                "chainId": chainId
+                "chainId": chainId,
+                "marketMaker": marketMaker.address
             }
         ]
         let infosToBeSigned = getPullInfosToBeSigned(rfq);
-        let quote = multipleQuotes(infosToBeSigned.pullInfosToBeSigned, infosToBeSigned.chainId);
+        let quote = multipleQuotes(infosToBeSigned.pullInfosToBeSigned, infosToBeSigned.chainId, infosToBeSigned.marketMaker);
 
         // 6. construct of input of funciton swap
         let infos = quote[0].infos;
@@ -169,16 +170,19 @@ describe("Market Marker test", function() {
         let markerAmount = ethers.utils.parseEther('2');
         await wbtc.connect(bob).approve(tokenApprove.address,markerAmount);
         let swapAmount = ethers.utils.parseEther('50000');
-        await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
-        
+
+        await usdt.connect(alice).transfer(pmmAdapter.address, swapAmount);
         data = ethers.utils.defaultAbiCoder.encode(
             ['tuple(uint256,address,address,address,uint256,uint256,uint256,uint256,bool)', 'bytes'],
             [request, signature]
         )
-        await pmmAdapter.connect(alice).sellBase(alice.address, ethers.constants.AddressZero, data);
+        await pmmAdapter.sellBase(alice.address, ethers.constants.AddressZero, data);
 
         // 8. check balance
-        expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
+        expect(await usdt.balanceOf(alice.address)).to.equal(0);
+        expect(await wbtc.balanceOf(alice.address)).to.equal(infos.toTokenAmountMax);
+        expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('50000'));
+        expect(await wbtc.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2').sub(BigNumber.from(infos.toTokenAmountMax)));
     });
 
     it("ERC20 Exchange By FixRate With DEXRouter", async () => {
@@ -190,7 +194,7 @@ describe("Market Marker test", function() {
         marketMaker = await MarketMaker.deploy();
         await marketMaker.deployed();
         marketMaker.initialize(weth.address, alice.address, owner.address, 0);
-        await marketMaker.connect(bob).setOperator(bob.address);
+        // await marketMaker.connect(bob).setOperator(bob.address);
 
         // 4. approve
         const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
@@ -216,7 +220,7 @@ describe("Market Marker test", function() {
 
         PMMAdapter = await ethers.getContractFactory("PMMAdapter");
         pmmAdapter = await PMMAdapter.deploy(marketMaker.address, dexRouter.address);
-        console.log("pmmAdapter: " + pmmAdapter.address);
+
         await marketMaker.addPmmAdapter(pmmAdapter.address);
 
         // console.log("before bob usdt: " + await usdt.balanceOf(bob.address));
@@ -232,11 +236,12 @@ describe("Market Marker test", function() {
                 "toTokenAddress": wbtc.address, 
                 "fromTokenAmount": '50000000000000000000000', 
                 "toTokenAmountMin": '1000000000000000000',
-                "chainId": chainId
+                "chainId": chainId,
+                "marketMaker": marketMaker.address
             }
         ]
         let infosToBeSigned = getPullInfosToBeSigned(rfq);
-        let quote = multipleQuotes(infosToBeSigned.pullInfosToBeSigned, infosToBeSigned.chainId);
+        let quote = multipleQuotes(infosToBeSigned.pullInfosToBeSigned, infosToBeSigned.chainId, infosToBeSigned.marketMaker);
 
         // 6. construct of input of funciton swap
         let infos = quote[0].infos;
@@ -282,8 +287,12 @@ describe("Market Marker test", function() {
             [[request]],
             [[signature]]
         );
+
         // 8. check balance
-        expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
+        expect(await usdt.balanceOf(alice.address)).to.equal(0);
+        expect(await wbtc.balanceOf(alice.address)).to.equal(infos.toTokenAmountMax);
+        expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('50000'));
+        expect(await wbtc.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2').sub(BigNumber.from(infos.toTokenAmountMax)));
     });
 
     async function initMockTokens() {

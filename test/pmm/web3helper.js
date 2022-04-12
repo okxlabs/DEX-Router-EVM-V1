@@ -9,11 +9,11 @@ var getCurBlockTs = async function(){
     return ts;
 }
 
-var getLocalTs = function(){
-    return Math.floor(Date.now()/1000);
+var getLocalTs = function() {
+    return Math.floor(Date.now() / 1000);
 }
 
-var abiEncodeDomainSeparator = function(chain_id, adapter_address){
+var abiEncodeDomainSeparator = function(chain_id, marketMaker) {
     return web3.eth.abi.encodeParameter(
         {
             "":{
@@ -29,7 +29,7 @@ var abiEncodeDomainSeparator = function(chain_id, adapter_address){
             "name_hash": NAME_HASH,
             "version_hash": VERSION_HASH,
             "chain_id": chain_id,
-            "adapter_address": adapter_address
+            "adapter_address": marketMaker
         }
     )
 }
@@ -69,7 +69,7 @@ var abiEncodeMessage = function(obj){
 }
 
 // string => hash
-var keccak256 = function (message){
+var keccak256 = function (message) {
     return web3.utils.keccak256(message);
 }
 
@@ -80,7 +80,7 @@ var hashToSign = function (domain_separator, hashOrder){
 
 // sign 
 var sign = function (digest){
-    let {r,s,v} = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(PRIVATE_KEY,'hex'));
+    let { r, s, v } = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(PRIVATE_KEY,'hex'));
     // r = '0x' + r.toString('hex');
     // s = '0x' + s.toString('hex');
     signature ='0x' + r.toString('hex') + s.toString('hex') + parseInt(v).toString(16);
@@ -98,6 +98,3 @@ module.exports = {
     hashToSign,
     sign
 };
-
-
-

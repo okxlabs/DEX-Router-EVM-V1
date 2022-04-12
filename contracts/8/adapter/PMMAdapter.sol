@@ -13,7 +13,7 @@ contract PMMAdapter is IAdapterWithResult {
     address public marketMaker;
     address public dexRouter;
 
-    constructor(address _marketMaker, address _dexRouter){
+    constructor(address _marketMaker, address _dexRouter) {
         marketMaker = _marketMaker;
         dexRouter = _dexRouter;
     }

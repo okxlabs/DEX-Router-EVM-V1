@@ -260,7 +260,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       ) == 0
     ) {
       // 3.1 transfer chips to user
-      _transferTokenToUser(localBaseRequest.fromToken);
+      _transferTokenToUser(localBaseRequest.toToken);
       returnAmount = _checkReturnAmountAndEmitEvent(returnAmount, msg.sender, localBaseRequest);
 
       return returnAmount;
