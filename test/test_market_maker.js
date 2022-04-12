@@ -19,7 +19,7 @@ describe("Market Marker test", function() {
         await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
     });
 
-    xit("ERC20 Exchange By FixRate", async () => {
+    it("ERC20 Exchange By FixRate", async () => {
         const { chainId }  = await ethers.provider.getNetwork();
 
         // 3. prepare marketMaker
@@ -101,7 +101,7 @@ describe("Market Marker test", function() {
         expect(await wbtc.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2').sub(BigNumber.from(infos.toTokenAmountMax)));
     });
 
-    it("ERC20 Exchange By FixRate With PMMAdapter", async () => {
+    xit("ERC20 Exchange By FixRate With PMMAdapter", async () => {
         const { chainId }  = await ethers.provider.getNetwork();
 
         // 3. prepare marketMaker
@@ -185,7 +185,7 @@ describe("Market Marker test", function() {
         expect(await wbtc.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2').sub(BigNumber.from(infos.toTokenAmountMax)));
     });
 
-    it("ERC20 Exchange By FixRate With DEXRouter", async () => {
+    xit("ERC20 Exchange By FixRate With DEXRouter", async () => {
         const { chainId }  = await ethers.provider.getNetwork();
 
         // 3. prepare marketMaker

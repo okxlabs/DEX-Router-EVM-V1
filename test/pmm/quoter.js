@@ -10,18 +10,26 @@
 */
 
 const getToTokenAmount = require("./strategy");
-const {getLocalTs, abiEncodeMessage, abiEncodeDomainSeparator, sign, keccak256, hashToSign} = require("./web3helper");
+const { keccak256, defaultAbiCoder, solidityPack } = require('ethers/lib/utils');
+const { ecsign } = require('ethereumjs-util');
 const {
     PAYER,
     ORDER_TYPEHASH,
     RFQ_VALID_PERIOD,
     PUSH_QUOTE_PATH_INDEX,
     ADAPTER_ADDRESS,
-    DEFAULT_QUOTE
+    DEFAULT_QUOTE,
+    PRIVATE_KEY, 
+    NAME_HASH, 
+    VERSION_HASH, 
+    EIP_712_DOMAIN_TYPEHASH
 } = require("./constants");
 
 const getDomainSeparator = function (chainId, marketMaker){
-    return keccak256(abiEncodeDomainSeparator(chainId, marketMaker));
+    return keccak256(defaultAbiCoder.encode(
+        ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
+        [EIP_712_DOMAIN_TYPEHASH, NAME_HASH, VERSION_HASH, chainId, marketMaker]
+    ));
 }
 
 // rfq => infos to be signed
@@ -124,6 +132,45 @@ const multipleQuotes = function (mulInfosToBeSigned, chainId, marketMaker) {
     return quotes;
 }
 
+const getLocalTs = function() {
+    return Math.floor(Date.now() / 1000);
+}
+
+const abiEncodeMessage = function(obj){
+    return defaultAbiCoder.encode(
+        ['bytes32', 'uint256', 'address', 'address', 'address', 'uint256', 'uint256', 'uint256', 'uint256', 'bool'],
+        [
+            obj.orderTypeHash,
+            obj.pathIndex.toLocaleString('fullwide', { useGrouping: false }),
+            obj.payer,
+            obj.fromTokenAddress,
+            obj.toTokenAddress,
+            obj.fromTokenAmountMax.toLocaleString('fullwide', { useGrouping: false }),
+            obj.toTokenAmountMax.toLocaleString('fullwide', { useGrouping: false }),
+            obj.salt,
+            obj.deadLine,
+            obj.isPushOrder
+        ]
+    );
+}
+
+// final hash for signature
+const hashToSign = function (domain_separator, hashOrder){
+    return keccak256(solidityPack(
+        ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+        ['0x19', '0x01', domain_separator, hashOrder]
+    ));
+}
+
+// sign 
+const sign = function (digest){
+    let { r, s, v } = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(PRIVATE_KEY,'hex'));
+    // r = '0x' + r.toString('hex');
+    // s = '0x' + s.toString('hex');
+    signature ='0x' + r.toString('hex') + s.toString('hex') + parseInt(v).toString(16);
+    // console.log("signature",signature);
+    return signature;
+}
 
 module.exports = { 
     getDomainSeparator,
