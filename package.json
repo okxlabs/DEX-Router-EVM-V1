@@ -2,7 +2,7 @@
   "name": "ok-swap",
   "repository": "http://stash.hiotc.pro/projects/CD/repos/dex_aggregator",
   "license": "MIT",
-  "description": "Yao Swap For Multi-chain",
+  "description": "Swap service for DEX aggregator",
   "scripts": {
     "size": "hardhat size-contracts",
     "compile": "npx hardhat --config hardhat.config.js compile",
@@ -22,8 +22,7 @@
     "hardhat": "^2.9.0",
     "hardhat-abi-exporter": "^2.2.1",
     "hardhat-gas-reporter": "^1.0.7",
-    "prettier-plugin-solidity": "^1.0.0-beta.19",
-    "web3": "^1.7.1"
+    "prettier-plugin-solidity": "^1.0.0-beta.19"
   },
   "dependencies": {
     "hardhat-contract-sizer": "^2.4.0"
