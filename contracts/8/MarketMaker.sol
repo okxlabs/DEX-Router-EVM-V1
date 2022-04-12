@@ -29,7 +29,6 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
 
   mapping(address => address) public operator;
   mapping(bytes32 => OrderStatus) public orderStatus;
-  //TODO change pmmAdapter to mapping type
   mapping(address => bool) public pmmAdapter;
 
   address public weth;

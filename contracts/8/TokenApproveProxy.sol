@@ -23,6 +23,7 @@ contract TokenApproveProxy is IApproveProxy, OwnableUpgradeable {
 
   event AddNewProxy(address newProxy);
   event RemoveNewProxy(address oldProxy);
+  event TokenApproveChanged(address newTokenApprove);
 
   //-------------------------------
   //------- Internal Functions ----
@@ -44,6 +45,7 @@ contract TokenApproveProxy is IApproveProxy, OwnableUpgradeable {
 
   function setTokenApprove(address _tokenApprove) external onlyOwner {
     tokenApprove = _tokenApprove;
+    emit TokenApproveChanged(_tokenApprove);
   }
 
   //-------------------------------

@@ -7,13 +7,19 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import "./interfaces/IWETH.sol";
 
 contract WNativeRelayer is OwnableUpgradeable, ReentrancyGuardUpgradeable {
+
   address private wnative;
   mapping(address => bool) private okCallers;
+
+  event SetCaller(address indexed caller, bool isAllowed);
+  event SetWNative(address newWNative);
 
   function initialize(address _wnative) public initializer {
     __Ownable_init();
     __ReentrancyGuard_init();
     wnative = _wnative;
+
+    emit SetWNative(_wnative);
   }
 
   modifier onlyWhitelistCaller() {
@@ -25,6 +31,8 @@ contract WNativeRelayer is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     uint256 len = whitelistedCallers.length;
     for (uint256 idx = 0; idx < len; idx++) {
       okCallers[whitelistedCallers[idx]] = isOk;
+
+      emit SetCaller(whitelistedCallers[idx], isOk);
     }
   }
 
