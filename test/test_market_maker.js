@@ -19,7 +19,7 @@ describe("Market Marker test", function() {
         await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
     });
 
-    xit("ERC20 Exchange By FixRate", async () => {
+    it("ERC20 Exchange By FixRate", async () => {
         const { chainId }  = await ethers.provider.getNetwork();
 
         // 3. prepare marketMaker
@@ -62,7 +62,7 @@ describe("Market Marker test", function() {
             }
         ]
         let infosToBeSigned = getPullInfosToBeSigned(rfq);
-        console.log(infosToBeSigned)
+
         let quote = multipleQuotes(infosToBeSigned.pullInfosToBeSigned, infosToBeSigned.chainId, infosToBeSigned.marketMaker);
 
         // 6. construct of input of funciton swap
@@ -176,7 +176,7 @@ describe("Market Marker test", function() {
             ['tuple(uint256,address,address,address,uint256,uint256,uint256,uint256,bool)', 'bytes'],
             [request, signature]
         )
-        await pmmAdapter.sellBase(alice.address, ethers.constants.AddressZero, data);
+        await pmmAdapter.connect(alice).sellBase(alice.address, ethers.constants.AddressZero, data);
 
         // 8. check balance
         expect(await usdt.balanceOf(alice.address)).to.equal(0);
@@ -272,18 +272,18 @@ describe("Market Marker test", function() {
             2000000000,
             pmmAdapter.address
         ]
-        const RouterPath = [
-            // address[] mixAdapters;
-            // address[] assetTo;
-            // uint256[] rawData;
-            // bytes[] extraData;
-            // address fromToken;
-            // [pmmAdapter.address]
-        ]
+        // const RouterPath = [
+        //     // address[] mixAdapters;
+        //     // address[] assetTo;
+        //     // uint256[] rawData;
+        //     // bytes[] extraData;
+        //     // address fromToken;
+        //     // [pmmAdapter.address]
+        // ]
         await dexRouter.connect(alice).smartSwap(
             baseRequest,
             [swapAmount],
-            [],
+            [[]],
             [[request]],
             [[signature]]
         );

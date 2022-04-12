@@ -6,7 +6,7 @@ const PAYER = '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC'; // third account of 
 const PRIVATE_KEY = '5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a'; // third account of hardhat network
 
 // valid period of quotes for pulling rfq
-const RFQ_VALID_PERIOD = 60;
+const RFQ_VALID_PERIOD = 600;
 
 // chain_id => adapter_address
 const ADAPTER_ADDRESS = {
