@@ -212,7 +212,7 @@ describe("Market Marker test", function() {
         await marketMaker.setApproveProxy(tokenApproveProxy.address);
 
         DexRouter = await ethers.getContractFactory("DexRouter");
-        dexRouter = await DexRouter.deploy();
+        const dexRouter = await DexRouter.deploy();
         await dexRouter.deployed();
         await dexRouter.initialize();
         await dexRouter.setApproveProxy(tokenApproveProxy.address);
@@ -222,6 +222,8 @@ describe("Market Marker test", function() {
         pmmAdapter = await PMMAdapter.deploy(marketMaker.address, dexRouter.address);
 
         await marketMaker.addPmmAdapter(pmmAdapter.address);
+        // 给 DexRouter 设置为 pmmAdapter 合约地址
+        await dexRouter.setPmmAdapter(pmmAdapter.address);
 
         // console.log("before bob usdt: " + await usdt.balanceOf(bob.address));
         // console.log("before alice usdt: " + await usdt.balanceOf(alice.address));
@@ -269,8 +271,7 @@ describe("Market Marker test", function() {
             wbtc.address,
             swapAmount,
             ethers.utils.parseEther('0'),
-            2000000000,
-            pmmAdapter.address
+            2000000000
         ]
         // const RouterPath = [
         //     // address[] mixAdapters;
