@@ -21,6 +21,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   using UniversalERC20 for IERC20;
 
   address public approveProxy;
+  address public pmmAdapter;
 
   struct BaseRequest {
     address fromToken;
@@ -28,7 +29,6 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     uint256 fromTokenAmount;
     uint256 minReturnAmount;
     uint256 deadLine;
-    address pmmAdapter;
   }
   // TODO deleted struct SwapRequest, and move fromToken to RouterPath
 
@@ -50,6 +50,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   //-------------------------------
 
   event ApproveProxyChanged(address _approveProxy);
+  event PmmAdapterChanged(address _pmmAdapter);
 
   //-------------------------------
   //------- Modifier --------------
@@ -99,14 +100,13 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   }
 
   function _exeHop(
-    address pmmAdapter,
     uint256 batchAmount,
     RouterPath[] calldata hops,
     IMarketMaker.PMMSwapRequest[] calldata pmmRequest,
     bytes[] calldata pmmSignature
   ) internal {
     // 1. try to replace this hop by pmm
-    if (_tryPmmSwap(pmmAdapter, hops[0].fromToken, batchAmount, pmmRequest[0], pmmSignature[0]) == 0) {
+    if (_tryPmmSwap(hops[0].fromToken, batchAmount, pmmRequest[0], pmmSignature[0]) == 0) {
       return;
     }
 
@@ -123,7 +123,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       }
 
       // 3.1 try to replace this fork by pmm
-      if (_tryPmmSwap(pmmAdapter, hops[i].fromToken, batchAmount, pmmRequest[i + 1], pmmSignature[i + 1]) == 0) {
+      if (_tryPmmSwap(hops[i].fromToken, batchAmount, pmmRequest[i + 1], pmmSignature[i + 1]) == 0) {
         continue;
       }
 
@@ -174,7 +174,6 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   }
 
   function _tryPmmSwap(
-    address pmmAdapter,
     address fromToken,
     uint256 actualRequest,
     IMarketMaker.PMMSwapRequest memory pmmRequest,
@@ -220,6 +219,12 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     emit ApproveProxyChanged(approveProxy);
   }
 
+  function setPmmAdapter(address newPmmAdapter) external onlyOwner {
+    pmmAdapter = newPmmAdapter;
+
+    emit PmmAdapterChanged(pmmAdapter);
+  }
+
   //-------------------------------
   //------- Users Functions -------
   //-------------------------------
@@ -252,7 +257,6 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     // 3. try to replace the whole swap by pmm
     if (
       _tryPmmSwap(
-        localBaseRequest.pmmAdapter,
         localBaseRequest.fromToken,
         localBaseRequest.fromTokenAmount,
         pmmRequests[0][0],
@@ -283,7 +287,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     // 5. execute batch
     for (uint256 i = 0; i < batches.length; i++) {
       // execute hop
-      _exeHop(localBaseRequest.pmmAdapter, batchesAmount[i], batches[i], pmmRequests[i + 1], pmmSignatures[i + 1]);
+      _exeHop(batchesAmount[i], batches[i], pmmRequests[i + 1], pmmSignatures[i + 1]);
     }
 
     // 6. transfer tokens to user
