@@ -2,16 +2,13 @@
 pragma solidity ^0.8.0;
 
 contract MockBancor {
+  function reserveBalance(address reserveToken) public view returns (uint256) {
+    return 0;
+  }
 
-    function reserveBalance(address reserveToken) public view returns (uint256) {
-        return 0;
-    }
+  function conversionFee() external view returns (uint32) {
+    return 0;
+  }
 
-    function conversionFee() external view returns (uint32) {
-        return 0;
-    }
-
-    function setConversionFee(uint32 fee) external {
-        
-    }
+  function setConversionFee(uint32 fee) external {}
 }

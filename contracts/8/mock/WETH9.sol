@@ -36,12 +36,12 @@ contract WETH9 is IWETH {
     deposit();
   }
 
-  function deposit() override public payable {
+  function deposit() public payable override {
     balanceOf[msg.sender] += msg.value;
     emit Deposit(msg.sender, msg.value);
   }
 
-  function withdraw(uint256 wad) override public {
+  function withdraw(uint256 wad) public override {
     require(balanceOf[msg.sender] >= wad);
     balanceOf[msg.sender] -= wad;
     payable(msg.sender).transfer(wad);
@@ -53,7 +53,7 @@ contract WETH9 is IWETH {
     balanceOf[guy] += wad;
   }
 
-  function totalSupply() public override view returns (uint256) {
+  function totalSupply() public view override returns (uint256) {
     return address(this).balance;
   }
 
@@ -63,7 +63,7 @@ contract WETH9 is IWETH {
     return true;
   }
 
-  function transfer(address dst, uint256 wad) override public returns (bool) {
+  function transfer(address dst, uint256 wad) public override returns (bool) {
     return transferFrom(msg.sender, dst, wad);
   }
 

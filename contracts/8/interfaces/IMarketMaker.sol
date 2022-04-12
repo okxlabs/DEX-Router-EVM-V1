@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 interface IMarketMaker {
-
   struct PMMSwapRequest {
     uint256 pathIndex;
     address payer;
@@ -12,7 +11,7 @@ interface IMarketMaker {
     uint256 toTokenAmountMax;
     uint256 salt;
     uint256 deadLine;
-    bool    isPushOrder;
+    bool isPushOrder;
   }
 
   enum PMM_ERROR {
@@ -27,10 +26,10 @@ interface IMarketMaker {
   }
 
   function swap(
-      uint256 actualAmountRequest,  
-      PMMSwapRequest memory pmmRequest,
-      bytes memory signature
-  ) external returns(uint256);
+    uint256 actualAmountRequest,
+    PMMSwapRequest memory pmmRequest,
+    bytes memory signature
+  ) external returns (uint256);
 
   function approveProxy() external returns (address);
 }
