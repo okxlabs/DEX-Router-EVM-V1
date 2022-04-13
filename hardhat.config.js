@@ -1,9 +1,9 @@
 require("@nomiclabs/hardhat-waffle");
-require("@openzeppelin/hardhat-upgrades")
+require("@nomiclabs/hardhat-solhint");
 require('hardhat-abi-exporter');
 require("hardhat-gas-reporter");
 require('hardhat-contract-sizer');
-require("@nomiclabs/hardhat-solhint");
+require("@openzeppelin/hardhat-upgrades");
 require('dotenv').config();
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
