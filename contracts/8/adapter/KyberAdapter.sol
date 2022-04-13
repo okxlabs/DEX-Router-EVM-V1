@@ -34,10 +34,8 @@ contract KyberAdapter is IAdapter {
 
         uint256 balance0 = baseToken.balanceOf(pool);
 
-        uint256 sellBaseAmountWithFee = (balance0 - reserveIn) *
-            (PRECISION - feeInPrecision);
-        uint256 receiveQuoteAmount = (sellBaseAmountWithFee * vReserveOut) /
-            (vReserveIn * PRECISION + sellBaseAmountWithFee);
+        uint sellBaseAmountWithFee = (balance0 - reserveIn) * (PRECISION - feeInPrecision) / PRECISION;
+        uint receiveQuoteAmount = sellBaseAmountWithFee * vReserveOut / (vReserveIn + sellBaseAmountWithFee);
 
         IKyber(pool).swap(0, receiveQuoteAmount, to, new bytes(0));
     }
@@ -49,24 +47,13 @@ contract KyberAdapter is IAdapter {
         bytes memory
     ) external override {
         IERC20 quoteToken = IKyber(pool).token1();
-        (
-            uint256 reserveOut,
-            uint256 reserveIn,
-            uint256 vReserveOut,
-            uint256 vReserveIn,
-            uint256 feeInPrecision
-        ) = IKyber(pool).getTradeInfo();
-        require(
-            reserveIn > 0 && reserveOut > 0,
-            "KyberAdapter: INSUFFICIENT_LIQUIDITY"
-        );
-
-        uint256 balance1 = quoteToken.balanceOf(pool);
-
-        uint256 sellQuoteAmountWithFee = (balance1 - reserveIn) *
-            (PRECISION - feeInPrecision);
-        uint256 receiveBaseAmount = (sellQuoteAmountWithFee * vReserveOut) /
-            (vReserveIn * PRECISION + sellQuoteAmountWithFee);
+        (uint reserveOut, uint reserveIn, uint vReserveOut, uint vReserveIn, uint feeInPrecision) = IKyber(pool).getTradeInfo();
+        require(reserveIn > 0 && reserveOut > 0, "KyberAdapter: INSUFFICIENT_LIQUIDITY");
+        
+        uint balance1 = quoteToken.balanceOf(pool);
+    
+        uint sellQuoteAmountWithFee = (balance1 - reserveIn) * (PRECISION - feeInPrecision) / PRECISION;
+        uint receiveBaseAmount = sellQuoteAmountWithFee * vReserveOut / (vReserveIn + sellQuoteAmountWithFee);
 
         IKyber(pool).swap(receiveBaseAmount, 0, to, new bytes(0));
     }
