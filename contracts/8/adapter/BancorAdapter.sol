@@ -77,6 +77,7 @@ contract BancorAdapter is IAdapter {
 
     event Received(address, uint);
     receive() external payable {
+        require(msg.value > 0, "receive error");
         emit Received(msg.sender, msg.value);
     }
 
