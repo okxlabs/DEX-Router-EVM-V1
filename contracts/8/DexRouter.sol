@@ -30,7 +30,6 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     uint256 minReturnAmount;
     uint256 deadLine;
   }
-  // TODO deleted struct SwapRequest, and move fromToken to RouterPath
 
   struct RouterPath {
     address[] mixAdapters;
@@ -66,7 +65,6 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   //-------------------------------
 
   function _exeForks(uint256 batchAmount, RouterPath calldata path) internal {
-    // TODO deleted isFirstHop
     // execute multiple Adapters for a transaction pair
     for (uint256 i = 0; i < path.mixAdapters.length; i++) {
       bytes32 rawData = bytes32(path.rawData[i]);
@@ -179,7 +177,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     IMarketMaker.PMMSwapRequest memory pmmRequest,
     bytes memory signature
   ) internal returns (uint256) {
-    // TODO check from token
+    // check from token
     if (pmmRequest.fromToken != fromToken) {
       return uint256(IMarketMaker.PMM_ERROR.WRONG_FROM_TOKEN);
     }
@@ -190,7 +188,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
     address tokenApprove = IApproveProxy(approveProxy).tokenApprove();
     SafeERC20.safeApprove(IERC20(fromToken), tokenApprove, actualRequest);
-    // TODO settle funds in MarketMaker, send funds to pmmAdapter
+    // settle funds in MarketMaker, send funds to pmmAdapter
     _deposit(address(this), pmmAdapter, fromToken, actualRequest);
     bytes memory moreInfo = abi.encode(pmmRequest, signature);
     uint256 errorCode = IAdapterWithResult(pmmAdapter).sellBase(address(this), address(0), moreInfo);

@@ -24,7 +24,7 @@ library Utils {
         }
     }
 
-    /* @notice      Convert bytes to uint256
+    /*  @notice      Convert bytes to uint256
      *  @param _b    Source bytes should have length of 32
      *  @return      uint256
      */
@@ -45,7 +45,7 @@ library Utils {
         );
     }
 
-    /* @notice      Convert uint256 to bytes
+    /*  @notice      Convert uint256 to bytes
      *  @param _b    uint256 that needs to be converted
      *  @return      bytes
      */
@@ -214,7 +214,7 @@ library Utils {
         return tempBytes;
     }
 
-    /* @notice              Check if the elements number of _signers within _keepers array is no less than _m
+    /*  @notice              Check if the elements number of _signers within _keepers array is no less than _m
      *  @param _keepers      The array consists of serveral address
      *  @param _signers      Some specific addresses to be looked into
      *  @param _m            The number requirement paramter
@@ -237,7 +237,7 @@ library Utils {
         return m >= _m;
     }
 
-    /* @notice              TODO
+    /*  @notice
      *  @param key
      *  @return
      */
