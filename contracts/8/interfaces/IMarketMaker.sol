@@ -27,10 +27,9 @@ interface IMarketMaker {
         WRONG_FROM_TOKEN
     }
 
-    function swap(
-        uint256 actualAmountRequest,
-        PMMSwapRequest memory pmmRequest
-    ) external returns (uint256);
+    function swap(uint256 actualAmountRequest, PMMSwapRequest memory pmmRequest)
+        external
+        returns (uint256);
 
     function approveProxy() external returns (address);
 }

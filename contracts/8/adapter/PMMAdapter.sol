@@ -9,8 +9,13 @@ import "../libraries/UniversalERC20.sol";
 import "../libraries/SafeERC20.sol";
 
 contract PMMAdapter is IAdapterWithResult {
+<<<<<<< HEAD
     address immutable marketMaker;
     address immutable dexRouter;
+=======
+    address public immutable marketMaker;
+    address public immutable dexRouter;
+>>>>>>> c05c8033b9f18e88aef7f2451d96539f43865186
 
     constructor(address _marketMaker, address _dexRouter) {
         marketMaker = _marketMaker;

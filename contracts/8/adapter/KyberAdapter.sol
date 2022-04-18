@@ -34,10 +34,10 @@ contract KyberAdapter is IAdapter {
 
         uint256 balance0 = baseToken.balanceOf(pool);
 
-        uint256 sellBaseAmountWithFee = (balance0 - reserveIn) *
-            (PRECISION - feeInPrecision);
+        uint256 sellBaseAmountWithFee = ((balance0 - reserveIn) *
+            (PRECISION - feeInPrecision)) / PRECISION;
         uint256 receiveQuoteAmount = (sellBaseAmountWithFee * vReserveOut) /
-            (vReserveIn * PRECISION + sellBaseAmountWithFee);
+            (vReserveIn + sellBaseAmountWithFee);
 
         IKyber(pool).swap(0, receiveQuoteAmount, to, new bytes(0));
     }
@@ -63,10 +63,10 @@ contract KyberAdapter is IAdapter {
 
         uint256 balance1 = quoteToken.balanceOf(pool);
 
-        uint256 sellQuoteAmountWithFee = (balance1 - reserveIn) *
-            (PRECISION - feeInPrecision);
+        uint256 sellQuoteAmountWithFee = ((balance1 - reserveIn) *
+            (PRECISION - feeInPrecision)) / PRECISION;
         uint256 receiveBaseAmount = (sellQuoteAmountWithFee * vReserveOut) /
-            (vReserveIn * PRECISION + sellQuoteAmountWithFee);
+            (vReserveIn + sellQuoteAmountWithFee);
 
         IKyber(pool).swap(receiveBaseAmount, 0, to, new bytes(0));
     }

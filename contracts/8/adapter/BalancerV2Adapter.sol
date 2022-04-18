@@ -100,7 +100,10 @@ contract BalancerV2Adapter is IAdapter {
         _balancerV2Swap(to, vault, moreInfo);
     }
 
+    event Received(address, uint256);
+
     receive() external payable {
         require(msg.value > 0, "receive error");
+        emit Received(msg.sender, msg.value);
     }
 }
