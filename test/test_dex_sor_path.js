@@ -6,7 +6,7 @@ describe("Smart route path test", function() {
   const FOREVER = '2000000000';
   let wbtc, weth, dot, bnb, usdc, usdt
   let router, tokenApprove, dexRouter
-  let owner, alice, bob, liquidity;
+  let owner, alice, bob;
 
   beforeEach(async function() {
     [owner, alice, bob, liquidity] = await ethers.getSigners();
@@ -35,9 +35,8 @@ describe("Smart route path test", function() {
     }
   });
 
-  xit("mixSwap with single path", async () => {
+  it("mixSwap with single path", async () => {
     // wbtc -> weth -> usdt
-    console.log("before: " + await usdt.balanceOf(alice.address));
 
     fromToken = wbtc;
     toToken = usdt;
@@ -99,7 +98,7 @@ describe("Smart route path test", function() {
     // console.log("after: " + await usdt.balanceOf(alice.address));
   });
 
-  xit("mixSwap with two fork path", async () => {
+  it("mixSwap with two fork path", async () => {
     // wbtc -> weth -> usdt
     //      -> dot  -> usdt
 
@@ -192,12 +191,12 @@ describe("Smart route path test", function() {
     expect(await usdt.balanceOf(alice.address)).to.be.eq("102207176171780117650753");
   });
 
-  xit("mixSwap with four path, same token", async () => {
+  it("mixSwap with four path, same token", async () => {
     // wbtc -> weth(uni)
     //      -> weth(curve)
     //      -> weth(dodo)
 
-    console.log("before: " + await weth.balanceOf(alice.address));
+    expect(await weth.balanceOf(alice.address)).to.be.eq("0");
 
     fromToken = wbtc;
     toToken = weth;
@@ -273,6 +272,8 @@ describe("Smart route path test", function() {
     const deadLine = FOREVER;
 
     await fromToken.connect(alice).approve(tokenApprove.address, ethers.constants.MaxUint256);
+
+    expect(await toToken.balanceOf(alice.address)).to.be.eq("0");
 
     // wbtc -> weth
     const mixAdapter1 = [
@@ -392,7 +393,7 @@ describe("Smart route path test", function() {
     );
 
     expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
-    console.log("after: " + await usdt.balanceOf(alice.address));
+    expect(await toToken.balanceOf(alice.address)).to.be.eq(53597548250295474132461);
   });
 
   const direction = function(token0, token1) {
