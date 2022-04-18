@@ -51,7 +51,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   //------- Events ----------------
   //-------------------------------
 
-  event ApproveProxyChanged(address _approveProxy);
+  event ApproveProxyChanged(address approveProxy);
 
   //-------------------------------
   //------- Modifier --------------
@@ -110,7 +110,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     uint8 pmmIndex;
 
     // try to replace this batch by pmm
-    if (uint256(hops[0].fromToken & _PMM_FLAG8_MASK) > 0){
+    if (uint256(hops[0].fromToken & _PMM_FLAG8_MASK) > 0) {
       fromToken = address(uint160(uint256(hops[0].fromToken) & _ADDRESS_MASK));
       pmmIndex = uint8(uint256(hops[0].fromToken & _PMM_INDEX_I_MASK) >> 240);
       if (_tryPmmSwap(fromToken, batchAmount, extraData[pmmIndex]) == 0) {
@@ -125,7 +125,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       }
 
       // 3.1 try to replace this hop by pmm
-      if (uint256(hops[i].fromToken & _PMM_FLAG4_MASK) > 0){
+      if (uint256(hops[i].fromToken & _PMM_FLAG4_MASK) > 0) {
         fromToken = address(uint160(uint256(hops[i].fromToken) & _ADDRESS_MASK));
         pmmIndex = uint8(uint256(hops[i].fromToken & _PMM_INDEX_I_MASK) >> 232);
         if (_tryPmmSwap(fromToken, batchAmount, extraData[pmmIndex]) == 0){
@@ -162,7 +162,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       if (wethBal > 0) {
         IWETH(address(uint160(_WETH))).withdraw(wethBal);
       }
-      uint256 ethBal = (address(this).balance);
+      uint256 ethBal = address(this).balance;
       if (ethBal > 0) {
         payable(msg.sender).transfer(ethBal);
       }
@@ -226,48 +226,47 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(msg.sender);
     _deposit(msg.sender, address(this), baseRequestFromToken, localBaseRequest.fromTokenAmount);
 
-    // 2. check total batch amount, invoid stack too deep
+    // 2. check total batch amount
     {
-      uint256 totalBatchAmount = 0;
-      for (uint256 i = 0; i < batches.length; i++) {
+      // invoid stack too deep
+      uint256 totalBatchAmount;
+      for (uint256 i = 0; i < batchesAmount.length; i++) {
         totalBatchAmount += batchesAmount[i];
       }
       require(
         totalBatchAmount <= localBaseRequest.fromTokenAmount,
-        "Route: number of branches should be <= fromTokenAmount"
+        "Route: number of batches should be <= fromTokenAmount"
       );
     }
 
     // 3. try to replace the whole swap by pmm
-    {
-      bool pmmFlag = (uint256(localBaseRequest.fromToken & _PMM_FLAG8_MASK)) > 0;
-      if (pmmFlag){
-        uint8 pmmIndex = uint8(uint256(localBaseRequest.fromToken & _PMM_INDEX_I_MASK) >> 240);
-        if (_tryPmmSwap(baseRequestFromToken, localBaseRequest.fromTokenAmount, extraData[pmmIndex]) == 0){
-          _transferTokenToUser(localBaseRequest.toToken);
-          returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(msg.sender) - returnAmount;
-          require(returnAmount >= baseRequest.minReturnAmount, "Route: Return amount is not enough");
-          emit OrderRecord(baseRequestFromToken, baseRequest.toToken, msg.sender, localBaseRequest.fromTokenAmount, returnAmount);
-        }
-        return returnAmount;
+    bool wholeReplaceFlag = (uint256(localBaseRequest.fromToken & _PMM_FLAG8_MASK)) > 0;
+    if (wholeReplaceFlag) {
+      uint8 pmmIndex = uint8(uint256(localBaseRequest.fromToken & _PMM_INDEX_I_MASK) >> 240);
+      if (_tryPmmSwap(baseRequestFromToken, localBaseRequest.fromTokenAmount, extraData[pmmIndex]) == 0) {
+        _transferTokenToUser(localBaseRequest.toToken);
+
+        returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(msg.sender) - returnAmount;
+        require(returnAmount >= baseRequest.minReturnAmount, "Route: Return amount is not enough");
+        emit OrderRecord(baseRequestFromToken, baseRequest.toToken, msg.sender, localBaseRequest.fromTokenAmount, returnAmount);
       }
+      return returnAmount;
     }
 
-    
-
-    // 5. execute batch
+    // 4. execute batch
     for (uint256 i = 0; i < batches.length; i++) {
       // execute hop
       _exeHop(batchesAmount[i], batches[i], extraData);
     }
 
-    // 6. transfer tokens to user
+    // 5. transfer tokens to user
     _transferTokenToUser(baseRequestFromToken);
     _transferTokenToUser(baseRequest.toToken);
 
-    // 7. check minReturnAmount
+    // 6. check minReturnAmount
     returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(msg.sender) - returnAmount;
     require(returnAmount >= baseRequest.minReturnAmount, "Route: Return amount is not enough");
+
     emit OrderRecord(baseRequestFromToken, baseRequest.toToken, msg.sender, localBaseRequest.fromTokenAmount, returnAmount);
   }
 }

@@ -22,7 +22,10 @@ contract PMMAdapter is IAdapterWithResult {
         address, /*pool*/
         bytes memory moreInfo
     ) internal returns (uint256) {
-        IMarketMaker.PMMSwapRequest memory request = abi.decode(moreInfo, (IMarketMaker.PMMSwapRequest));
+        IMarketMaker.PMMSwapRequest memory request = abi.decode(
+            moreInfo,
+            (IMarketMaker.PMMSwapRequest)
+        );
 
         uint256 sellAmount = IERC20(request.fromToken).balanceOf(address(this));
 
@@ -35,10 +38,7 @@ contract PMMAdapter is IAdapterWithResult {
             sellAmount
         );
 
-        uint256 result = IMarketMaker(marketMaker).swap(
-            sellAmount,
-            request
-        );
+        uint256 result = IMarketMaker(marketMaker).swap(sellAmount, request);
 
         if (to != address(this)) {
             SafeERC20.safeTransfer(

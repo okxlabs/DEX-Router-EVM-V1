@@ -55,7 +55,7 @@ module.exports = {
         },
       }
     },
-    oec: {
+    okc: {
       url: "https://exchainrpc.okex.org",
       chainId: 66,
       accounts: [`${PRIVATE_KEY}`],
@@ -66,7 +66,7 @@ module.exports = {
         },
       },
     },
-    oec_test: {
+    okc_test: {
       url: "https://exchaintestrpc.okex.org",
       chainId: 65,
       accounts: [`${PRIVATE_KEY}`],
