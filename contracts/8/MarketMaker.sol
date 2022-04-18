@@ -49,15 +49,17 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
   // ============ Struct ============
 
   struct PMMSwapRequest {
-    uint256 pathIndex;
-    address payer;
-    address fromToken;
-    address toToken;
-    uint256 fromTokenAmountMax;
-    uint256 toTokenAmountMax;
-    uint256 salt;
-    uint256 deadLine;
-    bool isPushOrder;
+      uint256 pathIndex;
+      address payer;
+      address fromToken;
+      address toToken;
+      uint256 fromTokenAmountMax;
+      uint256 toTokenAmountMax;
+      uint256 salt;
+      uint256 deadLine;
+      bool isPushOrder;
+      address pmmAdapter;
+      bytes signature;
   }
 
   struct OrderStatus {
@@ -183,14 +185,13 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
 
   function swap(
     uint256 actualAmountRequest,
-    PMMSwapRequest memory request,
-    bytes memory signature
+    PMMSwapRequest memory request
   ) external onlyPMMAdapter nonReentrant returns (uint256) {
     // TODO After this, Router transfer fromTokenAmount to payer
 
     bytes32 digest = _hashTypedDataV4(hashOrder(request));
 
-    if (!validateSig(digest, request.payer, signature)) {
+    if (!validateSig(digest, request.payer, request.signature)) {
       return uint256(PMM_ERROR.INVALID_SIGNATURE);
     }
 

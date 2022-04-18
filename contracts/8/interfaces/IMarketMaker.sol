@@ -12,6 +12,8 @@ interface IMarketMaker {
         uint256 salt;
         uint256 deadLine;
         bool isPushOrder;
+        address pmmAdapter;
+        bytes signature;
     }
 
     enum PMM_ERROR {
@@ -27,8 +29,7 @@ interface IMarketMaker {
 
     function swap(
         uint256 actualAmountRequest,
-        PMMSwapRequest memory pmmRequest,
-        bytes memory signature
+        PMMSwapRequest memory pmmRequest
     ) external returns (uint256);
 
     function approveProxy() external returns (address);

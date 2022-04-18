@@ -9,8 +9,8 @@ import "../libraries/UniversalERC20.sol";
 import "../libraries/SafeERC20.sol";
 
 contract PMMAdapter is IAdapterWithResult {
-    address public marketMaker;
-    address public dexRouter;
+    address immutable marketMaker;
+    address immutable dexRouter;
 
     constructor(address _marketMaker, address _dexRouter) {
         marketMaker = _marketMaker;
@@ -22,10 +22,7 @@ contract PMMAdapter is IAdapterWithResult {
         address, /*pool*/
         bytes memory moreInfo
     ) internal returns (uint256) {
-        (
-            IMarketMaker.PMMSwapRequest memory request,
-            bytes memory signature
-        ) = abi.decode(moreInfo, (IMarketMaker.PMMSwapRequest, bytes));
+        IMarketMaker.PMMSwapRequest memory request = abi.decode(moreInfo, (IMarketMaker.PMMSwapRequest));
 
         uint256 sellAmount = IERC20(request.fromToken).balanceOf(address(this));
 
@@ -40,8 +37,7 @@ contract PMMAdapter is IAdapterWithResult {
 
         uint256 result = IMarketMaker(marketMaker).swap(
             sellAmount,
-            request,
-            signature
+            request
         );
 
         if (to != address(this)) {
