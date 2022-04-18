@@ -13,7 +13,7 @@ import "./interfaces/IAdapter.sol";
 import "./interfaces/IAdapterWithResult.sol";
 import "./interfaces/IApproveProxy.sol";
 import "./interfaces/IMarketMaker.sol";
-
+import "hardhat/console.sol";
 /// @title DexRouter
 /// @notice Entrance of Split trading in Dex platform
 /// @dev Entrance of Split trading in Dex platform
@@ -27,7 +27,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   bytes32 public constant _PMM_INDEX_J_MASK = 0x0000ff0000000000000000000000000000000000000000000000000000000000;
 
   struct BaseRequest {
-    bytes32 fromToken;
+    uint256 fromToken;
     address toToken;
     uint256 fromTokenAmount;
     uint256 minReturnAmount;
@@ -39,7 +39,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     address[] assetTo;
     uint256[] rawData;
     bytes[] extraData;
-    bytes32 fromToken;    
+    uint256 fromToken;    
   }
 
   function initialize() public initializer {
@@ -67,7 +67,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   //-------------------------------
 
   function _exeForks(uint256 batchAmount, RouterPath memory path) internal {
-    address fromToken = address(uint160(uint256(path.fromToken) & _ADDRESS_MASK));
+    address fromToken = bytes32ToAddress(path.fromToken);
 
     // execute multiple Adapters for a transaction pair
     for (uint256 i = 0; i < path.mixAdapters.length; i++) {
@@ -81,13 +81,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
         weight := shr(160, and(rawData, _WEIGHT_MASK))
       }
       require(weight >= 0 && weight <= 10000, "weight out of range");
-      uint256 _fromTokenAmount;
-      if (i == path.mixAdapters.length - 1) {
-        // There will be one drop left over from the last fork in percentage, fix it here
-        _fromTokenAmount = IERC20(fromToken).universalBalanceOf(address(this));
-      } else {
-        _fromTokenAmount = (batchAmount * weight) / 10000;
-      }
+      uint256 _fromTokenAmount = (batchAmount * weight) / 10000;
       address tokenApprove = IApproveProxy(approveProxy).tokenApprove();
       SafeERC20.safeApprove(IERC20(fromToken), tokenApprove, _fromTokenAmount);
       // send the asset to the adapter
@@ -110,9 +104,9 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     uint8 pmmIndex;
 
     // try to replace this batch by pmm
-    if (uint256(hops[0].fromToken & _PMM_FLAG8_MASK) > 0) {
-      fromToken = address(uint160(uint256(hops[0].fromToken) & _ADDRESS_MASK));
-      pmmIndex = uint8(uint256(hops[0].fromToken & _PMM_INDEX_I_MASK) >> 240);
+    if (isReplace(hops[0].fromToken)) {
+      fromToken = bytes32ToAddress(hops[0].fromToken);
+      pmmIndex = getPmmIIndex(hops[0].fromToken);
       if (_tryPmmSwap(fromToken, batchAmount, extraData[pmmIndex]) == 0) {
         return;
       }
@@ -121,14 +115,15 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     // excute hop
     for (uint256 i = 0; i < hops.length; i++) {
       if (i > 0) {
+        fromToken = bytes32ToAddress(hops[i].fromToken);
         batchAmount = IERC20(fromToken).universalBalanceOf(address(this));
       }
 
       // 3.1 try to replace this hop by pmm
-      if (uint256(hops[i].fromToken & _PMM_FLAG4_MASK) > 0) {
-        fromToken = address(uint160(uint256(hops[i].fromToken) & _ADDRESS_MASK));
-        pmmIndex = uint8(uint256(hops[i].fromToken & _PMM_INDEX_I_MASK) >> 232);
-        if (_tryPmmSwap(fromToken, batchAmount, extraData[pmmIndex]) == 0){
+      if (isHopReplace(hops[i].fromToken)) {
+        fromToken = bytes32ToAddress(hops[i].fromToken);
+        pmmIndex = getPmmJIndex(hops[i].fromToken);
+        if (_tryPmmSwap(fromToken, batchAmount, extraData[pmmIndex]) == 0) {
           continue;
         }
       }
@@ -199,6 +194,36 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     return errorCode;
   }
 
+  function bytes32ToAddress(uint256 param) internal pure returns (address result) {
+    assembly {
+      result := and(param, _ADDRESS_MASK)
+    }
+  }
+
+  function isReplace(uint256 token) internal pure returns (bool result) {
+    assembly {
+      result := and(token, _PMM_FLAG8_MASK)
+    }
+  }
+
+  function isHopReplace(uint256 token) internal pure returns (bool result) {
+    assembly {
+      result := and(token, _PMM_FLAG4_MASK)
+    }
+  }
+
+  function getPmmIIndex(uint256 token) internal pure returns (uint8 result) {
+    assembly {
+      result := shr(240, and(token, _PMM_INDEX_I_MASK))
+    }
+  }
+
+  function getPmmJIndex(uint256 token) internal pure returns (uint8 result) {
+    assembly {
+      result := shr(232, and(token, _PMM_INDEX_I_MASK))
+    }
+  }
+
   //-------------------------------
   //------- Admin functions -------
   //-------------------------------
@@ -222,7 +247,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     // 1. transfer from token in
     require(baseRequest.fromTokenAmount > 0, "Route: fromTokenAmount must be > 0");
     BaseRequest memory localBaseRequest = baseRequest;
-    address baseRequestFromToken = address(uint160(uint256(localBaseRequest.fromToken) & _ADDRESS_MASK));
+    address baseRequestFromToken = bytes32ToAddress(localBaseRequest.fromToken);
     returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(msg.sender);
     _deposit(msg.sender, address(this), baseRequestFromToken, localBaseRequest.fromTokenAmount);
 
@@ -240,9 +265,10 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     }
 
     // 3. try to replace the whole swap by pmm
-    bool wholeReplaceFlag = (uint256(localBaseRequest.fromToken & _PMM_FLAG8_MASK)) > 0;
-    if (wholeReplaceFlag) {
-      uint8 pmmIndex = uint8(uint256(localBaseRequest.fromToken & _PMM_INDEX_I_MASK) >> 240);
+    if (isReplace(localBaseRequest.fromToken)) {
+      uint8 pmmIndex = getPmmIIndex(localBaseRequest.fromToken);
+      console.logBytes32(bytes32(localBaseRequest.fromToken));
+      console.log("pmmIndex %s", pmmIndex);
       if (_tryPmmSwap(baseRequestFromToken, localBaseRequest.fromTokenAmount, extraData[pmmIndex]) == 0) {
         _transferTokenToUser(localBaseRequest.toToken);
 
