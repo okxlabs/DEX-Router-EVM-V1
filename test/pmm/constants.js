@@ -41,17 +41,16 @@ const ORDER_TYPEHASH = '0x4a40b70e4ae0155dd898ee90c3175d87bc1fa4f090f96b782f2cfc
 const PUSH_QUOTE_PATH_INDEX = 0;
 
 const DEFAULT_QUOTE =  {
-    "infos":{
-        "pathIndex": 0, 
-        "payer": PAYER, 
-        "fromTokenAddress": "0x0000000000000000000000000000000000000000", 
-        "toTokenAddress" : "0x0000000000000000000000000000000000000000", 
-        "fromTokenAmountMax" : 0, 
-        "toTokenAmountMax" : 0, 
-        "salt" : 0, 
-        "deadLine" : 0, 
-        "isPushOrder" : false
-    },
+    "pathIndex": 0, 
+    "payer": PAYER, 
+    "fromTokenAddress": "0x0000000000000000000000000000000000000000", 
+    "toTokenAddress" : "0x0000000000000000000000000000000000000000", 
+    "fromTokenAmountMax" : 0, 
+    "toTokenAmountMax" : 0, 
+    "salt" : 0, 
+    "deadLine" : 0, 
+    "isPushOrder" : false,
+    "pmmAdapter" : "0x0000000000000000000000000000000000000000",
     "signature": '0x'
 }
 

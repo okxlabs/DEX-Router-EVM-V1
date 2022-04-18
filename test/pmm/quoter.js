@@ -39,6 +39,7 @@ const getPullInfosToBeSigned = function (pull_data) {
     let pullInfosToBeSigned = [];
     let chainId = [];
     let marketMaker = [];
+    let pmmAdapter = [];
 
     for (let i = 0; i < quantity; i++) {
         let chunk = pull_data[i];
@@ -59,9 +60,10 @@ const getPullInfosToBeSigned = function (pull_data) {
 
         chainId[i] = chunk.chainId;
         marketMaker[i] = chunk.marketMaker;
+        pmmAdapter[i] = chunk.pmmAdapter;
     }
 
-    return { pullInfosToBeSigned, chainId, marketMaker };
+    return { pullInfosToBeSigned, chainId, marketMaker, pmmAdapter };
 }
 
 // order to be pushed => infos to be signed
@@ -71,6 +73,7 @@ const getPushInfosToBeSigned = function (push_data){
     let pushInfosToBeSigned = [];
     let chainId = [];
     let marketMaker = [];
+    let pmmAdapter = [];
 
     for (let i = 0; i < quantity; i++){
         let chunk = push_data[i];
@@ -88,29 +91,30 @@ const getPushInfosToBeSigned = function (push_data){
         };
         chainId[i] = chunk.chainId;
         marketMaker[i] = ADAPTER_ADDRESS[chunk.chainId];
+        // pmmAdapter[i] = chunk.pmmAdapter;
+
     }
 
     return {pushInfosToBeSigned, chainId, marketMaker};
 }
 
 // sign infos and return a single quote
-const singleQuote = function (domain_separator, infosToBeSigned) {
+const singleQuote = function (domain_separator, infosToBeSigned, pmmAdapter) {
     try{
         let hashOrder = keccak256(abiEncodeMessage(infosToBeSigned));
         let hash = hashToSign(domain_separator, hashOrder);
         let signature = sign(hash);
         let quote = {
-            "infos":{
-                "pathIndex": infosToBeSigned.pathIndex.toLocaleString('fullwide', { useGrouping: false }), 
-                "payer": infosToBeSigned.payer, 
-                "fromTokenAddress": infosToBeSigned.fromTokenAddress, 
-                "toTokenAddress" : infosToBeSigned.toTokenAddress, 
-                "fromTokenAmountMax" : infosToBeSigned.fromTokenAmountMax.toLocaleString('fullwide', { useGrouping: false }), 
-                "toTokenAmountMax" : infosToBeSigned.toTokenAmountMax.toLocaleString('fullwide', { useGrouping: false }), 
-                "salt" : infosToBeSigned.salt, 
-                "deadLine" : infosToBeSigned.deadLine, 
-                "isPushOrder" : infosToBeSigned.isPushOrder
-            },
+            "pathIndex": infosToBeSigned.pathIndex.toLocaleString('fullwide', { useGrouping: false }), 
+            "payer": infosToBeSigned.payer, 
+            "fromTokenAddress": infosToBeSigned.fromTokenAddress, 
+            "toTokenAddress" : infosToBeSigned.toTokenAddress, 
+            "fromTokenAmountMax" : infosToBeSigned.fromTokenAmountMax.toLocaleString('fullwide', { useGrouping: false }), 
+            "toTokenAmountMax" : infosToBeSigned.toTokenAmountMax.toLocaleString('fullwide', { useGrouping: false }), 
+            "salt" : infosToBeSigned.salt, 
+            "deadLine" : infosToBeSigned.deadLine, 
+            "isPushOrder" : infosToBeSigned.isPushOrder,
+            "pmmAdapter" : pmmAdapter,
             "signature": signature
         }
         return quote;
@@ -120,12 +124,12 @@ const singleQuote = function (domain_separator, infosToBeSigned) {
 }
 
 // sign infos and return multiple quotes
-const multipleQuotes = function (mulInfosToBeSigned, chainId, marketMaker) {
+const multipleQuotes = function (mulInfosToBeSigned, chainId, marketMaker, pmmAdapter) {
     let quantity = mulInfosToBeSigned.length;
     let quotes = [];
     for (let i = 0; i < quantity; i++) {
         let domain_separator = getDomainSeparator(chainId[i], marketMaker[i]);
-        let quote = singleQuote(domain_separator, mulInfosToBeSigned[i]);
+        let quote = singleQuote(domain_separator, mulInfosToBeSigned[i], pmmAdapter[i]);
         quotes[i] = quote;
     }
 
