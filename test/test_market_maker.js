@@ -28,6 +28,7 @@ describe("Market Marker test", function() {
         await marketMaker.deployed();
         marketMaker.initialize(weth.address, alice.address, owner.address, 0);
         // await marketMaker.connect(bob).setOperator(bob.address);
+        let ownerAddress = await marketMaker.owner();
 
         // 4. approve
         const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
@@ -58,15 +59,21 @@ describe("Market Marker test", function() {
                 "fromTokenAmount": '50000000000000000000000', 
                 "toTokenAmountMin": '1000000000000000000',
                 "chainId": chainId,
-                "marketMaker": marketMaker.address
+                "marketMaker": marketMaker.address,
+                "pmmAdapter" : ethers.constants.AddressZero
             }
         ]
         let infosToBeSigned = getPullInfosToBeSigned(rfq);
 
-        let quote = multipleQuotes(infosToBeSigned.pullInfosToBeSigned, infosToBeSigned.chainId, infosToBeSigned.marketMaker);
+        let quote = multipleQuotes(
+            infosToBeSigned.pullInfosToBeSigned, 
+            infosToBeSigned.chainId, 
+            infosToBeSigned.marketMaker,
+            infosToBeSigned.pmmAdapter
+        );
 
         // 6. construct of input of funciton swap
-        let infos = quote[0].infos;
+        let infos = quote[0];
         let request = [
             infos.pathIndex, 
             infos.payer, 
@@ -76,9 +83,10 @@ describe("Market Marker test", function() {
             infos.toTokenAmountMax, 
             infos.salt, 
             infos.deadLine, 
-            infos.isPushOrder
+            infos.isPushOrder,
+            infos.pmmAdapter,
+            infos.signature
         ];
-        let signature = quote[0].signature;
 
         // 7. swap
         let markerAmount = ethers.utils.parseEther('2');
@@ -88,8 +96,7 @@ describe("Market Marker test", function() {
 
         await marketMaker.connect(alice).swap(
             swapAmount,
-            request,
-            signature
+            request
         );
 
         // 8. check balance
@@ -124,6 +131,9 @@ describe("Market Marker test", function() {
         await tokenApproveProxy.setTokenApprove(tokenApprove.address);
 
         await tokenApprove.setApproveProxy(tokenApproveProxy.address);
+
+        // let ownerAddress = await marketMaker.owner();
+        // console.log("marketMaker owner", ownerAddress);
         await marketMaker.setApproveProxy(tokenApproveProxy.address);
 
         PMMAdapter = await ethers.getContractFactory("PMMAdapter");
@@ -145,14 +155,20 @@ describe("Market Marker test", function() {
                 "fromTokenAmount": '50000000000000000000000', 
                 "toTokenAmountMin": '1000000000000000000',
                 "chainId": chainId,
-                "marketMaker": marketMaker.address
+                "marketMaker": marketMaker.address,
+                "pmmAdapter": pmmAdapter.address
             }
         ]
         let infosToBeSigned = getPullInfosToBeSigned(rfq);
-        let quote = multipleQuotes(infosToBeSigned.pullInfosToBeSigned, infosToBeSigned.chainId, infosToBeSigned.marketMaker);
+        let quote = multipleQuotes(
+            infosToBeSigned.pullInfosToBeSigned, 
+            infosToBeSigned.chainId, 
+            infosToBeSigned.marketMaker,
+            infosToBeSigned.pmmAdapter
+        );
 
         // 6. construct of input of funciton swap
-        let infos = quote[0].infos;
+        let infos = quote[0];
         let request = [
             infos.pathIndex, 
             infos.payer, 
@@ -162,9 +178,10 @@ describe("Market Marker test", function() {
             infos.toTokenAmountMax, 
             infos.salt, 
             infos.deadLine, 
-            infos.isPushOrder
+            infos.isPushOrder,
+            infos.pmmAdapter,
+            infos.signature
         ];
-        let signature = quote[0].signature;
 
         // 7. swap
         let markerAmount = ethers.utils.parseEther('2');
@@ -173,8 +190,8 @@ describe("Market Marker test", function() {
 
         await usdt.connect(alice).transfer(pmmAdapter.address, swapAmount);
         data = ethers.utils.defaultAbiCoder.encode(
-            ['tuple(uint256,address,address,address,uint256,uint256,uint256,uint256,bool)', 'bytes'],
-            [request, signature]
+            ['tuple(uint256,address,address,address,uint256,uint256,uint256,uint256,bool,address,bytes)'],
+            [request]
         )
         await pmmAdapter.connect(alice).sellBase(alice.address, ethers.constants.AddressZero, data);
 
@@ -223,7 +240,7 @@ describe("Market Marker test", function() {
 
         await marketMaker.addPmmAdapter(pmmAdapter.address);
         // 给 DexRouter 设置为 pmmAdapter 合约地址
-        await dexRouter.setPmmAdapter(pmmAdapter.address);
+        // await dexRouter.setPmmAdapter(pmmAdapter.address);
 
         // console.log("before bob usdt: " + await usdt.balanceOf(bob.address));
         // console.log("before alice usdt: " + await usdt.balanceOf(alice.address));
@@ -239,14 +256,20 @@ describe("Market Marker test", function() {
                 "fromTokenAmount": '50000000000000000000000', 
                 "toTokenAmountMin": '1000000000000000000',
                 "chainId": chainId,
-                "marketMaker": marketMaker.address
+                "marketMaker": marketMaker.address,
+                "pmmAdapter": pmmAdapter.address
             }
         ]
         let infosToBeSigned = getPullInfosToBeSigned(rfq);
-        let quote = multipleQuotes(infosToBeSigned.pullInfosToBeSigned, infosToBeSigned.chainId, infosToBeSigned.marketMaker);
+        let quote = multipleQuotes(
+            infosToBeSigned.pullInfosToBeSigned, 
+            infosToBeSigned.chainId, 
+            infosToBeSigned.marketMaker,
+            infosToBeSigned.pmmAdapter
+        );
 
         // 6. construct of input of funciton swap
-        let infos = quote[0].infos;
+        let infos = quote[0];
         let request = [
             infos.pathIndex, 
             infos.payer, 
@@ -256,9 +279,10 @@ describe("Market Marker test", function() {
             infos.toTokenAmountMax, 
             infos.salt, 
             infos.deadLine, 
-            infos.isPushOrder
+            infos.isPushOrder,
+            infos.pmmAdapter,
+            infos.signature
         ];
-        let signature = quote[0].signature;
 
         // 7. swap
         let markerAmount = ethers.utils.parseEther('2');
@@ -267,7 +291,7 @@ describe("Market Marker test", function() {
         await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
 
         const baseRequest = [
-            usdt.address,
+            '0x80' + '0000000000000000000000' + usdt.address.toString().slice(2),
             wbtc.address,
             swapAmount,
             ethers.utils.parseEther('0'),
@@ -285,8 +309,7 @@ describe("Market Marker test", function() {
             baseRequest,
             [swapAmount],
             [[]],
-            [[request]],
-            [[signature]]
+            [request]
         );
 
         // 8. check balance
