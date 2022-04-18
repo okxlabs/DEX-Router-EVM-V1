@@ -13,7 +13,7 @@ import "./interfaces/IAdapter.sol";
 import "./interfaces/IAdapterWithResult.sol";
 import "./interfaces/IApproveProxy.sol";
 import "./interfaces/IMarketMaker.sol";
-import "hardhat/console.sol";
+
 /// @title DexRouter
 /// @notice Entrance of Split trading in Dex platform
 /// @dev Entrance of Split trading in Dex platform
@@ -267,8 +267,6 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     // 3. try to replace the whole swap by pmm
     if (isReplace(localBaseRequest.fromToken)) {
       uint8 pmmIndex = getPmmIIndex(localBaseRequest.fromToken);
-      console.logBytes32(bytes32(localBaseRequest.fromToken));
-      console.log("pmmIndex %s", pmmIndex);
       if (_tryPmmSwap(baseRequestFromToken, localBaseRequest.fromTokenAmount, extraData[pmmIndex]) == 0) {
         _transferTokenToUser(localBaseRequest.toToken);
 
