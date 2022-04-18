@@ -17,7 +17,8 @@ const {
     ORDER_TYPEHASH,
     RFQ_VALID_PERIOD,
     PUSH_QUOTE_PATH_INDEX,
-    ADAPTER_ADDRESS,
+    MARKET_MAKER_ADDRESS,
+    PMM_ADAPTER_ADDRESS,
     DEFAULT_QUOTE,
     PRIVATE_KEY, 
     NAME_HASH, 
@@ -90,9 +91,8 @@ const getPushInfosToBeSigned = function (push_data){
             "isPushOrder" : true
         };
         chainId[i] = chunk.chainId;
-        marketMaker[i] = ADAPTER_ADDRESS[chunk.chainId];
-        // pmmAdapter[i] = chunk.pmmAdapter;
-
+        marketMaker[i] = MARKET_MAKER_ADDRESS[chunk.chainId];
+        pmmAdapter[i] = PMM_ADAPTER_ADDRESS[chunk.chainId];
     }
 
     return {pushInfosToBeSigned, chainId, marketMaker};
