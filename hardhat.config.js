@@ -4,11 +4,15 @@ require('hardhat-abi-exporter');
 require("hardhat-gas-reporter");
 require('hardhat-contract-sizer');
 require("@nomiclabs/hardhat-solhint");
+require("@nomiclabs/hardhat-etherscan");
 require('dotenv').config();
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const ALCHEMY_KEY = process.env.ALCHEMY_KEY || '';
 const INFURA_KEY = process.env.INFURA_KEY || '';
+const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || '';
+const BSC_API_KEY = process.env.BSC_API_KEY || '';
+const OKC_API_KEY = process.env.OKC_API_KEY || '';
 
 module.exports = {
   solidity: {
@@ -55,7 +59,7 @@ module.exports = {
         },
       }
     },
-    oec: {
+    okc: {
       url: "https://exchainrpc.okex.org",
       chainId: 66,
       accounts: [`${PRIVATE_KEY}`],
@@ -66,7 +70,7 @@ module.exports = {
         },
       },
     },
-    oec_test: {
+    okc_test: {
       url: "https://exchaintestrpc.okex.org",
       chainId: 65,
       accounts: [`${PRIVATE_KEY}`],
@@ -126,6 +130,12 @@ module.exports = {
   },
   gasReporter: {
     enabled: false
+  },
+  etherscan: {
+    apiKey: {
+      mainnet: ETHERSCAN_API_KEY,
+      bsc: BSC_API_KEY,
+      okc: OKC_API_KEY
+    }
   }
 }
-
