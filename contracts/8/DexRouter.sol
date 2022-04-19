@@ -127,7 +127,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       // 3.1 try to replace this hop by pmm
       if (uint256(hops[i].fromToken & _PMM_FLAG4_MASK) > 0) {
         fromToken = address(uint160(uint256(hops[i].fromToken) & _ADDRESS_MASK));
-        pmmIndex = uint8(uint256(hops[i].fromToken & _PMM_INDEX_I_MASK) >> 232);
+        pmmIndex = uint8(uint256(hops[i].fromToken & _PMM_INDEX_J_MASK) >> 232);
         if (_tryPmmSwap(fromToken, batchAmount, extraData[pmmIndex]) == 0){
           continue;
         }

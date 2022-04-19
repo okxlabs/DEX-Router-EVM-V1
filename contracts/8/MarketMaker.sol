@@ -24,7 +24,7 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
   //    uint256 private constant UINT_64_MASK = (1 << 64) - 1;
 
   uint256 private constant ADDRESS_MASK = (1 << 160) - 1;
-  uint256 private constant VALID_PERIOD_MIN = 3600;
+  // uint256 private constant VALID_PERIOD_MIN = 3600;
   address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
   mapping(address => address) public operator;
@@ -155,17 +155,16 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
     emit ChangeOperator(msg.sender, _operator);
   }
 
-  function cancelQuotes(PMMSwapRequest[] memory request, bytes[] memory signature) external returns (bool[] memory) {
-    require(request.length == signature.length, "PMM Adapter: length not match");
+  function cancelQuotes(PMMSwapRequest[] memory request) external returns (bool[] memory) {
     bool[] memory result = new bool[](request.length);
     uint256[] memory pathIndex = new uint256[](request.length);
     for (uint256 i = 0; i < request.length; i++) {
       pathIndex[i] = request[i].pathIndex;
-      if (block.timestamp < request[i].salt + VALID_PERIOD_MIN) {
-        continue;
-      }
+      // if (block.timestamp < request[i].salt + VALID_PERIOD_MIN) {
+      //   continue;
+      // }
       bytes32 digest = _hashTypedDataV4(hashOrder(request[i]));
-      if (validateSig(digest, msg.sender, signature[i])) {
+      if (validateSig(digest, msg.sender, request[i].signature)) {
         orderStatus[digest].cancelledOrFinalized = true;
         result[i] = true;
       }

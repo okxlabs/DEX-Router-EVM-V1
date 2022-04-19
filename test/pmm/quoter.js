@@ -14,6 +14,7 @@ const { keccak256, defaultAbiCoder, solidityPack } = require('ethers/lib/utils')
 const { ecsign } = require('ethereumjs-util');
 const {
     PAYER,
+    PAYER_4,
     ORDER_TYPEHASH,
     RFQ_VALID_PERIOD,
     PUSH_QUOTE_PATH_INDEX,
@@ -50,6 +51,40 @@ const getPullInfosToBeSigned = function (pull_data) {
             "orderTypeHash" : ORDER_TYPEHASH,
             "pathIndex" : chunk.pathIndex,
             "payer" : PAYER,
+            "fromTokenAddress" : chunk.fromTokenAddress,
+            "toTokenAddress" : chunk.toTokenAddress,
+            "fromTokenAmountMax" : Number(chunk.fromTokenAmount),
+            "toTokenAmountMax" : Number(toTokenAmount),
+            "salt" : Number(localTs),
+            "deadLine" : localTs + RFQ_VALID_PERIOD,
+            "isPushOrder" : false
+        };
+
+        chainId[i] = chunk.chainId;
+        marketMaker[i] = chunk.marketMaker;
+        pmmAdapter[i] = chunk.pmmAdapter;
+    }
+
+    return { pullInfosToBeSigned, chainId, marketMaker, pmmAdapter };
+}
+
+// change payer to payer_4
+const getPullInfosToBeSigned_paidByCarol = function (pull_data) {
+    let quantity = pull_data.length;
+    let localTs = getLocalTs();
+    let pullInfosToBeSigned = [];
+    let chainId = [];
+    let marketMaker = [];
+    let pmmAdapter = [];
+
+    for (let i = 0; i < quantity; i++) {
+        let chunk = pull_data[i];
+        let toTokenAmount = getToTokenAmount(chunk);
+
+        pullInfosToBeSigned[i] = {
+            "orderTypeHash" : ORDER_TYPEHASH,
+            "pathIndex" : chunk.pathIndex,
+            "payer" : PAYER_4,
             "fromTokenAddress" : chunk.fromTokenAddress,
             "toTokenAddress" : chunk.toTokenAddress,
             "fromTokenAmountMax" : Number(chunk.fromTokenAmount),
@@ -176,11 +211,34 @@ const sign = function (digest){
     return signature;
 }
 
+const getDigest = function (request,chainId,marketMaker){
+        let domain_separator = getDomainSeparator(chainId, marketMaker);
+        let obj = {
+            "orderTypeHash" : ORDER_TYPEHASH,
+            "pathIndex" : Number(request[0]),
+            "payer" : request[1],
+            "fromTokenAddress" : request[2],
+            "toTokenAddress" : request[3],
+            "fromTokenAmountMax" : Number(request[4]),
+            "toTokenAmountMax" : Number(request[5]),
+            "salt" : request[6],
+            "deadLine" : request[7],
+            "isPushOrder" : request[8]
+        }
+        let hashOrder = keccak256(abiEncodeMessage(obj));
+        let hash = hashToSign(domain_separator, hashOrder);
+    return hash;
+}
+
+
+
 module.exports = { 
     getDomainSeparator,
     getPullInfosToBeSigned, 
+    getPullInfosToBeSigned_paidByCarol,
     getPushInfosToBeSigned, 
     singleQuote, 
-    multipleQuotes 
+    multipleQuotes,
+    getDigest 
 };
 
