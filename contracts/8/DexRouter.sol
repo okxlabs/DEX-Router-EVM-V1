@@ -220,7 +220,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
   function getPmmJIndex(uint256 token) internal pure returns (uint8 result) {
     assembly {
-      result := shr(232, and(token, _PMM_INDEX_I_MASK))
+      result := shr(232, and(token, _PMM_INDEX_J_MASK))
     }
   }
 
