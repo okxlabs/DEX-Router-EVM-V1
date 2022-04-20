@@ -13,6 +13,7 @@ import "./interfaces/IAdapter.sol";
 import "./interfaces/IAdapterWithResult.sol";
 import "./interfaces/IApproveProxy.sol";
 import "./interfaces/IMarketMaker.sol";
+import "./interfaces/IWNativeRelayer.sol";
 
 /// @title DexRouter
 /// @notice Entrance of Split trading in Dex platform
@@ -155,7 +156,8 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     if ((IERC20(token).isETH())) {
       uint256 wethBal = IERC20(address(uint160(_WETH))).balanceOf(address(this));
       if (wethBal > 0) {
-        IWETH(address(uint160(_WETH))).withdraw(wethBal);
+        IWETH(address(uint160(_WETH))).transfer(address(uint160(_WNATIVE_RELAY_32)), wethBal);
+        IWNativeRelayer(address(uint160(_WNATIVE_RELAY_32))).withdraw(wethBal);
       }
       uint256 ethBal = address(this).balance;
       if (ethBal > 0) {
@@ -293,4 +295,6 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
     emit OrderRecord(baseRequestFromToken, baseRequest.toToken, msg.sender, localBaseRequest.fromTokenAmount, returnAmount);
   }
+
+  function calldataDexRouter(RouterPath[] calldata path) external {}
 }
