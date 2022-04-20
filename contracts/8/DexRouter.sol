@@ -88,9 +88,9 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       // send the asset to the adapter
       _deposit(address(this), path.assetTo[i], fromToken, _fromTokenAmount);
       if (reserves) {
-        IAdapter(path.mixAdapters[i]).sellBase(address(this), poolAddress, path.extraData[i]);
-      } else {
         IAdapter(path.mixAdapters[i]).sellQuote(address(this), poolAddress, path.extraData[i]);
+      } else {
+        IAdapter(path.mixAdapters[i]).sellBase(address(this), poolAddress, path.extraData[i]);
       }
       SafeERC20.safeApprove(IERC20(fromToken), tokenApprove, 0);
     }
