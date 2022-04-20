@@ -6,6 +6,7 @@ tokenConfig = getConfig("eth");
 let { initDexRouter, direction, FOREVER } = require("./utils")
 
 async function executeCurvePool() {
+    let pmmReq = []
     await setForkBlockNumber(14436483);
 
     let accountAddress = "0x3DdfA8eC3052539b6C9549F12cEA2C295cfF5296";
@@ -48,10 +49,10 @@ async function executeCurvePool() {
     console.log("before Account DAI Balance: " + await DAI.balanceOf(account.address));
 
     // arguments
-    let requestParam1 = [
-        tokenConfig.tokens.USDT.baseTokenAddress,
-        [fromTokenAmount]
-    ];
+    // let requestParam1 = [
+    //     tokenConfig.tokens.USDT.baseTokenAddress,
+    //     [fromTokenAmount]
+    // ];
     let mixAdapter1 = [
         CurveAdapter.address
     ];
@@ -77,10 +78,10 @@ async function executeCurvePool() {
         ]
     )
     let extraData1 = [moreInfo];
-    let router1 = [mixAdapter1, assertTo1, rawData1, extraData1];
+    let router1 = [mixAdapter1, assertTo1, rawData1, extraData1,USDT.address];
 
     // layer1
-    let request1 = [requestParam1];
+    // let request1 = [requestParam1];
     let layer1 = [router1];
 
     let baseRequest = [
@@ -94,8 +95,8 @@ async function executeCurvePool() {
     await dexRouter.connect(account).smartSwap(
         baseRequest,
         [fromTokenAmount],
-        [request1],
         [layer1],
+        pmmReq
     );
 
     console.log("after CurveAdapter USDT Balance: " + await USDT.balanceOf(CurveAdapter.address));
@@ -103,6 +104,7 @@ async function executeCurvePool() {
 }
 
 async function execute_underlying() {
+    const pmmReq = [];
     await setForkBlockNumber(14436483);
 
     // V神
@@ -147,10 +149,10 @@ async function execute_underlying() {
     let poolAddress = "0x890f4e345b1daed0367a877a1612f86a1f86985f"; 
 
     // arguments
-    let requestParam1 = [
-        tokenConfig.tokens.DAI.baseTokenAddress,
-        [fromTokenAmount]
-    ];
+    // let requestParam1 = [
+    //     tokenConfig.tokens.DAI.baseTokenAddress,
+    //     [fromTokenAmount]
+    // ];
     let mixAdapter1 = [
         CurveAdapter.address
     ];
@@ -176,10 +178,10 @@ async function execute_underlying() {
         ]
       )
     let extraData1 = [moreInfo];
-    let router1 = [mixAdapter1, assertTo1, rawData1, extraData1];
+    let router1 = [mixAdapter1, assertTo1, rawData1, extraData1,DAI.address];
       
     //   // layer1
-    let request1 = [requestParam1];
+    // let request1 = [requestParam1];
     let layer1 = [router1];
 
     let baseRequest = [
@@ -193,8 +195,8 @@ async function execute_underlying() {
     await dexRouter.connect(account).smartSwap(
         baseRequest,
         [fromTokenAmount],
-        [request1],
         [layer1],
+        pmmReq
     );
 
     console.log("after Account DAI Balance: " + await DAI.balanceOf(account.address));

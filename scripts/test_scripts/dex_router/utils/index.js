@@ -1,4 +1,5 @@
 const { ethers } = require("hardhat");
+const deployed = require("../../../deployed");
 
 const FOREVER = '2000000000';
 
@@ -22,6 +23,12 @@ const initDexRouter = async () => {
 
   await tokenApproveProxy.addProxy(dexRouter.address);
   await tokenApproveProxy.setTokenApprove(tokenApprove.address);
+
+  WNativeRelayer = await ethers.getContractFactory("WNativeRelayer");
+  wNativeRelayer = await WNativeRelayer.deploy();
+  await wNativeRelayer.deployed();
+  await wNativeRelayer.initialize("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
+  await wNativeRelayer.setCallerOk([dexRouter.address], [true]);
 
   return { dexRouter, tokenApprove }
 }
