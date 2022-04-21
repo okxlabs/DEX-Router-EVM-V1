@@ -6,11 +6,11 @@ const { expect } = require("chai");
 describe("Market Marker test", function() {
 
     let wbtc, usdt, weth;
-    let owner, alice, bob, carol;
+    let owner, alice, bob, carol, backEnd;
 
     beforeEach(async function() {
         // 1. prepare accounts and chain id
-        [owner, alice, bob, carol] = await ethers.getSigners();
+        [owner, alice, bob, carol, backEnd] = await ethers.getSigners();
 
         // 2. prepare mock tokens
         await initMockTokens();
@@ -26,7 +26,7 @@ describe("Market Marker test", function() {
         MarketMaker = await ethers.getContractFactory("MarketMaker");
         const marketMaker = await MarketMaker.deploy();
         await marketMaker.deployed();
-        marketMaker.initialize(weth.address, alice.address, owner.address, 0);
+        marketMaker.initialize(weth.address, alice.address, owner.address, 0, backEnd.address);
 
         // 4. approve
         const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
@@ -83,9 +83,9 @@ describe("Market Marker test", function() {
             infos.deadLine, 
             infos.isPushOrder,
             infos.pmmAdapter,
+            10000000,
             infos.signature
         ];
-
         // 7. swap
 
         // what if bob has not approved token ?
@@ -98,7 +98,7 @@ describe("Market Marker test", function() {
             swapAmount,
             request
         )
-        await expect(errorCode).to.equal(6);
+        await expect(errorCode).to.equal(7);
         
     });
 
@@ -109,7 +109,7 @@ describe("Market Marker test", function() {
         MarketMaker = await ethers.getContractFactory("MarketMaker");
         const marketMaker = await MarketMaker.deploy();
         await marketMaker.deployed();
-        marketMaker.initialize(weth.address, alice.address, owner.address, 0);
+        marketMaker.initialize(weth.address, alice.address, owner.address, 0, ethers.constants.AddressZero);
 
         // 4. approve
         const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
@@ -167,6 +167,7 @@ describe("Market Marker test", function() {
             infos.deadLine, 
             infos.isPushOrder,
             infos.pmmAdapter,
+            10000000,
             infos.signature
         ];
 
@@ -191,7 +192,7 @@ describe("Market Marker test", function() {
         MarketMaker = await ethers.getContractFactory("MarketMaker");
         const marketMaker = await MarketMaker.deploy();
         await marketMaker.deployed();
-        marketMaker.initialize(weth.address, alice.address, owner.address, 0);
+        marketMaker.initialize(weth.address, alice.address, owner.address, 0, backEnd.address);
 
         // 4. approve
         const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
@@ -250,6 +251,7 @@ describe("Market Marker test", function() {
             infos.deadLine, 
             infos.isPushOrder,
             infos.pmmAdapter,
+            10000000,
             infos.signature
         ];
 
@@ -271,7 +273,8 @@ describe("Market Marker test", function() {
         await marketMaker.connect(alice).swap(
             swapAmount,
             request
-        );
+        )
+ 
 
         // 8. check balance
         // console.log("alice get usdt: " + await usdt.balanceOf(alice.address));
@@ -289,7 +292,7 @@ describe("Market Marker test", function() {
         MarketMaker = await ethers.getContractFactory("MarketMaker");
         const marketMaker = await MarketMaker.deploy();
         await marketMaker.deployed();
-        marketMaker.initialize(weth.address, alice.address, owner.address, 0);
+        marketMaker.initialize(weth.address, alice.address, owner.address, 0, backEnd.address);
 
         // 4. approve
         const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
@@ -348,6 +351,7 @@ describe("Market Marker test", function() {
             infos.deadLine, 
             infos.isPushOrder,
             infos.pmmAdapter,
+            10000000,
             infos.signature
         ];
 
@@ -372,7 +376,7 @@ describe("Market Marker test", function() {
             request
         );
 
-        expect(errorCode).to.equal(4);
+        expect(errorCode).to.equal(5);
 
         // query order status after cancel quote
         orderStatus = await marketMaker.queryOrderStatus([hash]);

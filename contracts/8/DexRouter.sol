@@ -52,6 +52,16 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   //-------------------------------
 
   event ApproveProxyChanged(address approveProxy);
+  event PMMSwap(
+    uint256 pathIndex,
+    uint256 subId,
+    address payer,
+    address fromToken,
+    address toToken,
+    uint256 fromAmount,
+    uint256 toAmount,
+    uint256 errorCode
+  );
 
   //-------------------------------
   //------- Modifier --------------
@@ -120,17 +130,10 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       }
 
       // 3.1 try to replace this hop by pmm
-<<<<<<< HEAD
-      if (uint256(hops[i].fromToken & _PMM_FLAG4_MASK) > 0) {
-        fromToken = address(uint160(uint256(hops[i].fromToken) & _ADDRESS_MASK));
-        pmmIndex = uint8(uint256(hops[i].fromToken & _PMM_INDEX_J_MASK) >> 232);
-        if (_tryPmmSwap(fromToken, batchAmount, extraData[pmmIndex]) == 0){
-=======
       if (isHopReplace(hops[i].fromToken)) {
         fromToken = bytes32ToAddress(hops[i].fromToken);
         pmmIndex = getPmmJIndex(hops[i].fromToken);
         if (_tryPmmSwap(fromToken, batchAmount, extraData[pmmIndex]) == 0) {
->>>>>>> 1f805dbbb35b0e89772201ba78985d5f3ffd2b43
           continue;
         }
       }
@@ -180,14 +183,36 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     address fromToken,
     uint256 actualRequest,
     IMarketMaker.PMMSwapRequest memory pmmRequest
-  ) internal returns (uint256) {
+  ) internal returns (uint256 errorCode) {
     // check from token
     if (pmmRequest.fromToken != fromToken) {
-      return uint256(IMarketMaker.PMM_ERROR.WRONG_FROM_TOKEN);
+      errorCode = uint256(IMarketMaker.PMM_ERROR.WRONG_FROM_TOKEN);
+      emit PMMSwap (
+        pmmRequest.pathIndex, 
+        pmmRequest.subId, 
+        pmmRequest.payer, 
+        fromToken, 
+        pmmRequest.toToken, 
+        actualRequest, 
+        0, 
+        errorCode
+      );
+      return errorCode;
     }
 
     if (pmmRequest.fromTokenAmountMax < actualRequest) {
-      return uint256(IMarketMaker.PMM_ERROR.REQUEST_TOO_MUCH);
+      errorCode = uint256(IMarketMaker.PMM_ERROR.REQUEST_TOO_MUCH);
+      emit PMMSwap (
+        pmmRequest.pathIndex, 
+        pmmRequest.subId, 
+        pmmRequest.payer, 
+        fromToken, 
+        pmmRequest.toToken, 
+        actualRequest, 
+        0, 
+        errorCode
+      );
+      return errorCode;
     }
 
     address tokenApprove = IApproveProxy(approveProxy).tokenApprove();
@@ -195,9 +220,20 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     // settle funds in MarketMaker, send funds to pmmAdapter
     _deposit(address(this), pmmRequest.pmmAdapter, fromToken, actualRequest);
     bytes memory moreInfo = abi.encode(pmmRequest);
-    uint256 errorCode = IAdapterWithResult(pmmRequest.pmmAdapter).sellBase(address(this), address(0), moreInfo);
+    uint256 toTokenAmount = IERC20(pmmRequest.toToken).balanceOf(address(this));
+    errorCode = IAdapterWithResult(pmmRequest.pmmAdapter).sellBase(address(this), address(0), moreInfo);
+    toTokenAmount = IERC20(pmmRequest.toToken).balanceOf(address(this)) - toTokenAmount;
     SafeERC20.safeApprove(IERC20(fromToken), tokenApprove, 0);
-
+    emit PMMSwap (
+      pmmRequest.pathIndex, 
+      pmmRequest.subId, 
+      pmmRequest.payer, 
+      fromToken, 
+      pmmRequest.toToken, 
+      actualRequest, 
+      toTokenAmount, 
+      errorCode
+    );
     return errorCode;
   }
 

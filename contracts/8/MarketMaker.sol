@@ -9,6 +9,7 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 
 import "./libraries/SafeERC20.sol";
 import "./interfaces/IApproveProxy.sol";
+import "hardhat/console.sol";
 
 /// @title MarketMaker
 /// @notice Explain to an end user what this does
@@ -35,10 +36,12 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
   address public approveProxy;
   address public feeTo;
   uint256 public feeRate;
+  address public backEnd;
 
   enum PMM_ERROR {
     NO_ERROR,
-    INVALID_SIGNATURE,
+    INVALID_OPERATOR,
+    INVALID_BACKEND,
     QUOTE_EXPIRED,
     REQUEST_TOO_MUCH,
     ORDER_CANCELLED_OR_FINALIZED,
@@ -59,6 +62,7 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
       uint256 deadLine;
       bool isPushOrder;
       address pmmAdapter;
+      uint256 subId;
       bytes signature;
   }
 
@@ -74,22 +78,16 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
   event RemovePmmAdapter(address indexed sender, address pmmAdapter);
   event ChangeFeeConfig(address indexed sender, address newFeeTo, uint256 newFeeRate);
   event SetApproveProxy(address indexed sender, address approveProxy);
+  event SetBackEnd(address indexed sender, address backEnd);
   event ChangeOperator(address indexed payer, address operator);
   event CancelQuotes(address sender, uint256[] pathIndex, bool[] result);
-  event Swap(
-    uint256 indexed pathIndex,
-    address payer,
-    address fromToken,
-    address toToken,
-    uint256 fromAmount,
-    uint256 toAmount
-  );
 
   function initialize(
     address _weth,
     address _pmmAdapter,
     address _feeTo,
-    uint256 _feeRate
+    uint256 _feeRate,
+    address _backEnd
   ) public initializer {
     __Ownable_init();
     require(_weth != address(0), "Wrong Address!");
@@ -107,6 +105,7 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
     pmmAdapter[_pmmAdapter] = true;
     feeTo = _feeTo;
     feeRate = _feeRate;
+    backEnd = _backEnd;
   }
 
   // ============ Modifier ============
@@ -148,6 +147,11 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
     emit SetApproveProxy(msg.sender, approveProxy);
   }
 
+  function setBackEnd(address newBackEnd) external onlyOwner {
+    backEnd = newBackEnd;
+    emit SetBackEnd(msg.sender, backEnd);
+  }
+
   // ============ External ============
 
   function setOperator(address _operator) external {
@@ -158,13 +162,26 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
   function cancelQuotes(PMMSwapRequest[] memory request) external returns (bool[] memory) {
     bool[] memory result = new bool[](request.length);
     uint256[] memory pathIndex = new uint256[](request.length);
+    bytes32 digest;
+    bytes32 r;
+    bytes32 vs;
+    address operatorAddress;
+    bytes memory sig;
+
     for (uint256 i = 0; i < request.length; i++) {
       pathIndex[i] = request[i].pathIndex;
       // if (block.timestamp < request[i].salt + VALID_PERIOD_MIN) {
       //   continue;
       // }
-      bytes32 digest = _hashTypedDataV4(hashOrder(request[i]));
-      if (validateSig(digest, msg.sender, request[i].signature)) {
+      digest = _hashTypedDataV4(hashOrder(request[i]));
+      sig = request[i].signature;
+      assembly{
+        r := mload(add(sig, 0x20))
+        vs := mload(add(sig, 0x40))
+      }
+
+      operatorAddress = ECDSA.recover(digest, r, vs);
+      if (validateOperatorSig(request[i].payer, operatorAddress)) {
         orderStatus[digest].cancelledOrFinalized = true;
         result[i] = true;
       }
@@ -185,16 +202,17 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
   function swap(
     uint256 actualAmountRequest,
     PMMSwapRequest memory request
-  ) external onlyPMMAdapter nonReentrant returns (uint256) {
+  ) external onlyPMMAdapter nonReentrant returns (uint256 errorCode) {
     // TODO After this, Router transfer fromTokenAmount to payer
 
     bytes32 digest = _hashTypedDataV4(hashOrder(request));
 
-    if (!validateSig(digest, request.payer, request.signature)) {
-      return uint256(PMM_ERROR.INVALID_SIGNATURE);
+    errorCode = validateSigBatch(digest, request.payer, request.signature);
+    if (errorCode > 0) {
+      return errorCode;
     }
 
-    uint256 errorCode = updateOrder(digest, actualAmountRequest, request);
+    errorCode = updateOrder(digest, actualAmountRequest, request);
     if (errorCode > 0) {
       return errorCode;
     }
@@ -205,7 +223,8 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
       token = IERC20(weth);
     }
 
-    // try to transfer market maker's funds to "this"
+    // try to transfer market maker's funds to "this"      
+
     try IApproveProxy(approveProxy).claimTokens(address(token), request.payer, address(this), amount) {
       if (feeTo != address(0) && feeRate != 0) {
         uint256 fee = (amount * feeRate) / 10000;
@@ -216,11 +235,10 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
       // transfer user's funds to market maker
       IApproveProxy(approveProxy).claimTokens(request.fromToken, msg.sender, request.payer, actualAmountRequest);
 
-      emit Swap(request.pathIndex, request.payer, request.fromToken, request.toToken, actualAmountRequest, amount);
-
-      return uint256(PMM_ERROR.NO_ERROR);
+      // emit Swap(request.pathIndex, request.payer, request.fromToken, request.toToken, actualAmountRequest, amount);
+      errorCode = uint256(PMM_ERROR.NO_ERROR);
     } catch {
-      return uint256(PMM_ERROR.FAIL_TO_CLAIM_TOKEN);
+      errorCode = uint256(PMM_ERROR.FAIL_TO_CLAIM_TOKEN);
     }
   }
 
@@ -256,13 +274,45 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
     }
   }
 
-  function validateSig(
+  function validateSigBatch(
     bytes32 digest,
     address payer,
-    bytes memory signature
-  ) internal view returns (bool) {
-    address signatureAddress = ECDSA.recover(digest, signature);
-    if (signatureAddress == payer || signatureAddress == operator[payer]) {
+    bytes memory signature    
+  ) internal view returns (uint256) {
+    bytes32 operatorSigR;
+    bytes32 operatorSigVs;
+    bytes32 backEndSigR;
+    bytes32 backEndSigVs;
+    assembly{
+      operatorSigR := mload(add(signature, 0x20))
+      operatorSigVs := mload(add(signature, 0x40))
+      backEndSigR := mload(add(signature, 0x60))
+      backEndSigVs := mload(add(signature, 0x80))
+    }
+    address operatorAddress = ECDSA.recover(digest, operatorSigR, operatorSigVs);
+    if (!validateOperatorSig(payer, operatorAddress)) {
+      return uint256(PMM_ERROR.INVALID_OPERATOR);
+    }
+
+    address backEndAddress = ECDSA.recover(digest, backEndSigR, backEndSigVs);
+
+    if (!validateBackEndSig(backEndAddress)) {
+      return uint256(PMM_ERROR.INVALID_BACKEND);
+    }
+
+    return uint256(PMM_ERROR.NO_ERROR);
+  }
+
+  function validateOperatorSig(address payer, address operatorAddress) internal view returns (bool) {
+    // address operatorAddress = ECDSA.recover(digest, r, vs);
+    if (operatorAddress == payer || operatorAddress == operator[payer]) {
+      return true;
+    }
+    return false;
+  }
+
+  function validateBackEndSig(address backEndAddress) internal view returns (bool) {
+    if (backEndAddress == backEnd){
       return true;
     }
     return false;

@@ -1,10 +1,12 @@
 // account who pays the making assets
 const PAYER = '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC'; // third account of hardhat network
 const PAYER_4 = '0x90F79bf6EB2c4f870365E785982E1f101E93b906'; // fourth account of hardhat network
+const BACKEND = '0x15d34aaf54267db7d7c367839aaf71a00a2c6a65';   // fifth account of hardhat network
 // private key of the account who sign the quotes
 // const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const PRIVATE_KEY = '5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a'; // third account of hardhat network
-const PRIVATE_KEY_4 = '0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6'; // fourth account of hardhat network
+const PRIVATE_KEY_4 = '7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6'; // fourth account of hardhat network
+const PRIVATE_KEY_BACKEND = '47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a'; // fifth account of hardhat network
 // valid period of quotes for pulling rfq
 const RFQ_VALID_PERIOD = 600;
 
@@ -64,6 +66,8 @@ module.exports = {
     PAYER,
     PAYER_4,
     PRIVATE_KEY,
+    PRIVATE_KEY_4,
+    PRIVATE_KEY_BACKEND,
     PROVIDER,
     EIP712_PREFIX,
     EIP_712_DOMAIN_TYPEHASH,

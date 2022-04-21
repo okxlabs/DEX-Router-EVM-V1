@@ -13,6 +13,7 @@ interface IMarketMaker {
         uint256 deadLine;
         bool isPushOrder;
         address pmmAdapter;
+        uint256 subId;
         bytes signature;
     }
 

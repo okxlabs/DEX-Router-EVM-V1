@@ -22,6 +22,7 @@ const {
     PMM_ADAPTER_ADDRESS,
     DEFAULT_QUOTE,
     PRIVATE_KEY, 
+    PRIVATE_KEY_BACKEND,
     NAME_HASH, 
     VERSION_HASH, 
     EIP_712_DOMAIN_TYPEHASH
@@ -203,12 +204,21 @@ const hashToSign = function (domain_separator, hashOrder){
 
 // sign 
 const sign = function (digest){
-    let { r, s, v } = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(PRIVATE_KEY,'hex'));
-    // r = '0x' + r.toString('hex');
-    // s = '0x' + s.toString('hex');
-    signature ='0x' + r.toString('hex') + s.toString('hex') + parseInt(v).toString(16);
-    // console.log("signature",signature);
-    return signature;
+    // signature65 ='0x' + r.toString('hex') + s.toString('hex') + parseInt(v).toString(16);
+    // console.log("signature65",signature65);
+    let _operatorSig = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(PRIVATE_KEY,'hex'));
+    vs = (Number(_operatorSig.v - 27)*8 + Number(_operatorSig.s.toString('hex').slice(0,1))).toString(16) + _operatorSig.s.toString('hex').slice(1);
+    operatorSig64 = '0x' + _operatorSig.r.toString('hex') + vs;
+    // console.log("operatorSig", operatorSig64);
+
+    let _backEndSig = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(PRIVATE_KEY_BACKEND,'hex'));
+    vs = (Number(_backEndSig.v - 27)*8 + Number(_backEndSig.s.toString('hex').slice(0,1))).toString(16) + _backEndSig.s.toString('hex').slice(1);
+    backEndSig64 = _backEndSig.r.toString('hex') + vs;
+    // console.log("backEndSig64", backEndSig64);
+
+    sig = operatorSig64 + backEndSig64;
+    // console.log("sig", sig);
+    return sig;
 }
 
 const getDigest = function (request,chainId,marketMaker){
