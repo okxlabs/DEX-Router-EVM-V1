@@ -5,9 +5,9 @@ tokenConfig = getConfig("eth");
 let { initDexRouter, direction, FOREVER } = require("./utils")
 
 async function executeTricrypto() {
+    const pmmReq = []
     await setForkBlockNumber(14436483);
 
-    // V神
     let accountAddress = "0x3DdfA8eC3052539b6C9549F12cEA2C295cfF5296";
     await startMockAccount([accountAddress]);
     let account = await ethers.getSigner(accountAddress);
@@ -45,10 +45,10 @@ async function executeTricrypto() {
     console.log("before CurveV2Adapter USDT Balance: " + await USDT.balanceOf(CurveV2Adapter.address));
 
     // arguments
-    let requestParam1 = [
-        tokenConfig.tokens.USDT.baseTokenAddress,
-        [fromTokenAmount]
-    ];
+    // let requestParam1 = [
+    //     tokenConfig.tokens.USDT.baseTokenAddress,
+    //     [fromTokenAmount]
+    // ];
     let mixAdapter1 = [
         CurveV2Adapter.address
     ];
@@ -73,10 +73,10 @@ async function executeTricrypto() {
         ]
       )
     let extraData1 = [moreInfo];
-    let router1 = [mixAdapter1, assertTo1, rawData1, extraData1];
+    let router1 = [mixAdapter1, assertTo1, rawData1, extraData1,USDT.address];
 
     // layer1
-    let request1 = [requestParam1];
+    // let request1 = [requestParam1];
     let layer1 = [router1];
 
     let baseRequest = [
@@ -90,8 +90,8 @@ async function executeTricrypto() {
     await dexRouter.connect(account).smartSwap(
         baseRequest,
         [fromTokenAmount],
-        [request1],
         [layer1],
+        pmmReq
     );
 
     console.log("after Account USDT Balance: " + await USDT.balanceOf(account.address));
@@ -99,9 +99,12 @@ async function executeTricrypto() {
 }
 
 async function executeTwoCrypto() {
+    let pmmReq = [];
+    await setForkBlockNumber(14436483);
 
-    accountAddress = "0x3DdfA8eC3052539b6C9549F12cEA2C295cfF5296";
-    account = await ethers.getSigner(accountAddress);
+    let accountAddress = "0x3DdfA8eC3052539b6C9549F12cEA2C295cfF5296";
+    await startMockAccount([accountAddress]);
+    let account = await ethers.getSigner(accountAddress);
 
     // WETH
     WETH = await ethers.getContractAt(
@@ -121,34 +124,27 @@ async function executeTwoCrypto() {
     CurveV2Adapter = await CurveV2Adapter.deploy(tokenConfig.tokens.WETH.baseTokenAddress);
     await CurveV2Adapter.deployed();
 
-    // transfer 500 USDT to curveAdapter
-    fromTokenAmount =  ethers.utils.parseEther("0.2");
-    minReturnAmount = 0;
-    deadLine = FOREVER;
+    let fromTokenAmount =  ethers.utils.parseEther("0.2");
+    let minReturnAmount = 0;
+    let deadLine = FOREVER;
     let poolAddress = "0xc5424b857f758e906013f3555dad202e4bdb4567"; 
     console.log("before Account SETH Balance: " + await SETH.balanceOf(account.address));
 
-
-    // arguments
-    requestParam1 = [
-        tokenConfig.tokens.WETH.baseTokenAddress,
-        [fromTokenAmount]
-    ];
-    mixAdapter1 = [
+    let mixAdapter1 = [
         CurveV2Adapter.address
     ];
-    assertTo1 = [
+    let assertTo1 = [
         CurveV2Adapter.address
     ];
-    weight1 = Number(10000).toString(16).replace('0x', '');
-    rawData1 = [
+    let weight1 = Number(10000).toString(16).replace('0x', '');
+    let rawData1 = [
         "0x" + 
         direction(tokenConfig.tokens.ETH.baseTokenAddress, tokenConfig.tokens.SETH.baseTokenAddress) + 
         "0000000000000000000" + 
         weight1 + 
         poolAddress.replace("0x", "")  // three pools
     ];
-    moreinfo =  ethers.utils.defaultAbiCoder.encode(
+    let moreinfo =  ethers.utils.defaultAbiCoder.encode(
         ["address", "address", "int128", "int128"],
         [
             tokenConfig.tokens.ETH.baseTokenAddress,
@@ -157,26 +153,26 @@ async function executeTwoCrypto() {
             1
         ]
       )
-    extraData1 = [moreinfo];
-    router1 = [mixAdapter1, assertTo1, rawData1, extraData1];
+    let extraData1 = [moreinfo];
+    let router1 = [mixAdapter1, assertTo1, rawData1, extraData1,tokenConfig.tokens.WETH.baseTokenAddress];
       
     //   // layer1
-    request1 = [requestParam1];
-    layer1 = [router1];
+    // request1 = [requestParam1];
+    let layer1 = [router1];
 
-    baseRequest = [
+    let baseRequest = [
         tokenConfig.tokens.ETH.baseTokenAddress,
         tokenConfig.tokens.SETH.baseTokenAddress,
         fromTokenAmount,
         minReturnAmount,
         deadLine,
     ]
-
+    await WETH.connect(account).approve(tokenApprove.address, fromTokenAmount);
     await dexRouter.connect(account).smartSwap(
         baseRequest,
         [fromTokenAmount],
-        [request1],
         [layer1],
+        pmmReq,
         {value: fromTokenAmount}
     );
 

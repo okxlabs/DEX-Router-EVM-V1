@@ -5,7 +5,7 @@ tokenConfig = getConfig("eth")
 const { initDexRouter, direction, FOREVER } = require("./utils")
 
 async function executeWETH2RND() {
-
+    const pmmReq = []
     await setForkBlockNumber(14480328);
 
     const accountAddress = "0x9199Cc44CF7850FE40081ea6F2b010Fee1088270";
@@ -35,10 +35,10 @@ async function executeWETH2RND() {
     console.log("before RND Balance: " + await RND.balanceOf(account.address));
 
     // node1
-    const requestParam1 = [
-        tokenConfig.tokens.WETH.baseTokenAddress,
-        [fromTokenAmount]
-    ];
+    // const requestParam1 = [
+    //     tokenConfig.tokens.WETH.baseTokenAddress,
+    //     [fromTokenAmount]
+    // ];
     const mixAdapter1 = [
         univ3Adapter.address
     ];
@@ -69,10 +69,10 @@ async function executeWETH2RND() {
         ]
     )
     const extraData1 = [moreInfo];
-    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1];
+    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1,WETH.address];
 
     // layer1
-    const request1 = [requestParam1];
+    // const request1 = [requestParam1];
     const layer1 = [router1];
 
     const baseRequest = [
@@ -86,8 +86,8 @@ async function executeWETH2RND() {
     await dexRouter.connect(account).smartSwap(
         baseRequest,
         [fromTokenAmount],
-        [request1],
         [layer1],
+        pmmReq
     );
 
     console.log("after WETH Balance: " + await WETH.balanceOf(univ3Adapter.address));
