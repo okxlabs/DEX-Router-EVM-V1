@@ -295,6 +295,4 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
     emit OrderRecord(baseRequestFromToken, baseRequest.toToken, msg.sender, localBaseRequest.fromTokenAmount, returnAmount);
   }
-
-  function calldataDexRouter(RouterPath[] calldata path) external {}
 }
