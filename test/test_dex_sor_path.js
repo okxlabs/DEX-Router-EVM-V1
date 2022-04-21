@@ -171,13 +171,13 @@ describe("Smart route path test", function() {
       minReturnAmount,
       deadLine,
     ]
-    await dexRouter.connect(alice).smartSwap(
+    rxReuslt = await dexRouter.connect(alice).smartSwap(
       baseRequest,
       [fromTokenAmount1, fromTokenAmount2],
       [layer1, layer2],
       []
     );
-
+    // console.log(rxReuslt.data)
     expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
     // wbtc -> weth
     // 5000000000000000000 * 997 * 10000000000000000000000 / (1000000000000000000000 * 1000 +  5000000000000000000 * 997) = 49602730389010784000
@@ -197,10 +197,11 @@ describe("Smart route path test", function() {
     //      -> weth(dodo)
 
     expect(await weth.balanceOf(alice.address)).to.be.eq("0");
+    expect(await wbtc.balanceOf(alice.address)).to.be.eq("100000000000000000000");
 
     fromToken = wbtc;
     toToken = weth;
-    fromTokenAmount = ethers.utils.parseEther('10');
+    fromTokenAmount = ethers.utils.parseEther('1');
     minReturnAmount = 0;
     deadLine = FOREVER;
 
@@ -218,9 +219,9 @@ describe("Smart route path test", function() {
       lpWBTCWETH.address
     ];
     // The first flash swap weight does not work
-    const weight1 = Number(2000).toString(16).replace('0x', '');
-    const weight2 = Number(3000).toString(16).replace('0x', '');
-    const weight3 = Number(5000).toString(16).replace('0x', '');
+    const weight1 = ethers.utils.hexZeroPad(2000, 2).replace('0x', '');
+    const weight2 = ethers.utils.hexZeroPad(3000, 2).replace('0x', '');
+    const weight3 = ethers.utils.hexZeroPad(5000, 2).replace('0x', '');
     const rawData1 = [
       "0x" + direction(wbtc.address, weth.address) + "0000000000000000000" + weight1 + lpWBTCWETH.address.replace("0x", ""),
       "0x" + direction(wbtc.address, weth.address) + "0000000000000000000" + weight2 + lpWBTCWETH.address.replace("0x", ""),
@@ -239,21 +240,20 @@ describe("Smart route path test", function() {
       minReturnAmount,
       deadLine
     ]
-
-    await dexRouter.connect(alice).smartSwap(
+    rxResult = await dexRouter.connect(alice).smartSwap(
       baseRequest,
       [fromTokenAmount],
       [layer1],
       []
     );
-    
+    // console.log(rxResult.data)
     // wbtc -> weth
     // 2000000000000000000 * 997 * 10000000000000000000000 / (1000000000000000000000 * 1000 +  2000000000000000000 * 997) = 19900318764383818000
     // 3000000000000000000 * 997 * 9980099681235616181335 / (1002000000000000000000 * 1000 +  3000000000000000000 * 997) = 29702234295208346000
     // 5000000000000000000 * 997 * 9950397446940407838178 / (1005000000000000000000 * 1000 +  5000000000000000000 * 997) = 49112344513035270000
     // 19900318764383818000 + 29820805969345690000 + 49602730389010784000 = 98714897572627430000 ~> 98714897572627437666
     expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
-    expect(await weth.balanceOf(alice.address)).to.be.eq("98714897572627437666");
+    expect(await weth.balanceOf(alice.address)).to.be.eq("9960060559955350873");
   });
 
   it("mixSwap with three fork path", async () => {
@@ -346,8 +346,8 @@ describe("Smart route path test", function() {
       lpBNBWETH.address,
       lpBNBWETH.address
     ];
-    const weight61 = Number(8000).toString(16).replace('0x', '');
-    const weight62 = Number(2000).toString(16).replace('0x', '');
+    const weight61 = ethers.utils.hexZeroPad(8000, 2).replace('0x', '');
+    const weight62 = ethers.utils.hexZeroPad(2000, 2).replace('0x', '');
     const rawData6 = [
       "0x" + direction(bnb.address, weth.address) + "0000000000000000000" + weight61 + lpBNBWETH.address.replace("0x", ""),
       "0x" + direction(bnb.address, weth.address) + "0000000000000000000" + weight62 + lpBNBWETH.address.replace("0x", "")
@@ -364,8 +364,8 @@ describe("Smart route path test", function() {
       lpWETHUSDT.address,
       lpWETHUSDT.address
     ];
-    const weight70 = Number(5000).toString(16).replace('0x', '');
-    const weight71 = Number(5000).toString(16).replace('0x', '');
+    const weight70 = ethers.utils.hexZeroPad(5000, 2).replace('0x', '');
+    const weight71 = ethers.utils.hexZeroPad(5000, 2).replace('0x', '');
     const rawData7 = [
       "0x" + direction(weth.address, usdt.address) + "0000000000000000000" + weight70 + lpWETHUSDT.address.replace("0x", ""),
       "0x" + direction(weth.address, usdt.address) + "0000000000000000000" + weight71 + lpWETHUSDT.address.replace("0x", "")
@@ -393,11 +393,11 @@ describe("Smart route path test", function() {
     );
 
     expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
-    expect(await toToken.balanceOf(alice.address)).to.be.eq(53597548250295474132461);
+    expect(await toToken.balanceOf(alice.address)).to.be.eq("53597548250295474132461");
   });
 
   const direction = function(token0, token1) {
-    return token0 > token1 ? 0 : 8;
+    return token0 < token1 ? 0 : 8;
   }
 
   const addLiquidity = async (token0, token1, amount0, amount1) => {
