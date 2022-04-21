@@ -7,6 +7,7 @@ const { initDexRouter, direction, FOREVER } = require("./utils")
 const ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
 const BancorNetwork = "0x2F9EC37d6CcFFf1caB21733BdaDEdE11c823cCB0";
 const balancerVault = "0xBA12222222228d8Ba445958a75a0704d566BF2C8";
+const pmmReq = []
 
 const initToken = async () => {
     WETH = await ethers.getContractAt(
@@ -56,10 +57,10 @@ async function initWETHRNDParams(fromTokenAmount) {
     const uniV2PoolAddr = "0x5449bd1a97296125252db2d9cf23d5d6e30ca3c1"; // RND-WETH Pool
     const uniV3PoolAddr = "0x96b0837489d046A4f5aA9ac2FC9e086bD14Bac1E"; // RND-WETH V3 Pool
     // node1
-    const requestParam1 = [
-        tokenConfig.tokens.WETH.baseTokenAddress,
-        [0]
-    ];
+    // const requestParam1 = [
+    //     tokenConfig.tokens.WETH.baseTokenAddress,
+    //     [0]
+    // ];
     const mixAdapter1 = [
         univ2Adapter.address,
         univ3Adapter.address
@@ -99,10 +100,10 @@ async function initWETHRNDParams(fromTokenAmount) {
         ]
     )
     const extraData1 = [moreInfo1,moreInfo2];
-    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1];
+    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1, WETH.address];
 
     // layer1
-    const request1 = [requestParam1];
+    // const request1 = [requestParam1];
     const layer1 = [router1];
 
     const baseRequest = [
@@ -112,9 +113,9 @@ async function initWETHRNDParams(fromTokenAmount) {
         minReturnAmount,
         deadLine,
     ]
-    reqs = [request1]
+    // reqs = [request1]
     layers = [layer1]
-    return {baseRequest, reqs, layers}
+    return {baseRequest, layers}
 }
 
 // weth ->  rnd  (univ2)
@@ -135,14 +136,14 @@ async function executeWEth2RND() {
     console.log("before RND Balance: " + await RND.balanceOf(account.address));
 
     const fromTokenAmount = ethers.utils.parseEther("1");
-    const {baseRequest,reqs,layers} = await initWETHRNDParams(fromTokenAmount)
+    const {baseRequest,layers} = await initWETHRNDParams(fromTokenAmount)
 
     await WETH.connect(account).approve(tokenApprove.address, fromTokenAmount);
     await dexRouter.connect(account).smartSwap(
         baseRequest,
         [fromTokenAmount],
-        reqs,
         layers,
+        pmmReq
     );
 
     console.log("after WETH Balance: " + await WETH.balanceOf(univ2Adapter.address));
@@ -157,14 +158,14 @@ async function initWETHUSDCParams(fromTokenAmount) {
     const bntusdcPoolAddr = "0x23d1b2755d6C243DFa9Dd06624f1686b9c9E13EB";
     const ethbntPoolAddr = "0x4c9a2bd661d640da3634a4988a9bd2bc0f18e5a9";
 
-    const requestParam1 = [
-        tokenConfig.tokens.WETH.baseTokenAddress,
-        [0]
-    ];
-    const requestParam2 = [
-        tokenConfig.tokens.BNT.baseTokenAddress,
-        [0]
-    ];
+    // const requestParam1 = [
+    //     tokenConfig.tokens.WETH.baseTokenAddress,
+    //     [0]
+    // ];
+    // const requestParam2 = [
+    //     tokenConfig.tokens.BNT.baseTokenAddress,
+    //     [0]
+    // ];
     const mixAdapter1 = [
         univ2Adapter.address,
         univ3Adapter.address,
@@ -244,13 +245,13 @@ async function initWETHUSDCParams(fromTokenAmount) {
     )
 
     const extraData1 = [moreInfo1,moreInfo2,moreInfo3];
-    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1];
+    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1,WETH.address];
 
     const extraData2 = [moreInfo4];
-    const router2 = [mixAdapter2, assertTo2, rawData2, extraData2];
+    const router2 = [mixAdapter2, assertTo2, rawData2, extraData2,BNT.address];
 
     // layer1
-    const request1 = [requestParam1,requestParam2];
+    // const request1 = [requestParam1,requestParam2];
     const layer1 = [router1,router2];
 
     const baseRequest = [
@@ -260,9 +261,9 @@ async function initWETHUSDCParams(fromTokenAmount) {
         minReturnAmount,
         deadLine,
     ]
-    reqs = [request1]
+    // reqs = [request1]
     layers = [layer1]
-    return {baseRequest, reqs, layers}
+    return {baseRequest, layers}
 }
 
 // weth ->  usdc  (univ2)
@@ -284,14 +285,14 @@ async function executeWEth2USDC() {
     console.log("before USDC Balance: " + await USDC.balanceOf(account.address));
 
     const fromTokenAmount = ethers.utils.parseEther("0.06325");
-    const {baseRequest,reqs,layers} = await initWETHUSDCParams(fromTokenAmount)
+    const {baseRequest,layers} = await initWETHUSDCParams(fromTokenAmount)
 
     await WETH.connect(account).approve(tokenApprove.address, fromTokenAmount);
     await dexRouter.connect(account).smartSwap(
         baseRequest,
         [fromTokenAmount],
-        reqs,
         layers,
+        pmmReq
     );
 
     console.log("after WETH Balance: " + await WETH.balanceOf(univ2Adapter.address));
@@ -305,14 +306,14 @@ async function initWETHAAVEParams(fromTokenAmount) {
     const balancerV2PoolId = "0x01abc00e86c7e258823b9a055fd62ca6cf61a16300010000000000000000003b";
     const uniV3PoolAddr = "0xdceaf5d0e5e0db9596a47c0c4120654e80b1d706" // AAVE-USDC
 
-    const requestParam1 = [
-        tokenConfig.tokens.WETH.baseTokenAddress,
-        [0]
-    ];
-    const requestParam2 = [
-        tokenConfig.tokens.AAVE.baseTokenAddress,
-        [0]
-    ];
+    // const requestParam1 = [
+    //     tokenConfig.tokens.WETH.baseTokenAddress,
+    //     [0]
+    // ];
+    // const requestParam2 = [
+    //     tokenConfig.tokens.AAVE.baseTokenAddress,
+    //     [0]
+    // ];
     const mixAdapter1 = [
         balancerAdapter.address,
         balancerV2Adapter.address
@@ -380,11 +381,11 @@ async function initWETHAAVEParams(fromTokenAmount) {
     )
 
     const extraData1 = [moreInfo1,moreInfo2];
-    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1];
+    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1,WETH.address];
     const extraData2 = [moreInfo3];
-    const router2 = [mixAdapter2, assertTo2, rawData2, extraData2];
+    const router2 = [mixAdapter2, assertTo2, rawData2, extraData2,AAVE.address];
     // layer1
-    const request1 = [requestParam1,requestParam2];
+    // const request1 = [requestParam1,requestParam2];
     const layer1 = [router1,router2];
 
     const baseRequest = [
@@ -394,9 +395,9 @@ async function initWETHAAVEParams(fromTokenAmount) {
         minReturnAmount,
         deadLine,
     ]
-    reqs = [request1]
+    // reqs = [request1]
     layers = [layer1]
-    return {baseRequest, reqs, layers}
+    return {baseRequest, layers}
 }
 
 // weth ->  aave  (balancer) -> usdc (univ3)
@@ -421,14 +422,14 @@ async function executeWEth2AAVE() {
     console.log("before USDC Balance: " + await USDC.balanceOf(account.address));
 
     const fromTokenAmount = ethers.utils.parseEther("0.1");
-    const {baseRequest,reqs,layers} = await initWETHAAVEParams(fromTokenAmount)
+    const {baseRequest,layers} = await initWETHAAVEParams(fromTokenAmount)
 
     await WETH.connect(account).approve(tokenApprove.address, fromTokenAmount);
     await dexRouter.connect(account).smartSwap(
         baseRequest,
         [fromTokenAmount],
-        reqs,
         layers,
+        pmmReq
     );
 
     console.log("after WETH Balance: " + await WETH.balanceOf(univ2Adapter.address));
