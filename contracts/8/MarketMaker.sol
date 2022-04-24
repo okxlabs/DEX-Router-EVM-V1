@@ -9,7 +9,6 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 
 import "./libraries/SafeERC20.sol";
 import "./interfaces/IApproveProxy.sol";
-import "hardhat/console.sol";
 
 /// @title MarketMaker
 /// @notice Explain to an end user what this does
@@ -61,9 +60,10 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
       uint256 salt;
       uint256 deadLine;
       bool isPushOrder;
-      address pmmAdapter;
-      uint256 subId;
-      bytes signature;
+      bytes extension;
+      // address pmmAdapter;
+      // uint256 subIndex;
+      // bytes signature;
   }
 
   struct OrderStatus {
@@ -166,7 +166,7 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
     bytes32 r;
     bytes32 vs;
     address operatorAddress;
-    bytes memory sig;
+    bytes memory extension;
 
     for (uint256 i = 0; i < request.length; i++) {
       pathIndex[i] = request[i].pathIndex;
@@ -174,10 +174,10 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
       //   continue;
       // }
       digest = _hashTypedDataV4(hashOrder(request[i]));
-      sig = request[i].signature;
+      extension = request[i].extension;
       assembly{
-        r := mload(add(sig, 0x20))
-        vs := mload(add(sig, 0x40))
+        r := mload(add(extension, 0x20))
+        vs := mload(add(extension, 0x40))
       }
 
       operatorAddress = ECDSA.recover(digest, r, vs);
@@ -207,7 +207,7 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
 
     bytes32 digest = _hashTypedDataV4(hashOrder(request));
 
-    errorCode = validateSigBatch(digest, request.payer, request.signature);
+    errorCode = validateSigBatch(digest, request.payer, request.extension);
     if (errorCode > 0) {
       return errorCode;
     }
@@ -277,18 +277,19 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
   function validateSigBatch(
     bytes32 digest,
     address payer,
-    bytes memory signature    
+    bytes memory extension    
   ) internal view returns (uint256) {
     bytes32 operatorSigR;
     bytes32 operatorSigVs;
     bytes32 backEndSigR;
     bytes32 backEndSigVs;
     assembly{
-      operatorSigR := mload(add(signature, 0x20))
-      operatorSigVs := mload(add(signature, 0x40))
-      backEndSigR := mload(add(signature, 0x60))
-      backEndSigVs := mload(add(signature, 0x80))
+      operatorSigR := mload(add(extension, 0x60))
+      operatorSigVs := mload(add(extension, 0x80))
+      backEndSigR := mload(add(extension, 0xa0))
+      backEndSigVs := mload(add(extension, 0xc0))
     }
+
     address operatorAddress = ECDSA.recover(digest, operatorSigR, operatorSigVs);
     if (!validateOperatorSig(payer, operatorAddress)) {
       return uint256(PMM_ERROR.INVALID_OPERATOR);

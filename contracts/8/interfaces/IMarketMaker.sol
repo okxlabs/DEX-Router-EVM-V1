@@ -12,9 +12,10 @@ interface IMarketMaker {
         uint256 salt;
         uint256 deadLine;
         bool isPushOrder;
-        address pmmAdapter;
-        uint256 subId;
-        bytes signature;
+        bytes extension;
+        // address pmmAdapter;
+        // uint256 subIndex;
+        // bytes signature;
     }
 
     enum PMM_ERROR {
