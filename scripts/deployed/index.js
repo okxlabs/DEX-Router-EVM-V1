@@ -2,7 +2,6 @@ const { network } = require('hardhat');
 
 const oec  = require('./okc')
 const bsc = require('./bsc')
-const kovan = require('./bsc')
 const eth = require('./eth')
 
 let config
