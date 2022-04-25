@@ -28,6 +28,9 @@ const {
     EIP_712_DOMAIN_TYPEHASH
 } = require("./constants");
 
+const subIndex = '0000000000000000000000000000000000000000000000000000000000001111';
+
+
 const getDomainSeparator = function (chainId, marketMaker){
     return keccak256(defaultAbiCoder.encode(
         ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
@@ -40,9 +43,6 @@ const getPullInfosToBeSigned = function (pull_data) {
     let quantity = pull_data.length;
     let localTs = getLocalTs();
     let pullInfosToBeSigned = [];
-    let chainId = [];
-    let marketMaker = [];
-    let pmmAdapter = [];
 
     for (let i = 0; i < quantity; i++) {
         let chunk = pull_data[i];
@@ -58,15 +58,14 @@ const getPullInfosToBeSigned = function (pull_data) {
             "toTokenAmountMax" : Number(toTokenAmount),
             "salt" : Number(localTs),
             "deadLine" : localTs + RFQ_VALID_PERIOD,
-            "isPushOrder" : false
+            "isPushOrder" : false,
+            "chainId" : chunk.chainId,
+            "marketMaker" : chunk.marketMaker,
+            "pmmAdapter" : chunk.pmmAdapter
         };
-
-        chainId[i] = chunk.chainId;
-        marketMaker[i] = chunk.marketMaker;
-        pmmAdapter[i] = chunk.pmmAdapter;
     }
 
-    return { pullInfosToBeSigned, chainId, marketMaker, pmmAdapter };
+    return pullInfosToBeSigned;
 }
 
 // change payer to payer_4
@@ -74,9 +73,6 @@ const getPullInfosToBeSigned_paidByCarol = function (pull_data) {
     let quantity = pull_data.length;
     let localTs = getLocalTs();
     let pullInfosToBeSigned = [];
-    let chainId = [];
-    let marketMaker = [];
-    let pmmAdapter = [];
 
     for (let i = 0; i < quantity; i++) {
         let chunk = pull_data[i];
@@ -92,15 +88,14 @@ const getPullInfosToBeSigned_paidByCarol = function (pull_data) {
             "toTokenAmountMax" : Number(toTokenAmount),
             "salt" : Number(localTs),
             "deadLine" : localTs + RFQ_VALID_PERIOD,
-            "isPushOrder" : false
+            "isPushOrder" : false,
+            "chainId" : chunk.chainId,
+            "marketMaker" : chunk.marketMaker,
+            "pmmAdapter" : chunk.pmmAdapter
         };
-
-        chainId[i] = chunk.chainId;
-        marketMaker[i] = chunk.marketMaker;
-        pmmAdapter[i] = chunk.pmmAdapter;
     }
 
-    return { pullInfosToBeSigned, chainId, marketMaker, pmmAdapter };
+    return pullInfosToBeSigned;
 }
 
 // order to be pushed => infos to be signed
@@ -108,9 +103,6 @@ const getPushInfosToBeSigned = function (push_data){
     let quantity = push_data.length;
     let localTs = getLocalTs();
     let pushInfosToBeSigned = [];
-    let chainId = [];
-    let marketMaker = [];
-    let pmmAdapter = [];
 
     for (let i = 0; i < quantity; i++){
         let chunk = push_data[i];
@@ -124,14 +116,14 @@ const getPushInfosToBeSigned = function (push_data){
             "toTokenAmountMax" : chunk.makeAmountMax,
             "salt" : Number(localTs),
             "deadLine" : Number(localTs) + Number(chunk.pushQuoteValidPeriod),
-            "isPushOrder" : true
+            "isPushOrder" : true,
+            "chainId" : chunk.chainId,
+            "marketMaker" : chunk.marketMaker,
+            "pmmAdapter" : chunk.pmmAdapter
         };
-        chainId[i] = chunk.chainId;
-        marketMaker[i] = MARKET_MAKER_ADDRESS[chunk.chainId];
-        pmmAdapter[i] = PMM_ADAPTER_ADDRESS[chunk.chainId];
     }
 
-    return {pushInfosToBeSigned, chainId, marketMaker};
+    return pushInfosToBeSigned;
 }
 
 // sign infos and return a single quote
@@ -150,8 +142,7 @@ const singleQuote = function (domain_separator, infosToBeSigned, pmmAdapter) {
             "salt" : infosToBeSigned.salt, 
             "deadLine" : infosToBeSigned.deadLine, 
             "isPushOrder" : infosToBeSigned.isPushOrder,
-            "pmmAdapter" : pmmAdapter,
-            "signature": signature
+            "extension" : '0x000000000000000000000000' + pmmAdapter.slice(2) + subIndex + signature.slice(2),
         }
         return quote;
     } catch {
@@ -160,15 +151,15 @@ const singleQuote = function (domain_separator, infosToBeSigned, pmmAdapter) {
 }
 
 // sign infos and return multiple quotes
-const multipleQuotes = function (mulInfosToBeSigned, chainId, marketMaker, pmmAdapter) {
+const multipleQuotes = function (mulInfosToBeSigned) {
+    // console.log("marketMaker", marketMaker);
     let quantity = mulInfosToBeSigned.length;
     let quotes = [];
     for (let i = 0; i < quantity; i++) {
-        let domain_separator = getDomainSeparator(chainId[i], marketMaker[i]);
-        let quote = singleQuote(domain_separator, mulInfosToBeSigned[i], pmmAdapter[i]);
+        let domain_separator = getDomainSeparator(mulInfosToBeSigned[i].chainId, mulInfosToBeSigned[i].marketMaker);
+        let quote = singleQuote(domain_separator, mulInfosToBeSigned[i], mulInfosToBeSigned[i].pmmAdapter);
         quotes[i] = quote;
     }
-
     return quotes;
 }
 
@@ -208,7 +199,7 @@ const sign = function (digest){
     // console.log("signature65",signature65);
     let _operatorSig = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(PRIVATE_KEY,'hex'));
     vs = (Number(_operatorSig.v - 27)*8 + Number(_operatorSig.s.toString('hex').slice(0,1))).toString(16) + _operatorSig.s.toString('hex').slice(1);
-    operatorSig64 = '0x' + _operatorSig.r.toString('hex') + vs;
+    operatorSig64 = _operatorSig.r.toString('hex') + vs;
     // console.log("operatorSig", operatorSig64);
 
     let _backEndSig = ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(PRIVATE_KEY_BACKEND,'hex'));
@@ -216,7 +207,7 @@ const sign = function (digest){
     backEndSig64 = _backEndSig.r.toString('hex') + vs;
     // console.log("backEndSig64", backEndSig64);
 
-    sig = operatorSig64 + backEndSig64;
+    sig = '0x' + operatorSig64 + backEndSig64;
     // console.log("sig", sig);
     return sig;
 }

@@ -55,7 +55,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   event ApproveProxyChanged(address approveProxy);
   event PMMSwap(
     uint256 pathIndex,
-    uint256 subId,
+    uint256 subIndex,
     address payer,
     address fromToken,
     address toToken,
@@ -186,12 +186,19 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     uint256 actualRequest,
     IMarketMaker.PMMSwapRequest memory pmmRequest
   ) internal returns (uint256 errorCode) {
+    address pmmAdapter;
+    uint256 subIndex;
+    bytes memory extension = pmmRequest.extension;
+    assembly{
+      pmmAdapter := mload(add(extension, 0x20))
+      subIndex := mload(add(extension, 0x40))
+    }
     // check from token
     if (pmmRequest.fromToken != fromToken) {
       errorCode = uint256(IMarketMaker.PMM_ERROR.WRONG_FROM_TOKEN);
       emit PMMSwap (
         pmmRequest.pathIndex, 
-        pmmRequest.subId, 
+        subIndex, 
         pmmRequest.payer, 
         fromToken, 
         pmmRequest.toToken, 
@@ -206,7 +213,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       errorCode = uint256(IMarketMaker.PMM_ERROR.REQUEST_TOO_MUCH);
       emit PMMSwap (
         pmmRequest.pathIndex, 
-        pmmRequest.subId, 
+        subIndex, 
         pmmRequest.payer, 
         fromToken, 
         pmmRequest.toToken, 
@@ -220,15 +227,15 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     address tokenApprove = IApproveProxy(approveProxy).tokenApprove();
     SafeERC20.safeApprove(IERC20(fromToken), tokenApprove, actualRequest);
     // settle funds in MarketMaker, send funds to pmmAdapter
-    _deposit(address(this), pmmRequest.pmmAdapter, fromToken, actualRequest);
+    _deposit(address(this), pmmAdapter, fromToken, actualRequest);
     bytes memory moreInfo = abi.encode(pmmRequest);
     uint256 toTokenAmount = IERC20(pmmRequest.toToken).balanceOf(address(this));
-    errorCode = IAdapterWithResult(pmmRequest.pmmAdapter).sellBase(address(this), address(0), moreInfo);
+    errorCode = IAdapterWithResult(pmmAdapter).sellBase(address(this), address(0), moreInfo);
     toTokenAmount = IERC20(pmmRequest.toToken).balanceOf(address(this)) - toTokenAmount;
     SafeERC20.safeApprove(IERC20(fromToken), tokenApprove, 0);
     emit PMMSwap (
       pmmRequest.pathIndex, 
-      pmmRequest.subId, 
+      subIndex, 
       pmmRequest.payer, 
       fromToken, 
       pmmRequest.toToken, 

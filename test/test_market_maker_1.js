@@ -63,12 +63,7 @@ describe("Market Marker test", function() {
         ]
         let infosToBeSigned = getPullInfosToBeSigned(rfq);
 
-        let quote = multipleQuotes(
-            infosToBeSigned.pullInfosToBeSigned, 
-            infosToBeSigned.chainId, 
-            infosToBeSigned.marketMaker,
-            infosToBeSigned.pmmAdapter
-        );
+        let quote = multipleQuotes(infosToBeSigned);
 
         // 6. construct of input of funciton swap
         let infos = quote[0];
@@ -82,23 +77,34 @@ describe("Market Marker test", function() {
             infos.salt, 
             infos.deadLine, 
             infos.isPushOrder,
-            infos.pmmAdapter,
-            10000000,
-            infos.signature
+            infos.extension
         ];
         // 7. swap
 
         // what if bob has not approved token ?
-        // let markerAmount = ethers.utils.parseEther('2');
-        // await wbtc.connect(bob).approve(tokenApprove.address,markerAmount);
         let swapAmount = ethers.utils.parseEther('50000');
         await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
+        await marketMaker.connect(bob).setOperator(bob.address);
 
         let errorCode = await marketMaker.connect(alice).callStatic.swap(
             swapAmount,
             request
         )
         await expect(errorCode).to.equal(7);
+
+        // after bob approve token
+        let markerAmount = ethers.utils.parseEther('2');
+        await wbtc.connect(bob).approve(tokenApprove.address,markerAmount);
+
+        await marketMaker.connect(alice).swap(
+            swapAmount,
+            request
+        )
+
+        expect(await usdt.balanceOf(alice.address)).to.equal(0);
+        expect(await wbtc.balanceOf(alice.address)).to.equal(infos.toTokenAmountMax);
+        expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('50000'));
+        expect(await wbtc.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2').sub(BigNumber.from(infos.toTokenAmountMax)));
         
     });
 
@@ -145,13 +151,7 @@ describe("Market Marker test", function() {
             }
         ]
         let infosToBeSigned = getPullInfosToBeSigned(rfq);
-
-        let quote = multipleQuotes(
-            infosToBeSigned.pullInfosToBeSigned, 
-            infosToBeSigned.chainId, 
-            infosToBeSigned.marketMaker,
-            infosToBeSigned.pmmAdapter
-        );
+        let quote = multipleQuotes(infosToBeSigned);
 
         // 6. construct of input of funciton swap
         let infos = quote[0];
@@ -166,9 +166,7 @@ describe("Market Marker test", function() {
             infos.salt, 
             infos.deadLine, 
             infos.isPushOrder,
-            infos.pmmAdapter,
-            10000000,
-            infos.signature
+            infos.extension
         ];
 
         // 7. swap
@@ -230,13 +228,7 @@ describe("Market Marker test", function() {
             }
         ]
         let infosToBeSigned = getPullInfosToBeSigned_paidByCarol(rfq);
-
-        let quote = multipleQuotes(
-            infosToBeSigned.pullInfosToBeSigned, 
-            infosToBeSigned.chainId, 
-            infosToBeSigned.marketMaker,
-            infosToBeSigned.pmmAdapter
-        );
+        let quote = multipleQuotes(infosToBeSigned);
 
         // 6. construct of input of funciton swap
         let infos = quote[0];
@@ -250,9 +242,7 @@ describe("Market Marker test", function() {
             infos.salt, 
             infos.deadLine, 
             infos.isPushOrder,
-            infos.pmmAdapter,
-            10000000,
-            infos.signature
+            infos.extension
         ];
 
         // 7. swap
@@ -273,8 +263,7 @@ describe("Market Marker test", function() {
         await marketMaker.connect(alice).swap(
             swapAmount,
             request
-        )
- 
+        );
 
         // 8. check balance
         // console.log("alice get usdt: " + await usdt.balanceOf(alice.address));
@@ -330,13 +319,109 @@ describe("Market Marker test", function() {
             }
         ]
         let infosToBeSigned = getPullInfosToBeSigned_paidByCarol(rfq);
+        let quote = multipleQuotes(infosToBeSigned);
 
-        let quote = multipleQuotes(
-            infosToBeSigned.pullInfosToBeSigned, 
-            infosToBeSigned.chainId, 
-            infosToBeSigned.marketMaker,
-            infosToBeSigned.pmmAdapter
+        // 6. construct of input of funciton swap
+        let infos = quote[0];
+        let requestForCancel = [
+            infos.pathIndex, 
+            infos.payer, 
+            infos.fromTokenAddress, 
+            infos.toTokenAddress, 
+            infos.fromTokenAmountMax, 
+            infos.toTokenAmountMax, 
+            infos.salt, 
+            infos.deadLine, 
+            infos.isPushOrder,
+            '0x' + infos.extension.slice(130,258)
+        ];
+
+        // 7. swap
+        let markerAmount = ethers.utils.parseEther('2');
+        await wbtc.connect(carol).approve(tokenApprove.address,markerAmount);
+        let swapAmount = ethers.utils.parseEther('50000');
+        await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
+        await marketMaker.connect(carol).setOperator(bob.address);
+
+        // query order status before cancel quote
+        let hash = getDigest(requestForCancel, chainId, marketMaker.address);
+        let orderStatus = await marketMaker.queryOrderStatus([hash]);
+        expect(orderStatus[0].cancelledOrFinalized).to.equal(false);
+
+
+        // carol cancelled quotes
+        await marketMaker.connect(carol).cancelQuotes([requestForCancel]);
+
+
+        let requestForSwap = [
+            infos.pathIndex, 
+            infos.payer, 
+            infos.fromTokenAddress, 
+            infos.toTokenAddress, 
+            infos.fromTokenAmountMax, 
+            infos.toTokenAmountMax, 
+            infos.salt, 
+            infos.deadLine, 
+            infos.isPushOrder,
+            infos.extension
+        ];
+        errorCode = await marketMaker.connect(alice).callStatic.swap(
+            swapAmount,
+            requestForSwap
         );
+
+        expect(errorCode).to.equal(5);
+
+        // query order status after cancel quote
+        orderStatus = await marketMaker.queryOrderStatus([hash]);
+        expect(orderStatus[0].cancelledOrFinalized).to.equal(true);
+
+    });
+
+    it("ERC20 Exchange with a pull quote which has been used", async () => {
+        const { chainId }  = await ethers.provider.getNetwork();
+
+        // 3. prepare marketMaker
+        MarketMaker = await ethers.getContractFactory("MarketMaker");
+        const marketMaker = await MarketMaker.deploy();
+        await marketMaker.deployed();
+        marketMaker.initialize(weth.address, alice.address, owner.address, 0, backEnd.address);
+
+        // 4. approve
+        const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
+        const tokenApproveProxy = await TokenApproveProxy.deploy();
+        await tokenApproveProxy.initialize();
+
+        const TokenApprove = await ethers.getContractFactory("TokenApprove");
+        const tokenApprove = await TokenApprove.deploy();
+        await tokenApprove.initialize(tokenApproveProxy.address);
+
+        await tokenApproveProxy.addProxy(marketMaker.address);
+        await tokenApproveProxy.setTokenApprove(tokenApprove.address);
+
+        await tokenApprove.setApproveProxy(tokenApproveProxy.address);
+        await marketMaker.setApproveProxy(tokenApproveProxy.address);
+
+        // console.log("before bob usdt: " + await usdt.balanceOf(bob.address));
+        // console.log("before alice usdt: " + await usdt.balanceOf(alice.address));
+        expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
+        expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
+
+        // 5. prepare quotes
+        let rfq = [
+            {
+                "pathIndex": 100000000000000,
+                "fromTokenAddress": usdt.address, 
+                "toTokenAddress": wbtc.address, 
+                "fromTokenAmount": '50000000000000000000000', 
+                "toTokenAmountMin": '1000000000000000000',
+                "chainId": chainId,
+                "marketMaker": marketMaker.address,
+                "pmmAdapter" : ethers.constants.AddressZero
+            }
+        ]
+        let infosToBeSigned = getPullInfosToBeSigned(rfq);
+        let quote = multipleQuotes(infosToBeSigned);
 
         // 6. construct of input of funciton swap
         let infos = quote[0];
@@ -350,38 +435,27 @@ describe("Market Marker test", function() {
             infos.salt, 
             infos.deadLine, 
             infos.isPushOrder,
-            infos.pmmAdapter,
-            10000000,
-            infos.signature
+            infos.extension
         ];
-
         // 7. swap
+
         let markerAmount = ethers.utils.parseEther('2');
-        await wbtc.connect(carol).approve(tokenApprove.address,markerAmount);
-        let swapAmount = ethers.utils.parseEther('50000');
-        await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
-        await marketMaker.connect(carol).setOperator(bob.address);
+        await wbtc.connect(bob).approve(tokenApprove.address,markerAmount);
+        let swapAmount = ethers.utils.parseEther('10000');
+        await usdt.connect(alice).approve(tokenApprove.address, ethers.utils.parseEther('50000'));
 
-        // query order status before cancel quote
-        let hash = getDigest(request, chainId, marketMaker.address);
-        let orderStatus = await marketMaker.queryOrderStatus([hash]);
-        expect(orderStatus[0].cancelledOrFinalized).to.equal(false);
-
-
-        // carol cancelled quotes
-        await marketMaker.connect(carol).cancelQuotes([request]);
-
-        errorCode = await marketMaker.connect(alice).callStatic.swap(
+        await marketMaker.connect(alice).swap(
             swapAmount,
             request
-        );
+        )
 
-        expect(errorCode).to.equal(5);
+        let errorCode = await marketMaker.connect(alice).callStatic.swap(
+            swapAmount,
+            request
+        )
 
-        // query order status after cancel quote
-        orderStatus = await marketMaker.queryOrderStatus([hash]);
-        expect(orderStatus[0].cancelledOrFinalized).to.equal(true);
-
+        await expect(errorCode).to.equal(5);
+        
     });
 
     
