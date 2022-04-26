@@ -5,20 +5,20 @@ pragma abicoder v2;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-import "./TokenApproveProxy.sol";
-import "./UnxswapRouter.sol";
+import "../TokenApproveProxy.sol";
+import "../UnxswapRouter.sol";
 
-import "./interfaces/IWETH.sol";
-import "./interfaces/IAdapter.sol";
-import "./interfaces/IAdapterWithResult.sol";
-import "./interfaces/IApproveProxy.sol";
-import "./interfaces/IMarketMaker.sol";
-import "./interfaces/IWNativeRelayer.sol";
+import "../interfaces/IWETH.sol";
+import "../interfaces/IAdapter.sol";
+import "../interfaces/IAdapterWithResult.sol";
+import "../interfaces/IApproveProxy.sol";
+import "../interfaces/IMarketMaker.sol";
+import "../interfaces/IWNativeRelayer.sol";
 
 /// @title DexRouter
 /// @notice Entrance of Split trading in Dex platform
 /// @dev Entrance of Split trading in Dex platform
-contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradeable {
+contract MockDexRouterForLocalPMMTest is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   using UniversalERC20 for IERC20;
 
   address public approveProxy;
@@ -26,6 +26,9 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   bytes32 public constant _PMM_FLAG4_MASK = 0x4000000000000000000000000000000000000000000000000000000000000000;
   bytes32 public constant _PMM_INDEX_I_MASK = 0x00ff000000000000000000000000000000000000000000000000000000000000;
   bytes32 public constant _PMM_INDEX_J_MASK = 0x0000ff0000000000000000000000000000000000000000000000000000000000;
+
+  address public temp_weth;
+  address public w_native_relayer;
 
   struct BaseRequest {
     uint256 fromToken;
@@ -43,9 +46,11 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     uint256 fromToken;    
   }
 
-  function initialize() public initializer {
+  function initialize(address _temp_weth, address _w_native_relayer) public initializer {
     __Ownable_init();
     __ReentrancyGuard_init();
+    temp_weth = _temp_weth;
+    w_native_relayer = _w_native_relayer;
   }
 
   //-------------------------------
@@ -152,9 +157,9 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   ) internal {
     if (UniversalERC20.isETH(IERC20(token))) {
       if (amount > 0) {
-        IWETH(address(uint160(_WETH))).deposit{ value: amount }();
+        IWETH(address(uint160(temp_weth))).deposit{ value: amount }();
         if (to != address(this)) {
-          SafeERC20.safeTransfer(IERC20(address(uint160(_WETH))), to, amount);
+          SafeERC20.safeTransfer(IERC20(address(uint160(temp_weth))), to, amount);
         }
       }
     } else {
@@ -164,10 +169,10 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
   function _transferTokenToUser(address token) internal {
     if ((IERC20(token).isETH())) {
-      uint256 wethBal = IERC20(address(uint160(_WETH))).balanceOf(address(this));
+      uint256 wethBal = IERC20(address(uint160(temp_weth))).balanceOf(address(this));
       if (wethBal > 0) {
-        IWETH(address(uint160(_WETH))).transfer(address(uint160(_WNATIVE_RELAY_32)), wethBal);
-        IWNativeRelayer(address(uint160(_WNATIVE_RELAY_32))).withdraw(wethBal);
+        IWETH(address(uint160(temp_weth))).transfer(address(uint160(w_native_relayer)), wethBal);
+        IWNativeRelayer(address(uint160(w_native_relayer))).withdraw(wethBal);
       }
       uint256 ethBal = address(this).balance;
       if (ethBal > 0) {
@@ -191,7 +196,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     bytes memory extension = pmmRequest.extension;
     if (UniversalERC20.isETH(IERC20(fromToken))){
       // market makers will get WETH
-      fromToken = address(uint160(_WETH));
+      fromToken = address(uint160(temp_weth));
     }
     assembly{
       pmmAdapter := mload(add(extension, 0x20))
@@ -325,7 +330,6 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       uint8 pmmIndex = getPmmIIndex(localBaseRequest.fromToken);
       if (_tryPmmSwap(baseRequestFromToken, localBaseRequest.fromTokenAmount, extraData[pmmIndex]) == 0) {
         _transferTokenToUser(localBaseRequest.toToken);
-
         returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(msg.sender) - returnAmount;
         require(returnAmount >= baseRequest.minReturnAmount, "Route: Return amount is not enough");
         emit OrderRecord(baseRequestFromToken, baseRequest.toToken, msg.sender, localBaseRequest.fromTokenAmount, returnAmount);
