@@ -21,7 +21,10 @@ import "./interfaces/IWNativeRelayer.sol";
 contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   using UniversalERC20 for IERC20;
 
+  // In the test scenario, we take it as a settable state and adjust it to a constant after it stabilizes
   address public approveProxy;
+  address public wNativeRelayer;
+
   bytes32 public constant _PMM_FLAG8_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;
   bytes32 public constant _PMM_FLAG4_MASK = 0x4000000000000000000000000000000000000000000000000000000000000000;
   bytes32 public constant _PMM_INDEX_I_MASK = 0x00ff000000000000000000000000000000000000000000000000000000000000;
@@ -53,6 +56,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   //-------------------------------
 
   event ApproveProxyChanged(address approveProxy);
+  event WNativeRelayerChanged(address wNativeRelayer);
   event PMMSwap(
     uint256 pathIndex,
     uint256 subIndex,
@@ -166,8 +170,8 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     if ((IERC20(token).isETH())) {
       uint256 wethBal = IERC20(address(uint160(_WETH))).balanceOf(address(this));
       if (wethBal > 0) {
-        IWETH(address(uint160(_WETH))).transfer(address(uint160(_WNATIVE_RELAY_32)), wethBal);
-        IWNativeRelayer(address(uint160(_WNATIVE_RELAY_32))).withdraw(wethBal);
+        IWETH(address(uint160(_WETH))).transfer(wNativeRelayer, wethBal);
+        IWNativeRelayer(wNativeRelayer).withdraw(wethBal);
       }
       uint256 ethBal = address(this).balance;
       if (ethBal > 0) {
@@ -288,6 +292,12 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     approveProxy = newApproveProxy;
 
     emit ApproveProxyChanged(approveProxy);
+  }
+
+  function setWNativeRelayer(address relayer) external onlyOwner {
+    wNativeRelayer = relayer;
+
+    emit WNativeRelayerChanged(relayer);
   }
 
   //-------------------------------
