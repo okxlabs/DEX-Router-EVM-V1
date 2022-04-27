@@ -4,6 +4,7 @@ const deployed = require("../../../deployed");
 const FOREVER = '2000000000';
 
 const initDexRouter = async () => {
+
   TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
   tokenApproveProxy = await TokenApproveProxy.deploy();
   await tokenApproveProxy.initialize();
@@ -24,11 +25,18 @@ const initDexRouter = async () => {
   await tokenApproveProxy.addProxy(dexRouter.address);
   await tokenApproveProxy.setTokenApprove(tokenApprove.address);
 
-  WNativeRelayer = await ethers.getContractFactory("WNativeRelayer");
-  wNativeRelayer = await WNativeRelayer.deploy();
-  await wNativeRelayer.deployed();
-  await wNativeRelayer.initialize("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
-  await wNativeRelayer.setCallerOk([dexRouter.address], [true]);
+  const accountAddress = "0xc82Ea2afE1Fd1D61C4A12f5CeB3D7000f564F5C6";
+  await startMockAccount([accountAddress]);
+  account = await ethers.getSigner(accountAddress);
+
+  // set account balance 0.6 eth
+  await setBalance(accountAddress, "0x53444835ec580000");
+  wNativeRelayer = await ethers.getContractAt("WNativeRelayer", "0x5703B683c7F928b721CA95Da988d73a3299d4757")
+
+  await wNativeRelayer.connect(account).setCallerOk([dexRouter.address], [true]);
+  
+  
+  // console.log(wNativeRelayer.address);
 
   return { dexRouter, tokenApprove }
 }
