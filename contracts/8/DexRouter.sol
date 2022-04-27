@@ -191,7 +191,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     bytes memory extension = pmmRequest.extension;
     if (UniversalERC20.isETH(IERC20(fromToken))){
       // market makers will get WETH
-      fromToken = address(uint160(_WETH));
+      fromToken = bytes32ToAddress(_WETH);
     }
     assembly{
       pmmAdapter := mload(add(extension, 0x20))
@@ -203,7 +203,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       emit PMMSwap (
         pmmRequest.pathIndex, 
         subIndex, 
-        pmmRequest.payer, 
+        pmmRequest.payer,
         fromToken, 
         pmmRequest.toToken, 
         actualRequest, 
