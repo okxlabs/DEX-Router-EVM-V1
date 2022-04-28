@@ -263,11 +263,17 @@ executeMutilXAdapter = async function (account, blockNumber, from, to, amountIn,
     let diffFrom = fromTokenAfter.sub(fromTokenBefore)
     let diffTo = toTokenAfter.sub(toTokenBefore)
 
-
+    // assert check & console log
     console.log(adapterList)
     console.log("%s changed: %s >>>>(%s)>>>> %s", from.name, fromTokenBefore.toString(), diffFrom.toString(), fromTokenAfter.toString());
     assert((fromTokenBefore.sub(fromTokenAfter)).eq(ethers.utils.parseUnits(amountIn + "", await from.decimals)), "fromToken changed notequal Amount : " + (fromTokenAfter.sub(fromTokenBefore)).toString() + " != " + fromTokenAmount.toString())
     console.log("%s changed: %s >>>>(%s)>>>> %s", to.name, toTokenBefore.toString(), diffTo.toString(), toTokenAfter.toString());
+    let retention = await FromToken.balanceOf(dexRouter.address)
+    assert(retention == 0, "dexRouter fromToken retention > 0 !")
+    console.log("dexRouter fromToken retention Balance : 0")
+    retention = await ToToken.balanceOf(dexRouter.address)
+    assert(retention == 0, "dexRouter toToken retention > 0 !")
+    console.log("dexRouter toToken retention Balance : 0")
     for await(var key of adapterList){
         let retention = await FromToken.balanceOf(adapter.get(key).address)
         assert(retention == 0, key + " : Adapter retention > 0!")
