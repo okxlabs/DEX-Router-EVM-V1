@@ -2,7 +2,8 @@ const { ethers } = require("hardhat");
 require("../../tools");
 const { getConfig } = require("../../config");
 tokenConfig = getConfig("eth")
-const { initDexRouter, direction, FOREVER } = require("./utils")
+const { initDexRouter, direction, FOREVER, packRawData} = require("./utils")
+const {assert} = require("chai");
 
 const ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
 const BancorNetwork = "0x2F9EC37d6CcFFf1caB21733BdaDEdE11c823cCB0";
@@ -69,20 +70,16 @@ async function initWETHRNDParams(fromTokenAmount) {
         uniV2PoolAddr,
         univ3Adapter.address
     ];
-    const weight1 = Number(2000).toString(16).replace('0x', '');
-    const weight2 = Number(8000).toString(16).replace('0x', '');
+
+
+    const weight1 = 2000;
+    const weight2 = 8000;
+
     const rawData1 = [
-        "0x" +
-        direction(tokenConfig.tokens.WETH.baseTokenAddress, tokenConfig.tokens.RND.baseTokenAddress) +
-        "0000000000000000000" +
-        weight1 +
-        uniV2PoolAddr.replace("0x", ""),
-        "0x" +
-        direction(tokenConfig.tokens.WETH.baseTokenAddress, tokenConfig.tokens.RND.baseTokenAddress) +
-        "0000000000000000000" +
-        weight2 +
-        uniV3PoolAddr.replace("0x", "")  // RND-WETH Pool
+        packRawData(tokenConfig.tokens.WETH.baseTokenAddress,tokenConfig.tokens.RND.baseTokenAddress,weight1,uniV2PoolAddr),
+        packRawData(tokenConfig.tokens.WETH.baseTokenAddress,tokenConfig.tokens.RND.baseTokenAddress,weight2,uniV3PoolAddr)
     ];
+
     const moreInfo1 = "0x"
     const moreInfo2 = ethers.utils.defaultAbiCoder.encode(
         ["uint160", "bytes"],
@@ -146,8 +143,16 @@ async function executeWEth2RND() {
         pmmReq
     );
 
-    console.log("after WETH Balance: " + await WETH.balanceOf(univ2Adapter.address));
-    console.log("after RND Balance: " + await RND.balanceOf(account.address));
+    let rndBalance = await RND.balanceOf(account.address);
+    let adapterBalance1 = await WETH.balanceOf(univ2Adapter.address);
+    let adapterBalance2 = await WETH.balanceOf(univ3Adapter.address);
+    console.log("after univ2 WETH Balance: " + adapterBalance1);
+    console.log("after univ3 WETH Balance: " + adapterBalance2);
+    console.log("after RND Balance: " + rndBalance);
+    let dexRouterBalance = await ethers.provider.getBalance(dexRouter.address)
+    assert.equal(adapterBalance1+adapterBalance2, 0,"adapter has eth left");
+    assert.equal(dexRouterBalance, 0,"dexRouter has eth left");
+    assert.equal(rndBalance,7554274398053476814039960140,"rnd balance error")
 }
 
 async function initWETHUSDCParams(fromTokenAmount) {
@@ -183,36 +188,18 @@ async function initWETHUSDCParams(fromTokenAmount) {
         bancorAdapter.address
     ];
 
-    const weight1 = Number(1000).toString(16).replace('0x', '');
-    const weight2 = Number(8000).toString(16).replace('0x', '');
-    const weight3 = Number(1000).toString(16).replace('0x', '');
-    const weight4 = Number(10000).toString(16).replace('0x', '');
+    const weight1 = 1000;
+    const weight2 = 8000;
+    const weight3 = 1000;
+    const weight4 = 10000;
 
     const rawData1 = [
-        "0x" +
-        direction(tokenConfig.tokens.WETH.baseTokenAddress, tokenConfig.tokens.USDC.baseTokenAddress) +
-        "0000000000000000000" +
-        weight1 +
-        uniV2PoolAddr.replace("0x", ""),
-        "0x" +
-        direction(tokenConfig.tokens.WETH.baseTokenAddress, tokenConfig.tokens.USDC.baseTokenAddress) +
-        "0000000000000000000" +
-        weight2 +
-        uniV3PoolAddr.replace("0x", ""),
-        "0x" +
-        direction(tokenConfig.tokens.WETH.baseTokenAddress, tokenConfig.tokens.BNT.baseTokenAddress) +
-        "0000000000000000000" +
-        weight3 +
-        ethbntPoolAddr.replace("0x", "")
+        packRawData(tokenConfig.tokens.WETH.baseTokenAddress,tokenConfig.tokens.USDC.baseTokenAddress,weight1,uniV2PoolAddr),
+        packRawData(tokenConfig.tokens.WETH.baseTokenAddress,tokenConfig.tokens.USDC.baseTokenAddress,weight2,uniV3PoolAddr),
+        packRawData(tokenConfig.tokens.WETH.baseTokenAddress,tokenConfig.tokens.BNT.baseTokenAddress,weight3,ethbntPoolAddr),
     ];
 
-    const rawData2 = [
-        "0x" +
-        direction(tokenConfig.tokens.BNT.baseTokenAddress, tokenConfig.tokens.USDC.baseTokenAddress) +
-        "0000000000000000000" +
-        weight4 +
-        bntusdcPoolAddr.replace("0x", "")
-    ];
+    const rawData2 = [packRawData(tokenConfig.tokens.BNT.baseTokenAddress,tokenConfig.tokens.USDC.baseTokenAddress,weight4,bntusdcPoolAddr)];
 
     const moreInfo1 = "0x"
     const moreInfo2 = ethers.utils.defaultAbiCoder.encode(
@@ -295,8 +282,18 @@ async function executeWEth2USDC() {
         pmmReq
     );
 
-    console.log("after WETH Balance: " + await WETH.balanceOf(univ2Adapter.address));
-    console.log("after USDC Balance: " + await USDC.balanceOf(account.address));
+    let udscBalance = await USDC.balanceOf(account.address);
+    let adapterBalance1 = await ethers.provider.getBalance(univ2Adapter.address);
+    let adapterBalance2 = await ethers.provider.getBalance(univ3Adapter.address);
+    let adapterBalance3 = await ethers.provider.getBalance(univ3Adapter.address);
+    console.log("after univ2 WETH Balance: " + adapterBalance1);
+    console.log("after univ3 WETH Balance: " + adapterBalance2);
+    console.log("after bancor BNT Balance: " + adapterBalance3);
+    console.log("after USDC Balance: " + udscBalance);
+    let dexRouterBalance = await ethers.provider.getBalance(dexRouter.address)
+    assert.equal(adapterBalance1+adapterBalance2+adapterBalance3, 0,"adapter has eth left");
+    assert.equal(dexRouterBalance, 0,"dexRouter has eth left");
+    assert.equal(udscBalance,215997337,"usdc balance error")
 }
 
 async function initWETHAAVEParams(fromTokenAmount) {
@@ -432,12 +429,127 @@ async function executeWEth2AAVE() {
         pmmReq
     );
 
-    console.log("after WETH Balance: " + await WETH.balanceOf(univ2Adapter.address));
-    console.log("after USDC Balance: " + await USDC.balanceOf(account.address));
+    let udscBalance = await USDC.balanceOf(account.address);
+    let adapterBalance1 = await ethers.provider.getBalance(balancerAdapter.address);
+    let adapterBalance2 = await ethers.provider.getBalance(balancerV2Adapter.address);
+    console.log("after USDC Balance: " + udscBalance);
+    console.log("after balancer WETH Balance: " + adapterBalance1);
+    console.log("after balancerV2 WETH Balance: " + adapterBalance2);
+    let dexRouterBalance = await ethers.provider.getBalance(dexRouter.address)
+    assert.equal(adapterBalance1+adapterBalance2, 0,"adapter has eth left");
+    assert.equal(dexRouterBalance, 0,"dexRouter has eth left");
+    assert.equal(udscBalance,4154142,"usdc balance error")
+
+}
+
+
+async function initETHRNDParams(fromTokenAmount) {
+    const minReturnAmount = 0;
+    const deadLine = FOREVER;
+    const uniV2PoolAddr = "0x5449bd1a97296125252db2d9cf23d5d6e30ca3c1"; // RND-WETH Pool
+    const uniV3PoolAddr = "0x96b0837489d046A4f5aA9ac2FC9e086bD14Bac1E"; // RND-WETH V3 Pool
+    // node1
+    // const requestParam1 = [
+    //     tokenConfig.tokens.WETH.baseTokenAddress,
+    //     [0]
+    // ];
+    const mixAdapter1 = [
+        univ2Adapter.address,
+        univ3Adapter.address
+    ];
+    const assertTo1 = [
+        uniV2PoolAddr,
+        univ3Adapter.address
+    ];
+
+
+    const weight1 = 2000;
+    const weight2 = 8000;
+
+    const rawData1 = [
+        packRawData(tokenConfig.tokens.WETH.baseTokenAddress,tokenConfig.tokens.RND.baseTokenAddress,weight1,uniV2PoolAddr),
+        packRawData(tokenConfig.tokens.WETH.baseTokenAddress,tokenConfig.tokens.RND.baseTokenAddress,weight2,uniV3PoolAddr)
+    ];
+
+    const moreInfo1 = "0x"
+    const moreInfo2 = ethers.utils.defaultAbiCoder.encode(
+        ["uint160", "bytes"],
+        [
+            // "888971540474059905480051",
+            0,
+            ethers.utils.defaultAbiCoder.encode(
+                ["address", "address", "uint24"],
+                [
+                    WETH.address,
+                    RND.address,
+                    10000
+                ]
+            )
+        ]
+    )
+    const extraData1 = [moreInfo1,moreInfo2];
+    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1, WETH.address];
+
+    // layer1
+    // const request1 = [requestParam1];
+    const layer1 = [router1];
+
+    const baseRequest = [
+        ETH.address,
+        RND.address,
+        fromTokenAmount,
+        minReturnAmount,
+        deadLine,
+    ]
+    // reqs = [request1]
+    layers = [layer1]
+    return {baseRequest, layers}
+}
+
+// eth ->  rnd  (univ2)
+//      ->  rnd  (uniV3)
+async function executeEth2RND() {
+
+    await setForkBlockNumber(14446603);
+    const accountAddress = "0x9199Cc44CF7850FE40081ea6F2b010Fee1088270";
+    await startMockAccount([accountAddress]);
+    const account = await ethers.getSigner(accountAddress);
+
+    const { WETH, RND, BNT, USDC, AAVE } = await initToken();
+    const { dexRouter, tokenApprove } = await initDexRouter(WETH.address);
+
+    await initAdapter()
+
+    console.log("before ETH Balance: " + await account.getBalance());
+    console.log("before RND Balance: " + await RND.balanceOf(account.address));
+
+    const fromTokenAmount = ethers.utils.parseEther("1");
+    const {baseRequest,layers} = await initETHRNDParams(fromTokenAmount)
+
+    // await WETH.connect(account).approve(tokenApprove.address, fromTokenAmount);
+    await dexRouter.connect(account).smartSwap(
+        baseRequest,
+        [fromTokenAmount],
+        layers,
+        pmmReq,
+        {value: fromTokenAmount}
+    );
+
+    let rndBalance = await RND.balanceOf(account.address);
+    let adapterBalance1 = await WETH.balanceOf(univ2Adapter.address);
+    let adapterBalance2 = await WETH.balanceOf(univ3Adapter.address);
+    console.log("after ETH Balance: " + await account.getBalance());
+    console.log("after univ2 WETH Balance: " + adapterBalance1);
+    console.log("after univ3 WETH Balance: " + adapterBalance2);
+    console.log("after RND Balance: " + rndBalance);
+    let dexRouterBalance = await ethers.provider.getBalance(dexRouter.address)
+    assert.equal(adapterBalance1+adapterBalance2, 0,"adapter has eth left");
+    assert.equal(dexRouterBalance, 0,"dexRouter has eth left");
+    assert.equal(rndBalance,7554274398053476814039960140,"rnd balance error")
 }
 
 async function main() {
-    await executeWEth2AAVE();
+    await executeEth2RND();
 }
 
 main()
