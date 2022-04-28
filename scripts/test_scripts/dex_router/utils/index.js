@@ -30,6 +30,8 @@ const initDexRouter = async () => {
   await wNativeRelayer.initialize("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
   await wNativeRelayer.setCallerOk([dexRouter.address], [true]);
 
+  await dexRouter.setWNativeRelayer(wNativeRelayer.address);
+
   return { dexRouter, tokenApprove }
 }
 
