@@ -165,11 +165,16 @@ executeMutilXAdapter = async function (account, blockNumber, from, to, amountIn,
 
     await setForkBlockNumber(blockNumber);
     const accountAddress = account;
+    const accountGasRecoverAddress = "0xcBfd32FDec86F88784266221CcE8141dA7B9A9eD";
     await startMockAccount([accountAddress]);
+    await startMockAccount([accountGasRecoverAddress]);
     account = await ethers.getSigner(accountAddress);
+    accountGasRecover = await ethers.getSigner(accountGasRecoverAddress);
+    assert(accountGasRecoverAddress != accountAddress, "executeMutilXAdapter : accountGasRecoverAddress == accountAddress")
 
     // set account balance 2.0 eth for gas
     await setBalance(accountAddress, "0x1158e460913d00000");
+    await setBalance(accountGasRecoverAddress, "0x1158e460913d00000");
 
     FromToken = await ethers.getContractAt(
         "MockERC20",
@@ -179,8 +184,6 @@ executeMutilXAdapter = async function (account, blockNumber, from, to, amountIn,
         "MockERC20",
         to.baseTokenAddress
     )
-
-
 
     var adapterList = []
     for (var layerInfo of layerList){
@@ -205,6 +208,7 @@ executeMutilXAdapter = async function (account, blockNumber, from, to, amountIn,
 
     let fromTokenBefore = await FromToken.balanceOf(account.address);
     let toTokenBefore = await ToToken.balanceOf(account.address);
+    console.log("fromTokenBefore : ", fromTokenBefore)
 
     let valueInfo = {}
 
@@ -218,20 +222,33 @@ executeMutilXAdapter = async function (account, blockNumber, from, to, amountIn,
         to = tokenConfig.tokens.ETH
         baseRequest[1] = to.baseTokenAddress
         toTokenBefore = await ethers.provider.getBalance(account.address)
-        await FromToken.connect(account).approve(tokenApprove.address, baseRequest[2]);
+        let approveResult = await FromToken.connect(account).approve(tokenApprove.address, baseRequest[2]);
+        // return gasCost
+        let gasCost = await getTransactionCost(approveResult)
+        // console.log("gasCost:", gasCost)
+        await accountGasRecover.sendTransaction({value: gasCost, to: account.address})
     } 
     else {
-        await FromToken.connect(account).approve(tokenApprove.address, baseRequest[2]);
+        let approveResult = await FromToken.connect(account).approve(tokenApprove.address, baseRequest[2]);
+        // return gasCost
+        let gasCost = await getTransactionCost(approveResult)
+        // console.log("gasCost:", gasCost)
+        await accountGasRecover.sendTransaction({value: gasCost, to: account.address})
     }
 
     
-    await dexRouter.connect(account).smartSwap(
+    let dexRouterResult = await dexRouter.connect(account).smartSwap(
         baseRequest,
         fromTokenAmount,
         layer,
         pmmInfo,
         valueInfo
     );
+
+    let gasCost = await getTransactionCost(dexRouterResult)
+    // console.log("gasCost:", gasCost)
+    await accountGasRecover.sendTransaction({value: gasCost, to: account.address})
+
 
     let fromTokenAfter = await FromToken.balanceOf(account.address);
     let toTokenAfter = await ToToken.balanceOf(account.address);
@@ -247,10 +264,9 @@ executeMutilXAdapter = async function (account, blockNumber, from, to, amountIn,
     let diffTo = toTokenAfter.sub(toTokenBefore)
 
 
-
     console.log(adapterList)
     console.log("%s changed: %s >>>>(%s)>>>> %s", from.name, fromTokenBefore.toString(), diffFrom.toString(), fromTokenAfter.toString());
-    // assert((fromTokenBefore.sub(fromTokenAfter)).eq(ethers.utils.parseUnits(amountIn + "", await from.decimals)), "fromToken changed notequal Amount : " + (fromTokenAfter.sub(fromTokenBefore)).toString() + " != " + fromTokenAmount.toString())
+    assert((fromTokenBefore.sub(fromTokenAfter)).eq(ethers.utils.parseUnits(amountIn + "", await from.decimals)), "fromToken changed notequal Amount : " + (fromTokenAfter.sub(fromTokenBefore)).toString() + " != " + fromTokenAmount.toString())
     console.log("%s changed: %s >>>>(%s)>>>> %s", to.name, toTokenBefore.toString(), diffTo.toString(), toTokenAfter.toString());
     for await(var key of adapterList){
         let retention = await FromToken.balanceOf(adapter.get(key).address)
@@ -258,6 +274,11 @@ executeMutilXAdapter = async function (account, blockNumber, from, to, amountIn,
         console.log(key + "Adapter retention Balance: " + retention.toString());
     }
 }
+
+const getTransactionCost = async (txResult) => {
+    const cumulativeGasUsed = (await txResult.wait()).cumulativeGasUsed;
+    return ethers.BigNumber.from(txResult.gasPrice).mul(ethers.BigNumber.from(cumulativeGasUsed));
+  };
 
 module.exports = {
     executeMutilXAdapter,

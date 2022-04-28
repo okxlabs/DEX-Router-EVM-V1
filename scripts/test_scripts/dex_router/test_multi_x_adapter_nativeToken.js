@@ -41,7 +41,45 @@ async function main() {
         var layer = [layer1];
 
 
-        await executeMutilXAdapter(account, blockNumber, fromToken, toToken, amountIn, layer);
+        await executeMutilXAdapter(account, blockNumber, fromToken, toToken, amountIn, layer, isFromETH, isToETH);
+      
+    } catch (error) {
+        console.log(error)
+    }
+    //1000 USDT -> ETH Kyber:50%
+    //          -> ETH CurveV2:50%
+    try {
+        console.log("\n===========(1000 USDT -> ETH Kyber:50%/CurveV2:50%)===========")
+        var account = "0x4bfa9e1c47087b0c78783adda7a18ff6461c97b1"
+        var blockNumber = 14660040
+        var fromToken = tokenConfig.tokens.USDT
+        var toToken = tokenConfig.tokens.WETH
+        var amountIn = 1
+        var isFromETH = false;
+        var isToETH = true;
+
+        var kyberMoreInfo = "0x";
+
+        var curveV2MoreInfo = ethers.utils.defaultAbiCoder.encode(
+            ["address", "address", "int128", "int128"],
+            [
+                fromToken.baseTokenAddress,
+                toToken.baseTokenAddress,
+                0,
+                2
+            ]
+        )
+
+        var router1 = [
+            ["kyber", 5000, tokenConfig.tokens.USDT, tokenConfig.tokens.WETH, kyberUSDTWETHPoolAddress, kyberUSDTWETHPoolAddress, kyberMoreInfo],
+            ["curveV2", 5000, tokenConfig.tokens.USDT, tokenConfig.tokens.WETH, curveV2USDTWETHPoolAddress, AssertToSelf, curveV2MoreInfo]
+        ];
+
+        var layer1 = [10000,[router1]];
+        var layer = [layer1];
+
+
+        await executeMutilXAdapter(account, blockNumber, fromToken, toToken, amountIn, layer, isFromETH, isToETH);
       
     } catch (error) {
         console.log(error)
@@ -104,11 +142,12 @@ async function main() {
         var layer1 = [10000,[router1, router2]];
         var layer = [layer1];
 
-        await executeMutilXAdapter(account, blockNumber, fromToken, toToken, amountIn, layer);
+        await executeMutilXAdapter(account, blockNumber, fromToken, toToken, amountIn, layer, isFromETH, isToETH);
         
     } catch (error) {
         console.log(error)
     }
+
 }
 
 main()

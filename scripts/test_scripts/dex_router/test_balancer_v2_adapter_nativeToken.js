@@ -70,6 +70,38 @@ async function main() {
     } catch (error) {
         console.log(error)
     }
+    //100 USDC -> ETH BalancerV2:100%
+    try {
+        console.log("\n===========(100 USDC -> ETH BalancerV2:100%)===========")
+        var account = "0x19d675bbb76946785249a3ad8a805260e9420cb8"
+        var blockNumber = 14665291
+        var fromToken = tokenConfig.tokens.USDC
+        var toToken = tokenConfig.tokens.WETH
+        var amountIn = 100
+
+        var balancerV2USDCToWETHMoreInfo = ethers.utils.defaultAbiCoder.encode(
+            ["address", "address", "bytes32"],
+            [
+                fromToken.baseTokenAddress,                               // from token address 
+                toToken.baseTokenAddress,                                // to token address
+                balancerV2WETHUSDCPoolId
+            ]
+        )
+
+        var router1 = [
+            ["balancerV2", 10000, tokenConfig.tokens.USDC, tokenConfig.tokens.WETH, balancerV2VaultAddress, AssertToSelf, balancerV2USDCToWETHMoreInfo],
+        ];
+
+        var layer1 = [10000,[router1]];
+        var layer = [layer1];
+        var isFromETH = false;
+        var isToETH = true;
+
+        await executeMutilXAdapter(account, blockNumber, fromToken, toToken, amountIn, layer, isFromETH, isToETH);
+
+    } catch (error) {
+        console.log(error)
+    }
 }
 
 main()
