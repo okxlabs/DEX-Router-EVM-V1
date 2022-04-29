@@ -100,6 +100,12 @@ const RND = {
 
 }
 
+const BREED = {
+  name: "BREED",
+  decimals: 18,
+  baseTokenAddress: "0x94E9EB8b5Ab9fd6B9ea3169D55FFAde62a01702e"
+
+}
 
 module.exports = {
   BTCB,
@@ -119,5 +125,6 @@ module.exports = {
   MPH,
   BNT,
   WUST,
-  RND
+  RND,
+  BREED
 }
