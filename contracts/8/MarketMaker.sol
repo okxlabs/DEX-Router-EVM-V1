@@ -17,8 +17,8 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
   using SafeERC20 for IERC20;
 
   // ============ Storage ============
-  // keccak256("PMMSwapRequest(address payer,address fromToken,address toToken,uint256 fromTokenAmount,uint256 toTokenAmount,uint256 salt,uint256 deadLine,bool isPushOrder)")
-  bytes32 private constant _ORDER_TYPEHASH = 0x4a40b70e4ae0155dd898ee90c3175d87bc1fa4f090f96b782f2cfc670bc98f8c;
+//ORDER_TYPEHASH = keccak256("PMMSwapRequest(uint256 pathIndex,address payer,address fromToken,address toToken,uint256 fromTokenAmountMax,uint256 toTokenAmountMax,uint256 salt,uint256 deadLine,bool isPushOrder,bytes extension)")
+  bytes32 private constant _ORDER_TYPEHASH = 0x5d068ce469dcf41137bcb6c3e1894e076ad915392f28fda19ba41601d33c32a6;
 
   //    uint256 private constant UINT_128_MASK = (1 << 128) - 1;
   //    uint256 private constant UINT_64_MASK = (1 << 64) - 1;
@@ -97,7 +97,7 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712("
     require(
       _ORDER_TYPEHASH ==
         keccak256(
-          "PMMSwapRequest(address payer,address fromToken,address toToken,uint256 fromTokenAmount,uint256 toTokenAmount,uint256 salt,uint256 deadLine,bool isPushOrder)"
+          "PMMSwapRequest(uint256 pathIndex,address payer,address fromToken,address toToken,uint256 fromTokenAmountMax,uint256 toTokenAmountMax,uint256 salt,uint256 deadLine,bool isPushOrder,bytes extension)"
         ),
       "Wrong _ORDER_TYPEHASH"
     );
