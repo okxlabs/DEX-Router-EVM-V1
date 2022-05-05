@@ -311,10 +311,10 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     IMarketMaker.PMMSwapRequest[] calldata extraData
   ) external payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) {
     // 1. transfer from token in
-    require(baseRequest.fromTokenAmount > 0, "Route: fromTokenAmount must be > 0");
     BaseRequest memory localBaseRequest = baseRequest;
+    require(localBaseRequest.fromTokenAmount > 0, "Route: fromTokenAmount must be > 0");
     address baseRequestFromToken = bytes32ToAddress(localBaseRequest.fromToken);
-    returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(msg.sender);
+    returnAmount = IERC20(localBaseRequest.toToken).universalBalanceOf(msg.sender);
     _deposit(msg.sender, address(this), baseRequestFromToken, localBaseRequest.fromTokenAmount);
 
     // 2. check total batch amount
@@ -335,9 +335,9 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       uint8 pmmIndex = getPmmIIndex(localBaseRequest.fromToken);
       if (_tryPmmSwap(baseRequestFromToken, localBaseRequest.fromTokenAmount, extraData[pmmIndex]) == 0) {
         _transferTokenToUser(localBaseRequest.toToken);
-        returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(msg.sender) - returnAmount;
+        returnAmount = IERC20(localBaseRequest.toToken).universalBalanceOf(msg.sender) - returnAmount;
         require(returnAmount >= localBaseRequest.minReturnAmount, "Route: Return amount is not enough");
-        emit OrderRecord(baseRequestFromToken, baseRequest.toToken, msg.sender, localBaseRequest.fromTokenAmount, returnAmount);
+        emit OrderRecord(baseRequestFromToken, localBaseRequest.toToken, msg.sender, localBaseRequest.fromTokenAmount, returnAmount);
         return returnAmount;
       }
     }
@@ -350,12 +350,12 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
     // 5. transfer tokens to user
     _transferTokenToUser(baseRequestFromToken);
-    _transferTokenToUser(baseRequest.toToken);
+    _transferTokenToUser(localBaseRequest.toToken);
 
     // 6. check minReturnAmount
-    returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(msg.sender) - returnAmount;
-    require(returnAmount >= baseRequest.minReturnAmount, "Route: Return amount is not enough");
+    returnAmount = IERC20(localBaseRequest.toToken).universalBalanceOf(msg.sender) - returnAmount;
+    require(returnAmount >= localBaseRequest.minReturnAmount, "Route: Return amount is not enough");
 
-    emit OrderRecord(baseRequestFromToken, baseRequest.toToken, msg.sender, localBaseRequest.fromTokenAmount, returnAmount);
+    emit OrderRecord(baseRequestFromToken, localBaseRequest.toToken, msg.sender, localBaseRequest.fromTokenAmount, returnAmount);
   }
 }
