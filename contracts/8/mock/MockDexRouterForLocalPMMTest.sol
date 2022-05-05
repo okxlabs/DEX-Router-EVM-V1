@@ -15,6 +15,8 @@ import "../interfaces/IApproveProxy.sol";
 import "../interfaces/IMarketMaker.sol";
 import "../interfaces/IWNativeRelayer.sol";
 
+import "hardhat/console.sol";
+
 /// @title DexRouter
 /// @notice Entrance of Split trading in Dex platform
 /// @dev Entrance of Split trading in Dex platform
@@ -264,6 +266,7 @@ contract MockDexRouterForLocalPMMTest is
 
         if (pmmRequest.fromTokenAmountMax < actualRequest) {
             errorCode = uint256(IMarketMaker.PMM_ERROR.REQUEST_TOO_MUCH);
+
             emit PMMSwap(
                 pmmRequest.pathIndex,
                 subIndex,
@@ -424,8 +427,8 @@ contract MockDexRouterForLocalPMMTest is
                     localBaseRequest.fromTokenAmount,
                     returnAmount
                 );
+                return returnAmount;
             }
-            return returnAmount;
         }
 
         // 4. execute batch

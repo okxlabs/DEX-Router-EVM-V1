@@ -15,6 +15,7 @@ const { ecsign } = require('ethereumjs-util');
 const {
     PAYER,
     PAYER_4,
+    FORK_ACCOUNT,
     ORDER_TYPEHASH,
     RFQ_VALID_PERIOD,
     PUSH_QUOTE_PATH_INDEX,
@@ -64,7 +65,34 @@ const getPullInfosToBeSigned = function (pull_data) {
             "pmmAdapter" : chunk.pmmAdapter
         };
     }
+    return pullInfosToBeSigned;
+}
 
+const getPullInfosToBeSigned_paidByMockAccount = function (pull_data) {
+    let quantity = pull_data.length;
+    let localTs = getLocalTs();
+    let pullInfosToBeSigned = [];
+
+    for (let i = 0; i < quantity; i++) {
+        let chunk = pull_data[i];
+        let toTokenAmount = getToTokenAmount(chunk);
+
+        pullInfosToBeSigned[i] = {
+            "orderTypeHash" : ORDER_TYPEHASH,
+            "pathIndex" : chunk.pathIndex,
+            "payer" : FORK_ACCOUNT,
+            "fromTokenAddress" : chunk.fromTokenAddress,
+            "toTokenAddress" : chunk.toTokenAddress,
+            "fromTokenAmountMax" : Number(chunk.fromTokenAmount),
+            "toTokenAmountMax" : Number(toTokenAmount),
+            "salt" : Number(localTs),
+            "deadLine" : localTs + RFQ_VALID_PERIOD,
+            "isPushOrder" : false,
+            "chainId" : chunk.chainId,
+            "marketMaker" : chunk.marketMaker,
+            "pmmAdapter" : chunk.pmmAdapter
+        };
+    }
     return pullInfosToBeSigned;
 }
 
@@ -236,6 +264,7 @@ const getDigest = function (request,chainId,marketMaker){
 module.exports = { 
     getDomainSeparator,
     getPullInfosToBeSigned, 
+    getPullInfosToBeSigned_paidByMockAccount,
     getPullInfosToBeSigned_paidByCarol,
     getPushInfosToBeSigned, 
     singleQuote, 

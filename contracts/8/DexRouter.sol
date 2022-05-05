@@ -335,12 +335,11 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       uint8 pmmIndex = getPmmIIndex(localBaseRequest.fromToken);
       if (_tryPmmSwap(baseRequestFromToken, localBaseRequest.fromTokenAmount, extraData[pmmIndex]) == 0) {
         _transferTokenToUser(localBaseRequest.toToken);
-
         returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(msg.sender) - returnAmount;
-        require(returnAmount >= baseRequest.minReturnAmount, "Route: Return amount is not enough");
+        require(returnAmount >= localBaseRequest.minReturnAmount, "Route: Return amount is not enough");
         emit OrderRecord(baseRequestFromToken, baseRequest.toToken, msg.sender, localBaseRequest.fromTokenAmount, returnAmount);
+        return returnAmount;
       }
-      return returnAmount;
     }
 
     // 4. execute batch
