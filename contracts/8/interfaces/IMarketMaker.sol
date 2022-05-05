@@ -20,7 +20,8 @@ interface IMarketMaker {
 
     enum PMM_ERROR {
         NO_ERROR,
-        INVALID_SIGNATURE,
+        INVALID_OPERATOR,
+        INVALID_BACKEND,
         QUOTE_EXPIRED,
         REQUEST_TOO_MUCH,
         ORDER_CANCELLED_OR_FINALIZED,
