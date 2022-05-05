@@ -309,7 +309,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     uint256[] calldata batchesAmount,
     RouterPath[][] calldata batches,
     IMarketMaker.PMMSwapRequest[] calldata extraData
-  ) external payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) {
+  ) public payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) {
     // 1. transfer from token in
     BaseRequest memory localBaseRequest = baseRequest;
     require(localBaseRequest.fromTokenAmount > 0, "Route: fromTokenAmount must be > 0");
@@ -357,5 +357,16 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     require(returnAmount >= localBaseRequest.minReturnAmount, "Route: Return amount is not enough");
 
     emit OrderRecord(baseRequestFromToken, localBaseRequest.toToken, msg.sender, localBaseRequest.fromTokenAmount, returnAmount);
+  }
+
+  function smartSwapWithPermit(
+    BaseRequest calldata baseRequest,
+    uint256[] calldata batchesAmount,
+    RouterPath[][] calldata batches,
+    IMarketMaker.PMMSwapRequest[] calldata extraData,
+    bytes calldata permit
+  ) external payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) {
+    _permit(address(uint160(baseRequest.fromToken)), permit);
+    return smartSwap(baseRequest, batchesAmount, batches, extraData);
   }
 }
