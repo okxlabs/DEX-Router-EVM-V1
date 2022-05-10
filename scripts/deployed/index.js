@@ -8,7 +8,7 @@ let config
 
 console.log('current network.name: ', network.name)
 
-if (network.name === 'oec') {
+if (network.name === 'okc') {
     config = oec
 } else if (network.name === 'bsc') {
     config = bsc
