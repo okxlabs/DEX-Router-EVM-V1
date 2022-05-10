@@ -12,8 +12,10 @@ interface IKyber {
         bytes calldata data
     ) external;
 
-
-    function getReserves() external view returns (uint112 reserve0, uint112 reserve1);
+    function getReserves()
+        external
+        view
+        returns (uint112 reserve0, uint112 reserve1);
 
     function getTradeInfo()
         external

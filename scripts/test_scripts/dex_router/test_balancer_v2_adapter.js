@@ -5,7 +5,7 @@ tokenConfig = getConfig("eth")
 const { initDexRouter, direction, FOREVER } = require("./utils")
 
 async function executeWETH2IPAL() {
-
+    let pmmReq = []
     await setForkBlockNumber(14436483);
 
     const accountAddress = "0x260edfea92898a3c918a80212e937e6033f8489e";
@@ -40,10 +40,10 @@ async function executeWETH2IPAL() {
     console.log("before IPAL Balance: " + await IPAL.balanceOf(account.address));
 
     // node1
-    const requestParam1 = [
-        tokenConfig.tokens.WETH.baseTokenAddress,
-        [fromTokenAmount]
-    ];
+    // const requestParam1 = [
+    //     tokenConfig.tokens.WETH.baseTokenAddress,
+    //     [fromTokenAmount]
+    // ];
     const mixAdapter1 = [
         balancerV2Adapter.address
     ];
@@ -67,10 +67,10 @@ async function executeWETH2IPAL() {
         ]
     )
     const extraData1 = [moreInfo];
-    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1];
+    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1,WETH.address];
 
     // layer1
-    const request1 = [requestParam1];
+    // const request1 = [requestParam1];
     const layer1 = [router1];
 
     const baseRequest = [
@@ -84,8 +84,8 @@ async function executeWETH2IPAL() {
     await dexRouter.connect(account).smartSwap(
         baseRequest,
         [fromTokenAmount],
-        [request1],
         [layer1],
+        pmmReq
     );
 
     console.log("after WETH Balance: " + await WETH.balanceOf(balancerV2Adapter.address));

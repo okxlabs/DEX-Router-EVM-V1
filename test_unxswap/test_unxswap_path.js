@@ -14,6 +14,11 @@ describe("Unoswap swap test", function() {
   let router, tokenApprove, dexRouter;
   let owner, alice, bob;
 
+  before(async function() {
+    [owner, alice, bob, liquidity] = await ethers.getSigners();
+    await initDexRouter();
+  });
+
   beforeEach(async function() {
     await initMockTokens();
     await initUniSwap();
@@ -36,11 +41,6 @@ describe("Unoswap swap test", function() {
         pairs[i][3],
       );
     }
-  });
-
-  before(async function() {
-    [owner, alice, bob, liquidity] = await ethers.getSigners();
-    await initDexRouter();
   });
 
   it("ERC20 token single pool exchange", async () => {
@@ -423,13 +423,11 @@ describe("Unoswap swap test", function() {
     await weth.connect(liquidity).deposit({ value: ethers.utils.parseEther('1000') });
     await weth.connect(liquidity).transfer(bob.address, ethers.utils.parseEther('1000'));
     await weth.connect(bob).deposit({ value: ethers.utils.parseEther('1000') });
-    console.log("weth " + weth.address)
 
     TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
     tokenApproveProxy = await TokenApproveProxy.deploy();
     await tokenApproveProxy.initialize();
     await tokenApproveProxy.deployed();
-    console.log("tokenApproveProxy " + tokenApproveProxy.address)
 
     TokenApprove = await ethers.getContractFactory("TokenApprove");
     tokenApprove = await TokenApprove.deploy();
@@ -442,6 +440,9 @@ describe("Unoswap swap test", function() {
     )
     await dexRouter.deployed();
     await dexRouter.setApproveProxy(tokenApproveProxy.address);
+
+    expect(await dexRouter._WETH()).to.be.equal(weth.address);
+    expect(await dexRouter._APPROVE_PROXY_32()).to.be.equal(tokenApproveProxy.address);
 
     await tokenApproveProxy.addProxy(dexRouter.address);
     await tokenApproveProxy.setTokenApprove(tokenApprove.address);

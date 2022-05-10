@@ -13,7 +13,7 @@ library Address {
      * It is unsafe to assume that an address for which this function returns
      * false is an externally-owned account (EOA) and not a contract.
      *
-     * Among others, `isContract` will return false for the following 
+     * Among others, `isContract` will return false for the following
      * types of addresses:
      *
      *  - an externally-owned account
@@ -29,7 +29,9 @@ library Address {
         bytes32 codehash;
         bytes32 accountHash = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
         // solhint-disable-next-line no-inline-assembly
-        assembly { codehash := extcodehash(account) }
+        assembly {
+            codehash := extcodehash(account)
+        }
         return (codehash != accountHash && codehash != 0x0);
     }
 
@@ -39,7 +41,11 @@ library Address {
      *
      * _Available since v2.4.0._
      */
-    function toPayable(address account) internal pure returns (address payable) {
+    function toPayable(address account)
+        internal
+        pure
+        returns (address payable)
+    {
         return payable(account);
     }
 
@@ -62,10 +68,16 @@ library Address {
      * _Available since v2.4.0._
      */
     function sendValue(address recipient, uint256 amount) internal {
-        require(address(this).balance >= amount, "Address: insufficient balance");
+        require(
+            address(this).balance >= amount,
+            "Address: insufficient balance"
+        );
 
         // solhint-disable-next-line avoid-call-value
-        (bool success, ) = recipient.call{ value: amount }("");
-        require(success, "Address: unable to send value, recipient may have reverted");
+        (bool success, ) = recipient.call{value: amount}("");
+        require(
+            success,
+            "Address: unable to send value, recipient may have reverted"
+        );
     }
 }

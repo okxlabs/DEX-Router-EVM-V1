@@ -1,10 +1,14 @@
 require("@nomiclabs/hardhat-waffle");
-require("@openzeppelin/hardhat-upgrades")
+require("@nomiclabs/hardhat-solhint");
 require('hardhat-abi-exporter');
 require("hardhat-gas-reporter");
 require('hardhat-contract-sizer');
+<<<<<<< HEAD
+require("@openzeppelin/hardhat-upgrades");
+=======
 require("@nomiclabs/hardhat-solhint");
 require("@nomiclabs/hardhat-etherscan");
+>>>>>>> dev
 require('dotenv').config();
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
@@ -35,6 +39,24 @@ module.exports = {
           }
         }
 			},
+      {
+				version: '0.5.16',
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200
+          }
+        }
+			},
+      {
+				version: '0.6.6',
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200
+          }
+        }
+			},
 		]
   },
   networks: {
@@ -44,10 +66,10 @@ module.exports = {
       blockGasLimit: 0x1fffffffffffff,
       allowUnlimitedContractSize: true,
       timeout: 1800000,
-      forking:
-      {
-        url: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}`
-      }
+      // forking:
+      // {
+      //   url: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}`
+      // }
     },
     kovan: {
       url: `https://kovan.infura.io/v3/${INFURA_KEY}`,
@@ -130,6 +152,9 @@ module.exports = {
   },
   gasReporter: {
     enabled: false
+  },
+  mocha: {
+    timeout: 180000000
   },
   etherscan: {
     apiKey: {

@@ -38,8 +38,8 @@ contract TokenApprove is OwnableUpgradeable {
   //---------------------------------
 
   function setApproveProxy(address _newTokenApproveProxy) external onlyOwner {
-    tokenApproveProxy = _newTokenApproveProxy;
     emit ProxyUpdate(tokenApproveProxy, _newTokenApproveProxy);
+    tokenApproveProxy = _newTokenApproveProxy;
   }
 
   //---------------------------------

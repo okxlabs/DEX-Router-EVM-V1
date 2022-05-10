@@ -1,28 +1,31 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-
 library AddressSetLib {
     struct AddressSet {
         address[] elements;
-        mapping(address => uint) indices;
+        mapping(address => uint256) indices;
     }
 
-    function contains(AddressSet storage set, address candidate) internal view returns (bool) {
+    function contains(AddressSet storage set, address candidate)
+        internal
+        view
+        returns (bool)
+    {
         if (set.elements.length == 0) {
             return false;
         }
-        uint index = set.indices[candidate];
+        uint256 index = set.indices[candidate];
         return index != 0 || set.elements[0] == candidate;
     }
 
     function getPage(
         AddressSet storage set,
-        uint index,
-        uint pageSize
+        uint256 index,
+        uint256 pageSize
     ) internal view returns (address[] memory) {
         // NOTE: This implementation should be converted to slice operators if the compiler is updated to v0.6.0+
-        uint endIndex = index + pageSize; // The check below that endIndex <= index handles overflow.
+        uint256 endIndex = index + pageSize; // The check below that endIndex <= index handles overflow.
 
         // If the page extends past the end of the list, truncate it.
         if (endIndex > set.elements.length) {
@@ -32,9 +35,9 @@ library AddressSetLib {
             return new address[](0);
         }
 
-        uint n = endIndex - index; // We already checked for negative overflow.
+        uint256 n = endIndex - index; // We already checked for negative overflow.
         address[] memory page = new address[](n);
-        for (uint i; i < n; i++) {
+        for (uint256 i; i < n; i++) {
             page[i] = set.elements[i + index];
         }
         return page;
@@ -50,8 +53,8 @@ library AddressSetLib {
 
     function remove(AddressSet storage set, address element) internal {
         require(contains(set, element), "Element not in set.");
-        uint index = set.indices[element];
-        uint lastIndex = set.elements.length - 1;
+        uint256 index = set.indices[element];
+        uint256 lastIndex = set.elements.length - 1;
         if (index != lastIndex) {
             address shiftedElement = set.elements[lastIndex];
             set.elements[index] = shiftedElement;

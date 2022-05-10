@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { SafeMath } from "./SafeMath.sol";
-import { IERC20 } from "../interfaces/IERC20.sol";
-import { SafeERC20 } from "./SafeERC20.sol";
+import {SafeMath} from "./SafeMath.sol";
+import {IERC20} from "../interfaces/IERC20.sol";
+import {SafeERC20} from "./SafeERC20.sol";
 
 library UniversalERC20 {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    IERC20 private constant ETH_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+    IERC20 private constant ETH_ADDRESS =
+        IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
     function universalTransfer(
         IERC20 token,
@@ -50,7 +51,11 @@ library UniversalERC20 {
         }
     }
 
-    function universalBalanceOf(IERC20 token, address who) internal view returns (uint256) {
+    function universalBalanceOf(IERC20 token, address who)
+        internal
+        view
+        returns (uint256)
+    {
         if (isETH(token)) {
             return who.balance;
         } else {
@@ -58,7 +63,11 @@ library UniversalERC20 {
         }
     }
 
-    function tokenBalanceOf(IERC20 token, address who) internal view returns (uint256) {
+    function tokenBalanceOf(IERC20 token, address who)
+        internal
+        view
+        returns (uint256)
+    {
         return token.balanceOf(who);
     }
 

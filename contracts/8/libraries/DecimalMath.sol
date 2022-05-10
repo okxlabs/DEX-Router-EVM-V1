@@ -11,19 +11,35 @@ library DecimalMath {
     uint256 internal constant ONE = 10**18;
     uint256 internal constant ONE2 = 10**36;
 
-    function mulFloor(uint256 target, uint256 d) internal pure returns (uint256) {
-        return target * d / (10**18);
+    function mulFloor(uint256 target, uint256 d)
+        internal
+        pure
+        returns (uint256)
+    {
+        return (target * d) / (10**18);
     }
 
-    function mulCeil(uint256 target, uint256 d) internal pure returns (uint256) {
+    function mulCeil(uint256 target, uint256 d)
+        internal
+        pure
+        returns (uint256)
+    {
         return target.mul(d).divCeil(10**18);
     }
 
-    function divFloor(uint256 target, uint256 d) internal pure returns (uint256) {
-        return target * 10**18 / d;
+    function divFloor(uint256 target, uint256 d)
+        internal
+        pure
+        returns (uint256)
+    {
+        return (target * 10**18) / d;
     }
 
-    function divCeil(uint256 target, uint256 d) internal pure returns (uint256) {
+    function divCeil(uint256 target, uint256 d)
+        internal
+        pure
+        returns (uint256)
+    {
         return target.mul(10**18).divCeil(d);
     }
 

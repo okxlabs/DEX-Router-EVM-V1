@@ -13,15 +13,22 @@ contract BancorAdapter is IAdapter {
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address public immutable BANCOR_ADDRESS;
     address public immutable WETH_ADDRESS;
- 
+
     constructor(address _bancor_network, address _weth) {
         BANCOR_ADDRESS = _bancor_network;
         WETH_ADDRESS = _weth;
     }
 
-    function _bancorTrade(address to, address /*pool*/, bytes memory moreInfo) internal {
+    function _bancorTrade(
+        address to,
+        address, /*pool*/
+        bytes memory moreInfo
+    ) internal {
         IBancorNetwork bancorNetwork = IBancorNetwork(BANCOR_ADDRESS);
-        (address sourceToken, address targetToken) = abi.decode(moreInfo, (address, address));
+        (address sourceToken, address targetToken) = abi.decode(
+            moreInfo,
+            (address, address)
+        );
         address[] memory path = bancorNetwork.conversionPath(
             sourceToken,
             targetToken
@@ -32,7 +39,7 @@ contract BancorAdapter is IAdapter {
         // handle eth for special
         uint256 sellAmount = 0;
         uint256 sendValue = 0;
-        if(sourceToken == ETH_ADDRESS) {
+        if (sourceToken == ETH_ADDRESS) {
             sellAmount = IWETH(WETH_ADDRESS).balanceOf(address(this));
             IWETH(WETH_ADDRESS).withdraw(sellAmount);
             sendValue = sellAmount;
@@ -42,13 +49,10 @@ contract BancorAdapter is IAdapter {
             IERC20(sourceToken).approve(BANCOR_ADDRESS, sellAmount);
         }
 
-        uint256 minReturn = bancorNetwork.rateByPath(
-            path,
-            sellAmount
-        );
+        uint256 minReturn = bancorNetwork.rateByPath(path, sellAmount);
 
         // trade
-        uint256 returnAmount = bancorNetwork.convertByPath{ value: sendValue }(
+        uint256 returnAmount = bancorNetwork.convertByPath{value: sendValue}(
             path,
             sellAmount,
             minReturn,
@@ -57,27 +61,44 @@ contract BancorAdapter is IAdapter {
             0
         );
         // approve 0
-        SafeERC20.safeApprove(IERC20(sourceToken == ETH_ADDRESS ? WETH_ADDRESS : sourceToken), BANCOR_ADDRESS, 0);
-        if(to != address(this)) {
-            if(targetToken == ETH_ADDRESS) {
-                IWETH(WETH_ADDRESS).deposit{ value: returnAmount }();
+        SafeERC20.safeApprove(
+            IERC20(sourceToken == ETH_ADDRESS ? WETH_ADDRESS : sourceToken),
+            BANCOR_ADDRESS,
+            0
+        );
+        if (to != address(this)) {
+            if (targetToken == ETH_ADDRESS) {
+                IWETH(WETH_ADDRESS).deposit{value: returnAmount}();
                 targetToken = WETH_ADDRESS;
             }
-            SafeERC20.safeTransfer(IERC20(targetToken), to, IERC20(targetToken).balanceOf(address(this)));
+            SafeERC20.safeTransfer(
+                IERC20(targetToken),
+                to,
+                IERC20(targetToken).balanceOf(address(this))
+            );
         }
     }
 
-    function sellBase(address to, address pool, bytes memory moreInfo) external override {
+    function sellBase(
+        address to,
+        address pool,
+        bytes memory moreInfo
+    ) external override {
         _bancorTrade(to, pool, moreInfo);
     }
 
-    function sellQuote(address to, address pool, bytes memory moreInfo) external override {
+    function sellQuote(
+        address to,
+        address pool,
+        bytes memory moreInfo
+    ) external override {
         _bancorTrade(to, pool, moreInfo);
     }
 
-    event Received(address, uint);
+    event Received(address, uint256);
+
     receive() external payable {
+        require(msg.value > 0, "receive error");
         emit Received(msg.sender, msg.value);
     }
-
 }

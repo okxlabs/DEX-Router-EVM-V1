@@ -15,38 +15,63 @@ import "../interfaces/IWETH.sol";
 /// @notice Explain to an end user what this does
 /// @dev Explain to a developer any extra details
 contract UniV3Adapter is IAdapter, IUniswapV3SwapCallback {
-
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address public immutable WETH;
 
-    constructor (address payable weth) {
+    constructor(address payable weth) {
         WETH = weth;
     }
 
-    function _uniV3Swap(address to, address pool, uint160 sqrtX96, bytes memory data) internal {
-        (address fromToken, address toToken,) = abi.decode(data, (address, address, uint24));
-        
+    function _uniV3Swap(
+        address to,
+        address pool,
+        uint160 sqrtX96,
+        bytes memory data
+    ) internal {
+        (address fromToken, address toToken, ) = abi.decode(
+            data,
+            (address, address, uint24)
+        );
+
         uint256 sellAmount = IERC20(fromToken).balanceOf(address(this));
         bool zeroForOne = fromToken < toToken;
 
         IUniV3(pool).swap(
-            to, 
-            zeroForOne, 
-            int256(sellAmount), 
+            to,
+            zeroForOne,
+            int256(sellAmount),
             sqrtX96 == 0
-                ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
+                ? (
+                    zeroForOne
+                        ? TickMath.MIN_SQRT_RATIO + 1
+                        : TickMath.MAX_SQRT_RATIO - 1
+                )
                 : sqrtX96,
             data
         );
     }
 
-    function sellBase(address to, address pool, bytes memory moreInfo) external override {
-        (uint160 sqrtX96, bytes memory data) = abi.decode(moreInfo, (uint160, bytes));
+    function sellBase(
+        address to,
+        address pool,
+        bytes memory moreInfo
+    ) external override {
+        (uint160 sqrtX96, bytes memory data) = abi.decode(
+            moreInfo,
+            (uint160, bytes)
+        );
         _uniV3Swap(to, pool, sqrtX96, data);
     }
 
-    function sellQuote(address to, address pool, bytes memory moreInfo) external override {
-        (uint160 sqrtX96, bytes memory data) = abi.decode(moreInfo, (uint160, bytes));
+    function sellQuote(
+        address to,
+        address pool,
+        bytes memory moreInfo
+    ) external override {
+        (uint160 sqrtX96, bytes memory data) = abi.decode(
+            moreInfo,
+            (uint160, bytes)
+        );
         _uniV3Swap(to, pool, sqrtX96, data);
     }
 
@@ -57,15 +82,17 @@ contract UniV3Adapter is IAdapter, IUniswapV3SwapCallback {
         bytes calldata _data
     ) external override {
         require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
-        (address tokenIn, address tokenOut,) = abi.decode(_data, (address, address, uint24));
+        (address tokenIn, address tokenOut, ) = abi.decode(
+            _data,
+            (address, address, uint24)
+        );
 
-        (bool isExactInput, uint256 amountToPay) =
-            amount0Delta > 0
-                ? (tokenIn < tokenOut, uint256(amount0Delta))
-                : (tokenOut < tokenIn, uint256(amount1Delta));
+        (bool isExactInput, uint256 amountToPay) = amount0Delta > 0
+            ? (tokenIn < tokenOut, uint256(amount0Delta))
+            : (tokenOut < tokenIn, uint256(amount1Delta));
         if (isExactInput) {
             pay(tokenIn, address(this), msg.sender, amountToPay);
-        } else {           
+        } else {
             tokenIn = tokenOut; // swap in/out because exact output swaps are reversed
             pay(tokenIn, address(this), msg.sender, amountToPay);
         }

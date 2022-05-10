@@ -65,7 +65,10 @@ abstract contract ERC20Permit is ERC20, IERC2612Permit {
             let memPtr := mload(64)
 
             // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)")
-            mstore(memPtr, 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9)
+            mstore(
+                memPtr,
+                0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9
+            )
             mstore(add(memPtr, 32), owner)
             mstore(add(memPtr, 64), spender)
             mstore(add(memPtr, 96), amount)
@@ -88,9 +91,12 @@ abstract contract ERC20Permit is ERC20, IERC2612Permit {
             // Load free memory pointer
             let memPtr := mload(64)
 
-            mstore(memPtr, 0x1901000000000000000000000000000000000000000000000000000000000000)  // EIP191 header
-            mstore(add(memPtr, 2), eip712DomainHash)                                            // EIP712 domain hash
-            mstore(add(memPtr, 34), hashStruct)                                                 // Hash of struct
+            mstore(
+                memPtr,
+                0x1901000000000000000000000000000000000000000000000000000000000000
+            ) // EIP191 header
+            mstore(add(memPtr, 2), eip712DomainHash) // EIP712 domain hash
+            mstore(add(memPtr, 34), hashStruct) // Hash of struct
 
             hash := keccak256(memPtr, 66)
         }
@@ -106,7 +112,7 @@ abstract contract ERC20Permit is ERC20, IERC2612Permit {
     /**
      * @dev See {IERC2612Permit-nonces}.
      */
-    function nonces(address owner) public override view returns (uint256) {
+    function nonces(address owner) public view override returns (uint256) {
         return _nonces[owner].current();
     }
 
@@ -120,7 +126,7 @@ abstract contract ERC20Permit is ERC20, IERC2612Permit {
                     "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
                 ),
                 keccak256(bytes(name())), // ERC-20 Name
-                keccak256(bytes("1")),    // Version
+                keccak256(bytes("1")), // Version
                 chainID,
                 address(this)
             )

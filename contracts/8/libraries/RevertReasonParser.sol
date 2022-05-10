@@ -8,13 +8,20 @@ pragma solidity ^0.8.0;
 ///
 /// All unsuccessful parsings get encoded as Unknown(data) string
 library RevertReasonParser {
-    bytes4 constant private _PANIC_SELECTOR = bytes4(keccak256("Panic(uint256)"));
-    bytes4 constant private _ERROR_SELECTOR = bytes4(keccak256("Error(string)"));
+    bytes4 private constant _PANIC_SELECTOR =
+        bytes4(keccak256("Panic(uint256)"));
+    bytes4 private constant _ERROR_SELECTOR =
+        bytes4(keccak256("Error(string)"));
 
-    function parse(bytes memory data, string memory prefix) internal pure returns (string memory) {
+    function parse(bytes memory data, string memory prefix)
+        internal
+        pure
+        returns (string memory)
+    {
         if (data.length >= 4) {
             bytes4 selector;
-            assembly {  // solhint-disable-line no-inline-assembly
+            assembly {
+                // solhint-disable-line no-inline-assembly
                 selector := mload(add(data, 0x20))
             }
 
@@ -35,7 +42,10 @@ library RevertReasonParser {
                     because of that we can't check for equality and instead check
                     that offset + string length + extra 36 bytes is less than overall data length
                 */
-                require(data.length >= 36 + offset + reason.length, "Invalid revert reason");
+                require(
+                    data.length >= 36 + offset + reason.length,
+                    "Invalid revert reason"
+                );
                 return string(abi.encodePacked(prefix, "Error(", reason, ")"));
             }
             // 36 = 4-byte selector + 32 bytes integer
@@ -46,18 +56,21 @@ library RevertReasonParser {
                     // 36 = 32 bytes data length + 4-byte selector
                     code := mload(add(data, 36))
                 }
-                return string(abi.encodePacked(prefix, "Panic(", _toHex(code), ")"));
+                return
+                    string(
+                        abi.encodePacked(prefix, "Panic(", _toHex(code), ")")
+                    );
             }
         }
 
         return string(abi.encodePacked(prefix, "Unknown(", _toHex(data), ")"));
     }
 
-    function _toHex(uint256 value) private pure returns(string memory) {
+    function _toHex(uint256 value) private pure returns (string memory) {
         return _toHex(abi.encodePacked(value));
     }
 
-    function _toHex(bytes memory data) private pure returns(string memory) {
+    function _toHex(bytes memory data) private pure returns (string memory) {
         bytes16 alphabet = 0x30313233343536373839616263646566;
         bytes memory str = new bytes(2 + data.length * 2);
         str[0] = "0";

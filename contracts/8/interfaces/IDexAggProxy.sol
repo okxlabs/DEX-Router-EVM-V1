@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 interface IDexAggProxy {
-
     function dodoSwapV2ETHToToken(
         address toToken,
         uint256 minReturnAmount,
@@ -98,5 +97,4 @@ interface IDexAggProxy {
         bool isIncentive,
         uint256 deadLine
     ) external payable returns (uint256 returnAmount);
-
 }
