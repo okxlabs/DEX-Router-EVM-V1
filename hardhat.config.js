@@ -66,16 +66,6 @@ module.exports = {
       //   url: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}`
       // }
     },
-    kovan: {
-      url: `https://kovan.infura.io/v3/${INFURA_KEY}`,
-      accounts: [`${PRIVATE_KEY}`],
-      settings: {
-        optimizer: {
-          enabled: true,
-          runs: 200
-        },
-      }
-    },
     okc: {
       url: "https://exchainrpc.okex.org",
       chainId: 66,
@@ -129,6 +119,80 @@ module.exports = {
           runs: 200
         },
       }
+    },
+    kovan: {
+      url: `https://kovan.infura.io/v3/${INFURA_KEY}`,
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
+    },
+    cronosmain: {
+      url: "https://evm-cronos.crypto.org",
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      },
+    },
+    cronostest: {
+      url: "https://cronos-testnet-3.crypto.org:8545",
+      accounts: [`${PRIVATE_KEY}`],
+      network_id: "*",
+      skipDryRun: true,
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      },
+    },
+    avax: {
+      url: "https://rpc.ankr.com/avalanche",
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      },
+    },
+    avaxtest: {
+      url: "https://api.avax-test.network/ext/bc/C/rpc",
+      accounts: [`${PRIVATE_KEY}`],
+      gas: 2100000,
+      gasPrice: 25000000000,
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      },
+    },
+    polygon: {
+      url: "https://rpc.ankr.com/polygon",
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      },
+    },
+    polygontest: {
+      url: "https://rpc-mumbai.maticvigil.com/",
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      },
     }
   },
   paths: {
