@@ -3,12 +3,7 @@ require("@nomiclabs/hardhat-solhint");
 require('hardhat-abi-exporter');
 require("hardhat-gas-reporter");
 require('hardhat-contract-sizer');
-<<<<<<< HEAD
 require("@openzeppelin/hardhat-upgrades");
-=======
-require("@nomiclabs/hardhat-solhint");
-require("@nomiclabs/hardhat-etherscan");
->>>>>>> dev
 require('dotenv').config();
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
