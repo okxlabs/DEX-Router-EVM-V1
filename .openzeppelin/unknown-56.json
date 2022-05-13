@@ -24,6 +24,11 @@
       "address": "0x43c9361709bE9cE6B1E33ac31426b08dbC09e58a",
       "txHash": "0x43811fe9e4a591b54a95eea2d7463d54033b8f725d7c93493ec91f29f1defecf",
       "kind": "transparent"
+    },
+    {
+      "address": "0x9333C74BDd1E118634fE5664ACA7a9710b108Bab",
+      "txHash": "0x8a6c8e734e2505b568c7a837a364a2a4dd552bb3787408de700a3072459400a4",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -381,6 +386,85 @@
           "t_uint256": {
             "label": "uint256",
             "numberOfBytes": "32"
+          }
+        }
+      }
+    },
+    "1a9b75714f77766056c893be6d7fe7d384fde02d45a3f0904529d569f5bf7485": {
+      "address": "0x0e2E95b5366Bc8f16385e279D307AEe52Cecbf96",
+      "txHash": "0xe08edfc442af1ab35cbf7e9d37afac7c05da4bb1c9d4df8735f7cb52b221e43f",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:39"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:44"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:31"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:82"
+          },
+          {
+            "contract": "ReentrancyGuardUpgradeable",
+            "label": "_status",
+            "type": "t_uint256",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:38"
+          },
+          {
+            "contract": "ReentrancyGuardUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:68"
+          },
+          {
+            "contract": "DexRouter",
+            "label": "approveProxy",
+            "type": "t_address",
+            "src": "contracts/8/DexRouter.sol:25"
+          },
+          {
+            "contract": "DexRouter",
+            "label": "wNativeRelayer",
+            "type": "t_address",
+            "src": "contracts/8/DexRouter.sol:26"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_bool": {
+            "label": "bool"
           }
         }
       }
