@@ -4,6 +4,7 @@ const oec  = require('./okc')
 const bsc = require('./bsc')
 const eth = require('./eth')
 const polygon = require('./polygon')
+const avax = require('./avax')
 
 let config
 
@@ -17,6 +18,8 @@ if (network.name === 'okc') {
     config = eth
 } else if (network.name === 'polygon') {
     config = polygon
+} else if (network.name === 'avax') {
+    config = avax
 }
 
 module.exports = config

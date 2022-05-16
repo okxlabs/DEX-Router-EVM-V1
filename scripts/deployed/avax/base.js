@@ -1,0 +1,7 @@
+module.exports = {
+    wNativeToken: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+    wNativeRelayer: "0x3B86917369B83a6892f553609F3c2F439C184e31",
+    tokenApprove: "0x40aA958dd87FC8305b97f2BA922CDdCa374bcD7f",
+    tokenApproveProxy: "0x70cBb871E8f30Fc8Ce23609E9E0Ea87B6b222F58",
+    dexRouter: "0x1daC23e41Fc8ce857E86fD8C1AE5b6121C67D96d"
+}
