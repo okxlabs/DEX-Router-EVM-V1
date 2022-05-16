@@ -90,14 +90,12 @@ async function main() {
   // }
 
   data = {
-    "amount": "100000000000000000000",
+    "amount": "1000000000000000000",
     "minReturn": "0",
     "pools": [
-        "0x80000000000000003b7c4580ce7ebee972325da6576cc7b97bab319ac4e9006a",
-        "0x00000000000000003b8b87c063b30de1a998e9e64fd58a21f68d323b9bcd8f85",
-        "0x00000000000000003b7c45809da5fe6d575aa838fc24d2943e46d2d537a31a05"
+        "0x00000000000000003b6d0340604229c960e5CACF2aaEAc8Be68Ac07BA9dF81c3"
     ],
-    "srcToken": "0x2859e4544c4bb03966803b044a93563bd2d0dd4d"
+    "srcToken": "0x0000000000000000000000000000000000000000"
   }
 
   // await shib.approve(tokenApprove.address, ethers.constants.MaxUint256);
@@ -107,7 +105,7 @@ async function main() {
     data.minReturn,
     data.pools,
     {
-      // value: ethers.utils.parseEther('1')
+      value: ethers.utils.parseEther('1')
     }
   );
   console.log(r)
