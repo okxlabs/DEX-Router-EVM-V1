@@ -284,6 +284,6 @@ contract UnxswapRouter is EthReceiver, Permitable {
       reserve := and(rawPair, _REVERSE_MASK)
     }
     pair = reserve ? IUniswapV2Pair(pair).token0() : IUniswapV2Pair(pair).token1();
-    emit OrderRecord(address(srcToken), pair, msg.sender, amount, minReturn);
+    emit OrderRecord(address(srcToken), pair, msg.sender, amount, returnAmount);
   }
 }
