@@ -289,6 +289,25 @@ contract UnxswapRouter is EthReceiver, Permitable {
     emit OrderRecord(address(srcToken), pair, msg.sender, amount, returnAmount);
   }
 
+  /// @notice Same as `unoswap` but calls permit first,
+  /// allowing to approve token spending and make a swap in one transaction.
+  /// @param srcToken Source token
+  /// @param amountOut Exact output amount
+  /// @param amountInMax Maximum allowed input amount
+  /// @param pools Pools chain used for swaps. Pools src and dst tokens should match to make swap happen
+  /// @param permit Should contain valid permit that can be used in `IERC20Permit.permit` calls.
+  /// See tests for examples
+  function unxswapForExactTokensWithPermit(
+    IERC20 srcToken,
+    uint256 amountOut,
+    uint256 amountInMax,
+    bytes32[] calldata pools,
+    bytes calldata permit
+  ) external returns (uint256 returnAmount) {
+    _permit(address(srcToken), permit);
+    return unxswapForExactTokens(srcToken, amountOut, amountInMax, pools);
+  }
+
   /// @notice Performs swap using Uniswap exchange. Wraps and unwraps ETH if required.
   /// Sending non-zero `msg.value` for anything but ETH swaps is prohibited
   /// @param srcToken Source token
@@ -458,10 +477,10 @@ contract UnxswapRouter is EthReceiver, Permitable {
     uint256 amountOut,
     bytes32[] calldata pools)
   internal view returns (uint256[] memory amounts) {
-    amounts = new uint256[](pools.length);
+    amounts = new uint256[](pools.length + 1);
     amounts[amounts.length - 1] = amountOut;
-    for (uint256 i = pools.length - 1; i > 0; i--) {
-      bytes32 rawPair = pools[i];
+    for (uint256 i = pools.length; i > 0; i--) {
+      bytes32 rawPair = pools[i - 1];
       address pair;
       bool reserve;
       uint256 rate;
@@ -472,7 +491,7 @@ contract UnxswapRouter is EthReceiver, Permitable {
       }
       (uint112 reserve0, uint112 reserve1, ) = IUniswapV2Pair(pair).getReserves();
       (reserve0, reserve1) = reserve ? (reserve1, reserve0) : (reserve0, reserve1);
-      uint256 numerator = reserve0 * amounts[i] * 1000;
+      uint256 numerator = reserve0 * amounts[i] * _DENOMINATOR;
       uint256 denominator = (reserve1 - amounts[i]) * rate;
       amounts[i - 1] = (numerator / denominator) + 1;
     }
