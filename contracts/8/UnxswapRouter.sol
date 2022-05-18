@@ -299,11 +299,11 @@ contract UnxswapRouter is EthReceiver, Permitable {
     IERC20 srcToken,
     uint256 amountOut,
     uint256 amountInMax,
-  // solhint-disable-next-line no-unused-vars
+    // solhint-disable-next-line no-unused-vars
     bytes32[] calldata pools
   ) public payable returns (uint256 returnAmount) {
-    uint[] memory amountsIn = getAmountsIn(amountOut, pools);
-    uint amount = amountsIn[0];
+    uint256[] memory amountsIn = getAmountsIn(amountOut, pools);
+    uint256 amount = amountsIn[0];
     require(amount <= amountInMax, "UnxswapRouter: EXCESSIVE_INPUT_AMOUNT");
 
     assembly {
@@ -458,13 +458,13 @@ contract UnxswapRouter is EthReceiver, Permitable {
     uint256 amountOut,
     bytes32[] calldata pools)
   internal view returns (uint256[] memory amounts) {
-    amounts = new uint[](pools.length);
+    amounts = new uint256[](pools.length);
     amounts[amounts.length - 1] = amountOut;
-    for (uint i = pools.length - 1; i > 0; i--) {
+    for (uint256 i = pools.length - 1; i > 0; i--) {
       bytes32 rawPair = pools[i];
       address pair;
       bool reserve;
-      uint rate;
+      uint256 rate;
       assembly {
         pair := and(rawPair, _ADDRESS_MASK)
         reserve := and(rawPair, _REVERSE_MASK)
@@ -472,8 +472,8 @@ contract UnxswapRouter is EthReceiver, Permitable {
       }
       (uint112 reserve0, uint112 reserve1, ) = IUniswapV2Pair(pair).getReserves();
       (reserve0, reserve1) = reserve ? (reserve1, reserve0) : (reserve0, reserve1);
-      uint numerator = reserve0 * amounts[i] * 1000;
-      uint denominator = (reserve1 - amounts[i]) * rate;
+      uint256 numerator = reserve0 * amounts[i] * 1000;
+      uint256 denominator = (reserve1 - amounts[i]) * rate;
       amounts[i - 1] = (numerator / denominator) + 1;
     }
   }
