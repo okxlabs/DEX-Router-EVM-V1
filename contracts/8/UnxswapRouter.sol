@@ -11,6 +11,8 @@ interface IUniswapV2Pair {
   function token0() external returns (address);
 
   function token1() external returns (address);
+
+  function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast);
 }
 
 /// @title Base contract with common payable logics
@@ -286,4 +288,194 @@ contract UnxswapRouter is EthReceiver, Permitable {
     pair = reserve ? IUniswapV2Pair(pair).token0() : IUniswapV2Pair(pair).token1();
     emit OrderRecord(address(srcToken), pair, msg.sender, amount, minReturn);
   }
+
+  /// @notice Performs swap using Uniswap exchange. Wraps and unwraps ETH if required.
+  /// Sending non-zero `msg.value` for anything but ETH swaps is prohibited
+  /// @param srcToken Source token
+  /// @param amountOut Exact output amount
+  /// @param amountInMax Maximum allowed input amount
+  /// @param pools Pools chain used for swaps. Pools src and dst tokens should match to make swap happen
+  function unxswapForExactTokens(
+    IERC20 srcToken,
+    uint256 amountOut,
+    uint256 amountInMax,
+  // solhint-disable-next-line no-unused-vars
+    bytes32[] calldata pools
+  ) public payable returns (uint256 returnAmount) {
+    uint[] memory amountsIn = getAmountsIn(amountOut, pools);
+    uint amount = amountsIn[0];
+    require(amount <= amountInMax, "UnxswapRouter: EXCESSIVE_INPUT_AMOUNT");
+
+    assembly {
+    // solhint-disable-line no-inline-assembly
+      function reRevert() {
+        returndatacopy(0, 0, returndatasize())
+        revert(0, returndatasize())
+      }
+
+      function revertWithReason(m, len) {
+        mstore(0, 0x08c379a000000000000000000000000000000000000000000000000000000000)
+        mstore(0x20, 0x0000002000000000000000000000000000000000000000000000000000000000)
+        mstore(0x40, m)
+        revert(0, len)
+      }
+
+      function swap(emptyPtr, ret, pair, reversed, dst) {
+        mstore(emptyPtr, _UNISWAP_PAIR_SWAP_CALL_SELECTOR_32)
+        switch reversed
+        case 0 {
+          mstore(add(emptyPtr, 0x04), 0)
+          mstore(add(emptyPtr, 0x24), ret)
+        }
+        default {
+          mstore(add(emptyPtr, 0x04), ret)
+          mstore(add(emptyPtr, 0x24), 0)
+        }
+        mstore(add(emptyPtr, 0x44), dst)
+        mstore(add(emptyPtr, 0x64), 0x80)
+        mstore(add(emptyPtr, 0x84), 0)
+        if iszero(call(gas(), pair, 0, emptyPtr, 0xa4, 0, 0)) {
+          reRevert()
+        }
+      }
+
+      let emptyPtr := mload(0x40)
+      mstore(0x40, add(emptyPtr, 0xc0))
+
+      let poolsOffset := add(calldataload(0x64), 0x4)
+      let poolsEndOffset := calldataload(poolsOffset)
+      poolsOffset := add(poolsOffset, 0x20)
+      poolsEndOffset := add(poolsOffset, mul(0x20, poolsEndOffset))
+      let rawPair := calldataload(poolsOffset)
+      switch srcToken
+      case 0 {
+        if iszero(eq(amount, callvalue())) {
+          revertWithReason(0x00000011696e76616c6964206d73672e76616c75650000000000000000000000, 0x55) // "invalid msg.value"
+        }
+
+        mstore(emptyPtr, _WETH_DEPOSIT_CALL_SELECTOR_32)
+        if iszero(call(gas(), _WETH, amount, emptyPtr, 0x4, 0, 0)) {
+          reRevert()
+        }
+
+        mstore(emptyPtr, _ERC20_TRANSFER_CALL_SELECTOR_32)
+        mstore(add(emptyPtr, 0x4), and(rawPair, _ADDRESS_MASK))
+        mstore(add(emptyPtr, 0x24), amount)
+        if iszero(call(gas(), _WETH, 0, emptyPtr, 0x44, 0, 0)) {
+          reRevert()
+        }
+      }
+      default {
+        if callvalue() {
+          revertWithReason(0x00000011696e76616c6964206d73672e76616c75650000000000000000000000, 0x55) // "invalid msg.value"
+        }
+
+        mstore(emptyPtr, _CLAIM_TOKENS_CALL_SELECTOR_32)
+        mstore(add(emptyPtr, 0x4), srcToken)
+        mstore(add(emptyPtr, 0x24), caller())
+        mstore(add(emptyPtr, 0x44), and(rawPair, _ADDRESS_MASK))
+        mstore(add(emptyPtr, 0x64), amount)
+        if iszero(call(gas(), _APPROVE_PROXY_32, 0, emptyPtr, 0x84, 0, 0)) {
+          reRevert()
+        }
+      }
+
+      returnAmount := amountOut
+      let inData := add(amountsIn, 0x20)
+      for {
+        let i := add(poolsOffset, 0x20)
+      } lt(i, poolsEndOffset) {
+        i := add(i, 0x20)
+      } {
+        let nextRawPair := calldataload(i)
+        inData := add(inData, 0x20)
+
+        swap(
+        emptyPtr,
+        mload(inData),
+        and(rawPair, _ADDRESS_MASK),
+        and(rawPair, _REVERSE_MASK),
+        and(nextRawPair, _ADDRESS_MASK)
+        )
+        rawPair := nextRawPair
+      }
+
+      switch and(rawPair, _WETH_MASK)
+      case 0 {
+        swap(
+        emptyPtr,
+        returnAmount,
+        and(rawPair, _ADDRESS_MASK),
+        and(rawPair, _REVERSE_MASK),
+        caller()
+        )
+      }
+      default {
+        swap(
+        emptyPtr,
+        returnAmount,
+        and(rawPair, _ADDRESS_MASK),
+        and(rawPair, _REVERSE_MASK),
+        address()
+        )
+
+        mstore(emptyPtr, _ERC20_TRANSFER_CALL_SELECTOR_32)
+        mstore(add(emptyPtr, 0x4), _WNATIVE_RELAY_32)
+        mstore(add(emptyPtr, 0x24), returnAmount)
+        if iszero(call(gas(), _WETH, 0, emptyPtr, 0x44, 0, 0)) {
+          reRevert()
+        }
+
+        mstore(emptyPtr, _WETH_WITHDRAW_CALL_SELECTOR_32)
+        mstore(add(emptyPtr, 0x04), returnAmount)
+        if iszero(call(gas(), _WNATIVE_RELAY_32, 0, emptyPtr, 0x24, 0, 0)) {
+          reRevert()
+        }
+
+        if iszero(call(gas(), caller(), returnAmount, 0, 0, 0, 0)) {
+          reRevert()
+        }
+      }
+    }
+
+    // the last pool
+    bytes32 rawPair = pools[pools.length - 1];
+    address pair;
+    bool reserve;
+    assembly {
+      pair := and(rawPair, _ADDRESS_MASK)
+      reserve := and(rawPair, _REVERSE_MASK)
+    }
+    pair = reserve ? IUniswapV2Pair(pair).token0() : IUniswapV2Pair(pair).token1();
+    emit OrderRecord(address(srcToken), pair, msg.sender, amount, returnAmount);
+  }
+
+  //-------------------------------
+  //------- Internal Functions ----
+  //-------------------------------
+
+  function getAmountsIn(
+    uint256 amountOut,
+    bytes32[] calldata pools)
+  internal view returns (uint256[] memory amounts) {
+    amounts = new uint[](pools.length);
+    amounts[amounts.length - 1] = amountOut;
+    for (uint i = pools.length - 1; i > 0; i--) {
+      bytes32 rawPair = pools[i];
+      address pair;
+      bool reserve;
+      uint rate;
+      assembly {
+        pair := and(rawPair, _ADDRESS_MASK)
+        reserve := and(rawPair, _REVERSE_MASK)
+        rate := shr(_NUMERATOR_OFFSET, and(rawPair, _NUMERATOR_MASK))
+      }
+      (uint112 reserve0, uint112 reserve1, ) = IUniswapV2Pair(pair).getReserves();
+      (reserve0, reserve1) = reserve ? (reserve1, reserve0) : (reserve0, reserve1);
+      uint numerator = reserve0 * amounts[i] * 1000;
+      uint denominator = (reserve1 - amounts[i]) * rate;
+      amounts[i - 1] = (numerator / denominator) + 1;
+    }
+  }
+
 }
