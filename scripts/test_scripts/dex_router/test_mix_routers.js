@@ -549,7 +549,10 @@ async function executeEth2RND() {
 }
 
 async function main() {
+    await executeWEth2RND();
+    await executeWEth2AAVE();
     await executeEth2RND();
+    await executeWEth2USDC();
 }
 
 main()

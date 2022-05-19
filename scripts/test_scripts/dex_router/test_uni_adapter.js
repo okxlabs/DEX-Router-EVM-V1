@@ -210,6 +210,7 @@ async function executeNative() {
 
 async function main() {
     await executeNative();
+    await executeWETH2RND();
 }
 
 main()
