@@ -366,7 +366,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
     // 6. check minReturnAmount
     returnAmount = IERC20(localBaseRequest.toToken).universalBalanceOf(msg.sender) - returnAmount;
-    require(returnAmount >= localBaseRequest.minReturnAmount, "Route: Return amount is not enough");
+    require(returnAmount >= localBaseRequest.minReturnAmount, "Min return not reached");
 
     emit OrderRecord(baseRequestFromToken, localBaseRequest.toToken, msg.sender, localBaseRequest.fromTokenAmount, returnAmount);
   }
