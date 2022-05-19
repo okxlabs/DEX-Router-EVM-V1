@@ -97,16 +97,13 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       }
       require(weight >= 0 && weight <= 10000, "weight out of range");
       uint256 _fromTokenAmount = (batchAmount * weight) / 10000;
-      address tokenApprove = IApproveProxy(approveProxy).tokenApprove();
-      SafeERC20.safeApprove(IERC20(fromToken), tokenApprove, _fromTokenAmount);
       // send the asset to the adapter
-      _deposit(address(this), path.assetTo[i], fromToken, _fromTokenAmount);
+      _transferInternal(path.assetTo[i], fromToken, _fromTokenAmount);
       if (reserves) {
         IAdapter(path.mixAdapters[i]).sellQuote(address(this), poolAddress, path.extraData[i]);
       } else {
         IAdapter(path.mixAdapters[i]).sellBase(address(this), poolAddress, path.extraData[i]);
       }
-      SafeERC20.safeApprove(IERC20(fromToken), tokenApprove, 0);
     }
   }
 
@@ -153,7 +150,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     address to,
     address token,
     uint256 amount
-  ) internal {
+  ) private {
     if (UniversalERC20.isETH(IERC20(token))) {
       if (amount > 0) {
         IWETH(address(uint160(_WETH))).deposit{ value: amount }();
@@ -163,6 +160,23 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       }
     } else {
       IApproveProxy(approveProxy).claimTokens(token, from, to, amount);
+    }
+  }
+
+  function _transferInternal(
+    address to,
+    address token,
+    uint256 amount
+  ) private {
+    if (UniversalERC20.isETH(IERC20(token))) {
+      if (amount > 0) {
+        IWETH(address(uint160(_WETH))).deposit{ value: amount }();
+        if (to != address(this)) {
+          SafeERC20.safeTransfer(IERC20(address(uint160(_WETH))), to, amount);
+        }
+      }
+    } else {
+      SafeERC20.safeTransfer(IERC20(token), to, amount);
     }
   }
 
@@ -232,15 +246,13 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       return errorCode;
     }
 
-    address tokenApprove = IApproveProxy(approveProxy).tokenApprove();
-    SafeERC20.safeApprove(IERC20(fromToken), tokenApprove, actualRequest);
     // settle funds in MarketMaker, send funds to pmmAdapter
-    _deposit(address(this), pmmAdapter, fromToken, actualRequest);
+    _transferInternal(pmmAdapter, fromToken, actualRequest);
     bytes memory moreInfo = abi.encode(pmmRequest);
     uint256 toTokenAmount = IERC20(pmmRequest.toToken).balanceOf(address(this));
     errorCode = IAdapterWithResult(pmmAdapter).sellBase(address(this), address(0), moreInfo);
     toTokenAmount = IERC20(pmmRequest.toToken).balanceOf(address(this)) - toTokenAmount;
-    SafeERC20.safeApprove(IERC20(fromToken), tokenApprove, 0);
+
     emit PMMSwap (
       pmmRequest.pathIndex, 
       subIndex, 
@@ -354,7 +366,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
     // 6. check minReturnAmount
     returnAmount = IERC20(localBaseRequest.toToken).universalBalanceOf(msg.sender) - returnAmount;
-    require(returnAmount >= localBaseRequest.minReturnAmount, "Route: Return amount is not enough");
+    require(returnAmount >= localBaseRequest.minReturnAmount, "Min return not reached");
 
     emit OrderRecord(baseRequestFromToken, localBaseRequest.toToken, msg.sender, localBaseRequest.fromTokenAmount, returnAmount);
   }

@@ -82,8 +82,6 @@ contract UnxswapRouter is EthReceiver, Permitable {
 
   uint256 public constant _WEIGHT_MASK = 0x00000000000000000000ffff0000000000000000000000000000000000000000;
 
-  // address public approveProxy;
-
   event OrderRecord(address fromToken, address toToken, address sender, uint256 fromAmount, uint256 returnAmount);
 
   /// @notice Same as `unoswap` but calls permit first,
