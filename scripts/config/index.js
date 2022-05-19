@@ -12,6 +12,8 @@ if (network == "okc") {
   config = bsc
 } else if (network == "eth") {
   config = eth
+} else {
+  config = eth
 }
 
 const getConfig = function (network) {

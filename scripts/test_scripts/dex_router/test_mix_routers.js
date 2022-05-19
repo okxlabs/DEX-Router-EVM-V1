@@ -48,7 +48,7 @@ async function initAdapter() {
     balancerAdapter = await balancerAdapter.deploy();
     await balancerAdapter.deployed();
     BalancerV2Adapter = await ethers.getContractFactory("BalancerV2Adapter");
-    balancerV2Adapter = await BalancerV2Adapter.deploy(balancerVault ,WETH.address);
+    balancerV2Adapter = await BalancerV2Adapter.deploy(balancerVault, WETH.address);
     await balancerV2Adapter.deployed();
 }
 
