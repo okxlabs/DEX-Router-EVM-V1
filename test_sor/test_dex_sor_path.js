@@ -495,7 +495,7 @@ describe("Smart route path test", function() {
   });
 
   it("mixSwap with single path and target token is native token", async () => {
-    expect(await dexRouter._WNATIVE_RELAY_32()).to.be.equal(wNativeRelayer.address);
+    await dexRouter.setWNativeRelayer(wNativeRelayer.address);
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
 
     // wbtc -> eth
