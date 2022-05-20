@@ -48,13 +48,10 @@ describe("Smart route path test", function() {
     }
   });
 
-  xit("mixSwap with single path", async () => {
+  it("mixSwap with single path with safemoon token", async () => {
     // wbtc -> weth -> usdt
 
-    console.log(dexRouter.address)
-
     await memeToken.transfer(alice.address, ethers.utils.parseEther('100000000'));
-    console.log(" " + await memeToken.balanceOf(alice.address));
 
     fromToken = memeToken;
     toToken = usdt;
@@ -78,7 +75,7 @@ describe("Smart route path test", function() {
     const extraData1 = [0x0];
     const router1 = [mixAdapter1, assertTo1, rawData1, extraData1, memeToken.address];
 
-    // // node2
+    // node2
     // const mixAdapter2 = [
     //   uniAdapter.address
     // ];
@@ -123,6 +120,9 @@ describe("Smart route path test", function() {
   it("mixSwap with single path", async () => {
     // wbtc -> weth -> usdt
 
+    // console.log("alice" + alice.address);
+    console.log("wbtc: " + wbtc.address);
+
     fromToken = wbtc;
     toToken = usdt;
     const fromTokenAmount = ethers.utils.parseEther('10');
@@ -143,7 +143,7 @@ describe("Smart route path test", function() {
       "0x" + await direction(wbtc.address, weth.address, lpWBTCWETH) + "0000000000000000000" + weight1 + lpWBTCWETH.address.replace("0x", "")
     ];
     const extraData1 = [0x0];
-    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1, wbtc.address];
+    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1, fromToken.address];
 
     // node2
     const mixAdapter2 = [
@@ -187,7 +187,7 @@ describe("Smart route path test", function() {
     expect(await usdt.balanceOf(alice.address)).to.be.eq(receive1.toString());
   });
 
-  xit("mixSwap with two fork path", async () => {
+  it("mixSwap with two fork path", async () => {
     // wbtc -> weth -> usdt
     //      -> dot  -> usdt
 
@@ -293,7 +293,7 @@ describe("Smart route path test", function() {
     expect(await usdt.balanceOf(alice.address)).to.be.eq(receive);
   });
 
-  xit("mixSwap with four path, same token", async () => {
+  it("mixSwap with four path, same token", async () => {
     // wbtc -> weth(uni)
     //      -> weth(curve)
     //      -> weth(dodo)
@@ -366,7 +366,7 @@ describe("Smart route path test", function() {
     expect(await weth.balanceOf(alice.address)).to.be.eq(receive);
   });
 
-  xit("mixSwap with three fork path", async () => {
+  it("mixSwap with three fork path", async () => {
     //       -> weth -> usdt
     //  wbtc -> dot  -> usdt
     //       -> bnb  -> weth -> usdt
@@ -512,7 +512,7 @@ describe("Smart route path test", function() {
     expect(await toToken.balanceOf(alice.address)).to.be.eq("53597548250295474132461");
   });
 
-  xit("mixSwap with single path and source token is native token", async () => {
+  it("mixSwap with single path and source token is native token", async () => {
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
     // ETH -> WBTC
     ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
@@ -567,7 +567,7 @@ describe("Smart route path test", function() {
     expect(await toToken.balanceOf(alice.address)).to.be.eq(receive);
   });
 
-  xit("mixSwap with single path and target token is native token", async () => {
+  it("mixSwap with single path and target token is native token", async () => {
     await dexRouter.setWNativeRelayer(wNativeRelayer.address);
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
 
@@ -807,7 +807,7 @@ describe("Smart route path test", function() {
   }
 
   const getTransactionCost = async (txResult) => {
-    const cumulativeGasUsed = (await txResult.waxit()).cumulativeGasUsed;
+    const cumulativeGasUsed = (await txResult.wait()).cumulativeGasUsed;
     return ethers.BigNumber.from(txResult.gasPrice).mul(ethers.BigNumber.from(cumulativeGasUsed));
   };
 });
