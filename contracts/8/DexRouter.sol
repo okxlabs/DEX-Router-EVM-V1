@@ -146,24 +146,6 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     }
   }
 
-  function _deposit(
-    address from,
-    address to,
-    address token,
-    uint256 amount
-  ) private {
-    if (UniversalERC20.isETH(IERC20(token))) {
-      if (amount > 0) {
-        IWETH(address(uint160(_WETH))).deposit{ value: amount }();
-        if (to != address(this)) {
-          SafeERC20.safeTransfer(IERC20(address(uint160(_WETH))), to, amount);
-        }
-      }
-    } else {
-      IApproveProxy(approveProxy).claimTokens(token, from, to, amount);
-    }
-  }
-
   function _transferInternal(
     address to,
     address token,
@@ -325,7 +307,6 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     require(localBaseRequest.fromTokenAmount > 0, "Route: fromTokenAmount must be > 0");
     address baseRequestFromToken = bytes32ToAddress(localBaseRequest.fromToken);
     returnAmount = IERC20(localBaseRequest.toToken).universalBalanceOf(msg.sender);
-    // _deposit(msg.sender, address(this), baseRequestFromToken, localBaseRequest.fromTokenAmount);
 
     if (UniversalERC20.isETH(IERC20(address(uint160(localBaseRequest.fromToken))))) {
       IWETH(address(uint160(_WETH))).deposit{ value: localBaseRequest.fromTokenAmount }();
