@@ -5,6 +5,7 @@ require("hardhat-gas-reporter");
 require('hardhat-contract-sizer');
 require("@openzeppelin/hardhat-upgrades");
 require('dotenv').config();
+require("solidity-coverage");
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const ALCHEMY_KEY = process.env.ALCHEMY_KEY || '';

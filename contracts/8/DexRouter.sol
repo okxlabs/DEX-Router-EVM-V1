@@ -24,6 +24,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   // In the test scenario, we take it as a settable state and adjust it to a constant after it stabilizes
   address public approveProxy;
   address public wNativeRelayer;
+  address public weth;
 
   bytes32 public constant _PMM_FLAG8_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;
   bytes32 public constant _PMM_FLAG4_MASK = 0x4000000000000000000000000000000000000000000000000000000000000000;
@@ -57,6 +58,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
   event ApproveProxyChanged(address approveProxy);
   event WNativeRelayerChanged(address wNativeRelayer);
+  event WETHChanged(address weth);
   event PMMSwap(
     uint256 pathIndex,
     uint256 subIndex,
@@ -156,9 +158,9 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   ) internal {
     if (UniversalERC20.isETH(IERC20(token))) {
       if (amount > 0) {
-        IWETH(address(uint160(_WETH))).deposit{ value: amount }();
+        IWETH(address(uint160(weth))).deposit{ value: amount }();
         if (to != address(this)) {
-          SafeERC20.safeTransfer(IERC20(address(uint160(_WETH))), to, amount);
+          SafeERC20.safeTransfer(IERC20(address(uint160(weth))), to, amount);
         }
       }
     } else {
@@ -168,9 +170,9 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
   function _transferTokenToUser(address token) internal {
     if ((IERC20(token).isETH())) {
-      uint256 wethBal = IERC20(address(uint160(_WETH))).balanceOf(address(this));
+      uint256 wethBal = IERC20(address(uint160(weth))).balanceOf(address(this));
       if (wethBal > 0) {
-        IWETH(address(uint160(_WETH))).transfer(wNativeRelayer, wethBal);
+        IWETH(address(uint160(weth))).transfer(wNativeRelayer, wethBal);
         IWNativeRelayer(wNativeRelayer).withdraw(wethBal);
       }
       uint256 ethBal = address(this).balance;
@@ -195,7 +197,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     bytes memory extension = pmmRequest.extension;
     if (UniversalERC20.isETH(IERC20(fromToken))){
       // market makers will get WETH
-      fromToken = bytes32ToAddress(_WETH);
+      fromToken = weth;
     }
     assembly{
       pmmAdapter := mload(add(extension, 0x20))
@@ -298,6 +300,12 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     wNativeRelayer = relayer;
 
     emit WNativeRelayerChanged(relayer);
+  }
+
+  function setWETH(address wETH) external onlyOwner {
+    weth = wETH;
+
+    emit WETHChanged(wETH);
   }
 
   //-------------------------------

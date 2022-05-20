@@ -198,6 +198,7 @@ describe("Unoswap swap test", function() {
     wNativeRelayer = await WNativeRelayer.deploy();
     await wNativeRelayer.deployed();
     await wNativeRelayer.initialize(weth.address);
+    await dexRouter.setWETH(weth.address)
     await wNativeRelayer.setCallerOk([dexRouter.address], [true]);
     expect(await dexRouter._WNATIVE_RELAY_32()).to.be.equal(wNativeRelayer.address);
 
@@ -243,8 +244,8 @@ describe("Unoswap swap test", function() {
     const token0 = await lpDOTUSDT.token0();
     reserves = await lpDOTUSDT.getReserves();
     if (await lpDOTUSDT.token1() == dot.address) {
-      expect(reserves[1]).to.be.eq("4000000000000000000000000");
-      expect(reserves[0]).to.be.eq("100000000000000000000");
+      expect(reserves[1]).to.be.eq("100000000000000000000");
+      expect(reserves[0]).to.be.eq("3000000000000000000000");
     }
 
     sourceToken = dot;
@@ -440,6 +441,7 @@ describe("Unoswap swap test", function() {
     )
     await dexRouter.deployed();
     await dexRouter.setApproveProxy(tokenApproveProxy.address);
+    await dexRouter.setWETH(weth.address);
 
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
     expect(await dexRouter._APPROVE_PROXY_32()).to.be.equal(tokenApproveProxy.address);

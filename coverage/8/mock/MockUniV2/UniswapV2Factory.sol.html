@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for 8/mock/MockUniV2/UniswapV2Factory.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../../prettify.css" />
+    <link rel="stylesheet" href="../../../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../../../index.html">all files</a> / <a href="index.html">8/mock/MockUniV2/</a> UniswapV2Factory.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">70.59% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>12/17</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">30% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>3/10</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">40% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>2/5</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">72.22% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>13/18</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line medium'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">57×</span>
+<span class="cline-any cline-yes">186×</span>
+<span class="cline-any cline-yes">186×</span>
+<span class="cline-any cline-yes">186×</span>
+<span class="cline-any cline-yes">186×</span>
+<span class="cline-any cline-yes">186×</span>
+<span class="cline-any cline-yes">186×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">186×</span>
+<span class="cline-any cline-yes">186×</span>
+<span class="cline-any cline-yes">186×</span>
+<span class="cline-any cline-yes">186×</span>
+<span class="cline-any cline-yes">186×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">186×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">pragma solidity =0.5.16;
+&nbsp;
+import "../../interfaces/IUniswapV2Factory.sol";
+import "./UniswapV2Pair.sol";
+&nbsp;
+contract UniswapV2Factory is IUniswapV2Factory {
+  address public feeTo;
+  address public feeToSetter;
+&nbsp;
+  mapping(address =&gt; mapping(address =&gt; address)) public getPair;
+  address[] public allPairs;
+&nbsp;
+  event PairCreated(address indexed token0, address indexed token1, address pair, uint256);
+&nbsp;
+<span class="fstat-no" title="function not covered" >  constructor(address _feeToSetter) public {</span>
+<span class="cstat-no" title="statement not covered" >    feeToSetter = _feeToSetter</span>;
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function allPairsLength() external view returns (uint256) {</span>
+    return allPairs.length;
+  }
+&nbsp;
+  function createPair(address tokenA, address tokenB) external returns (address pair) {
+<span class="cstat-no" title="statement not covered" >    require(tokenA != tokenB, "UniswapV2: IDENTICAL_ADDRESSES")</span>;
+    (address token0, address token1) = tokenA &lt; tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
+    <span class="missing-if-branch" title="else path not taken" >E</span>require(token0 != address(0), "UniswapV2: ZERO_ADDRESS");
+    <span class="missing-if-branch" title="else path not taken" >E</span>require(getPair[token0][token1] == address(0), "UniswapV2: PAIR_EXISTS"); // single check is sufficient
+    bytes memory bytecode = type(UniswapV2Pair).creationCode;
+    bytes32 salt = keccak256(abi.encodePacked(token0, token1));
+    assembly {
+      pair := create2(0, add(bytecode, 32), mload(bytecode), salt)
+    }
+    IUniswapV2Pair(pair).initialize(token0, token1);
+    getPair[token0][token1] = pair;
+    getPair[token1][token0] = pair; // populate mapping in the reverse direction
+    allPairs.push(pair);
+    emit PairCreated(token0, token1, pair, allPairs.length);
+  }
+&nbsp;
+  function setFeeTo(address _feeTo) external {
+    <span class="missing-if-branch" title="else path not taken" >E</span>require(msg.sender == feeToSetter, "UniswapV2: FORBIDDEN");
+<span class="cstat-no" title="statement not covered" >    feeTo = _feeTo</span>;
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function setFeeToSetter(address _feeToSetter) external {</span>
+<span class="cstat-no" title="statement not covered" >    require(msg.sender == feeToSetter, "UniswapV2: FORBIDDEN")</span>;
+<span class="cstat-no" title="statement not covered" >    feeToSetter = _feeToSetter</span>;
+  }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue May 17 2022 18:36:28 GMT+0800 (China Standard Time)
+</div>
+</div>
+<script src="../../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../../sorter.js"></script>
+</body>
+</html>

@@ -440,7 +440,7 @@ describe("Smart route path test", function() {
   });
 
   it("mixSwap with single path and source token is native token", async () => {
-    expect(await dexRouter._WETH()).to.be.equal(weth.address);
+    expect(await dexRouter.weth()).to.be.equal(weth.address);
     // ETH -> WBTC
     ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
 
@@ -495,8 +495,8 @@ describe("Smart route path test", function() {
   });
 
   it("mixSwap with single path and target token is native token", async () => {
-    expect(await dexRouter._WNATIVE_RELAY_32()).to.be.equal(wNativeRelayer.address);
-    expect(await dexRouter._WETH()).to.be.equal(weth.address);
+    expect(await dexRouter.wNativeRelayer()).to.be.equal(wNativeRelayer.address);
+    expect(await dexRouter.weth()).to.be.equal(weth.address);
 
     // wbtc -> eth
     ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
@@ -693,7 +693,8 @@ describe("Smart route path test", function() {
     await tokenApproveProxy.addProxy(dexRouter.address);
     await tokenApproveProxy.setTokenApprove(tokenApprove.address);
 
-
+    await dexRouter.setWETH(weth.address)
+    await dexRouter.setWNativeRelayer(wNativeRelayer.address);
     await wNativeRelayer.setCallerOk([dexRouter.address], [true]);
   }
 

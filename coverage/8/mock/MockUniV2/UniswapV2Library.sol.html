@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for 8/mock/MockUniV2/UniswapV2Library.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../../prettify.css" />
+    <link rel="stylesheet" href="../../../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../../../index.html">all files</a> / <a href="index.html">8/mock/MockUniV2/</a> UniswapV2Library.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">23.53% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>8/34</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">10% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>2/20</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">37.5% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>3/8</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">23.53% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>8/34</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">144×</span>
+<span class="cline-any cline-yes">144×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">144×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">144×</span>
+<span class="cline-any cline-yes">432×</span>
+<span class="cline-any cline-yes">144×</span>
+<span class="cline-any cline-yes">144×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">144×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">pragma solidity &gt;=0.5.0;
+&nbsp;
+import "../../../5/libraries/SafeMath.sol";
+import "../../interfaces/IUniswapV2Pair.sol";
+import "../../interfaces/IUniswapV2Factory.sol";
+&nbsp;
+library UniswapV2Library {
+  using SafeMath for uint256;
+&nbsp;
+  // returns sorted token addresses, used to handle return values from pairs sorted in this order
+<span class="fstat-no" title="function not covered" >  function sortTokens(address tokenA, address tokenB) internal pure returns (address token0, address token1) {</span>
+<span class="cstat-no" title="statement not covered" >    require(tokenA != tokenB, "PancakeLibrary: IDENTICAL_ADDRESSES")</span>;
+    (token0, token1) = tokenA &lt; tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
+    <span class="missing-if-branch" title="else path not taken" >E</span>require(token0 != address(0), "PancakeLibrary: ZERO_ADDRESS");
+  }
+&nbsp;
+  // calculates the CREATE2 address for a pair without making any external calls
+  function pairFor(
+    address factory,
+    address tokenA,
+    address tokenB
+  ) internal view returns (address pair) {
+    return IUniswapV2Factory(factory).getPair(tokenA, tokenB); // For easy testing
+  }
+&nbsp;
+  // fetches and sorts the reserves for a pair
+  function getReserves(
+    address factory,
+    address tokenA,
+    address tokenB
+  ) internal view returns (uint256 reserveA, uint256 reserveB) {
+    (address token0, ) = sortTokens(tokenA, tokenB);
+    pairFor(factory, tokenA, tokenB);
+    (uint256 reserve0, uint256 reserve1, ) = IUniswapV2Pair(pairFor(factory, tokenA, tokenB)).getReserves();
+    (reserveA, reserveB) = tokenA == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
+  }
+&nbsp;
+  // given some amount of an asset and pair reserves, returns an equivalent amount of the other asset
+  function quote(
+    uint256 amountA,
+    uint256 reserveA,
+    uint256 reserveB
+  ) internal pure returns (uint256 amountB) {
+    <span class="missing-if-branch" title="else path not taken" >E</span>require(amountA &gt; 0, "PancakeLibrary: INSUFFICIENT_AMOUNT");
+<span class="cstat-no" title="statement not covered" >    require(reserveA &gt; 0 &amp;&amp; reserveB &gt; 0, "PancakeLibrary: INSUFFICIENT_LIQUIDITY")</span>;
+<span class="cstat-no" title="statement not covered" >    amountB = amountA.mul(reserveB) / reserveA</span>;
+  }
+&nbsp;
+  // given an input amount of an asset and pair reserves, returns the maximum output amount of the other asset
+<span class="fstat-no" title="function not covered" >  function getAmountOut(</span>
+    uint256 amountIn,
+    uint256 reserveIn,
+    uint256 reserveOut
+  ) internal pure returns (uint256 amountOut) {
+<span class="cstat-no" title="statement not covered" >    require(amountIn &gt; 0, "PancakeLibrary: INSUFFICIENT_INPUT_AMOUNT")</span>;
+<span class="cstat-no" title="statement not covered" >    require(reserveIn &gt; 0 &amp;&amp; reserveOut &gt; 0, "PancakeLibrary: INSUFFICIENT_LIQUIDITY")</span>;
+<span class="cstat-no" title="statement not covered" >    uint256 amountInWithFee = amountIn.mul(997);</span>
+<span class="cstat-no" title="statement not covered" >    uint256 numerator = amountInWithFee.mul(reserveOut);</span>
+<span class="cstat-no" title="statement not covered" >    uint256 denominator = reserveIn.mul(1000).add(amountInWithFee);</span>
+<span class="cstat-no" title="statement not covered" >    amountOut = numerator / denominator</span>;
+  }
+&nbsp;
+  // given an output amount of an asset and pair reserves, returns a required input amount of the other asset
+<span class="fstat-no" title="function not covered" >  function getAmountIn(</span>
+    uint256 amountOut,
+    uint256 reserveIn,
+    uint256 reserveOut
+  ) internal pure returns (uint256 amountIn) {
+<span class="cstat-no" title="statement not covered" >    require(amountOut &gt; 0, "PancakeLibrary: INSUFFICIENT_OUTPUT_AMOUNT")</span>;
+<span class="cstat-no" title="statement not covered" >    require(reserveIn &gt; 0 &amp;&amp; reserveOut &gt; 0, "PancakeLibrary: INSUFFICIENT_LIQUIDITY")</span>;
+<span class="cstat-no" title="statement not covered" >    uint256 numerator = reserveIn.mul(amountOut).mul(1000);</span>
+<span class="cstat-no" title="statement not covered" >    uint256 denominator = reserveOut.sub(amountOut).mul(997);</span>
+<span class="cstat-no" title="statement not covered" >    amountIn = (numerator / denominator).add(1)</span>;
+  }
+&nbsp;
+  // performs chained getAmountOut calculations on any number of pairs
+<span class="fstat-no" title="function not covered" >  function getAmountsOut(</span>
+    address factory,
+    uint256 amountIn,
+    address[] memory path
+  ) internal view returns (uint256[] memory amounts) {
+<span class="cstat-no" title="statement not covered" >    require(path.length &gt;= 2, "PancakeLibrary: INVALID_PATH")</span>;
+<span class="cstat-no" title="statement not covered" >    amounts = new uint256[](path.length)</span>;
+<span class="cstat-no" title="statement not covered" >    amounts[0] = amountIn</span>;
+<span class="cstat-no" title="statement not covered" >    for (uint256 i; i &lt; path.length - 1; i++) {</span>
+<span class="cstat-no" title="statement not covered" >      (uint256 reserveIn, uint256 reserveOut) = getReserves(factory, path[i], path[i + 1]);</span>
+<span class="cstat-no" title="statement not covered" >      amounts[i + 1] = getAmountOut(amounts[i], reserveIn, reserveOut)</span>;
+    }
+  }
+&nbsp;
+  // performs chained getAmountIn calculations on any number of pairs
+<span class="fstat-no" title="function not covered" >  function getAmountsIn(</span>
+    address factory,
+    uint256 amountOut,
+    address[] memory path
+  ) internal view returns (uint256[] memory amounts) {
+<span class="cstat-no" title="statement not covered" >    require(path.length &gt;= 2, "PancakeLibrary: INVALID_PATH")</span>;
+<span class="cstat-no" title="statement not covered" >    amounts = new uint256[](path.length)</span>;
+<span class="cstat-no" title="statement not covered" >    amounts[amounts.length - 1] = amountOut</span>;
+<span class="cstat-no" title="statement not covered" >    for (uint256 i = path.length - 1; i &gt; 0; i--) {</span>
+<span class="cstat-no" title="statement not covered" >      (uint256 reserveIn, uint256 reserveOut) = getReserves(factory, path[i - 1], path[i]);</span>
+<span class="cstat-no" title="statement not covered" >      amounts[i - 1] = getAmountIn(amounts[i], reserveIn, reserveOut)</span>;
+    }
+  }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue May 17 2022 18:36:28 GMT+0800 (China Standard Time)
+</div>
+</div>
+<script src="../../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../../sorter.js"></script>
+</body>
+</html>

@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for 8/adapter/BalancerV2Adapter.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../../index.html">all files</a> / <a href="index.html">8/adapter/</a> BalancerV2Adapter.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>0/25</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>0/8</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>0/4</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>0/26</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+&nbsp;
+import "../interfaces/IAdapter.sol";
+import "../interfaces/IERC20.sol";
+import "../interfaces/IBalancerV2Vault.sol";
+import "../interfaces/IWETH.sol";
+&nbsp;
+import "../libraries/SafeERC20.sol";
+import "hardhat/console.sol";
+&nbsp;
+// for two tokens
+contract BalancerV2Adapter is IAdapter {
+    address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address public immutable VAULT_ADDRESS;
+    address public immutable WETH_ADDRESS;
+&nbsp;
+<span class="fstat-no" title="function not covered" >    constructor(address _balancerVault, address _weth) {</span>
+<span class="cstat-no" title="statement not covered" >        VAULT_ADDRESS = _balancerVault</span>;
+<span class="cstat-no" title="statement not covered" >        WETH_ADDRESS = _weth</span>;
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _balancerV2Swap(</span>
+        address to,
+        address, /*vault*/
+        bytes memory moreInfo
+    ) internal {
+<span class="cstat-no" title="statement not covered" >        (address sourceToken, address targetToken, bytes32 poolId) = abi.decode(</span>
+            moreInfo,
+            (address, address, bytes32)
+        );
+&nbsp;
+        // fromToken ！= targetToken, The Balancer Vault will check
+        // In balancer eth or weth are exchanged for other tokens using the same pool,
+        // The dex router will only transfer weth here
+<span class="cstat-no" title="statement not covered" >        uint256 sellAmount = 0;</span>
+<span class="cstat-no" title="statement not covered" >        if (sourceToken == ETH_ADDRESS) {</span>
+<span class="cstat-no" title="statement not covered" >            sellAmount = IWETH(WETH_ADDRESS).balanceOf(address(this))</span>;
+        } else {
+<span class="cstat-no" title="statement not covered" >            sellAmount = IERC20(sourceToken).balanceOf(address(this))</span>;
+        }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        IBalancerV2Vault.SingleSwap memory singleSwap;</span>
+<span class="cstat-no" title="statement not covered" >        singleSwap.poolId = poolId</span>;
+<span class="cstat-no" title="statement not covered" >        singleSwap.kind = IBalancerV2Vault.SwapKind.GIVEN_IN</span>;
+<span class="cstat-no" title="statement not covered" >        singleSwap.assetIn = sourceToken == ETH_ADDRESS</span>
+            ? WETH_ADDRESS
+            : sourceToken;
+<span class="cstat-no" title="statement not covered" >        singleSwap.assetOut = targetToken == ETH_ADDRESS</span>
+            ? WETH_ADDRESS
+            : targetToken;
+<span class="cstat-no" title="statement not covered" >        singleSwap.amount = sellAmount</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        IBalancerV2Vault.FundManagement memory fund;</span>
+<span class="cstat-no" title="statement not covered" >        fund.sender = address(this)</span>;
+<span class="cstat-no" title="statement not covered" >        fund.recipient = to</span>;
+&nbsp;
+        // approve
+<span class="cstat-no" title="statement not covered" >        SafeERC20.safeApprove(</span>
+            IERC20(sourceToken == ETH_ADDRESS ? WETH_ADDRESS : sourceToken),
+            VAULT_ADDRESS,
+            sellAmount
+        );
+        // swap, the limit parameter is 0 for the time being, and the slippage point is not considered for the time being
+<span class="cstat-no" title="statement not covered" >        IBalancerV2Vault(VAULT_ADDRESS).swap(</span>
+            singleSwap,
+            fund,
+            0,
+            block.timestamp
+        );
+        // approve 0
+<span class="cstat-no" title="statement not covered" >        SafeERC20.safeApprove(</span>
+            IERC20(sourceToken == ETH_ADDRESS ? WETH_ADDRESS : sourceToken),
+            VAULT_ADDRESS,
+            0
+        );
+<span class="cstat-no" title="statement not covered" >        if (to != address(this)) {</span>
+<span class="cstat-no" title="statement not covered" >            if (targetToken == ETH_ADDRESS) <span class="cstat-no" title="statement not covered" >targetToken = WETH_ADDRESS</span>;</span>
+<span class="cstat-no" title="statement not covered" >            SafeERC20.safeTransfer(</span>
+                IERC20(targetToken),
+                to,
+                IERC20(targetToken).balanceOf(address(this))
+            );
+        }
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function sellBase(</span>
+        address to,
+        address vault,
+        bytes memory moreInfo
+    ) external override {
+<span class="cstat-no" title="statement not covered" >        _balancerV2Swap(to, vault, moreInfo)</span>;
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function sellQuote(</span>
+        address to,
+        address vault,
+        bytes memory moreInfo
+    ) external override {
+<span class="cstat-no" title="statement not covered" >        _balancerV2Swap(to, vault, moreInfo)</span>;
+    }
+&nbsp;
+    event Received(address, uint256);
+&nbsp;
+    receive() external payable {
+        require(msg.value &gt; 0, "receive error");
+        emit Received(msg.sender, msg.value);
+    }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue May 17 2022 18:36:28 GMT+0800 (China Standard Time)
+</div>
+</div>
+<script src="../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../sorter.js"></script>
+</body>
+</html>
