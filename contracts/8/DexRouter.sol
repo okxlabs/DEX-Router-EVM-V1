@@ -14,7 +14,7 @@ import "./interfaces/IAdapterWithResult.sol";
 import "./interfaces/IApproveProxy.sol";
 import "./interfaces/IMarketMaker.sol";
 import "./interfaces/IWNativeRelayer.sol";
-import "hardhat/console.sol";
+
 /// @title DexRouter
 /// @notice Entrance of Split trading in Dex platform
 /// @dev Entrance of Split trading in Dex platform
@@ -205,7 +205,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     address pmmAdapter;
     uint256 subIndex;
     bytes memory extension = pmmRequest.extension;
-    if (UniversalERC20.isETH(IERC20(fromToken))){
+    if (UniversalERC20.isETH(IERC20(fromToken))) {
       // market makers will get WETH
       fromToken = bytes32ToAddress(_WETH);
     }
