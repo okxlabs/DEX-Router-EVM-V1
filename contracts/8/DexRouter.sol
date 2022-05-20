@@ -14,7 +14,7 @@ import "./interfaces/IAdapterWithResult.sol";
 import "./interfaces/IApproveProxy.sol";
 import "./interfaces/IMarketMaker.sol";
 import "./interfaces/IWNativeRelayer.sol";
-
+import "hardhat/console.sol";
 /// @title DexRouter
 /// @notice Entrance of Split trading in Dex platform
 /// @dev Entrance of Split trading in Dex platform
@@ -176,7 +176,8 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
         }
       }
     } else {
-      SafeERC20.safeTransfer(IERC20(token), to, amount);
+      IApproveProxy(approveProxy).claimTokens(token, msg.sender, to, amount);
+      // SafeERC20.safeTransfer(IERC20(token), to, amount);
     }
   }
 
@@ -327,7 +328,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     require(localBaseRequest.fromTokenAmount > 0, "Route: fromTokenAmount must be > 0");
     address baseRequestFromToken = bytes32ToAddress(localBaseRequest.fromToken);
     returnAmount = IERC20(localBaseRequest.toToken).universalBalanceOf(msg.sender);
-    _deposit(msg.sender, address(this), baseRequestFromToken, localBaseRequest.fromTokenAmount);
+    // _deposit(msg.sender, address(this), baseRequestFromToken, localBaseRequest.fromTokenAmount);
 
     // 2. check total batch amount
     {
