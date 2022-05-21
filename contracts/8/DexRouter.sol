@@ -310,8 +310,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
     if (UniversalERC20.isETH(IERC20(address(uint160(localBaseRequest.fromToken))))) {
       IWETH(address(uint160(_WETH))).deposit{ value: localBaseRequest.fromTokenAmount }();
-    }
-    if (address(uint160(localBaseRequest.fromToken)) == address(uint160(_WETH))) {
+    } else if (address(uint160(localBaseRequest.fromToken)) == address(uint160(_WETH))) {
         IApproveProxy(approveProxy).claimTokens(
           address(uint160(localBaseRequest.fromToken)), 
           msg.sender, 
