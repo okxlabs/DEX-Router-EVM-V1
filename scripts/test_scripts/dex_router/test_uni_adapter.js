@@ -7,33 +7,37 @@ const { initDexRouter, direction, FOREVER, packRawData} = require("./utils")
 
 async function executeWETH2RND() {
     const pmmReq = []
-    await setForkBlockNumber(14446603);
+    // await setForkBlockNumber(14446603);
 
-    const accountAddress = "0x9199Cc44CF7850FE40081ea6F2b010Fee1088270";
-    await startMockAccount([accountAddress]);
-    const account = await ethers.getSigner(accountAddress);
+    // const accountAddress = "0x9199Cc44CF7850FE40081ea6F2b010Fee1088270";
+    // await startMockAccount([accountAddress]);
+    // const account = await ethers.getSigner(accountAddress);
 
     WETH = await ethers.getContractAt(
         "MockERC20",
-        tokenConfig.tokens.WETH.baseTokenAddress
+        "0x8Da6DA06A4902015cFe823b24c5Ed486016Ba3Cb"
     )
     RND = await ethers.getContractAt(
         "MockERC20",
-        tokenConfig.tokens.RND.baseTokenAddress
+        "0x382bb369d343125bfb2117af9c149795c6c65c50"
     )
 
-    const { dexRouter, tokenApprove } = await initDexRouter(WETH.address);
+    // const { dexRouter, tokenApprove } = await initDexRouter(WETH.address);
+    dexRouter = await ethers.getContractAt(
+        "DexRouter", 
+        "0xf6aab105cb9e66e03cad2c2f3f8558242593385c"
+    );
+    univ2Adapter = await ethers.getContractAt(
+        "UniAdapter", 
+        "0x5eAe840294c757e6fffE462e9C989944386613d4"
+    );
 
-    UniV2Adapter = await ethers.getContractFactory("UniAdapter");
-    univ2Adapter = await UniV2Adapter.deploy();
-    await univ2Adapter.deployed();
-
-    const fromTokenAmount = ethers.utils.parseEther('0.0625');
+    const fromTokenAmount = "10000000000000000000";
     const minReturnAmount = 0;
     const deadLine = FOREVER;
-    const uniV2PoolAddr = "0x5449bd1a97296125252db2d9cf23d5d6e30ca3c1"; // RND-WETH Pool
-    console.log("before WETH Balance: " + await WETH.balanceOf(account.address));
-    console.log("before RND Balance: " + await RND.balanceOf(account.address));
+    const uniV2PoolAddr = "0x81d17d3c81bf60e0e1f45ef71c46cb9e9ed31f34"; // RND-WETH Pool
+    // console.log("before WETH Balance: " + await WETH.balanceOf(account.address));
+    // console.log("before RND Balance: " + await RND.balanceOf(account.address));
 
     // node1
     // const requestParam1 = [
@@ -49,17 +53,16 @@ async function executeWETH2RND() {
     const weight1 = Number(10000).toString(16).replace('0x', '');
     const rawData1 = [
         "0x" +
-        direction(tokenConfig.tokens.WETH.baseTokenAddress, tokenConfig.tokens.RND.baseTokenAddress) +
+        "0" +
         "0000000000000000000" +
         weight1 +
         uniV2PoolAddr.replace("0x", "")  // RND-WETH Pool
     ];
     const moreInfo = "0x"
     const extraData1 = [moreInfo];
-    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1,WETH.address];
+    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1, WETH.address];
 
     // layer1
-    // const request1 = [requestParam1];
     const layer1 = [router1];
 
     const baseRequest = [
@@ -69,16 +72,19 @@ async function executeWETH2RND() {
         minReturnAmount,
         deadLine,
     ]
-    await WETH.connect(account).approve(tokenApprove.address, fromTokenAmount);
-    await dexRouter.connect(account).smartSwap(
+    // await WETH.approve("0x8da6da06a4902015cfe823b24c5ed486016ba3cb", fromTokenAmount);
+    // console.log("" + await WETH.allowance("0xc82Ea2afE1Fd1D61C4A12f5CeB3D7000f564F5C6", "0x70cBb871E8f30Fc8Ce23609E9E0Ea87B6b222F58"));
+
+    // console.log("" + await WETH.balanceOf("0xc82Ea2afE1Fd1D61C4A12f5CeB3D7000f564F5C6"));
+    tx = await dexRouter.smartSwap(
         baseRequest,
         [fromTokenAmount],
         [layer1],
         pmmReq
     );
-
-    console.log("after WETH Balance: " + await WETH.balanceOf(univ2Adapter.address));
-    console.log("after RND Balance: " + await RND.balanceOf(account.address));
+    console.log(tx);
+    // console.log("after WETH Balance: " + await WETH.balanceOf(univ2Adapter.address));
+    // console.log("after RND Balance: " + await RND.balanceOf(account.address));
 }
 
 //From and To Native
@@ -209,7 +215,7 @@ async function executeNative() {
 }
 
 async function main() {
-    await executeNative();
+    // await executeNative();
     await executeWETH2RND();
 }
 
