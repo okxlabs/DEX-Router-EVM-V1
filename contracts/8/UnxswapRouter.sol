@@ -84,6 +84,8 @@ contract UnxswapRouter is EthReceiver, Permitable {
 
   uint256 public constant _WEIGHT_MASK = 0x00000000000000000000ffff0000000000000000000000000000000000000000;
 
+  IERC20 private constant ETH_ADDRESS = IERC20(0x0000000000000000000000000000000000000000);
+
   // address public approveProxy;
 
   event OrderRecord(address fromToken, address toToken, address sender, uint256 fromAmount, uint256 returnAmount);
@@ -368,7 +370,7 @@ contract UnxswapRouter is EthReceiver, Permitable {
       let rawPair := calldataload(poolsOffset)
       switch srcToken
       case 0 {
-        if iszero(eq(amount, callvalue())) {
+        if iszero(eq(amountInMax, callvalue())) {
           revertWithReason(0x00000011696e76616c6964206d73672e76616c75650000000000000000000000, 0x55) // "invalid msg.value"
         }
 
@@ -454,6 +456,14 @@ contract UnxswapRouter is EthReceiver, Permitable {
         if iszero(call(gas(), caller(), returnAmount, 0, 0, 0, 0)) {
           reRevert()
         }
+      }
+    }
+
+    // excess refund
+    if (srcToken == ETH_ADDRESS) {
+      uint256 ethBal = address(this).balance;
+      if (ethBal > 0) {
+        payable(msg.sender).transfer(ethBal);
       }
     }
 

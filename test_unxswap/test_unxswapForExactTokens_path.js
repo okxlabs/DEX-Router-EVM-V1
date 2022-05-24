@@ -326,6 +326,53 @@ describe("Unoswap swapForExactTokens test", function() {
     ).to.be.revertedWith("ERC20Permit: invalid signature")
   })
 
+  it("if the source token is ETH, Excess amount must be refunded", async () => {
+    const token0 = await lpWETHUSDT.token0()
+    const reserves = await lpWETHUSDT.getReserves()
+    if (token0 == weth.address) {
+      expect(reserves[1]).to.be.eq("300000000000000000000000")
+      expect(reserves[0]).to.be.eq("100000000000000000000")
+    } else {
+      expect(reserves[0]).to.be.eq("300000000000000000000000")
+      expect(reserves[1]).to.be.eq("100000000000000000000")
+    }
+
+    sourceToken = ETH
+    targetToken = usdt
+    const amountOut = ethers.utils.parseEther("298.802094311970964947")
+    const realAmountIn = ethers.utils.parseEther("0.1")
+    const amountInMax = ethers.utils.parseEther("0.25")
+
+    // 0x4 WETH -> ETH 0x8 reverse pair
+    flag = token0 == weth.address ? "0x0" : "0x8"
+    poolAddr = lpWETHUSDT.address.toString().replace("0x", "")
+    poolFee = Number(997000000).toString(16).replace("0x", "")
+    pool0 = flag + "000000000000000" + poolFee + poolAddr
+
+    const beforeBalance = await ethers.provider.getBalance(alice.address)
+    //console.log("before balance: ", ethers.utils.formatUnits(beforeBalance, 18));
+
+    txResult = await dexRouter.connect(alice).unxswapForExactTokens(
+      sourceToken.address,
+      amountOut,
+      amountInMax,
+      [pool0],
+      {
+        value: amountInMax
+      }
+    )
+
+    const costGas = await getTransactionCost(txResult)
+    const afterBalance = await ethers.provider.getBalance(alice.address)
+    //console.log("after balance: ", ethers.utils.formatUnits(afterBalance, 18));
+    //console.log("costGas: ", ethers.utils.formatUnits(costGas, 18));
+    //console.log("change balance:", ethers.utils.formatUnits(afterBalance.sub(beforeBalance), 18));
+
+    // const rev = fromTokenAmount * fee * r0 / (r1 * 1000 + fromTokenAmount * fee);
+    expect(await usdt.balanceOf(alice.address)).to.be.equal("298802094311970964947")
+    expect(afterBalance).to.be.equal(BigNumber.from(beforeBalance).sub(costGas).sub(BigNumber.from(realAmountIn)))
+  })
+
   const initMockTokens = async () => {
     const MockERC20 = await ethers.getContractFactory("MockERC20")
 
