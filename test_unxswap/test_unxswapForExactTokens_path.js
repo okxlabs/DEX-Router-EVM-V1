@@ -54,30 +54,40 @@ describe("Unoswap swapForExactTokens test", function() {
       expect(reserves[0]).to.be.eq("4000000000000000000000000")
     }
 
-    sourceToken = wbtc
-    targetToken = usdt
-    const amountOut = ethers.utils.parseEther("3984.027924159612865972")
-    const amountInMax = ethers.utils.parseEther("0.1")
+    sourceToken = wbtc;
+    targetToken = usdt;
+    const amountOut = ethers.utils.parseEther("4000");
+    const amountInMax = ethers.utils.parseEther("0.12");
 
     // 0x4 WETH -> ETH 0x8 reverse pair
-    flag = sourceToken.address == token0 ? "0x0" : "0x8"
-    poolAddr = lpWBTCUSDT.address.toString().replace("0x", "")
-    poolFee = Number(997000000).toString(16).replace("0x", "")
-    pool0 = flag + "000000000000000" + poolFee + poolAddr
+    flag = sourceToken.address == token0 ? "0x0" : "0x8";
+    poolAddr = lpWBTCUSDT.address.toString().replace("0x", "");
+    poolFee = Number(997000000).toString(16).replace("0x", "");
+    pool0 = flag + "000000000000000" + poolFee + poolAddr;
 
-    await sourceToken.connect(alice).approve(tokenApprove.address, amountInMax)
+    const fromTokenBalanceBefore = await wbtc.balanceOf(alice.address);
+    console.log(fromTokenBalanceBefore + "");
+
+    // approve token approve amountInMax
+    await sourceToken.connect(alice).approve(tokenApprove.address, amountInMax);
+    expect(await usdt.balanceOf(alice.address)).to.be.equal("0");
 
     await dexRouter.connect(alice).unxswapForExactTokens(
       sourceToken.address,
       amountOut,
       amountInMax,
       [pool0]
-    )
+    );
+
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
-    expect(await usdt.balanceOf(alice.address)).to.be.equal("3984027924159612865972")
+    expect(await usdt.balanceOf(alice.address)).to.be.equal(ethers.utils.parseEther("4000"));
+
+    // expect(amount).to.be.equal(amountOut);
+    expect(await sourceToken.balanceOf(dexRouter.address)).to.be.equal("0");
+    expect(await targetToken.balanceOf(dexRouter.address)).to.be.equal("0");
   })
 
-  it("WETH token single pool exchange", async () => {
+  xit("WETH token single pool exchange", async () => {
     const token0 = await lpWETHUSDT.token0()
     reserves = await lpWETHUSDT.getReserves()
     if (token0 == weth.address) {
@@ -113,7 +123,7 @@ describe("Unoswap swapForExactTokens test", function() {
     expect(await usdt.balanceOf(alice.address)).to.be.equal("298802094311970964947")
   })
 
-  it("multi-pool token exchange", async () => {
+  xit("multi-pool token exchange", async () => {
     const token00 = await lpWBTCUSDT.token0()
     let reserves = await lpWBTCUSDT.getReserves()
     if (await lpWBTCUSDT.token0() == wbtc.address) {
@@ -163,7 +173,7 @@ describe("Unoswap swapForExactTokens test", function() {
     expect(await weth.balanceOf(alice.address)).to.be.equal("1306723925020281644")
   })
 
-  it("if the source token is ETH, it should be successfully converted", async () => {
+  xit("if the source token is ETH, it should be successfully converted", async () => {
     const token0 = await lpWETHUSDT.token0()
     const reserves = await lpWETHUSDT.getReserves()
     if (token0 == weth.address) {
@@ -199,7 +209,7 @@ describe("Unoswap swapForExactTokens test", function() {
     expect(await usdt.balanceOf(alice.address)).to.be.equal("298802094311970964947")
   })
 
-  it("if the target token is ETH, it should be successfully converted", async () => {
+  xit("if the target token is ETH, it should be successfully converted", async () => {
     WNativeRelayer = await ethers.getContractFactory("WNativeRelayer")
     wNativeRelayer = await WNativeRelayer.deploy()
     await wNativeRelayer.deployed()
@@ -246,7 +256,7 @@ describe("Unoswap swapForExactTokens test", function() {
     expect(afterBalance).to.be.equal(BigNumber.from("987158034397061298").add(BigNumber.from(beforeBalance)).sub(costGas))
   })
 
-  it("trader trades in permit signature mode", async () => {
+  xit("trader trades in permit signature mode", async () => {
     // token must support permit (EIP712)
     const token0 = await lpDOTUSDT.token0()
     reserves = await lpDOTUSDT.getReserves()
@@ -307,7 +317,7 @@ describe("Unoswap swapForExactTokens test", function() {
     )
 
     const beforeBalance = await usdt.balanceOf(owner.address)
-    await dexRouter.connect(owner).unxswapForExactTokensWithPermit(
+    await dexRouter.connect(owner).unxswapForExactTokensWithPermxit(
       sourceToken.address,
       amountOut,
       amountInMax,
@@ -322,7 +332,7 @@ describe("Unoswap swapForExactTokens test", function() {
     // Re-using the same sig doesn't work since the nonce has been incremented
     // on the contract level for replay-protection
     await expect(
-      sourceToken.permit(approve.owner, approve.spender, approve.value, deadline, v, r, s)
+      sourceToken.permxit(approve.owner, approve.spender, approve.value, deadline, v, r, s)
     ).to.be.revertedWith("ERC20Permit: invalid signature")
   })
 
@@ -461,5 +471,17 @@ describe("Unoswap swapForExactTokens test", function() {
   const getTransactionCost = async (txResult) => {
     const cumulativeGasUsed = (await txResult.wait()).cumulativeGasUsed
     return BigNumber.from(txResult.gasPrice).mul(BigNumber.from(cumulativeGasUsed))
+  }
+
+  // fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997)
+  const getAmountOut = function(amountIn, r0, r1) {
+    return ethers.BigNumber.from(amountIn.toString())
+      .mul(ethers.BigNumber.from('997'))
+      .mul(ethers.BigNumber.from(r0))
+      .div(
+        ethers.BigNumber.from(r1)
+        .mul(ethers.BigNumber.from('1000'))
+        .add(ethers.BigNumber.from(amountIn.toString()).mul(ethers.BigNumber.from('997')))
+      );
   }
 })
