@@ -33,9 +33,9 @@ bancorETHBNTPoolAddr = "0x4c9a2bd661d640da3634a4988a9bd2bc0f18e5a9";
 AssertToSelf = "";
 
 //init Adapter
-initAdapter = async function (adapterList){
+initAdapter = async function (adapterList) {
     const AdapterList = new Map()
-    for await(var key of adapterList){
+    for await(let key of adapterList){
         switch(key){
             case "curveV1":
                 AdapterContractName = "CurveAdapter";
@@ -102,7 +102,7 @@ initAdapter = async function (adapterList){
 }
 
 // wrapInfo: return baseRequest, fromTokenAmount, layer, pmmInfo
-wrapInfo = async function (from, to, amountIn, layerList){
+wrapInfo = async function (from, to, amountIn, layerList) {
     let FromToken = from;
     let ToToken = to;
     let fromTokenAmountTotal = 0;
@@ -114,7 +114,7 @@ wrapInfo = async function (from, to, amountIn, layerList){
     let layer = [];
     let pmmInfo = [];
 
-    for await(var layerInfo of layerList){
+    for await(let layerInfo of layerList){
         let layerAmount = layerInfo[0] * amountIn / 10000;
         let routerList = layerInfo[1];
         let router = [];
@@ -122,13 +122,13 @@ wrapInfo = async function (from, to, amountIn, layerList){
         layerAmount = ethers.utils.parseUnits(layerAmount + "", await FromToken.decimals())
         fromTokenAmount.push(layerAmount);
         
-        for await(var adapterList of routerList){
+        for await(let adapterList of routerList){
             let mixAdapter = [];
             let mixAssertTo = [];
             let mixRawData = [];
             let mixExtraData = [];
             let fromTokenAddressStr = 0;
-            for await(var adapterInfo of adapterList){
+            for await(let adapterInfo of adapterList){
                 let adapterName = adapterInfo[0];
                 let ratio = adapterInfo[1];
                 let token1 = adapterInfo[2];
@@ -185,16 +185,16 @@ executeMutilXAdapter = async function (account, blockNumber, from, to, amountIn,
         to.baseTokenAddress
     )
 
-    var adapterList = []
-    for (var layerInfo of layerList){
-        for (var AdapterList of layerInfo[1]){
-            for (var adapterInfo of AdapterList){
+    let adapterList = []
+    for (let layerInfo of layerList) {
+        for (let AdapterList of layerInfo[1]) {
+            for (let adapterInfo of AdapterList){
                 let adapterName = adapterInfo[0];
                 adapterList.push(adapterName)
             }    
         }
     }
-    var adapterList = [...new Set(adapterList)]
+    adapterList = [...new Set(adapterList)]
 
     let { dexRouter, tokenApprove } = await initDexRouter();
     adapter = await initAdapter(adapterList);
@@ -274,7 +274,7 @@ executeMutilXAdapter = async function (account, blockNumber, from, to, amountIn,
     retention = await ToToken.balanceOf(dexRouter.address)
     assert(retention == 0, "dexRouter toToken retention > 0 !")
     console.log("dexRouter toToken retention Balance : 0")
-    for await(var key of adapterList){
+    for await(let key of adapterList) {
         let retention = await FromToken.balanceOf(adapter.get(key).address)
         assert(retention == 0, key + " : Adapter retention > 0!")
         console.log(key + "Adapter retention Balance: " + retention.toString());
@@ -284,7 +284,7 @@ executeMutilXAdapter = async function (account, blockNumber, from, to, amountIn,
 const getTransactionCost = async (txResult) => {
     const cumulativeGasUsed = (await txResult.wait()).cumulativeGasUsed;
     return ethers.BigNumber.from(txResult.gasPrice).mul(ethers.BigNumber.from(cumulativeGasUsed));
-  };
+};
 
 module.exports = {
     executeMutilXAdapter,
@@ -302,4 +302,4 @@ module.exports = {
     bancorBNTUSDCPoolAddr,
     bancorETHBNTPoolAddr,
     AssertToSelf,
-  }
+}

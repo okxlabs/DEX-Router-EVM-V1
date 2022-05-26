@@ -240,6 +240,7 @@ async function executeNative() {
 }
 
 async function main() {
+    await executeWETH2BNT();
     await executeNative();
 }
 

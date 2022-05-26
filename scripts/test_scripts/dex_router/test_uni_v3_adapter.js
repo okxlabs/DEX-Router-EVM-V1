@@ -244,9 +244,9 @@ async function executeNative() {
     console.log("after RND Balance: " + rndBalance2);
     let adapterBalance2 = await ethers.provider.getBalance(univ3Adapter.address)
     let dexRouterBalance2 = await ethers.provider.getBalance(dexRouter.address)
-    assert.equal(adapterBalance2, 0,"adapter has eth left");
-    assert.equal(dexRouterBalance2, 0,"dexRouter has eth left");
-    assert.equal(rndBalance2,0,"rnd balance error")
+    assert.equal(adapterBalance2, 0, "adapter has eth left");
+    assert.equal(dexRouterBalance2, 0, "dexRouter has eth left");
+    assert.equal(rndBalance2, 0, "rnd balance error")
 }
 
 async function main() {
