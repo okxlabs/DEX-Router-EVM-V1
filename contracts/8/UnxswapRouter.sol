@@ -6,7 +6,7 @@ import "./libraries/RevertReasonParser.sol";
 
 import "./interfaces/IERC20Permit.sol";
 import "./interfaces/IDaiLikePermit.sol";
-
+import "hardhat/console.sol";
 interface IUniswapV2Pair {
   function token0() external returns (address);
 
@@ -80,7 +80,7 @@ contract UnxswapRouter is EthReceiver, Permitable {
   // BSC:   0B5f474ad0e3f7ef629BD10dbf9e4a8Fd60d9A48
   // OKC:   d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98
   // LOCAL: D49a0e9A4CD5979aE36840f542D2d7f02C4817Be
-  uint256 public constant _WNATIVE_RELAY_32 = 0x0000000000000000000000005703B683c7F928b721CA95Da988d73a3299d4757;
+  uint256 public constant _WNATIVE_RELAY_32 = 0x000000000000000000000000D49a0e9A4CD5979aE36840f542D2d7f02C4817Be;
 
   uint256 public constant _WEIGHT_MASK = 0x00000000000000000000ffff0000000000000000000000000000000000000000;
 
@@ -366,7 +366,7 @@ contract UnxswapRouter is EthReceiver, Permitable {
       let rawPair := calldataload(poolsOffset)
       switch srcToken
       case 0 {
-        if iszero(eq(amount, callvalue())) {
+        if iszero(eq(amountInMax, callvalue())) {
           revertWithReason(0x00000011696e76616c6964206d73672e76616c75650000000000000000000000, 0x55) // "invalid msg.value"
         }
 
@@ -420,11 +420,11 @@ contract UnxswapRouter is EthReceiver, Permitable {
       switch and(rawPair, _WETH_MASK)
       case 0 {
         swap(
-        emptyPtr,
-        returnAmount,
-        and(rawPair, _ADDRESS_MASK),
-        and(rawPair, _REVERSE_MASK),
-        caller()
+          emptyPtr,
+          returnAmount,
+          and(rawPair, _ADDRESS_MASK),
+          and(rawPair, _REVERSE_MASK),
+          caller()
         )
       }
       default {
@@ -454,6 +454,12 @@ contract UnxswapRouter is EthReceiver, Permitable {
         }
       }
     }
+
+    // solhint-disable-next-line no-call-value
+    (bool success, ) = msg.sender.call{value: address(this).balance}(new bytes(0));
+    require(success, "!safeTransferETH");
+
+    console.log(address(this).balance);
 
     // the last pool
     bytes32 rawPair = pools[pools.length - 1];
