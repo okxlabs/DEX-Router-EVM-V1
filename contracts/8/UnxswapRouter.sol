@@ -84,6 +84,8 @@ contract UnxswapRouter is EthReceiver, Permitable {
 
   uint256 public constant _WEIGHT_MASK = 0x00000000000000000000ffff0000000000000000000000000000000000000000;
 
+  IERC20 private constant ETH_ADDRESS = IERC20(0x0000000000000000000000000000000000000000);
+
   event OrderRecord(address fromToken, address toToken, address sender, uint256 fromAmount, uint256 returnAmount);
 
   /// @notice Same as `unoswap` but calls permit first,
@@ -455,11 +457,13 @@ contract UnxswapRouter is EthReceiver, Permitable {
       }
     }
 
-    // solhint-disable-next-line no-call-value
-    (bool success, ) = msg.sender.call{value: address(this).balance}(new bytes(0));
-    require(success, "!safeTransferETH");
-
-    console.log(address(this).balance);
+    // excess refund
+    if (srcToken == ETH_ADDRESS) {
+      uint256 ethBal = address(this).balance;
+      if (ethBal > 0) {
+        payable(msg.sender).transfer(ethBal);
+      }
+    }
 
     // the last pool
     bytes32 rawPair = pools[pools.length - 1];

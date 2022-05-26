@@ -66,7 +66,6 @@ describe("Unoswap swapForExactTokens test", function() {
     pool0 = flag + "000000000000000" + poolFee + poolAddr;
 
     const fromTokenBalanceBefore = await wbtc.balanceOf(alice.address);
-    console.log(fromTokenBalanceBefore + "");
 
     // approve token approve amountInMax
     await sourceToken.connect(alice).approve(tokenApprove.address, amountInMax);
@@ -99,8 +98,8 @@ describe("Unoswap swapForExactTokens test", function() {
 
     sourceToken = weth
     targetToken = usdt
-    const amountOut = ethers.utils.parseEther("298.802094311970964947")
-    const amountInMax = ethers.utils.parseEther("0.1")
+    const amountOut = ethers.utils.parseEther("300")
+    const amountInMax = ethers.utils.parseEther("0.12")
 
     // 0x4 WETH -> ETH 0x8 reverse pair
     flag = sourceToken.address == token0 ? "0x0" : "0x8"
@@ -119,7 +118,7 @@ describe("Unoswap swapForExactTokens test", function() {
     )
 
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
-    expect(await usdt.balanceOf(alice.address)).to.be.equal("298802094311970964947")
+    expect(await usdt.balanceOf(alice.address)).to.be.equal(ethers.utils.parseEther("300"))
   })
 
   it("multi-pool token exchange", async () => {
@@ -147,8 +146,8 @@ describe("Unoswap swapForExactTokens test", function() {
     middleToken = usdt
     targetToken = weth
 
-    const amountOut = ethers.utils.parseEther("1.306723925020281644")
-    const amountInMax = ethers.utils.parseEther("0.1")
+    const amountOut = ethers.utils.parseEther("1.5")
+    const amountInMax = ethers.utils.parseEther("0.15")
 
     // 0x4: WETH -> ETH 0x8: reverse pair
     flag0 = sourceToken.address == token00 ? "0x0" : "0x8"
@@ -169,7 +168,7 @@ describe("Unoswap swapForExactTokens test", function() {
       [pool0, pool1]
     )
     // const rev = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
-    expect(await weth.balanceOf(alice.address)).to.be.equal("1306723925020281644")
+    expect(await targetToken.balanceOf(alice.address)).to.be.equal("1519598695987863490")
   })
 
   it("if the source token is ETH, it should be successfully converted", async () => {
@@ -232,8 +231,8 @@ describe("Unoswap swapForExactTokens test", function() {
 
     sourceToken = usdt
     targetToken = ETH
-    const amountOut = ethers.utils.parseEther("0.987158034397061298")
-    const amountInMax = ethers.utils.parseEther("3000")
+    const amountOut = ethers.utils.parseEther("1")
+    const amountInMax = ethers.utils.parseEther("3500")
 
     // 0x4 WETH -> ETH 0x8 reverse pair
     flag = "0xc"
@@ -254,9 +253,8 @@ describe("Unoswap swapForExactTokens test", function() {
 
     const costGas = await getTransactionCost(txResult)
     const afterBalance = await ethers.provider.getBalance(alice.address)
-
     // const rev = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
-    expect(afterBalance).to.be.equal(BigNumber.from("987158034397061298").add(BigNumber.from(beforeBalance)).sub(costGas))
+    expect(afterBalance).to.be.equal(BigNumber.from(amountOut).add(BigNumber.from(beforeBalance)).sub(costGas))
   })
 
   it("trader trades in permit signature mode", async () => {
@@ -320,7 +318,7 @@ describe("Unoswap swapForExactTokens test", function() {
     )
 
     const beforeBalance = await usdt.balanceOf(owner.address)
-    await dexRouter.connect(owner).unxswapForExactTokensWithPermxit(
+    await dexRouter.connect(owner).unxswapForExactTokensWithPermit(
       sourceToken.address,
       amountOut,
       amountInMax,
@@ -335,8 +333,55 @@ describe("Unoswap swapForExactTokens test", function() {
     // Re-using the same sig doesn't work since the nonce has been incremented
     // on the contract level for replay-protection
     await expect(
-      sourceToken.permxit(approve.owner, approve.spender, approve.value, deadline, v, r, s)
+      sourceToken.permit(approve.owner, approve.spender, approve.value, deadline, v, r, s)
     ).to.be.revertedWith("ERC20Permit: invalid signature")
+  })
+
+  it("if the source token is ETH, Excess amount must be refunded", async () => {
+    const token0 = await lpWETHUSDT.token0()
+    const reserves = await lpWETHUSDT.getReserves()
+    if (token0 == weth.address) {
+      expect(reserves[1]).to.be.eq("300000000000000000000000")
+      expect(reserves[0]).to.be.eq("100000000000000000000")
+    } else {
+      expect(reserves[0]).to.be.eq("300000000000000000000000")
+      expect(reserves[1]).to.be.eq("100000000000000000000")
+    }
+
+    sourceToken = ETH
+    targetToken = usdt
+    const amountOut = ethers.utils.parseEther("298.802094311970964947")
+    const realAmountIn = ethers.utils.parseEther("0.1")
+    const amountInMax = ethers.utils.parseEther("0.25")
+
+    // 0x4 WETH -> ETH 0x8 reverse pair
+    flag = token0 == weth.address ? "0x0" : "0x8"
+    poolAddr = lpWETHUSDT.address.toString().replace("0x", "")
+    poolFee = Number(997000000).toString(16).replace("0x", "")
+    pool0 = flag + "000000000000000" + poolFee + poolAddr
+
+    const beforeBalance = await ethers.provider.getBalance(alice.address)
+    //console.log("before balance: ", ethers.utils.formatUnits(beforeBalance, 18));
+
+    txResult = await dexRouter.connect(alice).unxswapForExactTokens(
+      sourceToken.address,
+      amountOut,
+      amountInMax,
+      [pool0],
+      {
+        value: amountInMax
+      }
+    )
+
+    const costGas = await getTransactionCost(txResult)
+    const afterBalance = await ethers.provider.getBalance(alice.address)
+    //console.log("after balance: ", ethers.utils.formatUnits(afterBalance, 18));
+    //console.log("costGas: ", ethers.utils.formatUnits(costGas, 18));
+    //console.log("change balance:", ethers.utils.formatUnits(afterBalance.sub(beforeBalance), 18));
+
+    // const rev = fromTokenAmount * fee * r0 / (r1 * 1000 + fromTokenAmount * fee);
+    expect(await usdt.balanceOf(alice.address)).to.be.equal("298802094311970964947")
+    expect(afterBalance).to.be.equal(BigNumber.from(beforeBalance).sub(costGas).sub(BigNumber.from(realAmountIn)))
   })
 
   const initMockTokens = async () => {
