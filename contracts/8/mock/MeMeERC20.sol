@@ -362,7 +362,7 @@ contract ERC20V2 is Context, IERC20 {
      * All three of these values are immutable: they can only be set once during
      * construction.
      */
-    constructor (string memory name_, string memory symbol_) public {
+    constructor (string memory name_, string memory symbol_) {
         _name = name_;
         _symbol = symbol_;
         _decimals = 18;
@@ -933,7 +933,7 @@ abstract contract Ownable is Context {
     /**
      * @dev Initializes the contract setting the deployer as the initial owner.
      */
-    constructor () internal {
+    constructor () {
         address msgSender = _msgSender();
         _owner = msgSender;
         emit OwnershipTransferred(address(0), msgSender);
@@ -1001,7 +1001,7 @@ contract CustomERC20 is ERC20V2, Ownable {
         uint256 _tradeFeeRatio,
         address _feeTo,
         bool _isMintable
-    ) public ERC20V2(name, symbol) {
+    ) ERC20V2(name, symbol) {
         _setupDecimals(_decimals);
         _mint(_creator, _initSupply);
 
