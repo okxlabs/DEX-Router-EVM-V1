@@ -72,7 +72,8 @@ describe("Unoswap swap test", function() {
       [pool0]
     );
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
-    expect(await usdt.balanceOf(alice.address)).to.be.equal("3984027924159612865972");
+    const amount = getAmountOut(fromTokenAmount, "4000000000000000000000000", "100000000000000000000");
+    expect(await usdt.balanceOf(alice.address)).to.be.equal(amount);
   });
 
   it("WETH token single pool exchange", async () => {
@@ -452,4 +453,15 @@ describe("Unoswap swap test", function() {
     const cumulativeGasUsed = (await txResult.wait()).cumulativeGasUsed;
     return BigNumber.from(txResult.gasPrice).mul(BigNumber.from(cumulativeGasUsed));
   };
+
+  const getAmountOut = function(amountIn, r0, r1) {
+    return ethers.BigNumber.from(amountIn.toString())
+      .mul(ethers.BigNumber.from('997'))
+      .mul(ethers.BigNumber.from(r0))
+      .div(
+        ethers.BigNumber.from(r1)
+        .mul(ethers.BigNumber.from('1000'))
+        .add(ethers.BigNumber.from(amountIn.toString()).mul(ethers.BigNumber.from('997')))
+      );
+  }
 });

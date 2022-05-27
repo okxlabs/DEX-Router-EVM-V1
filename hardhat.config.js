@@ -61,10 +61,10 @@ module.exports = {
       blockGasLimit: 0x1fffffffffffff,
       allowUnlimitedContractSize: true,
       timeout: 1800000,
-      forking:
-      {
-        url: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}`
-      }
+      // forking:
+      // {
+      //   url: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}`
+      // }
     },
     okc: {
       url: "https://exchainrpc.okex.org",
