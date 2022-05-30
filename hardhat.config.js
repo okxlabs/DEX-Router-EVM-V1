@@ -3,6 +3,7 @@ require("@nomiclabs/hardhat-solhint");
 require('hardhat-abi-exporter');
 require("hardhat-gas-reporter");
 require('hardhat-contract-sizer');
+require('hardhat-log-remover');
 require("@openzeppelin/hardhat-upgrades");
 require('dotenv').config();
 

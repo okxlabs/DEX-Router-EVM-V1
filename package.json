@@ -7,7 +7,8 @@
     "size": "hardhat size-contracts",
     "compile": "npx hardhat --config hardhat.config.js compile",
     "compile5": "npx hardhat --config hardhat.config.5.js compile",
-    "prettier:solidity": "./node_modules/.bin/prettier --write contracts/**/**/*.sol"
+    "prettier:solidity": "./node_modules/.bin/prettier --write contracts/**/**/*.sol",
+    "removelogs": "yarn run hardhat remove-logs"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
@@ -23,6 +24,7 @@
     "hardhat": "^2.9.0",
     "hardhat-abi-exporter": "^2.2.1",
     "hardhat-gas-reporter": "^1.0.7",
+    "hardhat-log-remover": "^2.0.2",
     "prettier-plugin-solidity": "^1.0.0-beta.19"
   },
   "dependencies": {
