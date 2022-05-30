@@ -6,7 +6,7 @@ import "./libraries/RevertReasonParser.sol";
 
 import "./interfaces/IERC20Permit.sol";
 import "./interfaces/IDaiLikePermit.sol";
-import "hardhat/console.sol";
+
 interface IUniswapV2Pair {
   function token0() external returns (address);
 

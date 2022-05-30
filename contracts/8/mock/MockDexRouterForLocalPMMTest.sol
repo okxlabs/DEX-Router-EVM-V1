@@ -15,8 +15,6 @@ import "../interfaces/IApproveProxy.sol";
 import "../interfaces/IMarketMaker.sol";
 import "../interfaces/IWNativeRelayer.sol";
 
-import "hardhat/console.sol";
-
 /// @title DexRouter
 /// @notice Entrance of Split trading in Dex platform
 /// @dev Entrance of Split trading in Dex platform
