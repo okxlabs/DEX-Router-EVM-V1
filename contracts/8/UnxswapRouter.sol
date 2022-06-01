@@ -88,40 +88,20 @@ contract UnxswapRouter is EthReceiver, Permitable {
 
   event OrderRecord(address fromToken, address toToken, address sender, uint256 fromAmount, uint256 returnAmount);
 
-  /// @notice Same as `unoswap` but calls permit first,
-  /// allowing to approve token spending and make a swap in one transaction.
-  /// @param srcToken Source token
-  /// @param amount Amount of source tokens to swap
-  /// @param minReturn Minimal allowed returnAmount to make transaction commit
-  /// @param pools Pools chain used for swaps. Pools src and dst tokens should match to make swap happen
-  /// @param permit Should contain valid permit that can be used in `IERC20Permit.permit` calls.
-  /// See tests for examples
-  function unxswapWithPermit(
+  //-------------------------------
+  //------- Internal Functions ----
+  //-------------------------------
+  function _unxswapInternal(
     IERC20 srcToken,
     uint256 amount,
     uint256 minReturn,
+  // solhint-disable-next-line no-unused-vars
     bytes32[] calldata pools,
-    bytes calldata permit
-  ) external returns (uint256 returnAmount) {
-    _permit(address(srcToken), permit);
-    return unxswap(srcToken, amount, minReturn, pools);
-  }
-
-  /// @notice Performs swap using Uniswap exchange. Wraps and unwraps ETH if required.
-  /// Sending non-zero `msg.value` for anything but ETH swaps is prohibited
-  /// @param srcToken Source token
-  /// @param amount Amount of source tokens to swap
-  /// @param minReturn Minimal allowed returnAmount to make transaction commit
-  /// @param pools Pools chain used for swaps. Pools src and dst tokens should match to make swap happen
-  function unxswap(
-    IERC20 srcToken,
-    uint256 amount,
-    uint256 minReturn,
-    // solhint-disable-next-line no-unused-vars
-    bytes32[] calldata pools
-  ) public payable returns (uint256 returnAmount) {
+    address payer
+  ) internal returns (uint256) {
+    uint256 returnAmount;
     assembly {
-      // solhint-disable-line no-inline-assembly
+    // solhint-disable-line no-inline-assembly
       function reRevert() {
         returndatacopy(0, 0, returndatasize())
         revert(0, returndatasize())
@@ -204,7 +184,7 @@ contract UnxswapRouter is EthReceiver, Permitable {
 
         mstore(emptyPtr, _CLAIM_TOKENS_CALL_SELECTOR_32)
         mstore(add(emptyPtr, 0x4), srcToken)
-        mstore(add(emptyPtr, 0x24), caller())
+        mstore(add(emptyPtr, 0x24), payer)
         mstore(add(emptyPtr, 0x44), and(rawPair, _ADDRESS_MASK))
         mstore(add(emptyPtr, 0x64), amount)
         if iszero(call(gas(), _APPROVE_PROXY_32, 0, emptyPtr, 0x84, 0, 0)) {
@@ -287,6 +267,42 @@ contract UnxswapRouter is EthReceiver, Permitable {
     }
     pair = reserve ? IUniswapV2Pair(pair).token0() : IUniswapV2Pair(pair).token1();
     emit OrderRecord(address(srcToken), pair, msg.sender, amount, returnAmount);
+    return returnAmount;
+  }
+
+  /// @notice Same as `unoswap` but calls permit first,
+  /// allowing to approve token spending and make a swap in one transaction.
+  /// @param srcToken Source token
+  /// @param amount Amount of source tokens to swap
+  /// @param minReturn Minimal allowed returnAmount to make transaction commit
+  /// @param pools Pools chain used for swaps. Pools src and dst tokens should match to make swap happen
+  /// @param permit Should contain valid permit that can be used in `IERC20Permit.permit` calls.
+  /// See tests for examples
+  function unxswapWithPermit(
+    IERC20 srcToken,
+    uint256 amount,
+    uint256 minReturn,
+    bytes32[] calldata pools,
+    bytes calldata permit
+  ) external returns (uint256 returnAmount) {
+    _permit(address(srcToken), permit);
+    return unxswap(srcToken, amount, minReturn, pools);
+  }
+
+  /// @notice Performs swap using Uniswap exchange. Wraps and unwraps ETH if required.
+  /// Sending non-zero `msg.value` for anything but ETH swaps is prohibited
+  /// @param srcToken Source token
+  /// @param amount Amount of source tokens to swap
+  /// @param minReturn Minimal allowed returnAmount to make transaction commit
+  /// @param pools Pools chain used for swaps. Pools src and dst tokens should match to make swap happen
+  function unxswap(
+    IERC20 srcToken,
+    uint256 amount,
+    uint256 minReturn,
+    // solhint-disable-next-line no-unused-vars
+    bytes32[] calldata pools
+  ) public payable returns (uint256) {
+    return _unxswapInternal(srcToken, amount, minReturn, pools, msg.sender);
   }
 
   /// @notice Same as `unoswap` but calls permit first,
@@ -504,5 +520,4 @@ contract UnxswapRouter is EthReceiver, Permitable {
       amounts[i - 1] = (numerator / denominator) + 1;
     }
   }
-
 }
