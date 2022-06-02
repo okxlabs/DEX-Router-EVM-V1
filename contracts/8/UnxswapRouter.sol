@@ -47,40 +47,46 @@ contract Permitable {
 
 contract UnxswapRouter is EthReceiver, Permitable {
   uint256 private constant _CLAIM_TOKENS_CALL_SELECTOR_32 =
-    0x0a5ea46600000000000000000000000000000000000000000000000000000000;
+  0x0a5ea46600000000000000000000000000000000000000000000000000000000;
   uint256 private constant _WETH_DEPOSIT_CALL_SELECTOR_32 =
-    0xd0e30db000000000000000000000000000000000000000000000000000000000;
+  0xd0e30db000000000000000000000000000000000000000000000000000000000;
   uint256 private constant _WETH_WITHDRAW_CALL_SELECTOR_32 =
-    0x2e1a7d4d00000000000000000000000000000000000000000000000000000000;
+  0x2e1a7d4d00000000000000000000000000000000000000000000000000000000;
   uint256 private constant _ERC20_TRANSFER_CALL_SELECTOR_32 =
-    0xa9059cbb00000000000000000000000000000000000000000000000000000000;
+  0xa9059cbb00000000000000000000000000000000000000000000000000000000;
   uint256 public constant _ADDRESS_MASK = 0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff;
   uint256 public constant _REVERSE_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;
   uint256 private constant _WETH_MASK = 0x4000000000000000000000000000000000000000000000000000000000000000;
   uint256 private constant _NUMERATOR_MASK = 0x0000000000000000ffffffff0000000000000000000000000000000000000000;
   uint256 private constant _UNISWAP_PAIR_RESERVES_CALL_SELECTOR_32 =
-    0x0902f1ac00000000000000000000000000000000000000000000000000000000;
+  0x0902f1ac00000000000000000000000000000000000000000000000000000000;
   uint256 private constant _UNISWAP_PAIR_SWAP_CALL_SELECTOR_32 =
-    0x022c0d9f00000000000000000000000000000000000000000000000000000000;
+  0x022c0d9f00000000000000000000000000000000000000000000000000000000;
   uint256 private constant _DENOMINATOR = 1000000000;
   uint256 private constant _NUMERATOR_OFFSET = 160;
   /// @dev WETH address is network-specific and needs to be changed before deployment.
   /// It can not be moved to immutable as immutables are not supported in assembly
-  // ETH:   C02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
-  // BSC:   bb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c
-  // OKC:   8f8526dbfd6e38e3d8307702ca8469bae6c56c15
-  // LOCAL: 5FbDB2315678afecb367f032d93F642f64180aa3
-  uint256 public constant _WETH = 0x0000000000000000000000005FbDB2315678afecb367f032d93F642f64180aa3;
-  // ETH:   70cBb871E8f30Fc8Ce23609E9E0Ea87B6b222F58
-  // BSC:   d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98
-  // OKC:   E9BBD6eC0c9Ca71d3DcCD1282EE9de4F811E50aF
-  // LOCAL: e7f1725E7734CE288F8367e1Bb143E90bb3F0512
-  uint256 public constant _APPROVE_PROXY_32 = 0x000000000000000000000000e7f1725E7734CE288F8367e1Bb143E90bb3F0512;
-  // ETH:   5703B683c7F928b721CA95Da988d73a3299d4757
-  // BSC:   0B5f474ad0e3f7ef629BD10dbf9e4a8Fd60d9A48
-  // OKC:   d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98
-  // LOCAL: D49a0e9A4CD5979aE36840f542D2d7f02C4817Be
-  uint256 public constant _WNATIVE_RELAY_32 = 0x000000000000000000000000D49a0e9A4CD5979aE36840f542D2d7f02C4817Be;
+  // ETH:     C02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
+  // BSC:     bb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c
+  // OEC:     8f8526dbfd6e38e3d8307702ca8469bae6c56c15
+  // LOCAL:   5FbDB2315678afecb367f032d93F642f64180aa3
+  // POLYGON: 0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270
+  // AVAX:    B31f66AA3C1e785363F0875A1B74E27b85FD66c7
+  uint256 public constant _WETH = 0x0000000000000000000000000d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
+  // ETH:     70cBb871E8f30Fc8Ce23609E9E0Ea87B6b222F58
+  // BSC:     d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98
+  // OEC:     E9BBD6eC0c9Ca71d3DcCD1282EE9de4F811E50aF
+  // LOCAL:   e7f1725E7734CE288F8367e1Bb143E90bb3F0512
+  // POLYGON: 40aA958dd87FC8305b97f2BA922CDdCa374bcD7f
+  // AVAX:    70cBb871E8f30Fc8Ce23609E9E0Ea87B6b222F58
+  uint256 public constant _APPROVE_PROXY_32 = 0x00000000000000000000000040aA958dd87FC8305b97f2BA922CDdCa374bcD7f;
+  // ETH:     5703B683c7F928b721CA95Da988d73a3299d4757
+  // BSC:     0B5f474ad0e3f7ef629BD10dbf9e4a8Fd60d9A48
+  // OEC:     d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98
+  // LOCAL:   D49a0e9A4CD5979aE36840f542D2d7f02C4817Be
+  // POLYGON: f332761c673b59B21fF6dfa8adA44d78c12dEF09
+  // AVAX:    3B86917369B83a6892f553609F3c2F439C184e31
+  uint256 public constant _WNATIVE_RELAY_32 = 0x000000000000000000000000f332761c673b59B21fF6dfa8adA44d78c12dEF09;
 
   uint256 public constant _WEIGHT_MASK = 0x00000000000000000000ffff0000000000000000000000000000000000000000;
 
@@ -202,12 +208,12 @@ contract UnxswapRouter is EthReceiver, Permitable {
         let nextRawPair := calldataload(i)
 
         returnAmount := swap(
-          emptyPtr,
-          returnAmount,
-          and(rawPair, _ADDRESS_MASK),
-          and(rawPair, _REVERSE_MASK),
-          shr(_NUMERATOR_OFFSET, and(rawPair, _NUMERATOR_MASK)),
-          and(nextRawPair, _ADDRESS_MASK)
+        emptyPtr,
+        returnAmount,
+        and(rawPair, _ADDRESS_MASK),
+        and(rawPair, _REVERSE_MASK),
+        shr(_NUMERATOR_OFFSET, and(rawPair, _NUMERATOR_MASK)),
+        and(nextRawPair, _ADDRESS_MASK)
         )
 
         rawPair := nextRawPair
@@ -216,22 +222,22 @@ contract UnxswapRouter is EthReceiver, Permitable {
       switch and(rawPair, _WETH_MASK)
       case 0 {
         returnAmount := swap(
-          emptyPtr,
-          returnAmount,
-          and(rawPair, _ADDRESS_MASK),
-          and(rawPair, _REVERSE_MASK),
-          shr(_NUMERATOR_OFFSET, and(rawPair, _NUMERATOR_MASK)),
-          caller()
+        emptyPtr,
+        returnAmount,
+        and(rawPair, _ADDRESS_MASK),
+        and(rawPair, _REVERSE_MASK),
+        shr(_NUMERATOR_OFFSET, and(rawPair, _NUMERATOR_MASK)),
+        caller()
         )
       }
       default {
         returnAmount := swap(
-          emptyPtr,
-          returnAmount,
-          and(rawPair, _ADDRESS_MASK),
-          and(rawPair, _REVERSE_MASK),
-          shr(_NUMERATOR_OFFSET, and(rawPair, _NUMERATOR_MASK)),
-          address()
+        emptyPtr,
+        returnAmount,
+        and(rawPair, _ADDRESS_MASK),
+        and(rawPair, _REVERSE_MASK),
+        shr(_NUMERATOR_OFFSET, and(rawPair, _NUMERATOR_MASK)),
+        address()
         )
 
         mstore(emptyPtr, _ERC20_TRANSFER_CALL_SELECTOR_32)
@@ -299,7 +305,7 @@ contract UnxswapRouter is EthReceiver, Permitable {
     IERC20 srcToken,
     uint256 amount,
     uint256 minReturn,
-    // solhint-disable-next-line no-unused-vars
+  // solhint-disable-next-line no-unused-vars
     bytes32[] calldata pools
   ) public payable returns (uint256) {
     return _unxswapInternal(srcToken, amount, minReturn, pools, msg.sender);
@@ -334,7 +340,7 @@ contract UnxswapRouter is EthReceiver, Permitable {
     IERC20 srcToken,
     uint256 amountOut,
     uint256 amountInMax,
-    // solhint-disable-next-line no-unused-vars
+  // solhint-disable-next-line no-unused-vars
     bytes32[] calldata pools
   ) public payable returns (uint256 returnAmount) {
     uint256[] memory amountsIn = getAmountsIn(amountOut, pools);
@@ -342,7 +348,7 @@ contract UnxswapRouter is EthReceiver, Permitable {
     require(amount <= amountInMax, "UnxswapRouter: EXCESSIVE_INPUT_AMOUNT");
 
     assembly {
-      // solhint-disable-line no-inline-assembly
+    // solhint-disable-line no-inline-assembly
       function reRevert() {
         returndatacopy(0, 0, returndatasize())
         revert(0, returndatasize())
@@ -438,11 +444,11 @@ contract UnxswapRouter is EthReceiver, Permitable {
       switch and(rawPair, _WETH_MASK)
       case 0 {
         swap(
-          emptyPtr,
-          returnAmount,
-          and(rawPair, _ADDRESS_MASK),
-          and(rawPair, _REVERSE_MASK),
-          caller()
+        emptyPtr,
+        returnAmount,
+        and(rawPair, _ADDRESS_MASK),
+        and(rawPair, _REVERSE_MASK),
+        caller()
         )
       }
       default {
