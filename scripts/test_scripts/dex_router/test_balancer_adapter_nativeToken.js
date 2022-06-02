@@ -1,23 +1,21 @@
-const { assert } = require("chai");
 const { ethers } = require("hardhat");
 require("../../tools");
 const { getConfig } = require("../../config");
 tokenConfig = getConfig("eth")
-const { initDexRouter, packRawData, FOREVER } = require("./utils")
 require("./utils/test_multi_x_factory");
 
 async function main() {
 
-    //3.5 WETH -> AAVE BalancerV1:100%
+    // 3.5 WETH -> AAVE BalancerV1:100%
     try {
         console.log("\n===========(3.5 WETH -> AAVE BalancerV1:100%)===========")
-        var account = "0x260edfea92898a3c918a80212e937e6033f8489e"
-        var blockNumber = 14436483
-        var fromToken = tokenConfig.tokens.WETH
-        var toToken = tokenConfig.tokens.AAVE
-        var amountIn = 3.5
+        let account = "0x260edfea92898a3c918a80212e937e6033f8489e"
+        let blockNumber = 14436483
+        let fromToken = tokenConfig.tokens.WETH
+        let toToken = tokenConfig.tokens.AAVE
+        let amountIn = 3.5
 
-        var banlancerV1AAVEToWETHMoreInfo = ethers.utils.defaultAbiCoder.encode(
+        let banlancerV1AAVEToWETHMoreInfo = ethers.utils.defaultAbiCoder.encode(
             ["address", "address"],
             [
                 fromToken.baseTokenAddress,                               // from token address 
@@ -25,12 +23,12 @@ async function main() {
             ]
         )
 
-        var router1 = [
+        let router1 = [
             ["balancerV1", 10000, tokenConfig.tokens.WETH, tokenConfig.tokens.AAVE, banlancerV1AAVEWETHPoolAddress, AssertToSelf, banlancerV1AAVEToWETHMoreInfo],
         ];
 
-        var layer1 = [10000,[router1]];
-        var layer = [layer1];
+        let layer1 = [10000,[router1]];
+        let layer = [layer1];
 
         await executeMutilXAdapter(account, blockNumber, fromToken, toToken, amountIn, layer);
         
@@ -40,13 +38,13 @@ async function main() {
     //3.5 ETH -> AAVE BalancerV1:100%
     try {
         console.log("\n===========(3.5 ETH -> AAVE BalancerV1:100%)===========")
-        var account = "0x260edfea92898a3c918a80212e937e6033f8489e"
-        var blockNumber = 14436483
-        var fromToken = tokenConfig.tokens.WETH
-        var toToken = tokenConfig.tokens.AAVE
-        var amountIn = 3.5
+        let account = "0x260edfea92898a3c918a80212e937e6033f8489e"
+        let blockNumber = 14436483
+        let fromToken = tokenConfig.tokens.WETH
+        let toToken = tokenConfig.tokens.AAVE
+        let amountIn = 3.5
 
-        var banlancerV1WETHToAAVEMoreInfo = ethers.utils.defaultAbiCoder.encode(
+        let banlancerV1WETHToAAVEMoreInfo = ethers.utils.defaultAbiCoder.encode(
             ["address", "address"],
             [
                 fromToken.baseTokenAddress,                               // from token address 
@@ -54,30 +52,30 @@ async function main() {
             ]
         )
 
-        var router1 = [
+        let router1 = [
             ["balancerV1", 10000, tokenConfig.tokens.WETH, tokenConfig.tokens.AAVE, banlancerV1AAVEWETHPoolAddress, AssertToSelf, banlancerV1WETHToAAVEMoreInfo],
         ];
 
-        var layer1 = [10000,[router1]];
-        var layer = [layer1];
-        var isFromETH = true;
-        var isToETH = false;
+        let layer1 = [10000,[router1]];
+        let layer = [layer1];
+        let isFromETH = true;
+        let isToETH = false;
 
         await executeMutilXAdapter(account, blockNumber, fromToken, toToken, amountIn, layer, isFromETH, isToETH);
         
     } catch (error) {
         console.log(error)
     }
-    //3.5 AAVE -> ETH BalancerV1:100%
+    // 3.5 AAVE -> ETH BalancerV1:100%
     try {
         console.log("\n===========(3.5 AAVE -> ETH BalancerV1:100%)===========")
-        var account = "0x56178a0d5F301bAf6CF3e1Cd53d9863437345Bf9"
-        var blockNumber = 14659813
-        var fromToken = tokenConfig.tokens.AAVE
-        var toToken = tokenConfig.tokens.WETH
-        var amountIn = 3.5
+        let account = "0x56178a0d5F301bAf6CF3e1Cd53d9863437345Bf9"
+        let blockNumber = 14659813
+        let fromToken = tokenConfig.tokens.AAVE
+        let toToken = tokenConfig.tokens.WETH
+        let amountIn = 3.5
 
-        var banlancerV1WETHToAAVEMoreInfo = ethers.utils.defaultAbiCoder.encode(
+        let banlancerV1WETHToAAVEMoreInfo = ethers.utils.defaultAbiCoder.encode(
             ["address", "address"],
             [
                 fromToken.baseTokenAddress,                               // from token address 
@@ -85,14 +83,14 @@ async function main() {
             ]
         )
 
-        var router1 = [
+        let router1 = [
             ["balancerV1", 10000, tokenConfig.tokens.AAVE, tokenConfig.tokens.WETH, banlancerV1AAVEWETHPoolAddress, AssertToSelf, banlancerV1WETHToAAVEMoreInfo],
         ];
 
-        var layer1 = [10000,[router1]];
-        var layer = [layer1];
-        var isFromETH = false;
-        var isToETH = true;
+        let layer1 = [10000,[router1]];
+        let layer = [layer1];
+        let isFromETH = false;
+        let isToETH = true;
 
         await executeMutilXAdapter(account, blockNumber, fromToken, toToken, amountIn, layer, isFromETH, isToETH);
         
