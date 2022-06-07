@@ -194,6 +194,36 @@ module.exports = {
           runs: 200
         },
       },
+    },
+    arb: {
+      url: "https://rpc.ankr.com/arbitrum",
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      },
+    },
+    op: {
+      url: "https://rpc.ankr.com/optimism",
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      },
+    },
+    fantom: {
+      url: "https://rpc.ankr.com/fantom",
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      },
     }
   },
   paths: {
