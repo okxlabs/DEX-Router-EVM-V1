@@ -6,6 +6,7 @@ const eth = require('./eth')
 const polygon = require('./polygon')
 const avax = require('./avax')
 const ftm = require('./ftm')
+const arb = require('./arb')
 
 let config
 
@@ -23,6 +24,8 @@ if (network.name === 'okc') {
     config = avax
 } else if (network.name === 'ftm') {
     config = ftm
+} else if (network.name === 'arb') {
+    config = arb
 }
 
 module.exports = config
