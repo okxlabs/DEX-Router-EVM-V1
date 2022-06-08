@@ -206,7 +206,7 @@ module.exports = {
       },
     },
     op: {
-      url: "https://rpc.ankr.com/optimism",
+      url: "https://mainnet.optimism.io",
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
