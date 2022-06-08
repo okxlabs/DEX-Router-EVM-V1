@@ -7,6 +7,7 @@ const polygon = require('./polygon')
 const avax = require('./avax')
 const ftm = require('./ftm')
 const arb = require('./arb')
+const op = require('./op')
 
 let config
 
@@ -26,6 +27,8 @@ if (network.name === 'okc') {
     config = ftm
 } else if (network.name === 'arb') {
     config = arb
+} else if (network.name === 'op') {
+    config = op
 }
 
 module.exports = config
