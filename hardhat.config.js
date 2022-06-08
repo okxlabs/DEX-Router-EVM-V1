@@ -215,7 +215,7 @@ module.exports = {
         },
       },
     },
-    fantom: {
+    ftm: {
       url: "https://rpc.ankr.com/fantom",
       accounts: [`${PRIVATE_KEY}`],
       settings: {

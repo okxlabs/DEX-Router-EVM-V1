@@ -14,18 +14,18 @@ async function main() {
     deployed.base.tokenApproveProxy
   )
 
-  await tokenApprove.setApproveProxy(deployed.base.tokenApproveProxy);
-  console.log("tokenApprove init");
+  // await tokenApprove.setApproveProxy(deployed.base.tokenApproveProxy);
+  // console.log("tokenApprove init");
 
-  await tokenApproveProxy.addProxy(deployed.base.dexRouter);
-  await tokenApproveProxy.setTokenApprove(deployed.base.tokenApprove);
-  console.log("tokenApproveProxy add dexProxy")
+  // await tokenApproveProxy.addProxy(deployed.base.dexRouter);
+  // await tokenApproveProxy.setTokenApprove(deployed.base.tokenApprove);
+  // console.log("tokenApproveProxy add dexProxy")
 
-  const dexRouter = await ethers.getContractAt(
-    "DexRouter",
-    deployed.base.dexRouter
-  )
-  await dexRouter.setApproveProxy(tokenApproveProxy.address);
+  // const dexRouter = await ethers.getContractAt(
+  //   "DexRouter",
+  //   deployed.base.dexRouter
+  // )
+  // await dexRouter.setApproveProxy(tokenApproveProxy.address);
 
   const wNativeRelayer = await ethers.getContractAt(
     "WNativeRelayer",
