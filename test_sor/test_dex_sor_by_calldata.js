@@ -20,10 +20,9 @@ describe("Smart route path test by calldata", function() {
 
   beforeEach(async () => {
 
-    await setForkBlockNumber(14874123);
-    const block = await ethers.provider.getBlock(14874123);
-
-    await setNextBlockTimeStamp(block.timestamp + 60);
+    await setForkBlockNumber(14874122);
+    // const block = await ethers.provider.getBlock(14874123);
+    // await setNextBlockTimeStamp(block.timestamp + 60);
 
     const accountAddress = "0x55FE002aefF02F77364de339a1292923A15844B8";
     await startMockAccount([accountAddress]);
