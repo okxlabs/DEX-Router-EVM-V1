@@ -42,10 +42,15 @@ setNonce = async (user, nonce) => {
     ]);
 }
 
+setNextBlockTimeStamp = async (timestamp) => {
+    await network.provider.send("evm_setNextBlockTimestamp", [timestamp]);
+}
+
 module.exports = {
     setForkBlockNumber,
     startMockAccount,
     stopMockAccount,
     setBalance,
-    setNonce
+    setNonce,
+    setNextBlockTimeStamp
 }
