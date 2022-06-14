@@ -9,5 +9,6 @@ abi/
 *.iml
 *.log
 .vscode
+.idea/
 
 .openzeppelin/unknown-31337.json
