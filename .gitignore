@@ -10,5 +10,6 @@ abi/
 *.log
 .vscode
 .idea/
+.DS_Store
 
 .openzeppelin/unknown-31337.json
