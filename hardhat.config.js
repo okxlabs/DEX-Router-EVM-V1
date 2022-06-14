@@ -131,7 +131,7 @@ module.exports = {
         },
       }
     },
-    cronosmain: {
+    cro: {
       url: "https://evm-cronos.crypto.org",
       accounts: [`${PRIVATE_KEY}`],
       settings: {
@@ -141,7 +141,7 @@ module.exports = {
         },
       },
     },
-    cronostest: {
+    crotest: {
       url: "https://cronos-testnet-3.crypto.org:8545",
       accounts: [`${PRIVATE_KEY}`],
       network_id: "*",
