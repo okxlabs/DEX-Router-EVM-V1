@@ -6,7 +6,7 @@ require('hardhat-contract-sizer');
 require("@nomiclabs/hardhat-solhint");
 require('dotenv').config();
 
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
 
 module.exports = {
   solidity: {
