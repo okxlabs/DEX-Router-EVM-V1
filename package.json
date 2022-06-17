@@ -26,7 +26,8 @@
     "hardhat-abi-exporter": "^2.2.1",
     "hardhat-gas-reporter": "^1.0.7",
     "hardhat-log-remover": "^2.0.2",
-    "prettier-plugin-solidity": "^1.0.0-beta.19"
+    "prettier-plugin-solidity": "^1.0.0-beta.19",
+    "solidity-coverage": "^0.7.21"
   },
   "dependencies": {
     "hardhat-contract-sizer": "^2.4.0"
