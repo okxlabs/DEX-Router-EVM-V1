@@ -1,7 +1,8 @@
-const { ethers } = require('hardhat')
+const { ethers, network } = require('hardhat')
 const { BigNumber } = require('ethers')
 const { expect } = require('chai')
 const { getPermitDigest, sign } = require('./signatures')
+const Web3 = require("web3");
 
 // 
 // You need to change the address in the Unxswap contract before running the test case
@@ -72,7 +73,8 @@ describe("Unoswap swap test", function() {
       [pool0]
     );
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
-    expect(await usdt.balanceOf(alice.address)).to.be.equal("3984027924159612865972");
+    const amount = getAmountOut(fromTokenAmount, "4000000000000000000000000", "100000000000000000000");
+    expect(await usdt.balanceOf(alice.address)).to.be.equal(amount);
   });
 
   it("WETH token single pool exchange", async () => {
@@ -188,6 +190,7 @@ describe("Unoswap swap test", function() {
       }
     );
 
+
     // const rev = fromTokenAmount * fee * r0 / (r1 * 1000 + fromTokenAmount * fee);
     expect(await usdt.balanceOf(alice.address)).to.be.equal("298802094311970964947");
   });
@@ -231,10 +234,10 @@ describe("Unoswap swap test", function() {
       0,
       [pool0]
     );
-    
+
     const costGas = await getTransactionCost(txResult)
     const afterBalance = await ethers.provider.getBalance(alice.address);
-    
+
     // const rev = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
     expect(afterBalance).to.be.equal(BigNumber.from('987158034397061298').add(BigNumber.from(beforeBalance)).sub(costGas));
   })
@@ -296,7 +299,7 @@ describe("Unoswap swap test", function() {
         s
       ]
     )
-    
+
     const beforeBalance = await usdt.balanceOf(owner.address);
     await dexRouter.connect(owner).unxswapWithPermit(
       sourceToken.address,
@@ -315,6 +318,113 @@ describe("Unoswap swap test", function() {
     await expect(
       sourceToken.permit(approve.owner, approve.spender, approve.value, deadline, v, r, s)
     ).to.be.revertedWith('ERC20Permit: invalid signature')
+  });
+
+  it("unxswapByXBridge source token ETH to usdt", async () => {
+    const web3 = new Web3(network.provider);
+    const token0 = await lpWETHUSDT.token0();
+    const reserves = await lpWETHUSDT.getReserves();
+    if (token0 == weth.address) {
+      expect(reserves[1]).to.be.eq("300000000000000000000000");
+      expect(reserves[0]).to.be.eq("100000000000000000000");
+    } else {
+      expect(reserves[0]).to.be.eq("300000000000000000000000");
+      expect(reserves[1]).to.be.eq("100000000000000000000");
+    }
+
+    sourceToken = ETH;
+    targetToken = usdt;
+    const fromTokenAmount = ethers.utils.parseEther('0.1');
+    // 0x4 WETH -> ETH 0x8 reverse pair
+    flag = token0 == weth.address ? '0x0' : '0x8'
+    poolAddr = lpWETHUSDT.address.toString().replace('0x', '');
+    poolFee = Number(997000000).toString(16).replace('0x', '');
+    pool0 = flag + '000000000000000' + poolFee + poolAddr;
+    // construct calldata
+    let fourBytes = web3.eth.abi.encodeFunctionSignature('unxswapByXBridge(address,uint256,uint256,bytes32[])');
+    let parameters = web3.eth.abi.encodeParameters(
+      ['address','uint256','uint256','bytes32[]'],
+      [
+       '0x0000000000000000000000000000000000000000',
+       fromTokenAmount,
+       0,
+       [pool0]
+      ]
+    );
+    let calldata = fourBytes + parameters.replace('0x', '');
+    let xBridge = await initMockXBridge();
+    expect(await usdt.balanceOf(xBridge.address)).to.be.equal(0);
+    let request = {
+      adaptorId : 2,
+      fromToken : '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+      toToken : usdt.address,
+      to : alice.address,
+      toChainId : 56,
+      fromTokenAmount : fromTokenAmount,
+      toTokenMinAmount : 0,
+      toChainToTokenMinAmount : 0,
+      data : ethers.utils.defaultAbiCoder.encode(["address", "uint64", "uint32"], [usdt.address, 0, 501]),
+      dexData : calldata,
+    };
+    await xBridge.connect(alice).swapAndBridgeToImprove(request, {value: ethers.utils.parseEther('0.1')});
+    expect(await usdt.balanceOf(xBridge.address)).to.be.equal("298802094311970964947");
+  });
+
+  it("unxswapByXBridge source token WETH to usdt", async () => {
+    const web3 = new Web3(network.provider);
+    const token0 = await lpWETHUSDT.token0();
+    reserves = await lpWETHUSDT.getReserves();
+    if (token0 == weth.address) {
+      expect(reserves[1]).to.be.eq("300000000000000000000000");
+      expect(reserves[0]).to.be.eq("100000000000000000000");
+    } else {
+      expect(reserves[0]).to.be.eq("300000000000000000000000");
+      expect(reserves[1]).to.be.eq("100000000000000000000");
+    }
+
+    sourceToken = weth;
+    targetToken = usdt;
+    const fromTokenAmount = ethers.utils.parseEther('0.1');
+    // 0x4 WETH -> ETH 0x8 reverse pair
+    flag = sourceToken.address == token0 ? '0x0' : "0x8";
+    poolAddr = lpWETHUSDT.address.toString().replace('0x', '');
+    poolFee = Number(997000000).toString(16).replace('0x', '');
+    pool0 = flag + '000000000000000' + poolFee + poolAddr;
+
+    // construct calldata
+    let fourBytes = web3.eth.abi.encodeFunctionSignature('unxswapByXBridge(address,uint256,uint256,bytes32[])');
+    let parameters = web3.eth.abi.encodeParameters(
+      ['address','uint256','uint256','bytes32[]'],
+      [
+        sourceToken.address,
+        fromTokenAmount,
+        0,
+        [pool0]
+      ]
+    );
+    let calldata = fourBytes + parameters.replace('0x', '');
+    let xBridge = await initMockXBridge();
+    expect(await usdt.balanceOf(xBridge.address)).to.be.equal(0);
+    let request = {
+      adaptorId : 2,
+      fromToken : sourceToken.address,
+      toToken : targetToken.address,
+      to : alice.address,
+      toChainId : 56,
+      fromTokenAmount : fromTokenAmount,
+      toTokenMinAmount : 0,
+      toChainToTokenMinAmount : 0,
+      data : ethers.utils.defaultAbiCoder.encode(["address", "uint64", "uint32"], [usdt.address, 0, 501]),
+      dexData : calldata,
+    };
+
+    await sourceToken.connect(bob).transfer(alice.address, fromTokenAmount);
+    await sourceToken.connect(alice).approve(tokenApprove.address, fromTokenAmount);
+
+    await xBridge.connect(alice).swapAndBridgeToImprove(request);
+
+    // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
+    expect(await usdt.balanceOf(xBridge.address)).to.be.equal("298802094311970964947");
   });
 
   const initMockTokens = async () => {
@@ -450,8 +560,28 @@ describe("Unoswap swap test", function() {
     await tokenApproveProxy.setTokenApprove(tokenApprove.address);
   }
 
+  const initMockXBridge = async () => {
+    const XBridgeMock = await ethers.getContractFactory("MockXBridge");
+    let xBridge = await upgrades.deployProxy(XBridgeMock);
+    await xBridge.deployed();
+    await xBridge.setDexRouter(dexRouter.address);
+    await dexRouter.setXBridge(xBridge.address);
+    return xBridge;
+  }
+
   const getTransactionCost = async (txResult) => {
     const cumulativeGasUsed = (await txResult.wait()).cumulativeGasUsed;
     return BigNumber.from(txResult.gasPrice).mul(BigNumber.from(cumulativeGasUsed));
   };
+
+  const getAmountOut = function(amountIn, r0, r1) {
+    return ethers.BigNumber.from(amountIn.toString())
+      .mul(ethers.BigNumber.from('997'))
+      .mul(ethers.BigNumber.from(r0))
+      .div(
+        ethers.BigNumber.from(r1)
+        .mul(ethers.BigNumber.from('1000'))
+        .add(ethers.BigNumber.from(amountIn.toString()).mul(ethers.BigNumber.from('997')))
+      );
+  }
 });

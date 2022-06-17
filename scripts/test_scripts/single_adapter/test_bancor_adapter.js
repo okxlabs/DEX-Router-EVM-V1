@@ -237,15 +237,80 @@ async function executeBNT2ETH() {
     console.log("after bnt  balance: " + await BNT.balanceOf(bancorAdapter.address));
 }
 
+
+
+async function debug() {
+
+    // debug address(this): 0xf090f16dec8b6d24082edd25b1c8d26f2bc86128
+    // debug poolAddress: 0x79d89b87468a59b9895b31e3a373dc5973d60065
+    // debug adapter fromToken address: 0xdac17f958d2ee523a2206206994597c13d831ec7
+    // debug adapter fromToken balance Of: 1500862747328
+    // debug sourceToken: 0xdac17f958d2ee523a2206206994597c13d831ec7
+    // debug targetToken: 0x1f573d6fb3f13d689ff844b4ce37794d79a7ff1c
+  
+    const poolAddress = "0x79d89b87468a59b9895b31e3a373dc5973d60065";
+    const accountAddress = "0xeea81c4416d71cef071224611359f6f99a4c4294";
+    await startMockAccount([accountAddress]);
+    const account = await ethers.getSigner(accountAddress);
+  
+  
+    sourceToken = await ethers.getContractAt(
+      "MockERC20",
+      "0xdac17f958d2ee523a2206206994597c13d831ec7"
+    )
+    
+    targetToken = await ethers.getContractAt(
+      "MockERC20",
+      "0x1f573d6fb3f13d689ff844b4ce37794d79a7ff1c"
+    )
+  
+    WETH = await ethers.getContractAt(
+        "MockERC20",
+        tokenConfig.tokens.WETH.baseTokenAddress
+    )
+
+    const ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
+    const BancorNetwork = "0x2F9EC37d6CcFFf1caB21733BdaDEdE11c823cCB0";
+
+    BancorAdapter = await ethers.getContractFactory("BancorAdapter");
+    BancorAdapter = await BancorAdapter.deploy(BancorNetwork, WETH.address);
+    await BancorAdapter.deployed();
+  
+    console.log("before sourceToken Balance: " + await sourceToken.balanceOf(account.address));
+    await sourceToken.connect(account).transfer(BancorAdapter.address, 1500862747328);
+  
+    console.log("before sourceToken Balance: " + await sourceToken.balanceOf(BancorAdapter.address));
+    console.log("before targetToken Balance: " + await targetToken.balanceOf(account.address));
+  
+    // WETH to LPAL token pool vault
+    rxResult = await BancorAdapter.sellBase(
+      account.address,                                // receive token address
+      poolAddress,   // AAVE-WETH Pool
+      ethers.utils.defaultAbiCoder.encode(
+        ["address", "address"],
+        [
+          "0xdac17f958d2ee523a2206206994597c13d831ec7",                               // from token address 
+          "0x1f573d6fb3f13d689ff844b4ce37794d79a7ff1c"                               // to token address
+        ]
+      )
+    );
+    // console.log(rxResult);
+  
+    console.log("after usdt balance: " + await sourceToken.balanceOf(account.address));
+    console.log("after bnt  balance: " + await targetToken.balanceOf(account.address));
+  
+  }
 async function main() {
-    // ERC20 -> ERC20
-    await executeMPH2BNT();
+    // // // ERC20 -> ERC20
+    // await executeMPH2BNT();
 
-    // WETH -> ETH -> ERC20
-    await executeETH2BNT();
+    // // WETH -> ETH -> ERC20
+    // await executeETH2BNT();
 
-    // ERC20 -> ETH -> WETH
-    await executeBNT2ETH();
+    // // ERC20 -> ETH -> WETH
+    // await executeBNT2ETH();
+
+    await debug();
 }
 
 main()

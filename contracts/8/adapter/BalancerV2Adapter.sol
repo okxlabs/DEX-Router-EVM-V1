@@ -7,7 +7,6 @@ import "../interfaces/IBalancerV2Vault.sol";
 import "../interfaces/IWETH.sol";
 
 import "../libraries/SafeERC20.sol";
-import "hardhat/console.sol";
 
 // for two tokens
 contract BalancerV2Adapter is IAdapter {

@@ -3,6 +3,7 @@ require("@nomiclabs/hardhat-solhint");
 require('hardhat-abi-exporter');
 require("hardhat-gas-reporter");
 require('hardhat-contract-sizer');
+require('hardhat-log-remover');
 require("@openzeppelin/hardhat-upgrades");
 require('dotenv').config();
 require("solidity-coverage");
@@ -131,7 +132,7 @@ module.exports = {
         },
       }
     },
-    cronosmain: {
+    cro: {
       url: "https://evm-cronos.crypto.org",
       accounts: [`${PRIVATE_KEY}`],
       settings: {
@@ -141,7 +142,7 @@ module.exports = {
         },
       },
     },
-    cronostest: {
+    crotest: {
       url: "https://cronos-testnet-3.crypto.org:8545",
       accounts: [`${PRIVATE_KEY}`],
       network_id: "*",
@@ -187,6 +188,36 @@ module.exports = {
     },
     polygontest: {
       url: "https://rpc-mumbai.maticvigil.com/",
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      },
+    },
+    arb: {
+      url: "https://rpc.ankr.com/arbitrum",
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      },
+    },
+    op: {
+      url: "https://mainnet.optimism.io",
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      },
+    },
+    ftm: {
+      url: "https://rpc.ankr.com/fantom",
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
