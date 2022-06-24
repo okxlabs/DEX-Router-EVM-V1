@@ -42,10 +42,10 @@ describe("Smart route path test", function() {
     ]
     for (let i = 0; i < pairs.length; i++) {
       await addLiquidity(
-        pairs[i][0],
-        pairs[i][1],
-        pairs[i][2], 
-        pairs[i][3],
+          pairs[i][0],
+          pairs[i][1],
+          pairs[i][2],
+          pairs[i][3],
       );
     }
   });
@@ -102,10 +102,10 @@ describe("Smart route path test", function() {
       deadLine,
     ]
     await dexRouter.connect(alice).smartSwap(
-      baseRequest,
-      [fromTokenAmount],
-      [layer1],
-      []
+        baseRequest,
+        [fromTokenAmount],
+        [layer1],
+        []
     );
 
     // expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
@@ -172,10 +172,10 @@ describe("Smart route path test", function() {
       deadLine,
     ]
     await dexRouter.connect(alice).smartSwap(
-      baseRequest,
-      [fromTokenAmount],
-      [layer1],
-      []
+        baseRequest,
+        [fromTokenAmount],
+        [layer1],
+        []
     );
 
     expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
@@ -271,10 +271,10 @@ describe("Smart route path test", function() {
       deadLine,
     ]
     rxResult = await dexRouter.connect(alice).smartSwap(
-      baseRequest,
-      [fromTokenAmount1, fromTokenAmount2],
-      [layer1, layer2],
-      []
+        baseRequest,
+        [fromTokenAmount1, fromTokenAmount2],
+        [layer1, layer2],
+        []
     );
     // console.log(rxResult.data)
     expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
@@ -348,10 +348,10 @@ describe("Smart route path test", function() {
       deadLine
     ]
     rxResult = await dexRouter.connect(alice).smartSwap(
-      baseRequest,
-      [fromTokenAmount],
-      [layer1],
-      []
+        baseRequest,
+        [fromTokenAmount],
+        [layer1],
+        []
     );
     // console.log(rxResult.data)
     // wbtc -> weth
@@ -504,10 +504,10 @@ describe("Smart route path test", function() {
       deadLine,
     ]
     await dexRouter.connect(alice).smartSwap(
-      baseRequest,
-      [fromTokenAmount1, fromTokenAmount2, fromTokenAmount3],
-      [layer1, layer2, layer3],
-      []
+        baseRequest,
+        [fromTokenAmount1, fromTokenAmount2, fromTokenAmount3],
+        [layer1, layer2, layer3],
+        []
     );
 
     expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
@@ -515,7 +515,7 @@ describe("Smart route path test", function() {
   });
 
   it("mixSwap with single path and source token is native token", async () => {
-    expect(await dexRouter.weth()).to.be.equal(weth.address);
+    expect(await dexRouter._WETH()).to.be.equal(weth.address);
     // ETH -> WBTC
     ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
 
@@ -552,13 +552,13 @@ describe("Smart route path test", function() {
     ]
 
     rxResult = await dexRouter.connect(alice).smartSwap(
-      baseRequest,
-      [fromTokenAmount],
-      [layer1],
-      [],
-      {
-        value: fromTokenAmount
-      }
+        baseRequest,
+        [fromTokenAmount],
+        [layer1],
+        [],
+        {
+          value: fromTokenAmount
+        }
     );
 
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
@@ -572,6 +572,7 @@ describe("Smart route path test", function() {
   it("mixSwap with single path and target token is native token", async () => {
     await dexRouter.setWNativeRelayer(wNativeRelayer.address);
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
+
     // wbtc -> eth
     ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
 
@@ -608,12 +609,12 @@ describe("Smart route path test", function() {
       deadLine,
     ]
     rxResult = await dexRouter.connect(alice).smartSwap(
-      baseRequest,
-      [fromTokenAmount],
-      [layer1],
-      []
+        baseRequest,
+        [fromTokenAmount],
+        [layer1],
+        []
     );
-    
+
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
     // wbtc -> weth 1:10
     // 10000000000000000000 * 997 * 10000000000000000000000 / (1000000000000000000000 * 1000 +  10000000000000000000 * 997) = 98715803439706130000
@@ -635,7 +636,7 @@ describe("Smart route path test", function() {
     const minReturnAmount = ethers.utils.parseEther('0');
     const deadLine = FOREVER;
 
-      // node1
+    // node1
     const mixAdapter1 = [
       uniAdapter.address
     ];
@@ -648,7 +649,7 @@ describe("Smart route path test", function() {
     const extraData1 = ['0x'];
     const router1 = [mixAdapter1, assertTo1, rawData1, extraData1, weth.address];
 
-      // layer1
+    // layer1
     const layer1 = [router1];
 
     const baseRequest = [
@@ -770,46 +771,46 @@ describe("Smart route path test", function() {
     await token0.connect(bob).approve(router.address, amount0);
     await token1.connect(bob).approve(router.address, amount1);
     await router.connect(bob).addLiquidity(
-      token0.address,
-      token1.address,
-      amount0, 
-      amount1, 
-      '0', 
-      '0', 
-      bob.address,
-      FOREVER
+        token0.address,
+        token1.address,
+        amount0,
+        amount1,
+        '0',
+        '0',
+        bob.address,
+        FOREVER
     );
   }
 
   const initMockTokens = async () => {
     const MockERC20 = await ethers.getContractFactory("MockERC20");
-  
+
     usdt = await MockERC20.deploy('USDT', 'USDT', ethers.utils.parseEther('10000000000'));
     await usdt.deployed();
-  
+
     wbtc = await MockERC20.deploy('WBTC', 'WBTC', ethers.utils.parseEther('10000000000'));
     await wbtc.deployed();
-  
+
     dot = await MockERC20.deploy('DOT', 'DOT', ethers.utils.parseEther('10000000000'));
     await dot.deployed();
-  
+
     bnb = await MockERC20.deploy('BNB', 'BNB', ethers.utils.parseEther('10000000000'));
     await bnb.deployed();
-  
+
     usdc = await MockERC20.deploy('USDC', 'USDC', ethers.utils.parseEther('10000000000'));
     await usdc.deployed();
 
     const MEMEERC20 = await ethers.getContractFactory("CustomERC20");
     memeToken = await MEMEERC20.deploy(
-      owner.address,
-      ethers.utils.parseEther('10000000000'),
-      'YYDS',
-      'YYDS', 
-      18,
-      100,
-      10,
-      liquidity.address,
-      false
+        owner.address,
+        ethers.utils.parseEther('10000000000'),
+        'YYDS',
+        'YYDS',
+        18,
+        100,
+        10,
+        liquidity.address,
+        false
     );
     await memeToken.deployed();
   }
@@ -817,16 +818,16 @@ describe("Smart route path test", function() {
   const dispatchAsset = async () => {
     await usdt.transfer(alice.address, ethers.utils.parseEther('0'));
     await usdt.transfer(bob.address, ethers.utils.parseEther('100000000'));
-  
+
     await wbtc.transfer(alice.address, ethers.utils.parseEther('100'));
     await wbtc.transfer(bob.address, ethers.utils.parseEther('100000000'));
-  
+
     await dot.transfer(alice.address, ethers.utils.parseEther('0'));
     await dot.transfer(bob.address, ethers.utils.parseEther('100000000'));
-  
+
     await bnb.transfer(alice.address, ethers.utils.parseEther('100'));
     await bnb.transfer(bob.address, ethers.utils.parseEther('100000000'));
-  
+
     await usdc.transfer(alice.address, ethers.utils.parseEther('0'));
     await usdc.transfer(bob.address, ethers.utils.parseEther('100000000'));
 
@@ -911,7 +912,7 @@ describe("Smart route path test", function() {
 
     DexRouter = await ethers.getContractFactory("DexRouter");
     dexRouter = await upgrades.deployProxy(
-      DexRouter
+        DexRouter
     )
     await dexRouter.deployed();
     await dexRouter.setApproveProxy(tokenApproveProxy.address);
@@ -919,8 +920,7 @@ describe("Smart route path test", function() {
     await tokenApproveProxy.addProxy(dexRouter.address);
     await tokenApproveProxy.setTokenApprove(tokenApprove.address);
 
-    await dexRouter.setWETH(weth.address)
-    await dexRouter.setWNativeRelayer(wNativeRelayer.address);
+
     await wNativeRelayer.setCallerOk([dexRouter.address], [true]);
   }
 
@@ -940,13 +940,13 @@ describe("Smart route path test", function() {
   // fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997)
   const getAmountOut = function(amountIn, r0, r1) {
     return ethers.BigNumber.from(amountIn.toString())
-      .mul(ethers.BigNumber.from('997'))
-      .mul(ethers.BigNumber.from(r0))
-      .div(
-        ethers.BigNumber.from(r1)
-        .mul(ethers.BigNumber.from('1000'))
-        .add(ethers.BigNumber.from(amountIn.toString()).mul(ethers.BigNumber.from('997')))
-      );
+        .mul(ethers.BigNumber.from('997'))
+        .mul(ethers.BigNumber.from(r0))
+        .div(
+            ethers.BigNumber.from(r1)
+                .mul(ethers.BigNumber.from('1000'))
+                .add(ethers.BigNumber.from(amountIn.toString()).mul(ethers.BigNumber.from('997')))
+        );
   }
 
   const getTransactionCost = async (txResult) => {

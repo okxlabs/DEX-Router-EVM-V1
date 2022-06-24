@@ -4,9 +4,9 @@ const { expect } = require('chai')
 const { getPermitDigest, sign } = require('./signatures')
 const Web3 = require("web3");
 
-// 
+//
 // You need to change the address in the Unxswap contract before running the test case
-// 
+//
 describe("Unoswap swap test", function() {
 
   const ETH = { address: '0x0000000000000000000000000000000000000000' }
@@ -36,10 +36,10 @@ describe("Unoswap swap test", function() {
     ]
     for (let i = 0; i < pairs.length; i++) {
       await addLiquidity(
-        pairs[i][0],
-        pairs[i][1],
-        pairs[i][2], 
-        pairs[i][3],
+          pairs[i][0],
+          pairs[i][1],
+          pairs[i][2],
+          pairs[i][3],
       );
     }
   });
@@ -67,10 +67,10 @@ describe("Unoswap swap test", function() {
     await sourceToken.connect(alice).approve(tokenApprove.address, fromTokenAmount);
 
     await dexRouter.connect(alice).unxswap(
-      sourceToken.address,
-      fromTokenAmount,
-      0,
-      [pool0]
+        sourceToken.address,
+        fromTokenAmount,
+        0,
+        [pool0]
     );
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
     const amount = getAmountOut(fromTokenAmount, "4000000000000000000000000", "100000000000000000000");
@@ -101,10 +101,10 @@ describe("Unoswap swap test", function() {
     await sourceToken.connect(alice).approve(tokenApprove.address, fromTokenAmount);
 
     await dexRouter.connect(alice).unxswap(
-      sourceToken.address,
-      fromTokenAmount,
-      0,
-      [pool0]
+        sourceToken.address,
+        fromTokenAmount,
+        0,
+        [pool0]
     );
 
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
@@ -151,10 +151,10 @@ describe("Unoswap swap test", function() {
     await sourceToken.connect(alice).approve(tokenApprove.address, fromTokenAmount);
 
     await dexRouter.connect(alice).unxswap(
-      sourceToken.address,
-      fromTokenAmount,
-      0,
-      [pool0, pool1]
+        sourceToken.address,
+        fromTokenAmount,
+        0,
+        [pool0, pool1]
     );
     // const rev = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
     expect(await weth.balanceOf(alice.address)).to.be.equal("1306723925020281644");
@@ -181,13 +181,13 @@ describe("Unoswap swap test", function() {
     pool0 = flag + '000000000000000' + poolFee + poolAddr;
     // await sourceToken.connect(bob).approve(tokenApprove.address, fromTokenAmount);
     await dexRouter.connect(alice).unxswap(
-      sourceToken.address,
-      fromTokenAmount,
-      0,
-      [pool0],
-      {
-        value: ethers.utils.parseEther('0.1')
-      }
+        sourceToken.address,
+        fromTokenAmount,
+        0,
+        [pool0],
+        {
+          value: ethers.utils.parseEther('0.1')
+        }
     );
 
 
@@ -201,7 +201,6 @@ describe("Unoswap swap test", function() {
     wNativeRelayer = await WNativeRelayer.deploy();
     await wNativeRelayer.deployed();
     await wNativeRelayer.initialize(weth.address);
-    await dexRouter.setWETH(weth.address)
     await wNativeRelayer.setCallerOk([dexRouter.address], [true]);
     expect(await dexRouter._WNATIVE_RELAY_32()).to.be.equal(wNativeRelayer.address);
 
@@ -229,10 +228,10 @@ describe("Unoswap swap test", function() {
 
     const beforeBalance = await ethers.provider.getBalance(alice.address);
     txResult = await dexRouter.connect(alice).unxswap(
-      sourceToken.address,
-      fromTokenAmount,
-      0,
-      [pool0]
+        sourceToken.address,
+        fromTokenAmount,
+        0,
+        [pool0]
     );
 
     const costGas = await getTransactionCost(txResult)
@@ -247,8 +246,8 @@ describe("Unoswap swap test", function() {
     const token0 = await lpDOTUSDT.token0();
     reserves = await lpDOTUSDT.getReserves();
     if (await lpDOTUSDT.token1() == dot.address) {
-      expect(reserves[1]).to.be.eq("100000000000000000000");
-      expect(reserves[0]).to.be.eq("3000000000000000000000");
+      expect(reserves[1]).to.be.eq("4000000000000000000000000");
+      expect(reserves[0]).to.be.eq("100000000000000000000");
     }
 
     sourceToken = dot;
@@ -271,7 +270,7 @@ describe("Unoswap swap test", function() {
     const deadline = 200000000000000;
     // Get the EIP712 digest
     const digest = getPermitDigest(
-      await sourceToken.name(), sourceToken.address, chainId, approve, nonce, deadline
+        await sourceToken.name(), sourceToken.address, chainId, approve, nonce, deadline
     )
 
     const mnemonic = "test test test test test test test test test test test junk"
@@ -288,25 +287,25 @@ describe("Unoswap swap test", function() {
     //  479631220d2549f7f658f8534ff412c3e90fc6a355458342bfd08edcba9e0081
 
     const signdata = await ethers.utils.defaultAbiCoder.encode(
-      ['address', 'address', 'uint256', 'uint256', 'uint8', 'bytes32', 'bytes32'],
-      [
-        approve.owner,
-        approve.spender,
-        approve.value,
-        deadline,
-        v,
-        r,
-        s
-      ]
+        ['address', 'address', 'uint256', 'uint256', 'uint8', 'bytes32', 'bytes32'],
+        [
+          approve.owner,
+          approve.spender,
+          approve.value,
+          deadline,
+          v,
+          r,
+          s
+        ]
     )
 
     const beforeBalance = await usdt.balanceOf(owner.address);
     await dexRouter.connect(owner).unxswapWithPermit(
-      sourceToken.address,
-      fromTokenAmount,
-      0,
-      [pool0],
-      signdata
+        sourceToken.address,
+        fromTokenAmount,
+        0,
+        [pool0],
+        signdata
     );
     const afterBalance = await usdt.balanceOf(owner.address);
 
@@ -316,7 +315,7 @@ describe("Unoswap swap test", function() {
     // Re-using the same sig doesn't work since the nonce has been incremented
     // on the contract level for replay-protection
     await expect(
-      sourceToken.permit(approve.owner, approve.spender, approve.value, deadline, v, r, s)
+        sourceToken.permit(approve.owner, approve.spender, approve.value, deadline, v, r, s)
     ).to.be.revertedWith('ERC20Permit: invalid signature')
   });
 
@@ -343,13 +342,13 @@ describe("Unoswap swap test", function() {
     // construct calldata
     let fourBytes = web3.eth.abi.encodeFunctionSignature('unxswapByXBridge(address,uint256,uint256,bytes32[])');
     let parameters = web3.eth.abi.encodeParameters(
-      ['address','uint256','uint256','bytes32[]'],
-      [
-       '0x0000000000000000000000000000000000000000',
-       fromTokenAmount,
-       0,
-       [pool0]
-      ]
+        ['address','uint256','uint256','bytes32[]'],
+        [
+          '0x0000000000000000000000000000000000000000',
+          fromTokenAmount,
+          0,
+          [pool0]
+        ]
     );
     let calldata = fourBytes + parameters.replace('0x', '');
     let xBridge = await initMockXBridge();
@@ -394,13 +393,13 @@ describe("Unoswap swap test", function() {
     // construct calldata
     let fourBytes = web3.eth.abi.encodeFunctionSignature('unxswapByXBridge(address,uint256,uint256,bytes32[])');
     let parameters = web3.eth.abi.encodeParameters(
-      ['address','uint256','uint256','bytes32[]'],
-      [
-        sourceToken.address,
-        fromTokenAmount,
-        0,
-        [pool0]
-      ]
+        ['address','uint256','uint256','bytes32[]'],
+        [
+          sourceToken.address,
+          fromTokenAmount,
+          0,
+          [pool0]
+        ]
     );
     let calldata = fourBytes + parameters.replace('0x', '');
     let xBridge = await initMockXBridge();
@@ -429,7 +428,7 @@ describe("Unoswap swap test", function() {
 
   const initMockTokens = async () => {
     const MockERC20 = await ethers.getContractFactory("MockERC20");
-  
+
     usdt = await MockERC20.deploy('USDT', 'USDT', ethers.utils.parseEther('10000000000'));
     await usdt.deployed();
     await usdt.transfer(alice.address, ethers.utils.parseEther('0'));
@@ -517,14 +516,14 @@ describe("Unoswap swap test", function() {
     await token0.connect(bob).approve(router.address, amount0);
     await token1.connect(bob).approve(router.address, amount1);
     await router.connect(bob).addLiquidity(
-      token0.address,
-      token1.address,
-      amount0, 
-      amount1, 
-      '0', 
-      '0', 
-      bob.address,
-      FOREVER
+        token0.address,
+        token1.address,
+        amount0,
+        amount1,
+        '0',
+        '0',
+        bob.address,
+        FOREVER
     );
   }
 
@@ -547,11 +546,10 @@ describe("Unoswap swap test", function() {
 
     DexRouter = await ethers.getContractFactory("DexRouter");
     dexRouter = await upgrades.deployProxy(
-      DexRouter
+        DexRouter
     )
     await dexRouter.deployed();
     await dexRouter.setApproveProxy(tokenApproveProxy.address);
-    await dexRouter.setWETH(weth.address);
 
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
     expect(await dexRouter._APPROVE_PROXY_32()).to.be.equal(tokenApproveProxy.address);
@@ -576,12 +574,12 @@ describe("Unoswap swap test", function() {
 
   const getAmountOut = function(amountIn, r0, r1) {
     return ethers.BigNumber.from(amountIn.toString())
-      .mul(ethers.BigNumber.from('997'))
-      .mul(ethers.BigNumber.from(r0))
-      .div(
-        ethers.BigNumber.from(r1)
-        .mul(ethers.BigNumber.from('1000'))
-        .add(ethers.BigNumber.from(amountIn.toString()).mul(ethers.BigNumber.from('997')))
-      );
+        .mul(ethers.BigNumber.from('997'))
+        .mul(ethers.BigNumber.from(r0))
+        .div(
+            ethers.BigNumber.from(r1)
+                .mul(ethers.BigNumber.from('1000'))
+                .add(ethers.BigNumber.from(amountIn.toString()).mul(ethers.BigNumber.from('997')))
+        );
   }
 });

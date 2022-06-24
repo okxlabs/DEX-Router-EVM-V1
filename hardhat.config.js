@@ -8,7 +8,8 @@ require("@openzeppelin/hardhat-upgrades");
 require('dotenv').config();
 require("solidity-coverage");
 
-const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
+// Note: If no private key is configured in the project, the first test account of Hardhat is used by default
+const PRIVATE_KEY = process.env.PRIVATE_KEY || 'ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
 const ALCHEMY_KEY = process.env.ALCHEMY_KEY || '';
 const INFURA_KEY = process.env.INFURA_KEY || '';
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || '';

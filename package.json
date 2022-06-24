@@ -1,6 +1,6 @@
 {
   "name": "ok-swap",
-  "repository": "http://stash.hiotc.pro/projects/CD/repos/dex_aggregator",
+  "repository": "git@github.com:OKX-Web3/sor_smartcontract_dev.git",
   "license": "MIT",
   "description": "Swap service for DEX aggregator",
   "scripts": {

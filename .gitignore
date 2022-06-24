@@ -11,5 +11,7 @@ abi/
 .vscode
 .idea/
 .DS_Store
+coverage.json
+coverage/
 
 .openzeppelin/unknown-31337.json
