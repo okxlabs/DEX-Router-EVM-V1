@@ -2,6 +2,7 @@ const { ethers } = require("hardhat");
 const deployed = require("../../../deployed");
 
 const FOREVER = '2000000000';
+const ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
 
 const initDexRouter = async () => {
   TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
@@ -57,5 +58,6 @@ module.exports = {
   direction,
   getWeight,
   packRawData,
-  FOREVER
+  FOREVER,
+  ETH
 }

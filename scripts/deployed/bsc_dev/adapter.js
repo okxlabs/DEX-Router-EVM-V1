@@ -1,0 +1,5 @@
+module.exports = {
+    uniV2: "0x363FB85314c5d7BAF27e9e5AC3b6E8bDa9ae9b85",
+    bakery: "0xeB1426f967D9642317148b401EbB6a687E1a174a",
+    kyber: "0x595Da5C1b445493f5C5dB7fb8813de594c760bee"
+}

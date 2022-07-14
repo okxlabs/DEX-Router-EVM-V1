@@ -89,7 +89,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   //------- Internal Functions ----
   //-------------------------------
 
-  function _exeForks(address payer, uint256 batchAmount, RouterPath memory path, bool isNotFirst) internal {
+  function _exeForks(address payer, uint256 batchAmount, RouterPath memory path, bool isNotFirst, bool fundsInDexRouter) internal {
     address fromToken = bytes32ToAddress(path.fromToken);
 
     // execute multiple Adapters for a transaction pair
@@ -105,9 +105,14 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       }
       require(weight >= 0 && weight <= 10000, "weight out of range");
       uint256 _fromTokenAmount = (batchAmount * weight) / 10000;
-      // send the asset to the adapter
 
-      _transferInternal(payer, path.assetTo[i], fromToken, _fromTokenAmount, isNotFirst);
+      // send the asset to the adapter
+      if (isNotFirst || fundsInDexRouter) {
+        SafeERC20.safeTransfer(IERC20(fromToken), path.assetTo[i], _fromTokenAmount);
+      } else {
+        _transferInternal(payer, path.assetTo[i], fromToken, _fromTokenAmount, isNotFirst);
+      }
+
       if (reserves) {
         IAdapter(path.mixAdapters[i]).sellQuote(address(this), poolAddress, path.extraData[i]);
       } else {
@@ -120,21 +125,25 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     address payer,
     uint256 batchAmount,
     RouterPath[] calldata hops,
-    IMarketMaker.PMMSwapRequest[] memory extraData
+    IMarketMaker.PMMSwapRequest[] memory extraData,
+    bool wholeReplaceFailed
   ) internal {
     address fromToken;
     uint8 pmmIndex;
 
     // try to replace this batch by pmm
-    if (isReplace(hops[0].fromToken)) {
+    bool isReplaceHop = isReplace(hops[0].fromToken);
+    if (isReplaceHop) {
       fromToken = bytes32ToAddress(hops[0].fromToken);
       pmmIndex = getPmmIIndex(hops[0].fromToken);
-      if (_tryPmmSwap(payer, fromToken, batchAmount, extraData[pmmIndex], false) == 0 ) {
+      if (_tryPmmSwap(payer, fromToken, batchAmount, extraData[pmmIndex], false) == 0) {
         return;
       }
     }
 
     // excute hop
+    // hop and fork are the same flag bit
+    bool fundsInDexRouter = wholeReplaceFailed || isReplaceHop || isHopReplace(hops[0].fromToken);
     for (uint256 i = 0; i < hops.length; i++) {
       if (i > 0) {
         fromToken = bytes32ToAddress(hops[i].fromToken);
@@ -151,7 +160,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       }
 
       // 3.2 execute forks
-      _exeForks(payer, batchAmount, hops[i], i > 0);
+      _exeForks(payer, batchAmount, hops[i], i > 0, fundsInDexRouter);
     }
   }
 
@@ -302,6 +311,8 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     address baseRequestFromToken = bytes32ToAddress(localBaseRequest.fromToken);
     returnAmount = IERC20(localBaseRequest.toToken).universalBalanceOf(receiver);
 
+    // In order to deal with ETH/WETH transfer rules in a unified manner, 
+    // we do not need to judge according to fromToken.
     if (UniversalERC20.isETH(IERC20(address(uint160(localBaseRequest.fromToken))))) {
       IWETH(address(uint160(_WETH))).deposit{ value: localBaseRequest.fromTokenAmount }();
     } else if (address(uint160(localBaseRequest.fromToken)) == address(uint160(_WETH))) {
@@ -327,7 +338,8 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     }
 
     // 3. try to replace the whole swap by pmm
-    if (isReplace(localBaseRequest.fromToken)) {
+    bool isReplaceSwap = isReplace(localBaseRequest.fromToken);
+    if (isReplaceSwap) {
       uint8 pmmIndex = getPmmIIndex(localBaseRequest.fromToken);
       if (_tryPmmSwap(payer, baseRequestFromToken, localBaseRequest.fromTokenAmount, extraData[pmmIndex], false) == 0) {
         _transferTokenToUser(localBaseRequest.toToken, receiver);
@@ -340,8 +352,8 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
     // 4. execute batch
     for (uint256 i = 0; i < batches.length; i++) {
-      // execute hop
-      _exeHop(payer, batchesAmount[i], batches[i], extraData);
+      // execute hop, if the whole swap replacing by pmm fails, the funds will return to dexRouter	
+      _exeHop(payer, batchesAmount[i], batches[i], extraData, isReplaceSwap);
     }
 
     // 5. transfer tokens to user
