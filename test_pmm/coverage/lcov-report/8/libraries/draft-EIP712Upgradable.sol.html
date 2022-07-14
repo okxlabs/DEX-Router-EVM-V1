@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for 8/libraries/draft-EIP712Upgradable.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../../index.html">all files</a> / <a href="index.html">8/libraries/</a> draft-EIP712Upgradable.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>0/14</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>0/2</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>0/4</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>0/14</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
+// OpenZeppelin Contracts v4.4.1 (utils/cryptography/draft-EIP712.sol)
+&nbsp;
+pragma solidity ^0.8.0;
+&nbsp;
+import "./ECDSA.sol";
+&nbsp;
+/**
+ * @dev https://eips.ethereum.org/EIPS/eip-712[EIP 712] is a standard for hashing and signing of typed structured data.
+ *
+ * The encoding specified in the EIP is very generic, and such a generic implementation in Solidity is not feasible,
+ * thus this contract does not implement the encoding itself. Protocols need to implement the type-specific encoding
+ * they need in their contracts using a combination of `abi.encode` and `keccak256`.
+ *
+ * This contract implements the EIP 712 domain separator ({_domainSeparatorV4}) that is used as part of the encoding
+ * scheme, and the final step of the encoding to obtain the message digest that is then signed via ECDSA
+ * ({_hashTypedDataV4}).
+ *
+ * The implementation of the domain separator was designed to be as efficient as possible while still properly updating
+ * the chain id to protect against replay attacks on an eventual fork of the chain.
+ *
+ * NOTE: This contract implements the version of the encoding known as "v4", as implemented by the JSON RPC method
+ * https://docs.metamask.io/guide/signing-data.html[`eth_signTypedDataV4` in MetaMask].
+ *
+ * _Available since v3.4._
+ */
+abstract contract EIP712Upgradable {
+    /* solhint-disable var-name-mixedcase */
+    // Cache the domain separator as an immutable value, but also store the chain id that it corresponds to, in order to
+    // invalidate the cached domain separator if the chain id changes.
+    bytes32 private _CACHED_DOMAIN_SEPARATOR;
+    uint256 private _CACHED_CHAIN_ID;
+    address private _CACHED_THIS;
+&nbsp;
+    bytes32 private _HASHED_NAME;
+    bytes32 private _HASHED_VERSION;
+    bytes32 private _TYPE_HASH;
+&nbsp;
+    /* solhint-enable var-name-mixedcase */
+&nbsp;
+    /**
+     * @dev Initializes the domain separator and parameter caches.
+     *
+     * The meaning of `name` and `version` is specified in
+     * https://eips.ethereum.org/EIPS/eip-712#definition-of-domainseparator[EIP 712]:
+     *
+     * - `name`: the user readable name of the signing domain, i.e. the name of the DApp or the protocol.
+     * - `version`: the current major version of the signing domain.
+     *
+     * NOTE: These parameters cannot be changed except through a xref:learn::upgrading-smart-contracts.adoc[smart
+     * contract upgrade].
+     */
+<span class="fstat-no" title="function not covered" >    function _EIP712_init(string memory name, string memory version) internal {</span>
+<span class="cstat-no" title="statement not covered" >        bytes32 hashedName = keccak256(bytes(name));</span>
+<span class="cstat-no" title="statement not covered" >        bytes32 hashedVersion = keccak256(bytes(version));</span>
+<span class="cstat-no" title="statement not covered" >        bytes32 typeHash = keccak256(</span>
+            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+        );
+<span class="cstat-no" title="statement not covered" >        _HASHED_NAME = hashedName</span>;
+<span class="cstat-no" title="statement not covered" >        _HASHED_VERSION = hashedVersion</span>;
+<span class="cstat-no" title="statement not covered" >        _CACHED_CHAIN_ID = block.chainid</span>;
+<span class="cstat-no" title="statement not covered" >        _CACHED_DOMAIN_SEPARATOR = _buildDomainSeparator(typeHash, hashedName, hashedVersion)</span>;
+<span class="cstat-no" title="statement not covered" >        _CACHED_THIS = address(this)</span>;
+<span class="cstat-no" title="statement not covered" >        _TYPE_HASH = typeHash</span>;  
+    }
+&nbsp;
+    /**
+     * @dev Returns the domain separator for the current chain.
+     */
+<span class="fstat-no" title="function not covered" >    function _domainSeparatorV4() internal view returns (bytes32) {</span>
+<span class="cstat-no" title="statement not covered" >        if (address(this) == _CACHED_THIS &amp;&amp; block.chainid == _CACHED_CHAIN_ID) {</span>
+<span class="cstat-no" title="statement not covered" >            return _CACHED_DOMAIN_SEPARATOR;</span>
+        } else {
+<span class="cstat-no" title="statement not covered" >            return _buildDomainSeparator(_TYPE_HASH, _HASHED_NAME, _HASHED_VERSION);</span>
+        }
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _buildDomainSeparator(</span>
+        bytes32 typeHash,
+        bytes32 nameHash,
+        bytes32 versionHash
+    ) private view returns (bytes32) {
+<span class="cstat-no" title="statement not covered" >        return keccak256(abi.encode(typeHash, nameHash, versionHash, block.chainid, address(this)));</span>
+    }
+&nbsp;
+    /**
+     * @dev Given an already https://eips.ethereum.org/EIPS/eip-712#definition-of-hashstruct[hashed struct], this
+     * function returns the hash of the fully encoded EIP712 message for this domain.
+     *
+     * This hash can be used together with {ECDSA-recover} to obtain the signer of a message. For example:
+     *
+     * ```solidity
+     * bytes32 digest = _hashTypedDataV4(keccak256(abi.encode(
+     *     keccak256("Mail(address to,string contents)"),
+     *     mailTo,
+     *     keccak256(bytes(mailContents))
+     * )));
+     * address signer = ECDSA.recover(digest, signature);
+     * ```
+     */
+<span class="fstat-no" title="function not covered" >    function _hashTypedDataV4(bytes32 structHash) internal view virtual returns (bytes32) {</span>
+<span class="cstat-no" title="statement not covered" >        return ECDSA.toTypedDataHash(_domainSeparatorV4(), structHash);</span>
+    }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Jul 01 2022 16:59:39 GMT+0800 (中国标准时间)
+</div>
+</div>
+<script src="../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../sorter.js"></script>
+</body>
+</html>

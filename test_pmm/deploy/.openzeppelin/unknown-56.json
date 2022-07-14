@@ -1,0 +1,283 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0x19440199101Fb45882d06Ee432437eC89f406248",
+    "txHash": "0x35f0af36822df6618739ab78d950bdc17bce1d76556cbe1739ecf20eed7259ed"
+  },
+  "proxies": [
+    {
+      "address": "0x478c2F5B9b7a4C24b5F7D4c4f727dBC67D2f8382",
+      "txHash": "0x956cf72aaae4a33fc20f1299d2987472d06094e86b346307bb8c533163f76a91",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x5E5183AB5Aa1C243f8ccd50CF4B8E76639BF7e0a",
+      "txHash": "0xfbc8d7a92722d20d04968ac987f541151e8cca6c980ed7a68398104c450494fb",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "8cc0f24788e599dfdaeb86cf656a7551a1259c59765a055a417f8431c5629801": {
+      "address": "0x55b35bF627944396f9950dD6BDdaDb5218110c76",
+      "txHash": "0x67d4517c5afff7577cd838cef054751165f29e3dd786014611e2057a85e2373e",
+      "layout": {
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:39"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:44"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:87"
+          },
+          {
+            "label": "_status",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_uint256",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:38"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:74"
+          },
+          {
+            "label": "_CACHED_DOMAIN_SEPARATOR",
+            "offset": 0,
+            "slot": "151",
+            "type": "t_bytes32",
+            "contract": "EIP712Upgradable",
+            "src": "contracts/8/libraries/draft-EIP712Upgradable.sol:31"
+          },
+          {
+            "label": "_CACHED_CHAIN_ID",
+            "offset": 0,
+            "slot": "152",
+            "type": "t_uint256",
+            "contract": "EIP712Upgradable",
+            "src": "contracts/8/libraries/draft-EIP712Upgradable.sol:32"
+          },
+          {
+            "label": "_CACHED_THIS",
+            "offset": 0,
+            "slot": "153",
+            "type": "t_address",
+            "contract": "EIP712Upgradable",
+            "src": "contracts/8/libraries/draft-EIP712Upgradable.sol:33"
+          },
+          {
+            "label": "_HASHED_NAME",
+            "offset": 0,
+            "slot": "154",
+            "type": "t_bytes32",
+            "contract": "EIP712Upgradable",
+            "src": "contracts/8/libraries/draft-EIP712Upgradable.sol:35"
+          },
+          {
+            "label": "_HASHED_VERSION",
+            "offset": 0,
+            "slot": "155",
+            "type": "t_bytes32",
+            "contract": "EIP712Upgradable",
+            "src": "contracts/8/libraries/draft-EIP712Upgradable.sol:36"
+          },
+          {
+            "label": "_TYPE_HASH",
+            "offset": 0,
+            "slot": "156",
+            "type": "t_bytes32",
+            "contract": "EIP712Upgradable",
+            "src": "contracts/8/libraries/draft-EIP712Upgradable.sol:37"
+          },
+          {
+            "label": "operator",
+            "offset": 0,
+            "slot": "157",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "MarketMaker",
+            "src": "contracts/8/MarketMaker.sol:35"
+          },
+          {
+            "label": "orderStatus",
+            "offset": 0,
+            "slot": "158",
+            "type": "t_mapping(t_uint256,t_struct(OrderStatus)2033_storage)",
+            "contract": "MarketMaker",
+            "src": "contracts/8/MarketMaker.sol:36"
+          },
+          {
+            "label": "pmmAdapter",
+            "offset": 0,
+            "slot": "159",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "MarketMaker",
+            "src": "contracts/8/MarketMaker.sol:37"
+          },
+          {
+            "label": "cancelers",
+            "offset": 0,
+            "slot": "160",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "MarketMaker",
+            "src": "contracts/8/MarketMaker.sol:38"
+          },
+          {
+            "label": "weth",
+            "offset": 0,
+            "slot": "161",
+            "type": "t_address",
+            "contract": "MarketMaker",
+            "src": "contracts/8/MarketMaker.sol:40"
+          },
+          {
+            "label": "approveProxy",
+            "offset": 0,
+            "slot": "162",
+            "type": "t_address",
+            "contract": "MarketMaker",
+            "src": "contracts/8/MarketMaker.sol:41"
+          },
+          {
+            "label": "feeTo",
+            "offset": 0,
+            "slot": "163",
+            "type": "t_address",
+            "contract": "MarketMaker",
+            "src": "contracts/8/MarketMaker.sol:42"
+          },
+          {
+            "label": "feeRate",
+            "offset": 0,
+            "slot": "164",
+            "type": "t_uint256",
+            "contract": "MarketMaker",
+            "src": "contracts/8/MarketMaker.sol:43"
+          },
+          {
+            "label": "backEnd",
+            "offset": 0,
+            "slot": "165",
+            "type": "t_address",
+            "contract": "MarketMaker",
+            "src": "contracts/8/MarketMaker.sol:44"
+          },
+          {
+            "label": "cancelerGuardian",
+            "offset": 0,
+            "slot": "166",
+            "type": "t_address",
+            "contract": "MarketMaker",
+            "src": "contracts/8/MarketMaker.sol:45"
+          },
+          {
+            "label": "uniV2Factory",
+            "offset": 0,
+            "slot": "167",
+            "type": "t_address",
+            "contract": "MarketMaker",
+            "src": "contracts/8/MarketMaker.sol:46"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(OrderStatus)2033_storage)": {
+            "label": "mapping(uint256 => struct MarketMaker.OrderStatus)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(OrderStatus)2033_storage": {
+            "label": "struct MarketMaker.OrderStatus",
+            "members": [
+              {
+                "label": "fromTokenAmountMax",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "fromTokenAmountUsed",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "cancelledOrFinalized",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "96"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        }
+      }
+    }
+  }
+}
