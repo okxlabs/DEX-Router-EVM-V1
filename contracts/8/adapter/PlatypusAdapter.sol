@@ -6,6 +6,7 @@ import "../interfaces/IPlatypus.sol";
 import "../interfaces/IERC20.sol";
 import "../libraries/SafeERC20.sol";
 
+
 contract PlatypusAdapter is IAdapter {
     // ============ Hard Coded ============
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -21,7 +22,8 @@ contract PlatypusAdapter is IAdapter {
     //--------------------------------
     //------- Users Functions --------
     //--------------------------------
-        function sellBase(
+
+    function sellBase(
         address to,
         address pool,
         bytes memory moreInfo
@@ -29,6 +31,7 @@ contract PlatypusAdapter is IAdapter {
         _platypusSwap(to, pool, moreInfo);
     }
 
+       
     function sellQuote(
         address to,
         address pool,
@@ -51,14 +54,13 @@ contract PlatypusAdapter is IAdapter {
         
         if (fromToken==ETH_ADDRESS){
             
-            IPool(pool).swapFromETH(
-                fromToken,
+            IPool(pool).swapFromETH{ value:fromAmount }(
                 toToken,
-                fromAmount,
                 0,
                 to,
                 block.timestamp
-            )
+            );
+
         }else if (toToken==ETH_ADDRESS) {
             // approve
             SafeERC20.safeApprove(IERC20(fromToken), pool, fromAmount);
@@ -67,9 +69,9 @@ contract PlatypusAdapter is IAdapter {
                 fromToken,
                 fromAmount,
                 0,
-                to,
+                payable(to),
                 block.timestamp
-            )
+            );
             // approve 0
             SafeERC20.safeApprove(IERC20(fromToken), pool, 0);
         }else {
@@ -83,7 +85,7 @@ contract PlatypusAdapter is IAdapter {
                 0,
                 to,
                 block.timestamp                
-            )
+            );
             // approve 0
             SafeERC20.safeApprove(IERC20(fromToken), pool, 0);
         }

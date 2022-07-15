@@ -51,7 +51,7 @@ interface IPool {
         uint256 minimumToAmount,
         address to,
         uint256 deadline
-    ) external returns (uint256 actualToAmount, uint256 haircut);
+    ) external payable returns (uint256 actualToAmount, uint256 haircut);
 
     function quotePotentialSwap(
         address fromToken,
