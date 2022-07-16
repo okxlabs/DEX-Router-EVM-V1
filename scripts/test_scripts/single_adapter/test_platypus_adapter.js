@@ -24,11 +24,7 @@ async function setForkNetWork(blockNumber) {
         }]
     })
 }
-/* fork网络
-    模拟账户
-    构造calldata
-    执行swap
-    */
+
 // swap usdc to usdt in main pool
 async function execute1() {
     // fork network
