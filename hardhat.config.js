@@ -2,6 +2,7 @@ require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-solhint");
 require('hardhat-abi-exporter');
 require("hardhat-gas-reporter");
+require("solidity-coverage");
 require('hardhat-contract-sizer');
 require('hardhat-log-remover');
 require("@openzeppelin/hardhat-upgrades");
@@ -38,6 +39,15 @@ module.exports = {
         }
 			},
       {
+				version: '0.8.9',
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200
+          }
+        }
+			},
+      {
 				version: '0.5.16',
         settings: {
           optimizer: {
@@ -66,7 +76,7 @@ module.exports = {
       timeout: 1800000,
       // forking:
       // {
-      //   url: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}`
+      //   url: "https://rpc.ankr.com/bsc"
       // }
     },
     okc: {
@@ -92,7 +102,19 @@ module.exports = {
       },
     },
     bsc: {
-      url: "https://bsc-dataseed1.defibit.io",
+      url: "https://rpc.ankr.com/bsc",
+      chainId: 56,
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      },
+    },
+    bsc_dev: {
+      url: "https://rpc.ankr.com/bsc",
+      // url: "https://bsc-dataseed.binance.org",
       chainId: 56,
       accounts: [`${PRIVATE_KEY}`],
       settings: {
@@ -243,7 +265,7 @@ module.exports = {
     strict: true,
   },
   gasReporter: {
-    enabled: false
+    enabled: true
   },
   mocha: {
     timeout: 180000000

@@ -1,4 +1,8 @@
 const ALCHEMY_KEY = process.env.ALCHEMY_KEY || '';
+const { network } = require("hardhat");
+const hre = require("hardhat");
+
+
 
 setForkBlockNumber = async (targetBlockNumber) => {
     await network.provider.request({

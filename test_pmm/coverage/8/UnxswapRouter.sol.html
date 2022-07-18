@@ -1,0 +1,932 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for 8/UnxswapRouter.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">8/</a> UnxswapRouter.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>0/17</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>0/10</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>0/3</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>0/19</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+&nbsp;
+import "./libraries/UniversalERC20.sol";
+import "./libraries/RevertReasonParser.sol";
+&nbsp;
+import "./interfaces/IERC20Permit.sol";
+import "./interfaces/IDaiLikePermit.sol";
+&nbsp;
+interface IUniswapV2Pair {
+  function token0() external returns (address);
+&nbsp;
+  function token1() external returns (address);
+}
+&nbsp;
+/// @title Base contract with common payable logics
+abstract contract EthReceiver {
+  receive() external payable {
+    // solhint-disable-next-line avoid-tx-origin
+    require(msg.sender != tx.origin, "ETH deposit rejected");
+  }
+}
+&nbsp;
+/// @title Base contract with common permit handling logics
+contract Permitable {
+<span class="fstat-no" title="function not covered" >  function _permit(address token, bytes calldata permit) internal {</span>
+<span class="cstat-no" title="statement not covered" >    if (permit.length &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >      bool success;</span>
+<span class="cstat-no" title="statement not covered" >      bytes memory result;</span>
+<span class="cstat-no" title="statement not covered" >      if (permit.length == 32 * 7) {</span>
+        // solhint-disable-next-line avoid-low-level-calls
+<span class="cstat-no" title="statement not covered" >        (success, result) = token.call(abi.encodePacked(IERC20Permit.permit.selector, permit))</span>;
+      } else <span class="cstat-no" title="statement not covered" >if (permit.length == 32 * 8) {</span>
+        // solhint-disable-next-line avoid-low-level-calls
+<span class="cstat-no" title="statement not covered" >        (success, result) = token.call(abi.encodePacked(IDaiLikePermit.permit.selector, permit))</span>;
+      } else {
+<span class="cstat-no" title="statement not covered" >        revert("Wrong permit length")</span>;
+      }
+<span class="cstat-no" title="statement not covered" >      if (!success) {</span>
+<span class="cstat-no" title="statement not covered" >        revert(RevertReasonParser.parse(result, "Permit failed: "))</span>;
+      }
+    }
+  }
+}
+&nbsp;
+contract UnxswapRouter is EthReceiver, Permitable {
+  uint256 private constant _CLAIM_TOKENS_CALL_SELECTOR_32 =
+    0x0a5ea46600000000000000000000000000000000000000000000000000000000;
+  uint256 private constant _WETH_DEPOSIT_CALL_SELECTOR_32 =
+    0xd0e30db000000000000000000000000000000000000000000000000000000000;
+  uint256 private constant _WETH_WITHDRAW_CALL_SELECTOR_32 =
+    0x2e1a7d4d00000000000000000000000000000000000000000000000000000000;
+  uint256 private constant _ERC20_TRANSFER_CALL_SELECTOR_32 =
+    0xa9059cbb00000000000000000000000000000000000000000000000000000000;
+  uint256 public constant _ADDRESS_MASK = 0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff;
+  uint256 public constant _REVERSE_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;
+  uint256 private constant _WETH_MASK = 0x4000000000000000000000000000000000000000000000000000000000000000;
+  uint256 private constant _NUMERATOR_MASK = 0x0000000000000000ffffffff0000000000000000000000000000000000000000;
+  uint256 private constant _UNISWAP_PAIR_RESERVES_CALL_SELECTOR_32 =
+    0x0902f1ac00000000000000000000000000000000000000000000000000000000;
+  uint256 private constant _UNISWAP_PAIR_SWAP_CALL_SELECTOR_32 =
+    0x022c0d9f00000000000000000000000000000000000000000000000000000000;
+  uint256 private constant _DENOMINATOR = 1000000000;
+  uint256 private constant _NUMERATOR_OFFSET = 160;
+  /// @dev WETH address is network-specific and needs to be changed before deployment.
+  /// It can not be moved to immutable as immutables are not supported in assembly
+  // ETH:   C02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
+  // BSC:   bb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c
+  // OEC:   8f8526dbfd6e38e3d8307702ca8469bae6c56c15
+  // LOCAL: 5FbDB2315678afecb367f032d93F642f64180aa3
+  uint256 public constant _WETH = 0x0000000000000000000000008f8526dbfd6e38e3d8307702ca8469bae6c56c15;
+  // ETH:   70cBb871E8f30Fc8Ce23609E9E0Ea87B6b222F58
+  // BSC:   d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98
+  // OEC:   E9BBD6eC0c9Ca71d3DcCD1282EE9de4F811E50aF
+  // LOCAL: e7f1725E7734CE288F8367e1Bb143E90bb3F0512
+  uint256 public constant _APPROVE_PROXY_32 = 0x000000000000000000000000E9BBD6eC0c9Ca71d3DcCD1282EE9de4F811E50aF;
+  // ETH:   5703B683c7F928b721CA95Da988d73a3299d4757
+  // BSC:   0B5f474ad0e3f7ef629BD10dbf9e4a8Fd60d9A48
+  // OEC:   d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98
+  // LOCAL: D49a0e9A4CD5979aE36840f542D2d7f02C4817Be
+  uint256 public constant _WNATIVE_RELAY_32 = 0x000000000000000000000000d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98;
+&nbsp;
+  uint256 public constant _WEIGHT_MASK = 0x00000000000000000000ffff0000000000000000000000000000000000000000;
+&nbsp;
+  // address public approveProxy;
+&nbsp;
+  event OrderRecord(address fromToken, address toToken, address sender, uint256 fromAmount, uint256 returnAmount);
+&nbsp;
+  /// @notice Same as `unoswap` but calls permit first,
+  /// allowing to approve token spending and make a swap in one transaction.
+  /// @param srcToken Source token
+  /// @param amount Amount of source tokens to swap
+  /// @param minReturn Minimal allowed returnAmount to make transaction commit
+  /// @param pools Pools chain used for swaps. Pools src and dst tokens should match to make swap happen
+  /// @param permit Should contain valid permit that can be used in `IERC20Permit.permit` calls.
+  /// See tests for examples
+<span class="fstat-no" title="function not covered" >  function unxswapWithPermit(</span>
+    IERC20 srcToken,
+    uint256 amount,
+    uint256 minReturn,
+    bytes32[] calldata pools,
+    bytes calldata permit
+  ) external returns (uint256 returnAmount) {
+<span class="cstat-no" title="statement not covered" >    _permit(address(srcToken), permit)</span>;
+<span class="cstat-no" title="statement not covered" >    return unxswap(srcToken, amount, minReturn, pools);</span>
+  }
+&nbsp;
+  /// @notice Performs swap using Uniswap exchange. Wraps and unwraps ETH if required.
+  /// Sending non-zero `msg.value` for anything but ETH swaps is prohibited
+  /// @param srcToken Source token
+  /// @param amount Amount of source tokens to swap
+  /// @param minReturn Minimal allowed returnAmount to make transaction commit
+  /// @param pools Pools chain used for swaps. Pools src and dst tokens should match to make swap happen
+<span class="fstat-no" title="function not covered" >  function unxswap(</span>
+    IERC20 srcToken,
+    uint256 amount,
+    uint256 minReturn,
+    // solhint-disable-next-line no-unused-vars
+    bytes32[] calldata pools
+  ) public payable returns (uint256 returnAmount) {
+    assembly {
+      // solhint-disable-line no-inline-assembly
+      function reRevert() {
+        returndatacopy(0, 0, returndatasize())
+        revert(0, returndatasize())
+      }
+&nbsp;
+      function revertWithReason(m, len) {
+        mstore(0, 0x08c379a000000000000000000000000000000000000000000000000000000000)
+        mstore(0x20, 0x0000002000000000000000000000000000000000000000000000000000000000)
+        mstore(0x40, m)
+        revert(0, len)
+      }
+&nbsp;
+      function swap(emptyPtr, swapAmount, pair, reversed, numerator, dst) -&gt; ret {
+        mstore(emptyPtr, _UNISWAP_PAIR_RESERVES_CALL_SELECTOR_32)
+        if iszero(staticcall(gas(), pair, emptyPtr, 0x4, emptyPtr, 0x40)) {
+          reRevert()
+        }
+        if iszero(eq(returndatasize(), 0x60)) {
+          revertWithReason(0x0000001472657365727665732063616c6c206661696c65640000000000000000, 0x59) // "reserves call failed"
+        }
+&nbsp;
+        let reserve0 := mload(emptyPtr)
+        let reserve1 := mload(add(emptyPtr, 0x20))
+        if reversed {
+          let tmp := reserve0
+          reserve0 := reserve1
+          reserve1 := tmp
+        }
+        ret := mul(swapAmount, numerator)
+        ret := div(mul(ret, reserve1), add(ret, mul(reserve0, _DENOMINATOR)))
+&nbsp;
+        mstore(emptyPtr, _UNISWAP_PAIR_SWAP_CALL_SELECTOR_32)
+        switch reversed
+        case 0 {
+          mstore(add(emptyPtr, 0x04), 0)
+          mstore(add(emptyPtr, 0x24), ret)
+        }
+        default {
+          mstore(add(emptyPtr, 0x04), ret)
+          mstore(add(emptyPtr, 0x24), 0)
+        }
+        mstore(add(emptyPtr, 0x44), dst)
+        mstore(add(emptyPtr, 0x64), 0x80)
+        mstore(add(emptyPtr, 0x84), 0)
+        if iszero(call(gas(), pair, 0, emptyPtr, 0xa4, 0, 0)) {
+          reRevert()
+        }
+      }
+&nbsp;
+      let emptyPtr := mload(0x40)
+      mstore(0x40, add(emptyPtr, 0xc0))
+&nbsp;
+      let poolsOffset := add(calldataload(0x64), 0x4)
+      let poolsEndOffset := calldataload(poolsOffset)
+      poolsOffset := add(poolsOffset, 0x20)
+      poolsEndOffset := add(poolsOffset, mul(0x20, poolsEndOffset))
+      let rawPair := calldataload(poolsOffset)
+      switch srcToken
+      case 0 {
+        if iszero(eq(amount, callvalue())) {
+          revertWithReason(0x00000011696e76616c6964206d73672e76616c75650000000000000000000000, 0x55) // "invalid msg.value"
+        }
+&nbsp;
+        mstore(emptyPtr, _WETH_DEPOSIT_CALL_SELECTOR_32)
+        if iszero(call(gas(), _WETH, amount, emptyPtr, 0x4, 0, 0)) {
+          reRevert()
+        }
+&nbsp;
+        mstore(emptyPtr, _ERC20_TRANSFER_CALL_SELECTOR_32)
+        mstore(add(emptyPtr, 0x4), and(rawPair, _ADDRESS_MASK))
+        mstore(add(emptyPtr, 0x24), amount)
+        if iszero(call(gas(), _WETH, 0, emptyPtr, 0x44, 0, 0)) {
+          reRevert()
+        }
+      }
+      default {
+        if callvalue() {
+          revertWithReason(0x00000011696e76616c6964206d73672e76616c75650000000000000000000000, 0x55) // "invalid msg.value"
+        }
+&nbsp;
+        mstore(emptyPtr, _CLAIM_TOKENS_CALL_SELECTOR_32)
+        mstore(add(emptyPtr, 0x4), srcToken)
+        mstore(add(emptyPtr, 0x24), caller())
+        mstore(add(emptyPtr, 0x44), and(rawPair, _ADDRESS_MASK))
+        mstore(add(emptyPtr, 0x64), amount)
+        if iszero(call(gas(), _APPROVE_PROXY_32, 0, emptyPtr, 0x84, 0, 0)) {
+          reRevert()
+        }
+      }
+&nbsp;
+      returnAmount := amount
+&nbsp;
+      for {
+        let i := add(poolsOffset, 0x20)
+      } lt(i, poolsEndOffset) {
+        i := add(i, 0x20)
+      } {
+        let nextRawPair := calldataload(i)
+&nbsp;
+        returnAmount := swap(
+          emptyPtr,
+          returnAmount,
+          and(rawPair, _ADDRESS_MASK),
+          and(rawPair, _REVERSE_MASK),
+          shr(_NUMERATOR_OFFSET, and(rawPair, _NUMERATOR_MASK)),
+          and(nextRawPair, _ADDRESS_MASK)
+        )
+&nbsp;
+        rawPair := nextRawPair
+      }
+&nbsp;
+      switch and(rawPair, _WETH_MASK)
+      case 0 {
+        returnAmount := swap(
+          emptyPtr,
+          returnAmount,
+          and(rawPair, _ADDRESS_MASK),
+          and(rawPair, _REVERSE_MASK),
+          shr(_NUMERATOR_OFFSET, and(rawPair, _NUMERATOR_MASK)),
+          caller()
+        )
+      }
+      default {
+        returnAmount := swap(
+          emptyPtr,
+          returnAmount,
+          and(rawPair, _ADDRESS_MASK),
+          and(rawPair, _REVERSE_MASK),
+          shr(_NUMERATOR_OFFSET, and(rawPair, _NUMERATOR_MASK)),
+          address()
+        )
+&nbsp;
+        mstore(emptyPtr, _ERC20_TRANSFER_CALL_SELECTOR_32)
+        mstore(add(emptyPtr, 0x4), _WNATIVE_RELAY_32)
+        mstore(add(emptyPtr, 0x24), returnAmount)
+        if iszero(call(gas(), _WETH, 0, emptyPtr, 0x44, 0, 0)) {
+          reRevert()
+        }
+&nbsp;
+        mstore(emptyPtr, _WETH_WITHDRAW_CALL_SELECTOR_32)
+        mstore(add(emptyPtr, 0x04), returnAmount)
+        if iszero(call(gas(), _WNATIVE_RELAY_32, 0, emptyPtr, 0x24, 0, 0)) {
+          reRevert()
+        }
+&nbsp;
+        if iszero(call(gas(), caller(), returnAmount, 0, 0, 0, 0)) {
+          reRevert()
+        }
+      }
+&nbsp;
+      if lt(returnAmount, minReturn) {
+        revertWithReason(0x000000164d696e2072657475726e206e6f742072656163686564000000000000, 0x5a) // "Min return not reached"
+      }
+    }
+&nbsp;
+    // the last pool
+<span class="cstat-no" title="statement not covered" >    bytes32 rawPair = pools[pools.length - 1];</span>
+<span class="cstat-no" title="statement not covered" >    address pair;</span>
+<span class="cstat-no" title="statement not covered" >    bool reserve;</span>
+    assembly {
+      pair := and(rawPair, _ADDRESS_MASK)
+      reserve := and(rawPair, _REVERSE_MASK)
+    }
+<span class="cstat-no" title="statement not covered" >    pair = reserve ? IUniswapV2Pair(pair).token0() : IUniswapV2Pair(pair).token1()</span>;
+<span class="cstat-no" title="statement not covered" >    emit OrderRecord(address(srcToken), pair, msg.sender, amount, minReturn);</span>
+  }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Jul 01 2022 16:59:39 GMT+0800 (中国标准时间)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

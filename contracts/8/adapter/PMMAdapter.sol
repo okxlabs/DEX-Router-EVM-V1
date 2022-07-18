@@ -40,6 +40,12 @@ contract PMMAdapter is IAdapterWithResult {
 
         uint256 result = IMarketMaker(marketMaker).swap(sellAmount, request);
 
+        SafeERC20.safeApprove(
+            IERC20(request.fromToken),
+            tokenApprove,
+            0
+        );
+
         // refund
         uint256 fromBal = IERC20(request.fromToken).balanceOf(address(this));
         if (fromBal > 0) {

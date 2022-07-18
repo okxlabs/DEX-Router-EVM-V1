@@ -28,7 +28,7 @@ async function executeWETH2IPAL() {
   const balancerVault = "0xBA12222222228d8Ba445958a75a0704d566BF2C8";
   
   BalancerV2Adapter = await ethers.getContractFactory("BalancerV2Adapter");
-  balancerV2Adapter = await BalancerV2Adapter.deploy(balancerVault ,WETH.address);
+  balancerV2Adapter = await BalancerV2Adapter.deploy(balancerVault, WETH.address);
   await balancerV2Adapter.deployed();
 
   // transfer 100 WETH to bancorAdapter

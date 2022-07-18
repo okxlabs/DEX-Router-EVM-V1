@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for 8/libraries/RevertReasonParser.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../../index.html">all files</a> / <a href="index.html">8/libraries/</a> RevertReasonParser.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>0/20</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>0/8</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>0/3</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>0/22</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+&nbsp;
+/// @title Library that allows to parse unsuccessful arbitrary calls revert reasons.
+/// See https://solidity.readthedocs.io/en/latest/control-structures.html#revert for details.
+/// Note that we assume revert reason being abi-encoded as Error(string) so it may fail to parse reason
+/// if structured reverts appear in the future.
+///
+/// All unsuccessful parsings get encoded as Unknown(data) string
+library RevertReasonParser {
+    bytes4 private constant _PANIC_SELECTOR =
+        bytes4(keccak256("Panic(uint256)"));
+    bytes4 private constant _ERROR_SELECTOR =
+        bytes4(keccak256("Error(string)"));
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function parse(bytes memory data, string memory prefix)</span>
+        internal
+        pure
+        returns (string memory)
+    {
+<span class="cstat-no" title="statement not covered" >        if (data.length &gt;= 4) {</span>
+<span class="cstat-no" title="statement not covered" >            bytes4 selector;</span>
+            assembly {
+                // solhint-disable-line no-inline-assembly
+                selector := mload(add(data, 0x20))
+            }
+&nbsp;
+            // 68 = 4-byte selector + 32 bytes offset + 32 bytes length
+<span class="cstat-no" title="statement not covered" >            if (selector == _ERROR_SELECTOR &amp;&amp; data.length &gt;= 68) {</span>
+<span class="cstat-no" title="statement not covered" >                uint256 offset;</span>
+<span class="cstat-no" title="statement not covered" >                bytes memory reason;</span>
+                // solhint-disable no-inline-assembly
+                assembly {
+                    // 36 = 32 bytes data length + 4-byte selector
+                    offset := mload(add(data, 36))
+                    reason := add(data, add(36, offset))
+                }
+                /*
+                    revert reason is padded up to 32 bytes with ABI encoder: Error(string)
+                    also sometimes there is extra 32 bytes of zeros padded in the end:
+                    https://github.com/ethereum/solidity/issues/10170
+                    because of that we can't check for equality and instead check
+                    that offset + string length + extra 36 bytes is less than overall data length
+                */
+<span class="cstat-no" title="statement not covered" >                require(</span>
+                    data.length &gt;= 36 + offset + reason.length,
+                    "Invalid revert reason"
+                );
+<span class="cstat-no" title="statement not covered" >                return string(abi.encodePacked(prefix, "Error(", reason, ")"));</span>
+            }
+            // 36 = 4-byte selector + 32 bytes integer
+            else <span class="cstat-no" title="statement not covered" >if (selector == _PANIC_SELECTOR &amp;&amp; data.length == 36) {</span>
+<span class="cstat-no" title="statement not covered" >                uint256 code;</span>
+                // solhint-disable no-inline-assembly
+                assembly {
+                    // 36 = 32 bytes data length + 4-byte selector
+                    code := mload(add(data, 36))
+                }
+<span class="cstat-no" title="statement not covered" >                return</span>
+                    string(
+                        abi.encodePacked(prefix, "Panic(", _toHex(code), ")")
+                    );
+            }
+        }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        return string(abi.encodePacked(prefix, "Unknown(", _toHex(data), ")"));</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _toHex(uint256 value) private pure returns (string memory) {</span>
+<span class="cstat-no" title="statement not covered" >        return _toHex(abi.encodePacked(value));</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _toHex(bytes memory data) private pure returns (string memory) {</span>
+<span class="cstat-no" title="statement not covered" >        bytes16 alphabet = 0x30313233343536373839616263646566;</span>
+<span class="cstat-no" title="statement not covered" >        bytes memory str = new bytes(2 + data.length * 2);</span>
+<span class="cstat-no" title="statement not covered" >        str[0] = "0"</span>;
+<span class="cstat-no" title="statement not covered" >        str[1] = "x"</span>;
+<span class="cstat-no" title="statement not covered" >        for (uint256 i = 0; i &lt; data.length; i++) {</span>
+<span class="cstat-no" title="statement not covered" >            str[2 * i + 2] = alphabet[uint8(data[i] &gt;&gt; 4)]</span>;
+<span class="cstat-no" title="statement not covered" >            str[2 * i + 3] = alphabet[uint8(data[i] &amp; 0x0f)]</span>;
+        }
+<span class="cstat-no" title="statement not covered" >        return string(str);</span>
+    }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Jul 01 2022 16:59:39 GMT+0800 (中国标准时间)
+</div>
+</div>
+<script src="../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../sorter.js"></script>
+</body>
+</html>

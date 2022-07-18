@@ -1,0 +1,1487 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for 8/mock/MockUniV2/UniswapRouter.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../../prettify.css" />
+    <link rel="stylesheet" href="../../../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../../../index.html">all files</a> / <a href="index.html">8/mock/MockUniV2/</a> UniswapRouter.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>0/121</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>0/42</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>0/25</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>0/122</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+418
+419
+420
+421
+422
+423
+424
+425
+426
+427
+428
+429
+430
+431
+432
+433
+434
+435
+436
+437
+438
+439
+440
+441
+442
+443
+444
+445
+446
+447
+448
+449
+450
+451
+452
+453
+454
+455
+456
+457
+458
+459
+460
+461
+462
+463
+464
+465
+466
+467
+468
+469
+470
+471
+472
+473
+474
+475</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">pragma solidity =0.6.6;
+&nbsp;
+&nbsp;
+&nbsp;
+import "../../../5/interfaces/IERC20.sol";
+import "../../interfaces/IUniswapV2Factory.sol";
+import "../../../5/interfaces/IWETH.sol";
+import "../../interfaces/IUnswapRouter02.sol";
+import "../../../5/libraries/SafeMath.sol";
+import "../../libraries/SafeToken.sol";
+import "./UniswapV2Library.sol";
+&nbsp;
+contract UniswapRouter is IUnswapRouter02 {
+  using SafeMath for uint256;
+&nbsp;
+  address public override factory;
+  address public override WETH;
+&nbsp;
+<span class="fstat-no" title="function not covered" >  modifier ensure(uint256 deadline) {</span>
+<span class="cstat-no" title="statement not covered" >    require(deadline &gt;= block.timestamp, "PancakeRouter: EXPIRED")</span>;
+    _;
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  constructor(address _factory, address _WETH) public {</span>
+<span class="cstat-no" title="statement not covered" >    factory = _factory</span>;
+<span class="cstat-no" title="statement not covered" >    WETH = _WETH</span>;
+  }
+&nbsp;
+  receive() external payable {
+    assert(msg.sender == WETH); // only accept ETH via fallback from the WETH contract
+  }
+&nbsp;
+  // **** ADD LIQUIDITY ****
+<span class="fstat-no" title="function not covered" >  function _addLiquidity(</span>
+    address tokenA,
+    address tokenB,
+    uint256 amountADesired,
+    uint256 amountBDesired,
+    uint256 amountAMin,
+    uint256 amountBMin
+  ) internal virtual returns (uint256 amountA, uint256 amountB) {
+    // create the pair if it doesn't exist yet
+<span class="cstat-no" title="statement not covered" >    if (IUniswapV2Factory(factory).getPair(tokenA, tokenB) == address(0)) {</span>
+<span class="cstat-no" title="statement not covered" >      IUniswapV2Factory(factory).createPair(tokenA, tokenB)</span>;
+    }
+<span class="cstat-no" title="statement not covered" >    (uint256 reserveA, uint256 reserveB) = UniswapV2Library.getReserves(factory, tokenA, tokenB);</span>
+<span class="cstat-no" title="statement not covered" >    if (reserveA == 0 &amp;&amp; reserveB == 0) {</span>
+<span class="cstat-no" title="statement not covered" >      (amountA, amountB) = (amountADesired, amountBDesired)</span>;
+    } else {
+<span class="cstat-no" title="statement not covered" >      uint256 amountBOptimal = UniswapV2Library.quote(amountADesired, reserveA, reserveB);</span>
+<span class="cstat-no" title="statement not covered" >      if (amountBOptimal &lt;= amountBDesired) {</span>
+<span class="cstat-no" title="statement not covered" >        require(amountBOptimal &gt;= amountBMin, "PancakeRouter: INSUFFICIENT_B_AMOUNT")</span>;
+<span class="cstat-no" title="statement not covered" >        (amountA, amountB) = (amountADesired, amountBOptimal)</span>;
+      } else {
+<span class="cstat-no" title="statement not covered" >        uint256 amountAOptimal = UniswapV2Library.quote(amountBDesired, reserveB, reserveA);</span>
+<span class="cstat-no" title="statement not covered" >        assert(amountAOptimal &lt;= amountADesired)</span>;
+<span class="cstat-no" title="statement not covered" >        require(amountAOptimal &gt;= amountAMin, "PancakeRouter: INSUFFICIENT_A_AMOUNT")</span>;
+<span class="cstat-no" title="statement not covered" >        (amountA, amountB) = (amountAOptimal, amountBDesired)</span>;
+      }
+    }
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function addLiquidity(</span>
+    address tokenA,
+    address tokenB,
+    uint256 amountADesired,
+    uint256 amountBDesired,
+    uint256 amountAMin,
+    uint256 amountBMin,
+    address to,
+    uint256 deadline
+  )
+    external
+    virtual
+    override
+    ensure(deadline)
+    returns (
+      uint256 amountA,
+      uint256 amountB,
+      uint256 liquidity
+    )
+  {
+<span class="cstat-no" title="statement not covered" >    (amountA, amountB) = _addLiquidity(tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin)</span>;
+<span class="cstat-no" title="statement not covered" >    address pair = UniswapV2Library.pairFor(factory, tokenA, tokenB);</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    SafeToken.safeTransferFrom(tokenA, msg.sender, pair, amountA)</span>;
+<span class="cstat-no" title="statement not covered" >    SafeToken.safeTransferFrom(tokenB, msg.sender, pair, amountB)</span>;
+<span class="cstat-no" title="statement not covered" >    liquidity = IUniswapV2Pair(pair).mint(to)</span>;
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function addLiquidityETH(</span>
+    address token,
+    uint256 amountTokenDesired,
+    uint256 amountTokenMin,
+    uint256 amountETHMin,
+    address to,
+    uint256 deadline
+  )
+    external
+    payable
+    virtual
+    override
+    ensure(deadline)
+    returns (
+      uint256 amountToken,
+      uint256 amountETH,
+      uint256 liquidity
+    )
+  {
+<span class="cstat-no" title="statement not covered" >    (amountToken, amountETH) = _addLiquidity(token, WETH, amountTokenDesired, msg.value, amountTokenMin, amountETHMin)</span>;
+<span class="cstat-no" title="statement not covered" >    address pair = UniswapV2Library.pairFor(factory, token, WETH);</span>
+<span class="cstat-no" title="statement not covered" >    SafeToken.safeTransferFrom(token, msg.sender, pair, amountToken)</span>;
+<span class="cstat-no" title="statement not covered" >    IWETH(WETH).deposit{ value: amountETH }()</span>;
+<span class="cstat-no" title="statement not covered" >    assert(IWETH(WETH).transfer(pair, amountETH))</span>;
+<span class="cstat-no" title="statement not covered" >    liquidity = IUniswapV2Pair(pair).mint(to)</span>;
+    // refund dust eth, if any
+<span class="cstat-no" title="statement not covered" >    if (msg.value &gt; amountETH) <span class="cstat-no" title="statement not covered" >SafeToken.safeTransferETH(msg.sender, msg.value - amountETH)</span>;</span>
+  }
+&nbsp;
+  // **** REMOVE LIQUIDITY ****
+<span class="fstat-no" title="function not covered" >  function removeLiquidity(</span>
+    address tokenA,
+    address tokenB,
+    uint256 liquidity,
+    uint256 amountAMin,
+    uint256 amountBMin,
+    address to,
+    uint256 deadline
+  ) public virtual override ensure(deadline) returns (uint256 amountA, uint256 amountB) {
+<span class="cstat-no" title="statement not covered" >    address pair = UniswapV2Library.pairFor(factory, tokenA, tokenB);</span>
+<span class="cstat-no" title="statement not covered" >    IUniswapV2Pair(pair).transferFrom(msg.sender, pair, liquidity)</span>; // send liquidity to pair
+<span class="cstat-no" title="statement not covered" >    (uint256 amount0, uint256 amount1) = IUniswapV2Pair(pair).burn(to);</span>
+<span class="cstat-no" title="statement not covered" >    (address token0, ) = UniswapV2Library.sortTokens(tokenA, tokenB);</span>
+<span class="cstat-no" title="statement not covered" >    (amountA, amountB) = tokenA == token0 ? (amount0, amount1) : (amount1, amount0)</span>;
+<span class="cstat-no" title="statement not covered" >    require(amountA &gt;= amountAMin, "PancakeRouter: INSUFFICIENT_A_AMOUNT")</span>;
+<span class="cstat-no" title="statement not covered" >    require(amountB &gt;= amountBMin, "PancakeRouter: INSUFFICIENT_B_AMOUNT")</span>;
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function removeLiquidityETH(</span>
+    address token,
+    uint256 liquidity,
+    uint256 amountTokenMin,
+    uint256 amountETHMin,
+    address to,
+    uint256 deadline
+  ) public virtual override ensure(deadline) returns (uint256 amountToken, uint256 amountETH) {
+<span class="cstat-no" title="statement not covered" >    (amountToken, amountETH) = removeLiquidity(</span>
+      token,
+      WETH,
+      liquidity,
+      amountTokenMin,
+      amountETHMin,
+      address(this),
+      deadline
+    );
+<span class="cstat-no" title="statement not covered" >    SafeToken.safeTransfer(token, to, amountToken)</span>;
+<span class="cstat-no" title="statement not covered" >    IWETH(WETH).withdraw(amountETH)</span>;
+<span class="cstat-no" title="statement not covered" >    SafeToken.safeTransferETH(to, amountETH)</span>;
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function removeLiquidityWithPermit(</span>
+    address tokenA,
+    address tokenB,
+    uint256 liquidity,
+    uint256 amountAMin,
+    uint256 amountBMin,
+    address to,
+    uint256 deadline,
+    bool approveMax,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+  ) external virtual override returns (uint256 amountA, uint256 amountB) {
+<span class="cstat-no" title="statement not covered" >    address pair = UniswapV2Library.pairFor(factory, tokenA, tokenB);</span>
+<span class="cstat-no" title="statement not covered" >    uint256 value = approveMax ? uint256(-1) : liquidity;</span>
+<span class="cstat-no" title="statement not covered" >    IUniswapV2Pair(pair).permit(msg.sender, address(this), value, deadline, v, r, s)</span>;
+<span class="cstat-no" title="statement not covered" >    (amountA, amountB) = removeLiquidity(tokenA, tokenB, liquidity, amountAMin, amountBMin, to, deadline)</span>;
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function removeLiquidityETHWithPermit(</span>
+    address token,
+    uint256 liquidity,
+    uint256 amountTokenMin,
+    uint256 amountETHMin,
+    address to,
+    uint256 deadline,
+    bool approveMax,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+  ) external virtual override returns (uint256 amountToken, uint256 amountETH) {
+<span class="cstat-no" title="statement not covered" >    address pair = UniswapV2Library.pairFor(factory, token, WETH);</span>
+<span class="cstat-no" title="statement not covered" >    uint256 value = approveMax ? uint256(-1) : liquidity;</span>
+<span class="cstat-no" title="statement not covered" >    IUniswapV2Pair(pair).permit(msg.sender, address(this), value, deadline, v, r, s)</span>;
+<span class="cstat-no" title="statement not covered" >    (amountToken, amountETH) = removeLiquidityETH(token, liquidity, amountTokenMin, amountETHMin, to, deadline)</span>;
+  }
+&nbsp;
+  // **** REMOVE LIQUIDITY (supporting fee-on-transfer tokens) ****
+<span class="fstat-no" title="function not covered" >  function removeLiquidityETHSupportingFeeOnTransferTokens(</span>
+    address token,
+    uint256 liquidity,
+    uint256 amountTokenMin,
+    uint256 amountETHMin,
+    address to,
+    uint256 deadline
+  ) public virtual override ensure(deadline) returns (uint256 amountETH) {
+<span class="cstat-no" title="statement not covered" >    (, amountETH) = removeLiquidity(token, WETH, liquidity, amountTokenMin, amountETHMin, address(this), deadline)</span>;
+<span class="cstat-no" title="statement not covered" >    SafeToken.safeTransfer(token, to, IERC20(token).balanceOf(address(this)))</span>;
+<span class="cstat-no" title="statement not covered" >    IWETH(WETH).withdraw(amountETH)</span>;
+<span class="cstat-no" title="statement not covered" >    SafeToken.safeTransferETH(to, amountETH)</span>;
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function removeLiquidityETHWithPermitSupportingFeeOnTransferTokens(</span>
+    address token,
+    uint256 liquidity,
+    uint256 amountTokenMin,
+    uint256 amountETHMin,
+    address to,
+    uint256 deadline,
+    bool approveMax,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+  ) external virtual override returns (uint256 amountETH) {
+<span class="cstat-no" title="statement not covered" >    address pair = UniswapV2Library.pairFor(factory, token, WETH);</span>
+<span class="cstat-no" title="statement not covered" >    uint256 value = approveMax ? uint256(-1) : liquidity;</span>
+<span class="cstat-no" title="statement not covered" >    IUniswapV2Pair(pair).permit(msg.sender, address(this), value, deadline, v, r, s)</span>;
+<span class="cstat-no" title="statement not covered" >    amountETH = removeLiquidityETHSupportingFeeOnTransferTokens(</span>
+      token,
+      liquidity,
+      amountTokenMin,
+      amountETHMin,
+      to,
+      deadline
+    );
+  }
+&nbsp;
+  // **** SWAP ****
+  // requires the initial amount to have already been sent to the first pair
+<span class="fstat-no" title="function not covered" >  function _swap(</span>
+    uint256[] memory amounts,
+    address[] memory path,
+    address _to
+  ) internal virtual {
+<span class="cstat-no" title="statement not covered" >    for (uint256 i; i &lt; path.length - 1; i++) {</span>
+<span class="cstat-no" title="statement not covered" >      (address input, address output) = (path[i], path[i + 1]);</span>
+<span class="cstat-no" title="statement not covered" >      (address token0, ) = UniswapV2Library.sortTokens(input, output);</span>
+<span class="cstat-no" title="statement not covered" >      uint256 amountOut = amounts[i + 1];</span>
+<span class="cstat-no" title="statement not covered" >      (uint256 amount0Out, uint256 amount1Out) = input == token0 ? (uint256(0), amountOut) : (amountOut, uint256(0));</span>
+<span class="cstat-no" title="statement not covered" >      address to = i &lt; path.length - 2 ? UniswapV2Library.pairFor(factory, output, path[i + 2]) : _to;</span>
+<span class="cstat-no" title="statement not covered" >      IUniswapV2Pair(UniswapV2Library.pairFor(factory, input, output)).swap(amount0Out, amount1Out, to, new bytes(0))</span>;
+    }
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function swapExactTokensForTokens(</span>
+    uint256 amountIn,
+    uint256 amountOutMin,
+    address[] calldata path,
+    address to,
+    uint256 deadline
+  ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
+<span class="cstat-no" title="statement not covered" >    amounts = UniswapV2Library.getAmountsOut(factory, amountIn, path)</span>;
+<span class="cstat-no" title="statement not covered" >    require(amounts[amounts.length - 1] &gt;= amountOutMin, "PancakeRouter: INSUFFICIENT_OUTPUT_AMOUNT")</span>;
+<span class="cstat-no" title="statement not covered" >    SafeToken.safeTransferFrom(path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0])</span>;
+<span class="cstat-no" title="statement not covered" >    _swap(amounts, path, to)</span>;
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function swapTokensForExactTokens(</span>
+    uint256 amountOut,
+    uint256 amountInMax,
+    address[] calldata path,
+    address to,
+    uint256 deadline
+  ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
+<span class="cstat-no" title="statement not covered" >    amounts = UniswapV2Library.getAmountsIn(factory, amountOut, path)</span>;
+<span class="cstat-no" title="statement not covered" >    require(amounts[0] &lt;= amountInMax, "PancakeRouter: EXCESSIVE_INPUT_AMOUNT")</span>;
+<span class="cstat-no" title="statement not covered" >    SafeToken.safeTransferFrom(path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0])</span>;
+<span class="cstat-no" title="statement not covered" >    _swap(amounts, path, to)</span>;
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function swapExactETHForTokens(</span>
+    uint256 amountOutMin,
+    address[] calldata path,
+    address to,
+    uint256 deadline
+  ) external payable virtual override ensure(deadline) returns (uint256[] memory amounts) {
+<span class="cstat-no" title="statement not covered" >    require(path[0] == WETH, "PancakeRouter: INVALID_PATH")</span>;
+<span class="cstat-no" title="statement not covered" >    amounts = UniswapV2Library.getAmountsOut(factory, msg.value, path)</span>;
+<span class="cstat-no" title="statement not covered" >    require(amounts[amounts.length - 1] &gt;= amountOutMin, "PancakeRouter: INSUFFICIENT_OUTPUT_AMOUNT")</span>;
+<span class="cstat-no" title="statement not covered" >    IWETH(WETH).deposit{ value: amounts[0] }()</span>;
+<span class="cstat-no" title="statement not covered" >    assert(IWETH(WETH).transfer(UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]))</span>;
+<span class="cstat-no" title="statement not covered" >    _swap(amounts, path, to)</span>;
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function swapTokensForExactETH(</span>
+    uint256 amountOut,
+    uint256 amountInMax,
+    address[] calldata path,
+    address to,
+    uint256 deadline
+  ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
+<span class="cstat-no" title="statement not covered" >    require(path[path.length - 1] == WETH, "PancakeRouter: INVALID_PATH")</span>;
+<span class="cstat-no" title="statement not covered" >    amounts = UniswapV2Library.getAmountsIn(factory, amountOut, path)</span>;
+<span class="cstat-no" title="statement not covered" >    require(amounts[0] &lt;= amountInMax, "PancakeRouter: EXCESSIVE_INPUT_AMOUNT")</span>;
+<span class="cstat-no" title="statement not covered" >    SafeToken.safeTransferFrom(path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0])</span>;
+<span class="cstat-no" title="statement not covered" >    _swap(amounts, path, address(this))</span>;
+<span class="cstat-no" title="statement not covered" >    IWETH(WETH).withdraw(amounts[amounts.length - 1])</span>;
+<span class="cstat-no" title="statement not covered" >    SafeToken.safeTransferETH(to, amounts[amounts.length - 1])</span>;
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function swapExactTokensForETH(</span>
+    uint256 amountIn,
+    uint256 amountOutMin,
+    address[] calldata path,
+    address to,
+    uint256 deadline
+  ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
+<span class="cstat-no" title="statement not covered" >    require(path[path.length - 1] == WETH, "PancakeRouter: INVALID_PATH")</span>;
+<span class="cstat-no" title="statement not covered" >    amounts = UniswapV2Library.getAmountsOut(factory, amountIn, path)</span>;
+<span class="cstat-no" title="statement not covered" >    require(amounts[amounts.length - 1] &gt;= amountOutMin, "PancakeRouter: INSUFFICIENT_OUTPUT_AMOUNT")</span>;
+<span class="cstat-no" title="statement not covered" >    SafeToken.safeTransferFrom(path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0])</span>;
+<span class="cstat-no" title="statement not covered" >    _swap(amounts, path, address(this))</span>;
+<span class="cstat-no" title="statement not covered" >    IWETH(WETH).withdraw(amounts[amounts.length - 1])</span>;
+<span class="cstat-no" title="statement not covered" >    SafeToken.safeTransferETH(to, amounts[amounts.length - 1])</span>;
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function swapETHForExactTokens(</span>
+    uint256 amountOut,
+    address[] calldata path,
+    address to,
+    uint256 deadline
+  ) external payable virtual override ensure(deadline) returns (uint256[] memory amounts) {
+<span class="cstat-no" title="statement not covered" >    require(path[0] == WETH, "PancakeRouter: INVALID_PATH")</span>;
+<span class="cstat-no" title="statement not covered" >    amounts = UniswapV2Library.getAmountsIn(factory, amountOut, path)</span>;
+<span class="cstat-no" title="statement not covered" >    require(amounts[0] &lt;= msg.value, "PancakeRouter: EXCESSIVE_INPUT_AMOUNT")</span>;
+<span class="cstat-no" title="statement not covered" >    IWETH(WETH).deposit{ value: amounts[0] }()</span>;
+<span class="cstat-no" title="statement not covered" >    assert(IWETH(WETH).transfer(UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]))</span>;
+<span class="cstat-no" title="statement not covered" >    _swap(amounts, path, to)</span>;
+    // refund dust eth, if any
+<span class="cstat-no" title="statement not covered" >    if (msg.value &gt; amounts[0]) <span class="cstat-no" title="statement not covered" >SafeToken.safeTransferETH(msg.sender, msg.value - amounts[0])</span>;</span>
+  }
+&nbsp;
+  // **** SWAP (supporting fee-on-transfer tokens) ****
+  // requires the initial amount to have already been sent to the first pair
+<span class="fstat-no" title="function not covered" >  function _swapSupportingFeeOnTransferTokens(address[] memory path, address _to) internal virtual {</span>
+<span class="cstat-no" title="statement not covered" >    for (uint256 i; i &lt; path.length - 1; i++) {</span>
+<span class="cstat-no" title="statement not covered" >      (address input, address output) = (path[i], path[i + 1]);</span>
+<span class="cstat-no" title="statement not covered" >      (address token0, ) = UniswapV2Library.sortTokens(input, output);</span>
+<span class="cstat-no" title="statement not covered" >      IUniswapV2Pair pair = IUniswapV2Pair(UniswapV2Library.pairFor(factory, input, output));</span>
+<span class="cstat-no" title="statement not covered" >      uint256 amountInput;</span>
+<span class="cstat-no" title="statement not covered" >      uint256 amountOutput;</span>
+      {
+        // scope to avoid stack too deep errors
+<span class="cstat-no" title="statement not covered" >        (uint256 reserve0, uint256 reserve1, ) = pair.getReserves();</span>
+<span class="cstat-no" title="statement not covered" >        (uint256 reserveInput, uint256 reserveOutput) = input == token0 ? (reserve0, reserve1) : (reserve1, reserve0);</span>
+<span class="cstat-no" title="statement not covered" >        amountInput = IERC20(input).balanceOf(address(pair)).sub(reserveInput)</span>;
+<span class="cstat-no" title="statement not covered" >        amountOutput = UniswapV2Library.getAmountOut(amountInput, reserveInput, reserveOutput)</span>;
+      }
+<span class="cstat-no" title="statement not covered" >      (uint256 amount0Out, uint256 amount1Out) = input == token0</span>
+        ? (uint256(0), amountOutput)
+        : (amountOutput, uint256(0));
+<span class="cstat-no" title="statement not covered" >      address to = i &lt; path.length - 2 ? UniswapV2Library.pairFor(factory, output, path[i + 2]) : _to;</span>
+<span class="cstat-no" title="statement not covered" >      pair.swap(amount0Out, amount1Out, to, new bytes(0))</span>;
+    }
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function swapExactTokensForTokensSupportingFeeOnTransferTokens(</span>
+    uint256 amountIn,
+    uint256 amountOutMin,
+    address[] calldata path,
+    address to,
+    uint256 deadline
+  ) external virtual override ensure(deadline) {
+<span class="cstat-no" title="statement not covered" >    SafeToken.safeTransferFrom(path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amountIn)</span>;
+<span class="cstat-no" title="statement not covered" >    uint256 balanceBefore = IERC20(path[path.length - 1]).balanceOf(to);</span>
+<span class="cstat-no" title="statement not covered" >    _swapSupportingFeeOnTransferTokens(path, to)</span>;
+<span class="cstat-no" title="statement not covered" >    require(</span>
+      IERC20(path[path.length - 1]).balanceOf(to).sub(balanceBefore) &gt;= amountOutMin,
+      "PancakeRouter: INSUFFICIENT_OUTPUT_AMOUNT"
+    );
+  }
+&nbsp;
+  // function swapExactETHForTokensSupportingFeeOnTransferTokens(
+  //   uint amountOutMin,
+  //   address[] calldata path,
+  //   address to,
+  //   uint deadline
+  // )
+  //   external
+  //   virtual
+  //   override
+  //   payable
+  //   ensure(deadline)
+  // {
+  //   require(path[0] == WETH, 'PancakeRouter: INVALID_PATH');
+  //   uint amountIn = msg.value;
+  //   IWETH(WETH).deposit{value: amountIn}();
+  //   assert(IWETH(WETH).transfer(UniswapV2Library.pairFor(factory, path[0], path[1]), amountIn));
+  //   uint balanceBefore = IERC20(path[path.length - 1]).balanceOf(to);
+  //   _swapSupportingFeeOnTransferTokens(path, to);
+  //   require(
+  //     IERC20(path[path.length - 1]).balanceOf(to).sub(balanceBefore) &gt;= amountOutMin,
+  //     'PancakeRouter: INSUFFICIENT_OUTPUT_AMOUNT'
+  //   );
+  // }
+&nbsp;
+  // function swapExactTokensForETHSupportingFeeOnTransferTokens(
+  //     uint amountIn,
+  //     uint amountOutMin,
+  //     address[] calldata path,
+  //     address to,
+  //     uint deadline
+  // )
+  //     external
+  //     virtual
+  //     override
+  //     ensure(deadline)
+  // {
+  //   require(path[path.length - 1] == WETH, 'PancakeRouter: INVALID_PATH');
+  //   SafeToken.safeTransferFrom(
+  //       path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amountIn
+  //   );
+  //   _swapSupportingFeeOnTransferTokens(path, address(this));
+  //   uint amountOut = IERC20(WETH).balanceOf(address(this));
+  //   require(amountOut &gt;= amountOutMin, 'PancakeRouter: INSUFFICIENT_OUTPUT_AMOUNT');
+  //   IWETH(WETH).withdraw(amountOut);
+  //   SafeToken.safeTransferETH(to, amountOut);
+  // }
+&nbsp;
+  // **** LIBRARY FUNCTIONS ****
+<span class="fstat-no" title="function not covered" >  function quote(</span>
+    uint256 amountA,
+    uint256 reserveA,
+    uint256 reserveB
+  ) public pure virtual override returns (uint256 amountB) {
+<span class="cstat-no" title="statement not covered" >    return UniswapV2Library.quote(amountA, reserveA, reserveB);</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function getAmountOut(</span>
+    uint256 amountIn,
+    uint256 reserveIn,
+    uint256 reserveOut
+  ) public pure virtual override returns (uint256 amountOut) {
+<span class="cstat-no" title="statement not covered" >    return UniswapV2Library.getAmountOut(amountIn, reserveIn, reserveOut);</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function getAmountIn(</span>
+    uint256 amountOut,
+    uint256 reserveIn,
+    uint256 reserveOut
+  ) public pure virtual override returns (uint256 amountIn) {
+<span class="cstat-no" title="statement not covered" >    return UniswapV2Library.getAmountIn(amountOut, reserveIn, reserveOut);</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function getAmountsOut(uint256 amountIn, address[] memory path)</span>
+    public
+    view
+    virtual
+    override
+    returns (uint256[] memory amounts)
+  {
+<span class="cstat-no" title="statement not covered" >    return UniswapV2Library.getAmountsOut(factory, amountIn, path);</span>
+  }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function getAmountsIn(uint256 amountOut, address[] memory path)</span>
+    public
+    view
+    virtual
+    override
+    returns (uint256[] memory amounts)
+  {
+<span class="cstat-no" title="statement not covered" >    return UniswapV2Library.getAmountsIn(factory, amountOut, path);</span>
+  }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Jul 01 2022 16:59:39 GMT+0800 (中国标准时间)
+</div>
+</div>
+<script src="../../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../../sorter.js"></script>
+</body>
+</html>
