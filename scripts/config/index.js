@@ -3,6 +3,7 @@ const { network } = require('hardhat');
 const okc  = require('./okc')
 const bsc  = require('./bsc')
 const eth  = require('./eth')
+const avax = require('./avax')
 
 let config
 
@@ -12,6 +13,8 @@ if (network == "okc") {
   config = bsc
 } else if (network == "eth") {
   config = eth
+} else if (network == 'avax') {
+  config =avax
 } else {
   config = eth
 }
@@ -23,6 +26,8 @@ const getConfig = function (network) {
     return bsc
   } else if (network == "eth") { 
     return eth
+  } else if (network=='avax') {
+    return avax
   } else {
     throw error("network not config")
   }
