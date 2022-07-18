@@ -118,9 +118,9 @@ contract UnxswapRouter is EthReceiver, Permitable {
     uint256 minReturn,
   // solhint-disable-next-line no-unused-vars
     bytes32[] calldata pools,
-    address payer
-  ) internal returns (uint256) {
-    uint256 returnAmount;
+    address payer,
+    address receiver
+  ) internal returns (uint256 returnAmount) {
     assembly {
     // solhint-disable-line no-inline-assembly
       function reRevert() {
@@ -242,7 +242,7 @@ contract UnxswapRouter is EthReceiver, Permitable {
         and(rawPair, _ADDRESS_MASK),
         and(rawPair, _REVERSE_MASK),
         shr(_NUMERATOR_OFFSET, and(rawPair, _NUMERATOR_MASK)),
-        caller()
+        receiver
         )
       }
       default {
@@ -268,7 +268,7 @@ contract UnxswapRouter is EthReceiver, Permitable {
           reRevert()
         }
 
-        if iszero(call(gas(), caller(), returnAmount, 0, 0, 0, 0)) {
+        if iszero(call(gas(), receiver, returnAmount, 0, 0, 0, 0)) {
           reRevert()
         }
       }
@@ -323,7 +323,7 @@ contract UnxswapRouter is EthReceiver, Permitable {
   // solhint-disable-next-line no-unused-vars
     bytes32[] calldata pools
   ) public payable returns (uint256) {
-    return _unxswapInternal(srcToken, amount, minReturn, pools, msg.sender);
+    return _unxswapInternal(srcToken, amount, minReturn, pools, msg.sender, msg.sender);
   }
 
   /// @notice Same as `unoswap` but calls permit first,

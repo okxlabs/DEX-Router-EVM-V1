@@ -1,8 +1,7 @@
-const { ethers, network } = require('hardhat')
+const { ethers } = require('hardhat')
 const { BigNumber } = require('ethers')
 const { expect } = require('chai')
 const { getPermitDigest, sign } = require('./signatures')
-const Web3 = require("web3");
 
 //
 // You need to change the address in the Unxswap contract before running the test case
@@ -97,7 +96,9 @@ describe("Unoswap swap test", function() {
     poolFee = Number(997000000).toString(16).replace('0x', '');
     pool0 = flag + '000000000000000' + poolFee + poolAddr;
 
-    await sourceToken.connect(bob).transfer(alice.address, fromTokenAmount);
+    //await sourceToken.connect(bob).transfer(alice.address, fromTokenAmount);
+    await weth.connect(liquidity).deposit({ value: fromTokenAmount });
+    await weth.connect(liquidity).transfer(alice.address, fromTokenAmount); // sourceToken = weth
     await sourceToken.connect(alice).approve(tokenApprove.address, fromTokenAmount);
 
     await dexRouter.connect(alice).unxswap(
@@ -320,7 +321,6 @@ describe("Unoswap swap test", function() {
   });
 
   it("unxswapByXBridge source token ETH to usdt", async () => {
-    const web3 = new Web3(network.provider);
     const token0 = await lpWETHUSDT.token0();
     const reserves = await lpWETHUSDT.getReserves();
     if (token0 == weth.address) {
@@ -339,18 +339,8 @@ describe("Unoswap swap test", function() {
     poolAddr = lpWETHUSDT.address.toString().replace('0x', '');
     poolFee = Number(997000000).toString(16).replace('0x', '');
     pool0 = flag + '000000000000000' + poolFee + poolAddr;
-    // construct calldata
-    let fourBytes = web3.eth.abi.encodeFunctionSignature('unxswapByXBridge(address,uint256,uint256,bytes32[])');
-    let parameters = web3.eth.abi.encodeParameters(
-        ['address','uint256','uint256','bytes32[]'],
-        [
-          '0x0000000000000000000000000000000000000000',
-          fromTokenAmount,
-          0,
-          [pool0]
-        ]
-    );
-    let calldata = fourBytes + parameters.replace('0x', '');
+
+    let encodeABI = dexRouter.interface.encodeFunctionData('unxswapByXBridge', ['0x0000000000000000000000000000000000000000', fromTokenAmount, 0, [pool0]]);
     let xBridge = await initMockXBridge();
     expect(await usdt.balanceOf(xBridge.address)).to.be.equal(0);
     let request = {
@@ -363,14 +353,13 @@ describe("Unoswap swap test", function() {
       toTokenMinAmount : 0,
       toChainToTokenMinAmount : 0,
       data : ethers.utils.defaultAbiCoder.encode(["address", "uint64", "uint32"], [usdt.address, 0, 501]),
-      dexData : calldata,
+      dexData : encodeABI,
     };
     await xBridge.connect(alice).swapAndBridgeToImprove(request, {value: ethers.utils.parseEther('0.1')});
     expect(await usdt.balanceOf(xBridge.address)).to.be.equal("298802094311970964947");
   });
 
   it("unxswapByXBridge source token WETH to usdt", async () => {
-    const web3 = new Web3(network.provider);
     const token0 = await lpWETHUSDT.token0();
     reserves = await lpWETHUSDT.getReserves();
     if (token0 == weth.address) {
@@ -390,18 +379,7 @@ describe("Unoswap swap test", function() {
     poolFee = Number(997000000).toString(16).replace('0x', '');
     pool0 = flag + '000000000000000' + poolFee + poolAddr;
 
-    // construct calldata
-    let fourBytes = web3.eth.abi.encodeFunctionSignature('unxswapByXBridge(address,uint256,uint256,bytes32[])');
-    let parameters = web3.eth.abi.encodeParameters(
-        ['address','uint256','uint256','bytes32[]'],
-        [
-          sourceToken.address,
-          fromTokenAmount,
-          0,
-          [pool0]
-        ]
-    );
-    let calldata = fourBytes + parameters.replace('0x', '');
+    let encodeABI = dexRouter.interface.encodeFunctionData('unxswapByXBridge', [sourceToken.address, fromTokenAmount, 0, [pool0]]);
     let xBridge = await initMockXBridge();
     expect(await usdt.balanceOf(xBridge.address)).to.be.equal(0);
     let request = {
@@ -414,10 +392,12 @@ describe("Unoswap swap test", function() {
       toTokenMinAmount : 0,
       toChainToTokenMinAmount : 0,
       data : ethers.utils.defaultAbiCoder.encode(["address", "uint64", "uint32"], [usdt.address, 0, 501]),
-      dexData : calldata,
+      dexData : encodeABI,
     };
 
-    await sourceToken.connect(bob).transfer(alice.address, fromTokenAmount);
+    //await sourceToken.connect(bob).transfer(alice.address, fromTokenAmount);
+    await weth.connect(liquidity).deposit({ value: fromTokenAmount });
+    await weth.connect(liquidity).transfer(alice.address, fromTokenAmount); // sourceToken = weth
     await sourceToken.connect(alice).approve(tokenApprove.address, fromTokenAmount);
 
     await xBridge.connect(alice).swapAndBridgeToImprove(request);
@@ -425,6 +405,90 @@ describe("Unoswap swap test", function() {
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
     expect(await usdt.balanceOf(xBridge.address)).to.be.equal("298802094311970964947");
   });
+
+  it("unxswapByVault source token WETH to usdt", async () => {
+    const token0 = await lpWETHUSDT.token0();
+    reserves = await lpWETHUSDT.getReserves();
+    if (token0 == weth.address) {
+      expect(reserves[1]).to.be.eq("300000000000000000000000");
+      expect(reserves[0]).to.be.eq("100000000000000000000");
+    } else {
+      expect(reserves[0]).to.be.eq("300000000000000000000000");
+      expect(reserves[1]).to.be.eq("100000000000000000000");
+    }
+
+    sourceToken = weth;
+    targetToken = usdt;
+    const fromTokenAmount = ethers.utils.parseEther('0.1');
+    // 0x4 WETH -> ETH 0x8 reverse pair
+    flag = sourceToken.address == token0 ? '0x0' : "0x8";
+    poolAddr = lpWETHUSDT.address.toString().replace('0x', '');
+    poolFee = Number(997000000).toString(16).replace('0x', '');
+    pool0 = flag + '000000000000000' + poolFee + poolAddr;
+
+    let encodeABI = dexRouter.interface.encodeFunctionData('unxswapByVault', [sourceToken.address, fromTokenAmount, 0, [pool0]]);
+    let xBridge = await initMockXBridge();
+    let beforeBalance = await usdt.balanceOf(bob.address);
+    let request = {
+      fromToken : sourceToken.address,
+      toToken : targetToken.address,
+      to : bob.address,
+      amount: fromTokenAmount,
+      gasFeeAmount : 0,
+      srcChainId : 1,
+      srcTxHash : ethers.utils.defaultAbiCoder.encode(['bytes32'], ['0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9']),
+      dexData : encodeABI,
+      extData : ethers.utils.defaultAbiCoder.encode(['bytes'], ['0x6e']),
+    };
+
+    // await sourceToken.connect(alice).transfer(xBridge.address, fromTokenAmount);
+    await weth.connect(liquidity).deposit({ value: fromTokenAmount });
+    await weth.connect(liquidity).transfer(xBridge.address, fromTokenAmount); // sourceToken = weth
+    expect(await sourceToken.balanceOf(xBridge.address)).to.be.equal(fromTokenAmount);
+    await xBridge.connect(alice).claim(request);
+    expect(await weth.balanceOf(xBridge.address)).to.be.equal(0);
+    // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
+    expect(await usdt.balanceOf(bob.address)).to.be.equal(beforeBalance.add("298802094311970964947"));
+  });
+
+  it("unxswapByVault source token ETH to usdt", async () => {
+      const token0 = await lpWETHUSDT.token0();
+      const reserves = await lpWETHUSDT.getReserves();
+      if (token0 == weth.address) {
+        expect(reserves[1]).to.be.eq("300000000000000000000000");
+        expect(reserves[0]).to.be.eq("100000000000000000000");
+      } else {
+        expect(reserves[0]).to.be.eq("300000000000000000000000");
+        expect(reserves[1]).to.be.eq("100000000000000000000");
+      }
+
+      sourceToken = ETH;
+      targetToken = usdt;
+      const fromTokenAmount = ethers.utils.parseEther('0.1');
+      // 0x4 WETH -> ETH 0x8 reverse pair
+      flag = token0 == weth.address ? '0x0' : '0x8'
+      poolAddr = lpWETHUSDT.address.toString().replace('0x', '');
+      poolFee = Number(997000000).toString(16).replace('0x', '');
+      pool0 = flag + '000000000000000' + poolFee + poolAddr;
+
+      let encodeABI = dexRouter.interface.encodeFunctionData('unxswapByVault', ['0x0000000000000000000000000000000000000000', fromTokenAmount, 0, [pool0]]);
+      let xBridge = await initMockXBridge();
+      const beforeBalance = await usdt.balanceOf(owner.address);
+      let request = {
+        fromToken : '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+        toToken : targetToken.address,
+        to : owner.address,
+        amount: fromTokenAmount,
+        gasFeeAmount : 0,
+        srcChainId : 1,
+        srcTxHash : ethers.utils.defaultAbiCoder.encode(['bytes32'], ['0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9']),
+        dexData : encodeABI,
+        extData : ethers.utils.defaultAbiCoder.encode(['bytes'], ['0x6e']),
+      };
+      await liquidity.sendTransaction({to: xBridge.address, value: fromTokenAmount});
+      await xBridge.connect(alice).claim(request);
+      expect(await usdt.balanceOf(owner.address)).to.be.equal(beforeBalance.add("298802094311970964947"));
+    });
 
   const initMockTokens = async () => {
     const MockERC20 = await ethers.getContractFactory("MockERC20");
@@ -530,8 +594,8 @@ describe("Unoswap swap test", function() {
   const initDexRouter = async () => {
     const WETH9 = await ethers.getContractFactory("WETH9");
     weth = await WETH9.deploy();
-    await weth.connect(liquidity).deposit({ value: ethers.utils.parseEther('1000') });
-    await weth.connect(liquidity).transfer(bob.address, ethers.utils.parseEther('1000'));
+    await weth.connect(liquidity).deposit({ value: ethers.utils.parseEther('8000') });
+    await weth.connect(liquidity).transfer(bob.address, ethers.utils.parseEther('8000'));
     await weth.connect(bob).deposit({ value: ethers.utils.parseEther('1000') });
 
     TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
@@ -564,6 +628,8 @@ describe("Unoswap swap test", function() {
     await xBridge.deployed();
     await xBridge.setDexRouter(dexRouter.address);
     await dexRouter.setXBridge(xBridge.address);
+    await xBridge.connect(owner).setMpc([alice.address]);
+    await xBridge.setApproveProxy(tokenApproveProxy.address);
     return xBridge;
   }
 
