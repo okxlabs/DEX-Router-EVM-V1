@@ -44,6 +44,12 @@ const BUSD = {
   baseTokenAddress: '0xe9e7cea3dedca5984780bafc599bd69add087d56',
 }
 
+const BNB = {
+  name: "BNB",
+  decimals: 18,
+  baseTokenAddress: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+}
+
 module.exports = {
   BTCB,
   DOT,
@@ -53,5 +59,6 @@ module.exports = {
   WBTC,
   WETH,
   CAKE,
-  BUSD
+  BUSD,
+  BNB
 }

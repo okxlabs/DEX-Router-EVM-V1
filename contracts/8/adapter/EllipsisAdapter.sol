@@ -7,6 +7,7 @@ import "../interfaces/IERC20.sol";
 import "../libraries/UniversalERC20.sol";
 import "../libraries/SafeERC20.sol";
 import "../interfaces/IWETH.sol";
+import "hardhat/console.sol";
 
 contract EllipsisAdapter is IAdapter {
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -27,11 +28,10 @@ contract EllipsisAdapter is IAdapter {
         );
 
         uint256 sellAmount = 0;
-        uint256 returnAmount = 0;
         if (fromToken == ETH_ADDRESS) {
             sellAmount = IWETH(WETH_ADDRESS).balanceOf(address(this));
             IWETH(WETH_ADDRESS).withdraw(sellAmount);
-            returnAmount = IEllipsis(pool).exchange{value: sellAmount}(
+            IEllipsis(pool).exchange{value: sellAmount}(
                 i,
                 j,
                 sellAmount,
@@ -48,6 +48,7 @@ contract EllipsisAdapter is IAdapter {
             );
         }
 
+
         // approve 0
         SafeERC20.safeApprove(
             IERC20(fromToken == ETH_ADDRESS ? WETH_ADDRESS : fromToken),
@@ -56,6 +57,7 @@ contract EllipsisAdapter is IAdapter {
         );
         if (to != address(this)) {
             if (toToken == ETH_ADDRESS) {
+                uint256 returnAmount = address(this).balance;
                 IWETH(WETH_ADDRESS).deposit{value: returnAmount}();
                 toToken = WETH_ADDRESS;
             }

@@ -9,5 +9,5 @@ interface IEllipsis {
         int128 j,
         uint256 dx,
         uint256 minDy
-    ) external payable returns (uint256);
+    ) external payable ;
 }

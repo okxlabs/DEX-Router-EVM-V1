@@ -4,6 +4,7 @@ const okc  = require('./okc')
 const bsc  = require('./bsc')
 const eth  = require('./eth')
 const avax = require('./avax')
+const arbitrum = require('./arbitrum')
 
 let config
 
@@ -14,7 +15,9 @@ if (network == "okc") {
 } else if (network == "eth") {
   config = eth
 } else if (network == 'avax') {
-  config =avax
+  config = avax
+} else if (network == 'arbitrum') {
+  config = arbitrum
 } else {
   config = eth
 }
@@ -28,6 +31,8 @@ const getConfig = function (network) {
     return eth
   } else if (network=='avax') {
     return avax
+  } else if (network == 'arbitrum') {
+    return arbitrum
   } else {
     throw error("network not config")
   }
