@@ -64,18 +64,6 @@ async function checkWeightPool(BeethovenxAdapter) {
 
 
 
-
-async function checkWeight2Pool() {
-
-}
-
-async function checkStablePoolFactory() {
-
-}
-
-
-
-
 async function main() {
     BeethovenxAdapter = await deployContract()
     console.log("====== checkWeightPool =====")

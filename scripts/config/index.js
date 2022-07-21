@@ -7,6 +7,8 @@ const avax = require('./avax')
 const arbitrum = require('./arbitrum')
 const op = require('./op')
 const ftm = require('./ftm')
+const polygon = require('./polygon')
+
 
 
 
@@ -26,6 +28,8 @@ if (network == "okc") {
   config = op
 } else if (network == 'ftm') {
   config = ftm
+} else if (network == '') {
+  config = polygon
 } else {
   config = eth
 }
@@ -45,7 +49,9 @@ const getConfig = function (network) {
     return op
   } else if (network == 'ftm') {
     return ftm
-  }else {
+  } else if (network == 'polygon') {
+    return polygon
+  } else {
     throw error("network not config")
   }
 }
