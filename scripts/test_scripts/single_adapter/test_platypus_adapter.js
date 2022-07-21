@@ -13,22 +13,11 @@ async function deployContract() {
 
     return platypusAdapter
 }
-async function setForkNetWork(blockNumber) {
-    await network.provider.request({
-        method: "hardhat_reset",
-        params: [{
-            forking: {
-                jsonRpcUrl: "https://rpc.ankr.com/avalanche",
-                blockNumber: blockNumber
-            }
-        }]
-    })
-}
 
 // swap usdc to usdt in main pool
 async function execute1() {
     // fork network
-    await setForkNetWork(17351078)
+    await setForkNetWorkAndBlockNumber("avax")
     // deploy adapter
     const platypusAdapter = await deployContract()
     console.log(platypusAdapter.address)
@@ -80,7 +69,7 @@ async function execute1() {
 async function execute2() {
     // tx = "0xb3536c11c73dab89e0a6f7d4ef6d6ea2d073de35e688cde3b1b9c81e92bd1032"
     // fork network
-    await setForkNetWork(17317563)
+    await setForkNetWorkAndBlockNumber( "avax")
     // deploy adapter
     const platypusAdapter = await deployContract()
     console.log(platypusAdapter.address)
@@ -137,7 +126,7 @@ async function execute2() {
 async function execute3() {
     // tx = "0xb6b42ea522e0c20cc841e131429b5dffc32ea2e2df0a7aefba0047e1169dca11"
     // fork network
-    await setForkNetWork(17351168)
+    await setForkNetWorkAndBlockNumber( "avax")
     // deploy adapter
     const platypusAdapter = await deployContract()
     console.log(platypusAdapter.address)
@@ -188,9 +177,6 @@ async function execute3() {
 
 
 async function main() {
-    
-    
-
     console.log("==== swap usdc to usdt in main pool ====== ")
     await execute1()
     console.log("==== swap avax to savax alt pool ====== ")
