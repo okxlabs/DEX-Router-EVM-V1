@@ -7,7 +7,7 @@ const USDC  = {
 const USDT  = {
     name: "USDT",
     decimals: 6,
-    baseTokenAddress: '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7',
+    baseTokenAddress: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
 }
 
 const nUSD = {
@@ -27,6 +27,8 @@ const ETH = {
     decimals: 18,
     baseTokenAddress: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
   }
+
+
 
 module.exports = {
     USDC,

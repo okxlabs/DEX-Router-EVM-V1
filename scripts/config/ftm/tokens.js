@@ -17,8 +17,15 @@ const WETH = {
   baseTokenAddress: '0x74b23882a30290451A17c44f4F05243b6b58C76d',
 }
 
+const FUSDT  = {
+  name: "FUSDT",
+  decimals: 6,
+  baseTokenAddress: '0x049d68029688eAbF473097a2fC38ef61633A3C7A',
+  }
+
 module.exports = {
   USDC,
   DAI,
-  WETH
+  WETH,
+  FUSDT
 }
