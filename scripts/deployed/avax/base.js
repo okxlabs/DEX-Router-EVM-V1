@@ -5,10 +5,6 @@ module.exports = {
     tokenApproveProxy: "0x70cBb871E8f30Fc8Ce23609E9E0Ea87B6b222F58",
     dexRouter: "0x1daC23e41Fc8ce857E86fD8C1AE5b6121C67D96d",
     xbridge: "0xf956D9FA19656D8e5219fd6fa8bA6cb198094138",
-<<<<<<< HEAD
-    nftmarket: "0x8EdfF1177E28dF694A60C9C6133f2f869E15657b"
-=======
     nftmarket: "0x8EdfF1177E28dF694A60C9C6133f2f869E15657b",
     investEntrance: "0x7251FEbEABB01eC9dE53ECe7a96f1C951F886Dd2"
->>>>>>> dev
 }
