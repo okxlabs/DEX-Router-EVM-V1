@@ -54,9 +54,9 @@ contract MockXBridge is PausableUpgradeable, OwnableUpgradeable, ReentrancyGuard
 
     address public payer; // temp msg.sender when swap
 
-    address public feeTo;
-
     address public receiver;
+
+    address public feeTo;
 
     address public admin;
 
@@ -144,7 +144,7 @@ contract MockXBridge is PausableUpgradeable, OwnableUpgradeable, ReentrancyGuard
         }
     }
 
-    function _swapAndBridgeToInternal(SwapAndBridgeRequest calldata _request, bool improve) internal {
+    function _swapAndBridgeToInternal(SwapAndBridgeRequest calldata _request) internal {
         require(_request.fromToken != address(0), "address 0");
         require(_request.toToken != address(0), "address 0");
         require(_request.fromToken != _request.toToken, "address equal");
@@ -153,6 +153,10 @@ contract MockXBridge is PausableUpgradeable, OwnableUpgradeable, ReentrancyGuard
         uint256 fromTokenBalance = _getBalanceOf(_request.fromToken);
         uint256 toTokenBalance = _getBalanceOf(_request.toToken);
         bool success;
+        bytes4 selectorId = bytes4(_request.dexData);
+        require(selectorId == 0xd6576868 || selectorId == 0xe051c6e8, "selector id error");
+        payer = msg.sender;
+        receiver = address(this);
         // 1. prepare and swap
         if (_request.fromToken == NATIVE_TOKEN) {
             require(msg.value == _request.fromTokenAmount, "invalid amount");
@@ -160,16 +164,10 @@ contract MockXBridge is PausableUpgradeable, OwnableUpgradeable, ReentrancyGuard
             (success, ) = dexRouter.call{value : msg.value}(_request.dexData);
         } else {
             require(msg.value == 0, "invalid msg value");
-            if (improve) {
-                payer = msg.sender;
-                (success, ) = dexRouter.call(_request.dexData);
-                payer = address(0);
-            } else {
-                _deposit(msg.sender, address(this), _request.fromToken, _request.fromTokenAmount);
-                _approve(_request.fromToken, IApproveProxy(approveProxy).tokenApprove(), _request.fromTokenAmount);
-                (success, ) = dexRouter.call(_request.dexData);
-            }
+            (success, ) = dexRouter.call(_request.dexData);
         }
+        delete payer;
+        delete receiver;
 
         // 2. check result and balance
         require(success, "dex router error");
@@ -270,12 +268,8 @@ contract MockXBridge is PausableUpgradeable, OwnableUpgradeable, ReentrancyGuard
     //-------------------------------
     //------- Users Functions -------
     //-------------------------------
-    function swapAndBridgeTo(SwapAndBridgeRequest calldata _request) external payable nonReentrant whenNotPaused {
-        _swapAndBridgeToInternal(_request, false);
-    }
-
     function swapAndBridgeToImprove(SwapAndBridgeRequest calldata _request) external payable nonReentrant whenNotPaused {
-        _swapAndBridgeToInternal(_request, true);
+        _swapAndBridgeToInternal(_request);
     }
 
     function payerReceiver() external view returns(address, address) {
