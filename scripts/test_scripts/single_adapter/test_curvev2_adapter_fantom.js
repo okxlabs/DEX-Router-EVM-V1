@@ -11,7 +11,7 @@ async function deployContract() {
     return CurveV2Adapter
 }
 
-// https://arbiscan.io/address/0x960ea3e3C7FB317332d990873d354E18d7645590#code
+// https://ftmscan.com/tx/0xb27d22e615ae50fc15dd5bc547abfcf99e8df8ce5ba54d53cf5018c4c152052d
 // fUST: WETH : BTC
 // 0: fUST
 // 1: WBTC
@@ -22,7 +22,7 @@ async function executeTricrypto(CurveV2Adapter) {
     await setBalance(CurveV2Adapter.address, "0x53444835ec580000");
 
     UserAddress = "0x15d1bfe5f771ca0369d42fc0edf491f032332d3e"
-    triCryptoAddress = "0x960ea3e3C7FB317332d990873d354E18d7645590"
+    triCryptoAddress = "0x3a1659ddcf2339be3aea159ca010979fb49155ff"
 
     startMockAccount([UserAddress])
 
@@ -43,7 +43,7 @@ async function executeTricrypto(CurveV2Adapter) {
     console.log("user balance: ", beforeBalance.toString());
     
     // transfer token
-    await FUSDT.connect(signer).transfer(CurveV2Adapter.address, ethers.utils.parseUnits('1000', tokenConfig.tokens.USDT.decimals));
+    await FUSDT.connect(signer).transfer(CurveV2Adapter.address, ethers.utils.parseUnits('1000', tokenConfig.tokens.FUSDT.decimals));
     beforeBalance = await FUSDT.balanceOf(CurveV2Adapter.address);
 
     console.log("FUSDT beforeBalance: ", beforeBalance.toString());
@@ -70,7 +70,7 @@ async function executeTricrypto(CurveV2Adapter) {
 
     afterBalance = await WETH.balanceOf(CurveV2Adapter.address);
     usdtBalance = await FUSDT.balanceOf(CurveV2Adapter.address);
-    console.log("FUSDT afterBalance: ", FUSDT.toString());
+    console.log("FUSDT afterBalance: ", usdtBalance.toString());
     console.log("WETH afterBalance: ", afterBalance.toString());
 }
 

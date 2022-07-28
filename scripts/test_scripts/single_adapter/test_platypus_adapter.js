@@ -17,59 +17,59 @@ async function deployContract() {
 // swap usdc to usdt in main pool
 async function execute1() {
     // fork network
-    await setForkNetWorkAndBlockNumber("avax")
+    // await setForkNetWork("avax", 17351078)
     // deploy adapter
     const platypusAdapter = await deployContract()
     console.log(platypusAdapter.address)
     // mock account
-    const userAddress = "0x1df3cc53e85481d503eada1c7593a1999d7cc786"
-    await startMockAccount([userAddress])
-    const userSigner = await ethers.getSigner(userAddress)
+    // const userAddress = "0x1df3cc53e85481d503eada1c7593a1999d7cc786"
+    // await startMockAccount([userAddress])
+    // const userSigner = await ethers.getSigner(userAddress)
 
-    const pool = "0x66357dCaCe80431aee0A7507e2E361B7e2402370"  // main pool
+    // const pool = "0x66357dCaCe80431aee0A7507e2E361B7e2402370"  // main pool
     
-    const usdc = await ethers.getContractAt(
-        "MockERC20",
-        tokenConfig.tokens.USDC.baseTokenAddress
-    )
-    const usdt = await ethers.getContractAt(
-        "MockERC20",
-        tokenConfig.tokens.USDT.baseTokenAddress
-    )
+    // const usdc = await ethers.getContractAt(
+    //     "MockERC20",
+    //     tokenConfig.tokens.USDC.baseTokenAddress
+    // )
+    // const usdt = await ethers.getContractAt(
+    //     "MockERC20",
+    //     tokenConfig.tokens.USDT.baseTokenAddress
+    // )
 
-    // transfer token
-    await usdc.connect(userSigner).transfer(platypusAdapter.address,40000000000)
-    // start status
-    usdcAmountBefore = await usdc.balanceOf(platypusAdapter.address)
-    usdtAmountBefore = await usdt.balanceOf(platypusAdapter.address)
-    console.log("USDC before balance: ", usdcAmountBefore.toString())
-    console.log("USDT before balance: ", usdtAmountBefore.toString())
+    // // transfer token
+    // await usdc.connect(userSigner).transfer(platypusAdapter.address,40000000000)
+    // // start status
+    // usdcAmountBefore = await usdc.balanceOf(platypusAdapter.address)
+    // usdtAmountBefore = await usdt.balanceOf(platypusAdapter.address)
+    // console.log("USDC before balance: ", usdcAmountBefore.toString())
+    // console.log("USDT before balance: ", usdtAmountBefore.toString())
 
-    // swap
-    const moreInfo=await ethers.utils.defaultAbiCoder.encode(
-        ['address','address'],
-        [
-            tokenConfig.tokens.USDC.baseTokenAddress,
-            tokenConfig.tokens.USDT.baseTokenAddress
-        ]
-    )
-    await platypusAdapter.sellBase(
-        platypusAdapter.address,
-        pool,
-        moreInfo
-    )
-    // end status
-    usdcAmountBefore = await usdc.balanceOf(platypusAdapter.address)
-    usdtAmountBefore = await usdt.balanceOf(platypusAdapter.address)
-    console.log("USDC after balance: ", usdcAmountBefore.toString())
-    console.log("USDT after balance: ", usdtAmountBefore.toString())
+    // // swap
+    // const moreInfo=await ethers.utils.defaultAbiCoder.encode(
+    //     ['address','address'],
+    //     [
+    //         tokenConfig.tokens.USDC.baseTokenAddress,
+    //         tokenConfig.tokens.USDT.baseTokenAddress
+    //     ]
+    // )
+    // await platypusAdapter.sellBase(
+    //     platypusAdapter.address,
+    //     pool,
+    //     moreInfo
+    // )
+    // // end status
+    // usdcAmountBefore = await usdc.balanceOf(platypusAdapter.address)
+    // usdtAmountBefore = await usdt.balanceOf(platypusAdapter.address)
+    // console.log("USDC after balance: ", usdcAmountBefore.toString())
+    // console.log("USDT after balance: ", usdtAmountBefore.toString())
 }
 
 // swap avax to savax in alt pool (swapFromETH)
 async function execute2() {
     // tx = "0xb3536c11c73dab89e0a6f7d4ef6d6ea2d073de35e688cde3b1b9c81e92bd1032"
     // fork network
-    await setForkNetWorkAndBlockNumber( "avax")
+    // await setForkNetWork( "avax", 17317563)
     // deploy adapter
     const platypusAdapter = await deployContract()
     console.log(platypusAdapter.address)
@@ -126,7 +126,7 @@ async function execute2() {
 async function execute3() {
     // tx = "0xb6b42ea522e0c20cc841e131429b5dffc32ea2e2df0a7aefba0047e1169dca11"
     // fork network
-    await setForkNetWorkAndBlockNumber( "avax")
+    // await setForkNetWork( "avax", 17351168)
     // deploy adapter
     const platypusAdapter = await deployContract()
     console.log(platypusAdapter.address)
@@ -179,10 +179,10 @@ async function execute3() {
 async function main() {
     console.log("==== swap usdc to usdt in main pool ====== ")
     await execute1()
-    console.log("==== swap avax to savax alt pool ====== ")
-    await execute2()
-    console.log("==== swap savax to avax alt pool ====== ")
-    await execute3()
+    // console.log("==== swap avax to savax alt pool ====== ")
+    // await execute2()
+    // console.log("==== swap savax to avax alt pool ====== ")
+    // await execute3()
 }
 main()
     .then(() => process.exit(0))

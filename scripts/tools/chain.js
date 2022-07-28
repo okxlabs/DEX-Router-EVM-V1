@@ -16,7 +16,9 @@ function getNetworkURL(net) {
         // return `https://rpc.ankr.com/polygon`
         return `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
     } else if (net == 'avax') {
-        return "https://rpc.ankr.com/avalanche"
+        //  return `https://speedy-nodes-nyc.moralis.io/e88a69edd7e8b87e8c86975b/avalanche/mainnet/archive`
+        return `https://avalancheapi.terminet.io/ext/bc/C/rpc`
+        // return `https://rpc.ankr.com/avalanche`
     } else if (net == 'artibrum') {
         return "https://rpc.ankr.com/arbitrum"
     } else {
@@ -32,7 +34,7 @@ setForkNetWorkAndBlockNumber = async (net, blockNumber) => {
         params: [
             {
                 forking: {
-                    jsonRpcUrl: url,
+                    jsonRpcUrl: url
                 }
             },
         ],
