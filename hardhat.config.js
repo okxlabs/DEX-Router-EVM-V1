@@ -200,8 +200,9 @@ module.exports = {
       },
     },
     polygon: {
-      url: "https://rpc.ankr.com/polygon",
+      url: "https://matic-mainnet-archive-rpc.bwarelabs.com",
       accounts: [`${PRIVATE_KEY}`],
+      gasPrice: 250000000000,
       settings: {
         optimizer: {
           enabled: true,
