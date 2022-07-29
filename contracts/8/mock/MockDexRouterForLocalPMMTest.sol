@@ -418,8 +418,8 @@ contract MockDexRouterForLocalPMMTest is UnxswapRouter, OwnableUpgradeable, Reen
     RouterPath[][] calldata batches,
     IMarketMaker.PMMSwapRequest[] calldata extraData
   ) public payable isExpired(baseRequest.deadLine) nonReentrant onlyXBridge returns (uint256 returnAmount) {
-    address payer = IXBridge(xBridge).payer();
-    returnAmount = _smartSwapInternal(baseRequest, batchesAmount, batches, extraData, payer, msg.sender);
+    (address payer, address receiver) = IXBridge(xBridge).payerReceiver();
+    returnAmount = _smartSwapInternal(baseRequest, batchesAmount, batches, extraData, payer, receiver);
   }
 
   function unxswapByXBridge(
@@ -429,7 +429,7 @@ contract MockDexRouterForLocalPMMTest is UnxswapRouter, OwnableUpgradeable, Reen
   // solhint-disable-next-line no-unused-vars
     bytes32[] calldata pools
   ) public payable onlyXBridge returns (uint256 returnAmount) {
-    address payer = IXBridge(xBridge).payer();
-    returnAmount = _unxswapInternal(srcToken, amount, minReturn, pools, payer);
+    (address payer, address receiver) = IXBridge(xBridge).payerReceiver();
+    returnAmount = _unxswapInternal(srcToken, amount, minReturn, pools, payer, receiver);
   }
 }

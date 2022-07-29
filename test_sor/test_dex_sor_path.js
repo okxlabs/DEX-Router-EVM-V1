@@ -1,16 +1,15 @@
-const { ethers, network } = require('hardhat')
+const { ethers } = require('hardhat')
 const { expect } = require('chai');
-const Web3 = require("web3");
-const fs = require("fs");
 
 describe("Smart route path test", function() {
 
   const FOREVER = '2000000000';
   let wbtc, weth, dot, bnb, usdc, usdt, memeToken;
   let router, tokenApprove, dexRouter, wNativeRelayer, tokenApproveProxy;
-  let owner, alice, bob, liquidity;
+  let owner, alice, bob, liquidity, ethHolder;
 
   before(async () => {
+    [owner, alice, bob, liquidity, ethHolder] = await ethers.getSigners();
     const WETH9 = await ethers.getContractFactory("WETH9");
     weth = await WETH9.deploy();
 
@@ -18,10 +17,11 @@ describe("Smart route path test", function() {
     wNativeRelayer = await WNativeRelayer.deploy();
     await wNativeRelayer.deployed();
     await wNativeRelayer.initialize(weth.address);
+    await ethHolder.sendTransaction({ to : bob.address, value : ethers.utils.parseEther('4000')});
+    await ethHolder.sendTransaction({ to : liquidity.address, value : ethers.utils.parseEther('4000')});
   });
 
   beforeEach(async () => {
-    [owner, alice, bob, liquidity] = await ethers.getSigners();
 
     await initMockTokens();
     await dispatchAsset();
@@ -123,7 +123,7 @@ describe("Smart route path test", function() {
     // wbtc -> weth -> usdt
 
     // console.log("alice" + alice.address);
-    console.log("wbtc: " + wbtc.address);
+    // console.log("wbtc: " + wbtc.address);
 
     fromToken = wbtc;
     toToken = usdt;
@@ -252,7 +252,7 @@ describe("Smart route path test", function() {
     const assertTo4 = [
       lpDOTUSDT.address,
     ];
-    const weight4 = Number(10000).toString(16).replace('0x', '');
+    const weight4 = '2710'; // Number(10000).toString(16).replace('0x', '');
     const rawData4 = [
       "0x" + await await direction(dot.address, usdt.address, lpDOTUSDT) + "0000000000000000000" + weight4 + lpDOTUSDT.address.replace("0x", "")
     ];
@@ -534,7 +534,7 @@ describe("Smart route path test", function() {
     const assertTo1 = [
       lpWBTCWETH.address
     ];
-    const weight1 = Number(10000).toString(16).replace('0x', '');
+    const weight1 = '2710'; // Number(10000).toString(16).replace('0x', '');
     const rawData1 = [
       "0x" + await direction(weth.address, wbtc.address, lpWBTCWETH) + "0000000000000000000" + weight1 + lpWBTCWETH.address.replace("0x", "")];
     const extraData1 = ['0x'];
@@ -625,7 +625,6 @@ describe("Smart route path test", function() {
   });
 
   it("smartSwapByXBridge ETH to WBTC", async () => {
-    const web3 = new Web3(network.provider);
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
     // ETH -> WBTC
     ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
@@ -643,7 +642,7 @@ describe("Smart route path test", function() {
     const assertTo1 = [
       lpWBTCWETH.address
     ];
-    const weight1 = Number(10000).toString(16).replace('0x', '');
+    const weight1 = '2710'; // Number(10000).toString(16).replace('0x', '');
     const rawData1 = [
       "0x" + await direction(weth.address, wbtc.address, lpWBTCWETH) + "0000000000000000000" + weight1 + lpWBTCWETH.address.replace("0x", "")];
     const extraData1 = ['0x'];
@@ -660,9 +659,7 @@ describe("Smart route path test", function() {
       deadLine,
     ]
     // selector 0xe051c6e8
-    let abiObject = JSON.parse(fs.readFileSync("artifacts/contracts/8/DexRouter.sol/DexRouter.json"));
-    let contract = new web3.eth.Contract(abiObject.abi);
-    let encodeABI = contract.methods.smartSwapByXBridge(baseRequest, [fromTokenAmount], [layer1], []).encodeABI();
+    let encodeABI = dexRouter.interface.encodeFunctionData('smartSwapByXBridge', [baseRequest, [fromTokenAmount], [layer1], []]);
     let xBridge = await initMockXBridge();
     const beforeToTokenBalance = await toToken.balanceOf(xBridge.address);
     expect(await wbtc.balanceOf(xBridge.address)).to.be.equal(0);
@@ -689,7 +686,6 @@ describe("Smart route path test", function() {
   });
 
   it("smartSwapByXBridge WBTC to ETH", async () => {
-    const web3 = new Web3(network.provider);
     await dexRouter.setWNativeRelayer(wNativeRelayer.address);
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
 
@@ -728,9 +724,9 @@ describe("Smart route path test", function() {
       deadLine,
     ]
 
-    let abiObject = JSON.parse(fs.readFileSync("artifacts/contracts/8/DexRouter.sol/DexRouter.json"));
-    let contract = new web3.eth.Contract(abiObject.abi);
-    let encodeABI = contract.methods.smartSwapByXBridge(baseRequest, [fromTokenAmount], [layer1], []).encodeABI();
+    //encodeFunctionData
+    let encodeABI = dexRouter.interface.encodeFunctionData('smartSwapByXBridge', [baseRequest, [fromTokenAmount], [layer1], []]);
+
     let xBridge = await initMockXBridge();
     const beforeEthBalance = await ethers.provider.getBalance(xBridge.address);
     expect(await wbtc.balanceOf(xBridge.address)).to.be.equal(0);
@@ -754,6 +750,137 @@ describe("Smart route path test", function() {
     // 10000000000000000000 * 997 * 10000000000000000000000 / (1000000000000000000000 * 1000 +  10000000000000000000 * 997) = 98715803439706130000
     const receiveAmount = getAmountOut(fromTokenAmount, '10000000000000000000000', '1000000000000000000000');
     expect(await ethers.provider.getBalance(xBridge.address)).to.be.eq(receiveAmount);
+  });
+
+  it("smartSwapByVault ETH to WBTC", async () => {
+      expect(await dexRouter._WETH()).to.be.equal(weth.address);
+      // ETH -> WBTC
+      ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
+
+      fromToken = ETH;
+      toToken = wbtc;
+      const fromTokenAmount = ethers.utils.parseEther('10');
+      const minReturnAmount = ethers.utils.parseEther('0');
+      const deadLine = FOREVER;
+
+      // node1
+      const mixAdapter1 = [
+        uniAdapter.address
+      ];
+      const assertTo1 = [
+        lpWBTCWETH.address
+      ];
+      const weight1 = '2710'; // Number(10000).toString(16).replace('0x', '');
+      const rawData1 = [
+        "0x" + await direction(weth.address, wbtc.address, lpWBTCWETH) + "0000000000000000000" + weight1 + lpWBTCWETH.address.replace("0x", "")];
+      const extraData1 = ['0x'];
+      const router1 = [mixAdapter1, assertTo1, rawData1, extraData1, weth.address];
+
+      // layer1
+      const layer1 = [router1];
+
+      const baseRequest = [
+        fromToken.address,
+        toToken.address,
+        fromTokenAmount,
+        minReturnAmount,
+        deadLine,
+      ]
+      // selector 0xe051c6e8
+      let encodeABI = dexRouter.interface.encodeFunctionData('smartSwapByVault', [baseRequest, [fromTokenAmount], [layer1], []]);
+      let xBridge = await initMockXBridge();
+      const beforeToTokenBalance = await toToken.balanceOf(bob.address);
+      expect(await wbtc.balanceOf(xBridge.address)).to.be.equal(0);
+      let request = {
+        fromToken : fromToken.address,
+        toToken : toToken.address,
+        to : bob.address,
+        amount: fromTokenAmount,
+        gasFeeAmount : 0,
+        srcChainId : 1,
+        srcTxHash : ethers.utils.defaultAbiCoder.encode(['bytes32'], ['0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9']),
+        dexData : encodeABI,
+        extData : ethers.utils.defaultAbiCoder.encode(['bytes'], ['0x6e']),
+      };
+
+      await alice.sendTransaction({to: xBridge.address, value: fromTokenAmount});
+      await xBridge.connect(alice).claim(request);
+
+      // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
+      // wbtc -> weth 1:10
+      // 10000000000000000000 * 997 * 10000000000000000000000 / (1000000000000000000000 * 1000 +  10000000000000000000 * 997) = 98715803439706130000
+      const receive0 = getAmountOut(fromTokenAmount, '1000000000000000000000', '10000000000000000000000');
+      const receive = receive0.add(beforeToTokenBalance);
+      expect(await toToken.balanceOf(bob.address)).to.be.eq(receive);
+    });
+
+  it("smartSwapByXVault WBTC to ETH", async () => {
+    await dexRouter.setWNativeRelayer(wNativeRelayer.address);
+    expect(await dexRouter._WETH()).to.be.equal(weth.address);
+
+    // wbtc -> eth
+    ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
+
+    fromToken = wbtc;
+    toToken = ETH;
+    const fromTokenAmount = ethers.utils.parseEther('10');
+    const minReturnAmount = ethers.utils.parseEther('0');
+    const deadLine = FOREVER;
+
+    await fromToken.connect(alice).approve(tokenApprove.address, fromTokenAmount);
+
+    // node1
+    const mixAdapter1 = [
+      uniAdapter.address
+    ];
+    const assertTo1 = [
+      lpWBTCWETH.address
+    ];
+    const weight1 = getWeight(10000);
+    const rawData1 = [
+      "0x" + await direction(wbtc.address, weth.address, lpWBTCWETH) + "0000000000000000000" + weight1 + lpWBTCWETH.address.replace("0x", "")];
+    const extraData1 = ['0x'];
+    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1, wbtc.address];
+
+    // layer1
+    const layer1 = [router1];
+
+    const baseRequest = [
+      fromToken.address,
+      toToken.address,
+      fromTokenAmount,
+      minReturnAmount,
+      deadLine,
+    ]
+
+    //encodeFunctionData
+    let encodeABI = dexRouter.interface.encodeFunctionData('smartSwapByVault', [baseRequest, [fromTokenAmount], [layer1], []]);
+
+    let xBridge = await initMockXBridge();
+    expect(await wbtc.balanceOf(xBridge.address)).to.be.equal(0);
+    let beforeToTokenBalance = await ethers.provider.getBalance(bob.address)
+    let request = {
+      fromToken : fromToken.address,
+      toToken : toToken.address,
+      to : bob.address,
+      amount: fromTokenAmount,
+      gasFeeAmount : 0,
+      srcChainId : 1,
+      srcTxHash : ethers.utils.defaultAbiCoder.encode(['bytes32'], ['0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9']),
+      dexData : encodeABI,
+      extData : ethers.utils.defaultAbiCoder.encode(['bytes'], ['0x6e']),
+    };
+
+    await fromToken.connect(alice).transfer(xBridge.address, fromTokenAmount);
+    expect(await fromToken.balanceOf(xBridge.address)).to.be.equal(fromTokenAmount);
+    await xBridge.connect(alice).claim(request);
+    expect(await wbtc.balanceOf(xBridge.address)).to.be.equal(0);
+
+    // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
+    // wbtc -> weth 1:10
+    // 10000000000000000000 * 997 * 10000000000000000000000 / (1000000000000000000000 * 1000 +  10000000000000000000 * 997) = 98715803439706130000
+    const receiveAmount = getAmountOut(fromTokenAmount, '10000000000000000000000', '1000000000000000000000');
+    expect(await ethers.provider.getBalance(bob.address)).to.be.eq(receiveAmount.add(beforeToTokenBalance));
   });
 
   const direction = async (fromToken, toToken, pair) => {
@@ -930,6 +1057,8 @@ describe("Smart route path test", function() {
     await xBridge.deployed();
     await xBridge.setDexRouter(dexRouter.address);
     await dexRouter.setXBridge(xBridge.address);
+    await xBridge.connect(owner).setMpc([alice.address]);
+    await xBridge.setApproveProxy(tokenApproveProxy.address);
     return xBridge;
   }
 

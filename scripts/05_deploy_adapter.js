@@ -8,7 +8,6 @@ async function main() {
     univ2Adapter = await UniV2Adapter.deploy();
     await univ2Adapter.deployed();
 
-    console.log("univ2Adapter: " + univ2Adapter.address);
 }
 
 main()

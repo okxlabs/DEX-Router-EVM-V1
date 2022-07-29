@@ -317,7 +317,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       IWETH(address(uint160(_WETH))).deposit{ value: localBaseRequest.fromTokenAmount }();
     } else if (address(uint160(localBaseRequest.fromToken)) == address(uint160(_WETH))) {
       IApproveProxy(approveProxy).claimTokens(
-        address(uint160(localBaseRequest.fromToken)),
+        baseRequestFromToken,
         payer,
         address(this),
         localBaseRequest.fromTokenAmount
@@ -326,7 +326,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
 
     // 2. check total batch amount
     {
-      // invoid stack too deep
+      // avoid stack too deep
       uint256 totalBatchAmount;
       for (uint256 i = 0; i < batchesAmount.length; i++) {
         totalBatchAmount += batchesAmount[i];
@@ -345,7 +345,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
         _transferTokenToUser(localBaseRequest.toToken, receiver);
         returnAmount = IERC20(localBaseRequest.toToken).universalBalanceOf(receiver) - returnAmount;
         require(returnAmount >= localBaseRequest.minReturnAmount, "Route: Return amount is not enough");
-        emit OrderRecord(baseRequestFromToken, localBaseRequest.toToken, receiver, localBaseRequest.fromTokenAmount, returnAmount);
+        emit OrderRecord(baseRequestFromToken, localBaseRequest.toToken, tx.origin, localBaseRequest.fromTokenAmount, returnAmount);
         return returnAmount;
       }
     }
@@ -364,7 +364,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     returnAmount = IERC20(localBaseRequest.toToken).universalBalanceOf(receiver) - returnAmount;
     require(returnAmount >= localBaseRequest.minReturnAmount, "Min return not reached");
 
-    emit OrderRecord(baseRequestFromToken, localBaseRequest.toToken, receiver, localBaseRequest.fromTokenAmount, returnAmount);
+    emit OrderRecord(baseRequestFromToken, localBaseRequest.toToken, tx.origin, localBaseRequest.fromTokenAmount, returnAmount);
     return returnAmount;
   }
 
@@ -419,8 +419,8 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     RouterPath[][] calldata batches,
     IMarketMaker.PMMSwapRequest[] calldata extraData
   ) public payable isExpired(baseRequest.deadLine) nonReentrant onlyXBridge returns (uint256 returnAmount) {
-    address payer = IXBridge(xBridge).payer();
-    returnAmount = _smartSwapInternal(baseRequest, batchesAmount, batches, extraData, payer, msg.sender);
+    (address payer, address receiver) = IXBridge(xBridge).payerReceiver();
+    returnAmount = _smartSwapInternal(baseRequest, batchesAmount, batches, extraData, payer, receiver);
   }
 
   function unxswapByXBridge(
@@ -430,7 +430,28 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   // solhint-disable-next-line no-unused-vars
     bytes32[] calldata pools
   ) public payable onlyXBridge returns (uint256 returnAmount) {
-    address payer = IXBridge(xBridge).payer();
-    returnAmount = _unxswapInternal(srcToken, amount, minReturn, pools, payer);
+    (address payer, address receiver) = IXBridge(xBridge).payerReceiver();
+    returnAmount = _unxswapInternal(srcToken, amount, minReturn, pools, payer, receiver);
+  }
+
+  function smartSwapByVault(
+    BaseRequest calldata baseRequest,
+    uint256[] calldata batchesAmount,
+    RouterPath[][] calldata batches,
+    IMarketMaker.PMMSwapRequest[] calldata extraData
+  ) public payable isExpired(baseRequest.deadLine) nonReentrant onlyXBridge returns (uint256 returnAmount) {
+    (address payer, address receiver) = IXBridge(xBridge).payerReceiver();
+    returnAmount = _smartSwapInternal(baseRequest, batchesAmount, batches, extraData, payer, receiver);
+  }
+
+  function unxswapByVault(
+    IERC20 srcToken,
+    uint256 amount,
+    uint256 minReturn,
+  // solhint-disable-next-line no-unused-vars
+    bytes32[] calldata pools
+  ) public payable onlyXBridge returns (uint256 returnAmount) {
+    (address payer, address receiver) = IXBridge(xBridge).payerReceiver();
+    returnAmount = _unxswapInternal(srcToken, amount, minReturn, pools, payer, receiver);
   }
 }
