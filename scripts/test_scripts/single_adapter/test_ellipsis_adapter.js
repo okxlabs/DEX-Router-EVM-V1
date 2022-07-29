@@ -41,9 +41,7 @@ async function Erc20ToErc20(EllipsisAdapter) {
     await USDT.connect(signer).transfer(EllipsisAdapter.address, ethers.utils.parseEther("1000"));
     USDTbeforeBalance = await USDT.balanceOf(EllipsisAdapter.address);
     USDCbeforeBalance = await USDC.balanceOf(EllipsisAdapter.address);
-    console.log(USDTbeforeBalance, USDCbeforeBalance)
-
-
+    
     moreinfo =  ethers.utils.defaultAbiCoder.encode(
         ["address", "address", "int128", "int128"],
         [
@@ -62,8 +60,8 @@ async function Erc20ToErc20(EllipsisAdapter) {
     // check balance
     USDTAftereBalance = await USDT.balanceOf(EllipsisAdapter.address);
     USDCAfterBalance = await USDC.balanceOf(EllipsisAdapter.address);
-    console.log("usdt before balance: ", USDTbeforeBalance, "usdt after balance: ", USDTAftereBalance)
-    console.log("usdc before balance: ", USDCbeforeBalance, "usdt after balance: ", USDCAfterBalance)
+    console.log("usdt before balance: ", USDTbeforeBalance.toString(), "usdt after balance: ", USDTAftereBalance.toString())
+    console.log("usdc before balance: ", USDCbeforeBalance.toString(), "usdt after balance: ", USDCAfterBalance.toString())
 }
 
 // stable coin: BNB => ZBNB
@@ -163,8 +161,8 @@ async function ERC20ToNative(EllipsisAdapter) {
 
 async function main() {  
     EllipsisAdapter = await deployContract()
-    // console.log("==== swap usdt to usdc in ellipisis pool ====== ")
-    // await Erc20ToErc20(EllipsisAdapter)
+    console.log("==== swap usdt to usdc in ellipisis pool ====== ")
+    await Erc20ToErc20(EllipsisAdapter)
     console.log("==== swap BNB to ZBNB in ellipisis pool ====== ")
     await NativeToErc20(EllipsisAdapter)
     console.log("==== swap ZBNB to BNB in ellipisis pool ====== ")

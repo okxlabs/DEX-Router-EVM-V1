@@ -11,7 +11,7 @@ const DOT = {
 const USDC = {
   name: "USDC",
   decimals: 6,
-  baseTokenAddress: '0x64715Ed6c2B49dfcc823bC0D1af39A9731C56F83',
+  baseTokenAddress: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
 }
 const USDT = {
   name: "USDT",
