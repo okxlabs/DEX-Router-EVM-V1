@@ -3,6 +3,8 @@ require("../../tools");
 let { getConfig } = require("../../config");
 tokenConfig = getConfig("bsc");
 let { initDexRouter, direction, FOREVER } = require("./utils")
+require("./utils/test_multi_x_factory");
+
 
 async function Erc20ToErc20() {
     const pmmReq = []
@@ -94,8 +96,7 @@ async function Erc20ToErc20() {
 
 
 async function main() {
-    console.log(" ============= Curve tricrypto pool ===============");
-    await Erc20ToErc20();
+    await Erc20ToErc20()
 }
 
 main()

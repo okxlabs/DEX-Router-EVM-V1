@@ -41,7 +41,7 @@ async function Erc20ToErc20(EllipsisAdapter) {
     await USDT.connect(signer).transfer(EllipsisAdapter.address, ethers.utils.parseEther("1000"));
     USDTbeforeBalance = await USDT.balanceOf(EllipsisAdapter.address);
     USDCbeforeBalance = await USDC.balanceOf(EllipsisAdapter.address);
-    
+
     moreinfo =  ethers.utils.defaultAbiCoder.encode(
         ["address", "address", "int128", "int128"],
         [
@@ -73,7 +73,6 @@ async function NativeToErc20(EllipsisAdapter) {
   startMockAccount([UserAddress])
   signer = await ethers.getSigner(UserAddress)
 
-  // perapre DAI Token
   WBNB = await ethers.getContractAt(
      "MockERC20",
      tokenConfig.tokens.WBNB.baseTokenAddress
@@ -81,7 +80,7 @@ async function NativeToErc20(EllipsisAdapter) {
   ZBNB = await ethers.getContractAt(
      "MockERC20",
       "0x6DEdCEeE04795061478031b1DfB3c1ddCA80B204"
-)
+  )
 
   // prepare BNB
   await WBNB.connect(signer).transfer(EllipsisAdapter.address, ethers.utils.parseEther("20"));
