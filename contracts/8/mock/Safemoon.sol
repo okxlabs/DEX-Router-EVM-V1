@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
 /**
  *Submitted for verification at BscScan.com on 2021-12-02
-*/
+ */
 
 pragma solidity >=0.6.12;
 pragma experimental ABIEncoderV2;
-
 
 library SafeMathUpgradeable {
     /**
@@ -13,7 +12,11 @@ library SafeMathUpgradeable {
      *
      * _Available since v3.4._
      */
-    function tryAdd(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    function tryAdd(uint256 a, uint256 b)
+        internal
+        pure
+        returns (bool, uint256)
+    {
         uint256 c = a + b;
         if (c < a) return (false, 0);
         return (true, c);
@@ -24,7 +27,11 @@ library SafeMathUpgradeable {
      *
      * _Available since v3.4._
      */
-    function trySub(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    function trySub(uint256 a, uint256 b)
+        internal
+        pure
+        returns (bool, uint256)
+    {
         if (b > a) return (false, 0);
         return (true, a - b);
     }
@@ -34,7 +41,11 @@ library SafeMathUpgradeable {
      *
      * _Available since v3.4._
      */
-    function tryMul(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    function tryMul(uint256 a, uint256 b)
+        internal
+        pure
+        returns (bool, uint256)
+    {
         // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
         // benefit is lost if 'b' is also tested.
         // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
@@ -49,7 +60,11 @@ library SafeMathUpgradeable {
      *
      * _Available since v3.4._
      */
-    function tryDiv(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    function tryDiv(uint256 a, uint256 b)
+        internal
+        pure
+        returns (bool, uint256)
+    {
         if (b == 0) return (false, 0);
         return (true, a / b);
     }
@@ -59,7 +74,11 @@ library SafeMathUpgradeable {
      *
      * _Available since v3.4._
      */
-    function tryMod(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    function tryMod(uint256 a, uint256 b)
+        internal
+        pure
+        returns (bool, uint256)
+    {
         if (b == 0) return (false, 0);
         return (true, a % b);
     }
@@ -159,7 +178,11 @@ library SafeMathUpgradeable {
      *
      * - Subtraction cannot overflow.
      */
-    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+    function sub(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
         require(b <= a, errorMessage);
         return a - b;
     }
@@ -179,7 +202,11 @@ library SafeMathUpgradeable {
      *
      * - The divisor cannot be zero.
      */
-    function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+    function div(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
         require(b > 0, errorMessage);
         return a / b;
     }
@@ -199,7 +226,11 @@ library SafeMathUpgradeable {
      *
      * - The divisor cannot be zero.
      */
-    function mod(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+    function mod(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
         require(b > 0, errorMessage);
         return a % b;
     }
@@ -230,7 +261,9 @@ library AddressUpgradeable {
 
         uint256 size;
         // solhint-disable-next-line no-inline-assembly
-        assembly { size := extcodesize(account) }
+        assembly {
+            size := extcodesize(account)
+        }
         return size > 0;
     }
 
@@ -251,11 +284,17 @@ library AddressUpgradeable {
      * https://solidity.readthedocs.io/en/v0.5.11/security-considerations.html#use-the-checks-effects-interactions-pattern[checks-effects-interactions pattern].
      */
     function sendValue(address payable recipient, uint256 amount) internal {
-        require(address(this).balance >= amount, "Address: insufficient balance");
+        require(
+            address(this).balance >= amount,
+            "Address: insufficient balance"
+        );
 
         // solhint-disable-next-line avoid-low-level-calls, avoid-call-value
-        (bool success, ) = recipient.call{ value: amount }("");
-        require(success, "Address: unable to send value, recipient may have reverted");
+        (bool success, ) = recipient.call{value: amount}("");
+        require(
+            success,
+            "Address: unable to send value, recipient may have reverted"
+        );
     }
 
     /**
@@ -276,8 +315,11 @@ library AddressUpgradeable {
      *
      * _Available since v3.1._
      */
-    function functionCall(address target, bytes memory data) internal returns (bytes memory) {
-      return functionCall(target, data, "Address: low-level call failed");
+    function functionCall(address target, bytes memory data)
+        internal
+        returns (bytes memory)
+    {
+        return functionCall(target, data, "Address: low-level call failed");
     }
 
     /**
@@ -286,7 +328,11 @@ library AddressUpgradeable {
      *
      * _Available since v3.1._
      */
-    function functionCall(address target, bytes memory data, string memory errorMessage) internal returns (bytes memory) {
+    function functionCall(
+        address target,
+        bytes memory data,
+        string memory errorMessage
+    ) internal returns (bytes memory) {
         return functionCallWithValue(target, data, 0, errorMessage);
     }
 
@@ -301,8 +347,18 @@ library AddressUpgradeable {
      *
      * _Available since v3.1._
      */
-    function functionCallWithValue(address target, bytes memory data, uint256 value) internal returns (bytes memory) {
-        return functionCallWithValue(target, data, value, "Address: low-level call with value failed");
+    function functionCallWithValue(
+        address target,
+        bytes memory data,
+        uint256 value
+    ) internal returns (bytes memory) {
+        return
+            functionCallWithValue(
+                target,
+                data,
+                value,
+                "Address: low-level call with value failed"
+            );
     }
 
     /**
@@ -311,12 +367,22 @@ library AddressUpgradeable {
      *
      * _Available since v3.1._
      */
-    function functionCallWithValue(address target, bytes memory data, uint256 value, string memory errorMessage) internal returns (bytes memory) {
-        require(address(this).balance >= value, "Address: insufficient balance for call");
+    function functionCallWithValue(
+        address target,
+        bytes memory data,
+        uint256 value,
+        string memory errorMessage
+    ) internal returns (bytes memory) {
+        require(
+            address(this).balance >= value,
+            "Address: insufficient balance for call"
+        );
         require(isContract(target), "Address: call to non-contract");
 
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory returndata) = target.call{ value: value }(data);
+        (bool success, bytes memory returndata) = target.call{value: value}(
+            data
+        );
         return _verifyCallResult(success, returndata, errorMessage);
     }
 
@@ -326,8 +392,17 @@ library AddressUpgradeable {
      *
      * _Available since v3.3._
      */
-    function functionStaticCall(address target, bytes memory data) internal view returns (bytes memory) {
-        return functionStaticCall(target, data, "Address: low-level static call failed");
+    function functionStaticCall(address target, bytes memory data)
+        internal
+        view
+        returns (bytes memory)
+    {
+        return
+            functionStaticCall(
+                target,
+                data,
+                "Address: low-level static call failed"
+            );
     }
 
     /**
@@ -336,7 +411,11 @@ library AddressUpgradeable {
      *
      * _Available since v3.3._
      */
-    function functionStaticCall(address target, bytes memory data, string memory errorMessage) internal view returns (bytes memory) {
+    function functionStaticCall(
+        address target,
+        bytes memory data,
+        string memory errorMessage
+    ) internal view returns (bytes memory) {
         require(isContract(target), "Address: static call to non-contract");
 
         // solhint-disable-next-line avoid-low-level-calls
@@ -344,7 +423,11 @@ library AddressUpgradeable {
         return _verifyCallResult(success, returndata, errorMessage);
     }
 
-    function _verifyCallResult(bool success, bytes memory returndata, string memory errorMessage) private pure returns(bytes memory) {
+    function _verifyCallResult(
+        bool success,
+        bytes memory returndata,
+        string memory errorMessage
+    ) private pure returns (bytes memory) {
         if (success) {
             return returndata;
         } else {
@@ -365,7 +448,6 @@ library AddressUpgradeable {
 }
 
 abstract contract Initializable {
-
     /**
      * @dev Indicates that the contract has been initialized.
      */
@@ -380,7 +462,10 @@ abstract contract Initializable {
      * @dev Modifier to protect an initializer function from being invoked twice.
      */
     modifier initializer() {
-        require(_initializing || _isConstructor() || !_initialized, "Initializable: contract is already initialized");
+        require(
+            _initializing || _isConstructor() || !_initialized,
+            "Initializable: contract is already initialized"
+        );
 
         bool isTopLevelCall = !_initializing;
         if (isTopLevelCall) {
@@ -406,8 +491,7 @@ abstract contract ContextUpgradeable is Initializable {
         __Context_init_unchained();
     }
 
-    function __Context_init_unchained() internal initializer {
-    }
+    function __Context_init_unchained() internal initializer {}
 
     function _msgSender() internal view virtual returns (address payable) {
         return payable(msg.sender);
@@ -417,13 +501,17 @@ abstract contract ContextUpgradeable is Initializable {
         this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
         return msg.data;
     }
+
     uint256[50] private __gap;
 }
 
 abstract contract OwnableUpgradeable is Initializable, ContextUpgradeable {
     address private _owner;
 
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    event OwnershipTransferred(
+        address indexed previousOwner,
+        address indexed newOwner
+    );
 
     /**
      * @dev Initializes the contract setting the deployer as the initial owner.
@@ -471,10 +559,14 @@ abstract contract OwnableUpgradeable is Initializable, ContextUpgradeable {
      * Can only be called by the current owner.
      */
     function transferOwnership(address newOwner) public virtual onlyOwner {
-        require(newOwner != address(0), "Ownable: new owner is the zero address");
+        require(
+            newOwner != address(0),
+            "Ownable: new owner is the zero address"
+        );
         emit OwnershipTransferred(_owner, newOwner);
         _owner = newOwner;
     }
+
     uint256[49] private __gap;
 }
 
@@ -496,7 +588,9 @@ interface ISafemoon {
      *
      * Emits a {Transfer} event.
      */
-    function transfer(address recipient, uint256 amount) external returns (bool);
+    function transfer(address recipient, uint256 amount)
+        external
+        returns (bool);
 
     /**
      * @dev Returns the remaining number of tokens that `spender` will be
@@ -505,7 +599,10 @@ interface ISafemoon {
      *
      * This value changes when {approve} or {transferFrom} are called.
      */
-    function allowance(address owner, address spender) external view returns (uint256);
+    function allowance(address owner, address spender)
+        external
+        view
+        returns (uint256);
 
     /**
      * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
@@ -532,8 +629,11 @@ interface ISafemoon {
      *
      * Emits a {Transfer} event.
      */
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
-
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) external returns (bool);
 
     /** @dev Creates `amount` tokens and assigns them to `account`, increasing
      * the total supply.
@@ -546,9 +646,7 @@ interface ISafemoon {
      */
     function migrate(address account, uint256 amount) external;
 
-
     function isMigrationStarted() external view returns (bool);
-
 
     /**
      * @dev Emitted when `value` tokens are moved from one account (`from`) to
@@ -562,215 +660,364 @@ interface ISafemoon {
      * @dev Emitted when the allowance of a `spender` for an `owner` is set by
      * a call to {approve}. `value` is the new allowance.
      */
-    event Approval(address indexed owner, address indexed spender, uint256 value);
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 value
+    );
 }
 
-
 interface IUniswapV2Factory {
-    event PairCreated(address indexed token0, address indexed token1, address pair, uint);
+    event PairCreated(
+        address indexed token0,
+        address indexed token1,
+        address pair,
+        uint256
+    );
 
     function feeTo() external view returns (address);
+
     function feeToSetter() external view returns (address);
 
-    function getPair(address tokenA, address tokenB) external view returns (address pair);
-    function allPairs(uint) external view returns (address pair);
-    function allPairsLength() external view returns (uint);
+    function getPair(address tokenA, address tokenB)
+        external
+        view
+        returns (address pair);
 
-    function createPair(address tokenA, address tokenB) external returns (address pair);
+    function allPairs(uint256) external view returns (address pair);
+
+    function allPairsLength() external view returns (uint256);
+
+    function createPair(address tokenA, address tokenB)
+        external
+        returns (address pair);
 
     function setFeeTo(address) external;
+
     function setFeeToSetter(address) external;
 }
 
-
 interface IUniswapV2Pair {
-    event Approval(address indexed owner, address indexed spender, uint value);
-    event Transfer(address indexed from, address indexed to, uint value);
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 value
+    );
+    event Transfer(address indexed from, address indexed to, uint256 value);
 
     function name() external pure returns (string memory);
-    function symbol() external pure returns (string memory);
-    function decimals() external pure returns (uint8);
-    function totalSupply() external view returns (uint);
-    function balanceOf(address owner) external view returns (uint);
-    function allowance(address owner, address spender) external view returns (uint);
 
-    function approve(address spender, uint value) external returns (bool);
-    function transfer(address to, uint value) external returns (bool);
-    function transferFrom(address from, address to, uint value) external returns (bool);
+    function symbol() external pure returns (string memory);
+
+    function decimals() external pure returns (uint8);
+
+    function totalSupply() external view returns (uint256);
+
+    function balanceOf(address owner) external view returns (uint256);
+
+    function allowance(address owner, address spender)
+        external
+        view
+        returns (uint256);
+
+    function approve(address spender, uint256 value) external returns (bool);
+
+    function transfer(address to, uint256 value) external returns (bool);
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 value
+    ) external returns (bool);
 
     function DOMAIN_SEPARATOR() external view returns (bytes32);
+
     function PERMIT_TYPEHASH() external pure returns (bytes32);
-    function nonces(address owner) external view returns (uint);
 
-    function permit(address owner, address spender, uint value, uint deadline, uint8 v, bytes32 r, bytes32 s) external;
+    function nonces(address owner) external view returns (uint256);
 
-    event Mint(address indexed sender, uint amount0, uint amount1);
-    event Burn(address indexed sender, uint amount0, uint amount1, address indexed to);
+    function permit(
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
+
+    event Mint(address indexed sender, uint256 amount0, uint256 amount1);
+    event Burn(
+        address indexed sender,
+        uint256 amount0,
+        uint256 amount1,
+        address indexed to
+    );
     event Swap(
         address indexed sender,
-        uint amount0In,
-        uint amount1In,
-        uint amount0Out,
-        uint amount1Out,
+        uint256 amount0In,
+        uint256 amount1In,
+        uint256 amount0Out,
+        uint256 amount1Out,
         address indexed to
     );
     event Sync(uint112 reserve0, uint112 reserve1);
 
-    function MINIMUM_LIQUIDITY() external pure returns (uint);
-    function factory() external view returns (address);
-    function token0() external view returns (address);
-    function token1() external view returns (address);
-    function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast);
-    function price0CumulativeLast() external view returns (uint);
-    function price1CumulativeLast() external view returns (uint);
-    function kLast() external view returns (uint);
+    function MINIMUM_LIQUIDITY() external pure returns (uint256);
 
-    function mint(address to) external returns (uint liquidity);
-    function burn(address to) external returns (uint amount0, uint amount1);
-    function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external;
+    function factory() external view returns (address);
+
+    function token0() external view returns (address);
+
+    function token1() external view returns (address);
+
+    function getReserves()
+        external
+        view
+        returns (
+            uint112 reserve0,
+            uint112 reserve1,
+            uint32 blockTimestampLast
+        );
+
+    function price0CumulativeLast() external view returns (uint256);
+
+    function price1CumulativeLast() external view returns (uint256);
+
+    function kLast() external view returns (uint256);
+
+    function mint(address to) external returns (uint256 liquidity);
+
+    function burn(address to)
+        external
+        returns (uint256 amount0, uint256 amount1);
+
+    function swap(
+        uint256 amount0Out,
+        uint256 amount1Out,
+        address to,
+        bytes calldata data
+    ) external;
+
     function skim(address to) external;
+
     function sync() external;
 
     function initialize(address, address) external;
 }
 
-
 interface IUniswapV2Router01 {
     function factory() external pure returns (address);
+
     function WETH() external pure returns (address);
 
     function addLiquidity(
         address tokenA,
         address tokenB,
-        uint amountADesired,
-        uint amountBDesired,
-        uint amountAMin,
-        uint amountBMin,
+        uint256 amountADesired,
+        uint256 amountBDesired,
+        uint256 amountAMin,
+        uint256 amountBMin,
         address to,
-        uint deadline
-    ) external returns (uint amountA, uint amountB, uint liquidity);
+        uint256 deadline
+    )
+        external
+        returns (
+            uint256 amountA,
+            uint256 amountB,
+            uint256 liquidity
+        );
+
     function addLiquidityETH(
         address token,
-        uint amountTokenDesired,
-        uint amountTokenMin,
-        uint amountETHMin,
+        uint256 amountTokenDesired,
+        uint256 amountTokenMin,
+        uint256 amountETHMin,
         address to,
-        uint deadline
-    ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
+        uint256 deadline
+    )
+        external
+        payable
+        returns (
+            uint256 amountToken,
+            uint256 amountETH,
+            uint256 liquidity
+        );
+
     function removeLiquidity(
         address tokenA,
         address tokenB,
-        uint liquidity,
-        uint amountAMin,
-        uint amountBMin,
+        uint256 liquidity,
+        uint256 amountAMin,
+        uint256 amountBMin,
         address to,
-        uint deadline
-    ) external returns (uint amountA, uint amountB);
+        uint256 deadline
+    ) external returns (uint256 amountA, uint256 amountB);
+
     function removeLiquidityETH(
         address token,
-        uint liquidity,
-        uint amountTokenMin,
-        uint amountETHMin,
+        uint256 liquidity,
+        uint256 amountTokenMin,
+        uint256 amountETHMin,
         address to,
-        uint deadline
-    ) external returns (uint amountToken, uint amountETH);
+        uint256 deadline
+    ) external returns (uint256 amountToken, uint256 amountETH);
+
     function removeLiquidityWithPermit(
         address tokenA,
         address tokenB,
-        uint liquidity,
-        uint amountAMin,
-        uint amountBMin,
+        uint256 liquidity,
+        uint256 amountAMin,
+        uint256 amountBMin,
         address to,
-        uint deadline,
-        bool approveMax, uint8 v, bytes32 r, bytes32 s
-    ) external returns (uint amountA, uint amountB);
+        uint256 deadline,
+        bool approveMax,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external returns (uint256 amountA, uint256 amountB);
+
     function removeLiquidityETHWithPermit(
         address token,
-        uint liquidity,
-        uint amountTokenMin,
-        uint amountETHMin,
+        uint256 liquidity,
+        uint256 amountTokenMin,
+        uint256 amountETHMin,
         address to,
-        uint deadline,
-        bool approveMax, uint8 v, bytes32 r, bytes32 s
-    ) external returns (uint amountToken, uint amountETH);
-    function swapExactTokensForTokens(
-        uint amountIn,
-        uint amountOutMin,
-        address[] calldata path,
-        address to,
-        uint deadline
-    ) external returns (uint[] memory amounts);
-    function swapTokensForExactTokens(
-        uint amountOut,
-        uint amountInMax,
-        address[] calldata path,
-        address to,
-        uint deadline
-    ) external returns (uint[] memory amounts);
-    function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline)
-    external
-    payable
-    returns (uint[] memory amounts);
-    function swapTokensForExactETH(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline)
-    external
-    returns (uint[] memory amounts);
-    function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)
-    external
-    returns (uint[] memory amounts);
-    function swapETHForExactTokens(uint amountOut, address[] calldata path, address to, uint deadline)
-    external
-    payable
-    returns (uint[] memory amounts);
+        uint256 deadline,
+        bool approveMax,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external returns (uint256 amountToken, uint256 amountETH);
 
-    function quote(uint amountA, uint reserveA, uint reserveB) external pure returns (uint amountB);
-    function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) external pure returns (uint amountOut);
-    function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut) external pure returns (uint amountIn);
-    function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts);
-    function getAmountsIn(uint amountOut, address[] calldata path) external view returns (uint[] memory amounts);
+    function swapExactTokensForTokens(
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external returns (uint256[] memory amounts);
+
+    function swapTokensForExactTokens(
+        uint256 amountOut,
+        uint256 amountInMax,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external returns (uint256[] memory amounts);
+
+    function swapExactETHForTokens(
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external payable returns (uint256[] memory amounts);
+
+    function swapTokensForExactETH(
+        uint256 amountOut,
+        uint256 amountInMax,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external returns (uint256[] memory amounts);
+
+    function swapExactTokensForETH(
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external returns (uint256[] memory amounts);
+
+    function swapETHForExactTokens(
+        uint256 amountOut,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external payable returns (uint256[] memory amounts);
+
+    function quote(
+        uint256 amountA,
+        uint256 reserveA,
+        uint256 reserveB
+    ) external pure returns (uint256 amountB);
+
+    function getAmountOut(
+        uint256 amountIn,
+        uint256 reserveIn,
+        uint256 reserveOut
+    ) external pure returns (uint256 amountOut);
+
+    function getAmountIn(
+        uint256 amountOut,
+        uint256 reserveIn,
+        uint256 reserveOut
+    ) external pure returns (uint256 amountIn);
+
+    function getAmountsOut(uint256 amountIn, address[] calldata path)
+        external
+        view
+        returns (uint256[] memory amounts);
+
+    function getAmountsIn(uint256 amountOut, address[] calldata path)
+        external
+        view
+        returns (uint256[] memory amounts);
 }
 
 interface IUniswapV2Router02 is IUniswapV2Router01 {
     function removeLiquidityETHSupportingFeeOnTransferTokens(
         address token,
-        uint liquidity,
-        uint amountTokenMin,
-        uint amountETHMin,
+        uint256 liquidity,
+        uint256 amountTokenMin,
+        uint256 amountETHMin,
         address to,
-        uint deadline
-    ) external returns (uint amountETH);
+        uint256 deadline
+    ) external returns (uint256 amountETH);
+
     function removeLiquidityETHWithPermitSupportingFeeOnTransferTokens(
         address token,
-        uint liquidity,
-        uint amountTokenMin,
-        uint amountETHMin,
+        uint256 liquidity,
+        uint256 amountTokenMin,
+        uint256 amountETHMin,
         address to,
-        uint deadline,
-        bool approveMax, uint8 v, bytes32 r, bytes32 s
-    ) external returns (uint amountETH);
+        uint256 deadline,
+        bool approveMax,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external returns (uint256 amountETH);
 
     function swapExactTokensForTokensSupportingFeeOnTransferTokens(
-        uint amountIn,
-        uint amountOutMin,
+        uint256 amountIn,
+        uint256 amountOutMin,
         address[] calldata path,
         address to,
-        uint deadline
+        uint256 deadline
     ) external;
+
     function swapExactETHForTokensSupportingFeeOnTransferTokens(
-        uint amountOutMin,
+        uint256 amountOutMin,
         address[] calldata path,
         address to,
-        uint deadline
+        uint256 deadline
     ) external payable;
+
     function swapExactTokensForETHSupportingFeeOnTransferTokens(
-        uint amountIn,
-        uint amountOutMin,
+        uint256 amountIn,
+        uint256 amountOutMin,
         address[] calldata path,
         address to,
-        uint deadline
+        uint256 deadline
     ) external;
 }
 
-contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgradeable {
+contract Safemoon is
+    ISafemoon,
+    Initializable,
+    ContextUpgradeable,
+    OwnableUpgradeable
+{
     using SafeMathUpgradeable for uint256;
     using AddressUpgradeable for address;
 
@@ -805,13 +1052,13 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         uint256 tBurn;
     }
 
-    mapping (address => uint256) private _rOwned;
-    mapping (address => uint256) private _tOwned;
-    mapping (address => mapping (address => uint256)) private _allowances;
-    mapping (address => bool) private _isExcludedFromFee;
-    mapping (address => bool) private _isExcluded;
-    mapping (address => bool) private _isBlacklisted;
-    mapping (address => uint256) private _accountsTier;
+    mapping(address => uint256) private _rOwned;
+    mapping(address => uint256) private _tOwned;
+    mapping(address => mapping(address => uint256)) private _allowances;
+    mapping(address => bool) private _isExcludedFromFee;
+    mapping(address => bool) private _isExcluded;
+    mapping(address => bool) private _isBlacklisted;
+    mapping(address => uint256) private _accountsTier;
 
     address[] private _excluded;
 
@@ -854,13 +1101,13 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         uint256 tokensIntoLiquidity
     );
 
-    modifier lockTheSwap {
+    modifier lockTheSwap() {
         inSwapAndLiquify = true;
         _;
         inSwapAndLiquify = false;
     }
 
-    modifier lockUpgrade {
+    modifier lockUpgrade() {
         require(!_upgraded, "Safemoon: Already upgraded");
         _;
         _upgraded = true;
@@ -882,7 +1129,10 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         __Safemoon_v2_init_unchained(_router);
     }
 
-    function __Safemoon_v2_init_unchained(address _router) internal initializer {
+    function __Safemoon_v2_init_unchained(address _router)
+        internal
+        initializer
+    {
         _name = "SafeMoon";
         _symbol = "SAFEMOON";
         _decimals = 9;
@@ -904,8 +1154,10 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         uniswapV2Router = IUniswapV2Router02(_router);
         WBNB = uniswapV2Router.WETH();
         // Create a uniswap pair for this new token
-        uniswapV2Pair = IUniswapV2Factory(uniswapV2Router.factory())
-        .createPair(address(this), WBNB);
+        uniswapV2Pair = IUniswapV2Factory(uniswapV2Router.factory()).createPair(
+                address(this),
+                WBNB
+            );
 
         //exclude owner and this contract from fee
         _isExcludedFromFee[owner()] = true;
@@ -944,33 +1196,76 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         return tokenFromReflection(_rOwned[account]);
     }
 
-    function transfer(address recipient, uint256 amount) public override returns (bool) {
+    function transfer(address recipient, uint256 amount)
+        public
+        override
+        returns (bool)
+    {
         _transfer(_msgSender(), recipient, amount);
         return true;
     }
 
-    function allowance(address owner, address spender) public view override returns (uint256) {
+    function allowance(address owner, address spender)
+        public
+        view
+        override
+        returns (uint256)
+    {
         return _allowances[owner][spender];
     }
 
-    function approve(address spender, uint256 amount) public override returns (bool) {
+    function approve(address spender, uint256 amount)
+        public
+        override
+        returns (bool)
+    {
         _approve(_msgSender(), spender, amount);
         return true;
     }
 
-    function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) public override returns (bool) {
         _transfer(sender, recipient, amount);
-        _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "BEP20: transfer amount exceeds allowance"));
+        _approve(
+            sender,
+            _msgSender(),
+            _allowances[sender][_msgSender()].sub(
+                amount,
+                "BEP20: transfer amount exceeds allowance"
+            )
+        );
         return true;
     }
 
-    function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
-        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].add(addedValue));
+    function increaseAllowance(address spender, uint256 addedValue)
+        public
+        virtual
+        returns (bool)
+    {
+        _approve(
+            _msgSender(),
+            spender,
+            _allowances[_msgSender()][spender].add(addedValue)
+        );
         return true;
     }
 
-    function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
-        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].sub(subtractedValue, "BEP20: decreased allowance below zero"));
+    function decreaseAllowance(address spender, uint256 subtractedValue)
+        public
+        virtual
+        returns (bool)
+    {
+        _approve(
+            _msgSender(),
+            spender,
+            _allowances[_msgSender()][spender].sub(
+                subtractedValue,
+                "BEP20: decreased allowance below zero"
+            )
+        );
         return true;
     }
 
@@ -982,7 +1277,11 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         return _tFeeTotal;
     }
 
-    function reflectionFromTokenInTiers(uint256 tAmount, uint256 _tierIndex, bool deductTransferFee) public view returns(uint256) {
+    function reflectionFromTokenInTiers(
+        uint256 tAmount,
+        uint256 _tierIndex,
+        bool deductTransferFee
+    ) public view returns (uint256) {
         require(tAmount <= _tTotal, "Amount must be less than supply");
         if (!deductTransferFee) {
             FeeValues memory _values = _getValues(tAmount, _tierIndex);
@@ -993,26 +1292,37 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         }
     }
 
-    function reflectionFromToken(uint256 tAmount, bool deductTransferFee) public view returns(uint256) {
+    function reflectionFromToken(uint256 tAmount, bool deductTransferFee)
+        public
+        view
+        returns (uint256)
+    {
         return reflectionFromTokenInTiers(tAmount, 0, deductTransferFee);
     }
 
-    function tokenFromReflection(uint256 rAmount) public view returns(uint256) {
-        require(rAmount <= _rTotal, "Amount must be less than total reflections");
+    function tokenFromReflection(uint256 rAmount)
+        public
+        view
+        returns (uint256)
+    {
+        require(
+            rAmount <= _rTotal,
+            "Amount must be less than total reflections"
+        );
         uint256 currentRate = _getRate();
         return rAmount.div(currentRate);
     }
 
-    function excludeFromReward(address account) public onlyOwner() {
+    function excludeFromReward(address account) public onlyOwner {
         require(!_isExcluded[account], "Account is already excluded");
-        if(_rOwned[account] > 0) {
+        if (_rOwned[account] > 0) {
             _tOwned[account] = tokenFromReflection(_rOwned[account]);
         }
         _isExcluded[account] = true;
         _excluded.push(account);
     }
 
-    function includeInReward(address account) external onlyOwner() {
+    function includeInReward(address account) external onlyOwner {
         require(_isExcluded[account], "Account is already included");
         for (uint256 i = 0; i < _excluded.length; i++) {
             if (_excluded[i] == account) {
@@ -1025,34 +1335,41 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         }
     }
 
-    function excludeFromFee(address account) public onlyOwner() {
+    function excludeFromFee(address account) public onlyOwner {
         _isExcludedFromFee[account] = true;
     }
 
-    function includeInFee(address account) public onlyOwner() {
+    function includeInFee(address account) public onlyOwner {
         _isExcludedFromFee[account] = false;
     }
 
-    function whitelistAddress(
-        address _account,
-        uint256 _tierIndex
-    )
-    public
-    onlyOwner()
-    checkTierIndex(_tierIndex)
-    preventBlacklisted(_account, "Safemoon: Selected account is in blacklist")
+    function whitelistAddress(address _account, uint256 _tierIndex)
+        public
+        onlyOwner
+        checkTierIndex(_tierIndex)
+        preventBlacklisted(
+            _account,
+            "Safemoon: Selected account is in blacklist"
+        )
     {
         require(_account != address(0), "Safemoon: Invalid address");
         _accountsTier[_account] = _tierIndex;
     }
 
-    function excludeWhitelistedAddress(address _account) public onlyOwner() {
+    function excludeWhitelistedAddress(address _account) public onlyOwner {
         require(_account != address(0), "Safemoon: Invalid address");
-        require(_accountsTier[_account] > 0, "Safemoon: Account is not in whitelist");
+        require(
+            _accountsTier[_account] > 0,
+            "Safemoon: Account is not in whitelist"
+        );
         _accountsTier[_account] = 0;
     }
 
-    function accountTier(address _account) public view returns (FeeTier memory) {
+    function accountTier(address _account)
+        public
+        view
+        returns (FeeTier memory)
+    {
         return feeTiers[_accountsTier[_account]];
     }
 
@@ -1060,82 +1377,127 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         return _accountsTier[_account] > 0;
     }
 
-    function checkFees(FeeTier memory _tier) internal view returns (FeeTier memory) {
-        uint256 _fees = _tier.ecoSystemFee.add(_tier.liquidityFee).add(_tier.taxFee).add(_tier.ownerFee).add(_tier.burnFee);
+    function checkFees(FeeTier memory _tier)
+        internal
+        view
+        returns (FeeTier memory)
+    {
+        uint256 _fees = _tier
+            .ecoSystemFee
+            .add(_tier.liquidityFee)
+            .add(_tier.taxFee)
+            .add(_tier.ownerFee)
+            .add(_tier.burnFee);
         require(_fees <= _maxFee, "Safemoon: Fees exceeded max limitation");
 
         return _tier;
     }
 
-    function checkFeesChanged(FeeTier memory _tier, uint256 _oldFee, uint256 _newFee) internal view {
-        uint256 _fees = _tier.ecoSystemFee
-        .add(_tier.liquidityFee)
-        .add(_tier.taxFee)
-        .add(_tier.ownerFee)
-        .add(_tier.burnFee)
-        .sub(_oldFee)
-        .add(_newFee);
+    function checkFeesChanged(
+        FeeTier memory _tier,
+        uint256 _oldFee,
+        uint256 _newFee
+    ) internal view {
+        uint256 _fees = _tier
+            .ecoSystemFee
+            .add(_tier.liquidityFee)
+            .add(_tier.taxFee)
+            .add(_tier.ownerFee)
+            .add(_tier.burnFee)
+            .sub(_oldFee)
+            .add(_newFee);
 
         require(_fees <= _maxFee, "Safemoon: Fees exceeded max limitation");
     }
 
-    function setEcoSystemFeePercent(uint256 _tierIndex, uint256 _ecoSystemFee) external onlyOwner() checkTierIndex(_tierIndex) {
+    function setEcoSystemFeePercent(uint256 _tierIndex, uint256 _ecoSystemFee)
+        external
+        onlyOwner
+        checkTierIndex(_tierIndex)
+    {
         FeeTier memory tier = feeTiers[_tierIndex];
         checkFeesChanged(tier, tier.ecoSystemFee, _ecoSystemFee);
         feeTiers[_tierIndex].ecoSystemFee = _ecoSystemFee;
-        if(_tierIndex == 0) {
+        if (_tierIndex == 0) {
             _defaultFees.ecoSystemFee = _ecoSystemFee;
         }
     }
 
-    function setLiquidityFeePercent(uint256 _tierIndex, uint256 _liquidityFee) external onlyOwner() checkTierIndex(_tierIndex) {
+    function setLiquidityFeePercent(uint256 _tierIndex, uint256 _liquidityFee)
+        external
+        onlyOwner
+        checkTierIndex(_tierIndex)
+    {
         FeeTier memory tier = feeTiers[_tierIndex];
         checkFeesChanged(tier, tier.liquidityFee, _liquidityFee);
         feeTiers[_tierIndex].liquidityFee = _liquidityFee;
-        if(_tierIndex == 0) {
+        if (_tierIndex == 0) {
             _defaultFees.liquidityFee = _liquidityFee;
         }
     }
 
-    function setTaxFeePercent(uint256 _tierIndex, uint256 _taxFee) external onlyOwner() checkTierIndex(_tierIndex) {
+    function setTaxFeePercent(uint256 _tierIndex, uint256 _taxFee)
+        external
+        onlyOwner
+        checkTierIndex(_tierIndex)
+    {
         FeeTier memory tier = feeTiers[_tierIndex];
         checkFeesChanged(tier, tier.taxFee, _taxFee);
         feeTiers[_tierIndex].taxFee = _taxFee;
-        if(_tierIndex == 0) {
+        if (_tierIndex == 0) {
             _defaultFees.taxFee = _taxFee;
         }
     }
 
-    function setOwnerFeePercent(uint256 _tierIndex, uint256 _ownerFee) external onlyOwner() checkTierIndex(_tierIndex) {
+    function setOwnerFeePercent(uint256 _tierIndex, uint256 _ownerFee)
+        external
+        onlyOwner
+        checkTierIndex(_tierIndex)
+    {
         FeeTier memory tier = feeTiers[_tierIndex];
         checkFeesChanged(tier, tier.ownerFee, _ownerFee);
         feeTiers[_tierIndex].ownerFee = _ownerFee;
-        if(_tierIndex == 0) {
+        if (_tierIndex == 0) {
             _defaultFees.ownerFee = _ownerFee;
         }
     }
 
-    function setBurnFeePercent(uint256 _tierIndex, uint256 _burnFee) external onlyOwner() checkTierIndex(_tierIndex) {
+    function setBurnFeePercent(uint256 _tierIndex, uint256 _burnFee)
+        external
+        onlyOwner
+        checkTierIndex(_tierIndex)
+    {
         FeeTier memory tier = feeTiers[_tierIndex];
         checkFeesChanged(tier, tier.burnFee, _burnFee);
         feeTiers[_tierIndex].burnFee = _burnFee;
-        if(_tierIndex == 0) {
+        if (_tierIndex == 0) {
             _defaultFees.burnFee = _burnFee;
         }
     }
 
-    function setEcoSystemFeeAddress(uint256 _tierIndex, address _ecoSystem) external onlyOwner() checkTierIndex(_tierIndex) {
-        require(_ecoSystem != address(0), "Safemoon: Address Zero is not allowed");
+    function setEcoSystemFeeAddress(uint256 _tierIndex, address _ecoSystem)
+        external
+        onlyOwner
+        checkTierIndex(_tierIndex)
+    {
+        require(
+            _ecoSystem != address(0),
+            "Safemoon: Address Zero is not allowed"
+        );
         feeTiers[_tierIndex].ecoSystem = _ecoSystem;
-        if(_tierIndex == 0) {
+        if (_tierIndex == 0) {
             _defaultFees.ecoSystem = _ecoSystem;
         }
     }
 
-    function setOwnerFeeAddress(uint256 _tierIndex, address _owner) external onlyOwner() checkTierIndex(_tierIndex) {
+    function setOwnerFeeAddress(uint256 _tierIndex, address _owner)
+        external
+        onlyOwner
+        checkTierIndex(_tierIndex)
+    {
         require(_owner != address(0), "Safemoon: Address Zero is not allowed");
         feeTiers[_tierIndex].owner = _owner;
-        if(_tierIndex == 0) {
+        if (_tierIndex == 0) {
             _defaultFees.owner = _owner;
         }
     }
@@ -1148,7 +1510,7 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         uint256 _burnFee,
         address _ecoSystem,
         address _owner
-    ) public onlyOwner() {
+    ) public onlyOwner {
         _addTier(
             _ecoSystemFee,
             _liquidityFee,
@@ -1169,7 +1531,8 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         address _ecoSystem,
         address _owner
     ) internal returns (FeeTier memory) {
-        FeeTier memory _newTier = checkFees(FeeTier(
+        FeeTier memory _newTier = checkFees(
+            FeeTier(
                 _ecoSystemFee,
                 _liquidityFee,
                 _taxFee,
@@ -1177,42 +1540,49 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
                 _burnFee,
                 _ecoSystem,
                 _owner
-            ));
+            )
+        );
         feeTiers.push(_newTier);
 
         return _newTier;
     }
 
-    function feeTier(uint256 _tierIndex) public view checkTierIndex(_tierIndex) returns (FeeTier memory) {
+    function feeTier(uint256 _tierIndex)
+        public
+        view
+        checkTierIndex(_tierIndex)
+        returns (FeeTier memory)
+    {
         return feeTiers[_tierIndex];
     }
 
-    function blacklistAddress(address account) public onlyOwner() {
+    function blacklistAddress(address account) public onlyOwner {
         _isBlacklisted[account] = true;
         _accountsTier[account] = 0;
     }
 
-    function unBlacklistAddress(address account) public onlyOwner() {
+    function unBlacklistAddress(address account) public onlyOwner {
         _isBlacklisted[account] = false;
     }
 
-    function updateRouterAndPair(address _uniswapV2Router,address _uniswapV2Pair) public onlyOwner() {
+    function updateRouterAndPair(
+        address _uniswapV2Router,
+        address _uniswapV2Pair
+    ) public onlyOwner {
         uniswapV2Router = IUniswapV2Router02(_uniswapV2Router);
         uniswapV2Pair = _uniswapV2Pair;
         WBNB = uniswapV2Router.WETH();
     }
 
-    function setDefaultSettings() external onlyOwner() {
+    function setDefaultSettings() external onlyOwner {
         swapAndLiquifyEnabled = true;
     }
 
-    function setMaxTxPercent(uint256 maxTxPercent) external onlyOwner() {
-        _maxTxAmount = _tTotal.mul(maxTxPercent).div(
-            10**4
-        );
+    function setMaxTxPercent(uint256 maxTxPercent) external onlyOwner {
+        _maxTxAmount = _tTotal.mul(maxTxPercent).div(10**4);
     }
 
-    function setSwapAndLiquifyEnabled(bool _enabled) public onlyOwner() {
+    function setSwapAndLiquifyEnabled(bool _enabled) public onlyOwner {
         swapAndLiquifyEnabled = _enabled;
         emit SwapAndLiquifyEnabledUpdated(_enabled);
     }
@@ -1225,14 +1595,42 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         _tFeeTotal = _tFeeTotal.add(tFee);
     }
 
-    function _getValues(uint256 tAmount, uint256 _tierIndex) private view returns (FeeValues memory) {
+    function _getValues(uint256 tAmount, uint256 _tierIndex)
+        private
+        view
+        returns (FeeValues memory)
+    {
         tFeeValues memory tValues = _getTValues(tAmount, _tierIndex);
-        uint256 tTransferFee = tValues.tLiquidity.add(tValues.tEchoSystem).add(tValues.tOwner).add(tValues.tBurn);
-        (uint256 rAmount, uint256 rTransferAmount, uint256 rFee) = _getRValues(tAmount, tValues.tFee, tTransferFee, _getRate());
-        return FeeValues(rAmount, rTransferAmount, rFee, tValues.tTransferAmount, tValues.tEchoSystem, tValues.tLiquidity, tValues.tFee, tValues.tOwner, tValues.tBurn);
+        uint256 tTransferFee = tValues
+            .tLiquidity
+            .add(tValues.tEchoSystem)
+            .add(tValues.tOwner)
+            .add(tValues.tBurn);
+        (uint256 rAmount, uint256 rTransferAmount, uint256 rFee) = _getRValues(
+            tAmount,
+            tValues.tFee,
+            tTransferFee,
+            _getRate()
+        );
+        return
+            FeeValues(
+                rAmount,
+                rTransferAmount,
+                rFee,
+                tValues.tTransferAmount,
+                tValues.tEchoSystem,
+                tValues.tLiquidity,
+                tValues.tFee,
+                tValues.tOwner,
+                tValues.tBurn
+            );
     }
 
-    function _getTValues(uint256 tAmount, uint256 _tierIndex) private view returns (tFeeValues memory) {
+    function _getTValues(uint256 tAmount, uint256 _tierIndex)
+        private
+        view
+        returns (tFeeValues memory)
+    {
         FeeTier memory tier = feeTiers[_tierIndex];
         tFeeValues memory tValues = tFeeValues(
             0,
@@ -1243,11 +1641,29 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
             calculateFee(tAmount, tier.burnFee)
         );
 
-        tValues.tTransferAmount = tAmount.sub(tValues.tEchoSystem).sub(tValues.tFee).sub(tValues.tLiquidity).sub(tValues.tOwner).sub(tValues.tBurn);
+        tValues.tTransferAmount = tAmount
+            .sub(tValues.tEchoSystem)
+            .sub(tValues.tFee)
+            .sub(tValues.tLiquidity)
+            .sub(tValues.tOwner)
+            .sub(tValues.tBurn);
         return tValues;
     }
 
-    function _getRValues(uint256 tAmount, uint256 tFee, uint256 tTransferFee, uint256 currentRate) private pure returns (uint256, uint256, uint256) {
+    function _getRValues(
+        uint256 tAmount,
+        uint256 tFee,
+        uint256 tTransferFee,
+        uint256 currentRate
+    )
+        private
+        pure
+        returns (
+            uint256,
+            uint256,
+            uint256
+        )
+    {
         uint256 rAmount = tAmount.mul(currentRate);
         uint256 rFee = tFee.mul(currentRate);
         uint256 rTransferFee = tTransferFee.mul(currentRate);
@@ -1255,16 +1671,19 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         return (rAmount, rTransferAmount, rFee);
     }
 
-    function _getRate() private view returns(uint256) {
+    function _getRate() private view returns (uint256) {
         (uint256 rSupply, uint256 tSupply) = _getCurrentSupply();
         return rSupply.div(tSupply);
     }
 
-    function _getCurrentSupply() private view returns(uint256, uint256) {
+    function _getCurrentSupply() private view returns (uint256, uint256) {
         uint256 rSupply = _rTotal;
         uint256 tSupply = _tTotal;
         for (uint256 i = 0; i < _excluded.length; i++) {
-            if (_rOwned[_excluded[i]] > rSupply || _tOwned[_excluded[i]] > tSupply) return (_rTotal, _tTotal);
+            if (
+                _rOwned[_excluded[i]] > rSupply ||
+                _tOwned[_excluded[i]] > tSupply
+            ) return (_rTotal, _tTotal);
             rSupply = rSupply.sub(_rOwned[_excluded[i]]);
             tSupply = tSupply.sub(_tOwned[_excluded[i]]);
         }
@@ -1272,11 +1691,13 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         return (rSupply, tSupply);
     }
 
-    function calculateFee(uint256 _amount, uint256 _fee) private pure returns (uint256) {
-        if(_fee == 0) return 0;
-        return _amount.mul(_fee).div(
-            10**4
-        );
+    function calculateFee(uint256 _amount, uint256 _fee)
+        private
+        pure
+        returns (uint256)
+    {
+        if (_fee == 0) return 0;
+        return _amount.mul(_fee).div(10**4);
     }
 
     function removeAllFee() private {
@@ -1288,11 +1709,11 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         feeTiers[0] = _previousFees;
     }
 
-    function isExcludedFromFee(address account) public view returns(bool) {
+    function isExcludedFromFee(address account) public view returns (bool) {
         return _isExcludedFromFee[account];
     }
 
-    function isBlacklisted(address account) public view returns(bool) {
+    function isBlacklisted(address account) public view returns (bool) {
         return _isBlacklisted[account];
     }
 
@@ -1301,9 +1722,9 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         address spender,
         uint256 amount
     )
-    private
-    preventBlacklisted(owner, "Safemoon: Owner address is blacklisted")
-    preventBlacklisted(spender, "Safemoon: Spender address is blacklisted")
+        private
+        preventBlacklisted(owner, "Safemoon: Owner address is blacklisted")
+        preventBlacklisted(spender, "Safemoon: Spender address is blacklisted")
     {
         require(owner != address(0), "BEP20: approve from the zero address");
         require(spender != address(0), "BEP20: approve to the zero address");
@@ -1317,17 +1738,20 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         address to,
         uint256 amount
     )
-    private
-    preventBlacklisted(_msgSender(), "Safemoon: Address is blacklisted")
-    preventBlacklisted(from, "Safemoon: From address is blacklisted")
-    preventBlacklisted(to, "Safemoon: To address is blacklisted")
+        private
+        preventBlacklisted(_msgSender(), "Safemoon: Address is blacklisted")
+        preventBlacklisted(from, "Safemoon: From address is blacklisted")
+        preventBlacklisted(to, "Safemoon: To address is blacklisted")
     {
         require(from != address(0), "BEP20: transfer from the zero address");
         require(to != address(0), "BEP20: transfer to the zero address");
         require(amount > 0, "Transfer amount must be greater than zero");
 
-        if(from != owner() && to != owner())
-            require(amount <= _maxTxAmount, "Transfer amount exceeds the maxTxAmount.");
+        if (from != owner() && to != owner())
+            require(
+                amount <= _maxTxAmount,
+                "Transfer amount exceeds the maxTxAmount."
+            );
 
         // is the token balance of this contract address over the min number of
         // tokens that we need to initiate a swap + liquidity lock?
@@ -1335,12 +1759,12 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         // also, don't swap & liquify if sender is uniswap pair.
         uint256 contractTokenBalance = balanceOf(address(this));
 
-        if(contractTokenBalance >= _maxTxAmount)
-        {
+        if (contractTokenBalance >= _maxTxAmount) {
             contractTokenBalance = _maxTxAmount;
         }
 
-        bool overMinTokenBalance = contractTokenBalance >= numTokensSellToAddToLiquidity;
+        bool overMinTokenBalance = contractTokenBalance >=
+            numTokensSellToAddToLiquidity;
         if (
             overMinTokenBalance &&
             !inSwapAndLiquify &&
@@ -1356,16 +1780,16 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         bool takeFee = true;
 
         //if any account belongs to _isExcludedFromFee account then remove the fee
-        if(_isExcludedFromFee[from] || _isExcludedFromFee[to]){
+        if (_isExcludedFromFee[from] || _isExcludedFromFee[to]) {
             takeFee = false;
         }
 
         uint256 tierIndex = 0;
 
-        if(takeFee) {
+        if (takeFee) {
             tierIndex = _accountsTier[from];
 
-            if(_msgSender() != from) {
+            if (_msgSender() != from) {
                 tierIndex = _accountsTier[_msgSender()];
             }
         }
@@ -1431,9 +1855,14 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
     }
 
     //this method is responsible for taking all fee, if takeFee is true
-    function _tokenTransfer(address sender, address recipient, uint256 amount, uint256 tierIndex, bool takeFee) private {
-        if(!takeFee)
-            removeAllFee();
+    function _tokenTransfer(
+        address sender,
+        address recipient,
+        uint256 amount,
+        uint256 tierIndex,
+        bool takeFee
+    ) private {
+        if (!takeFee) removeAllFee();
 
         if (_isExcluded[sender] && !_isExcluded[recipient]) {
             _transferFromExcluded(sender, recipient, amount, tierIndex);
@@ -1447,11 +1876,15 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
             _transferStandard(sender, recipient, amount, tierIndex);
         }
 
-        if(!takeFee)
-            restoreAllFee();
+        if (!takeFee) restoreAllFee();
     }
 
-    function _transferBothExcluded(address sender, address recipient, uint256 tAmount, uint256 tierIndex) private {
+    function _transferBothExcluded(
+        address sender,
+        address recipient,
+        uint256 tAmount,
+        uint256 tierIndex
+    ) private {
         FeeValues memory _values = _getValues(tAmount, tierIndex);
         _tOwned[sender] = _tOwned[sender].sub(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(_values.rAmount);
@@ -1462,7 +1895,12 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         emit Transfer(sender, recipient, _values.tTransferAmount);
     }
 
-    function _transferStandard(address sender, address recipient, uint256 tAmount, uint256 tierIndex) private {
+    function _transferStandard(
+        address sender,
+        address recipient,
+        uint256 tAmount,
+        uint256 tierIndex
+    ) private {
         FeeValues memory _values = _getValues(tAmount, tierIndex);
         _rOwned[sender] = _rOwned[sender].sub(_values.rAmount);
         _rOwned[recipient] = _rOwned[recipient].add(_values.rTransferAmount);
@@ -1471,7 +1909,12 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         emit Transfer(sender, recipient, _values.tTransferAmount);
     }
 
-    function _transferToExcluded(address sender, address recipient, uint256 tAmount, uint256 tierIndex) private {
+    function _transferToExcluded(
+        address sender,
+        address recipient,
+        uint256 tAmount,
+        uint256 tierIndex
+    ) private {
         FeeValues memory _values = _getValues(tAmount, tierIndex);
         _rOwned[sender] = _rOwned[sender].sub(_values.rAmount);
         _tOwned[recipient] = _tOwned[recipient].add(_values.tTransferAmount);
@@ -1481,7 +1924,12 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         emit Transfer(sender, recipient, _values.tTransferAmount);
     }
 
-    function _transferFromExcluded(address sender, address recipient, uint256 tAmount, uint256 tierIndex) private {
+    function _transferFromExcluded(
+        address sender,
+        address recipient,
+        uint256 tAmount,
+        uint256 tierIndex
+    ) private {
         FeeValues memory _values = _getValues(tAmount, tierIndex);
         _tOwned[sender] = _tOwned[sender].sub(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(_values.rAmount);
@@ -1499,26 +1947,26 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
     }
 
     function _takeFee(uint256 tAmount, address recipient) private {
-        if(recipient == address(0)) return;
-        if(tAmount == 0) return;
+        if (recipient == address(0)) return;
+        if (tAmount == 0) return;
 
         uint256 currentRate = _getRate();
         uint256 rAmount = tAmount.mul(currentRate);
         _rOwned[recipient] = _rOwned[recipient].add(rAmount);
-        if(_isExcluded[recipient])
+        if (_isExcluded[recipient])
             _tOwned[recipient] = _tOwned[recipient].add(tAmount);
     }
 
     function _takeBurn(uint256 _amount) private {
-        if(_amount == 0) return;
+        if (_amount == 0) return;
         _tOwned[_burnAddress] = _tOwned[_burnAddress].add(_amount);
     }
 
-    function setMigrationAddress(address _migration) public onlyOwner() {
+    function setMigrationAddress(address _migration) public onlyOwner {
         migration = _migration;
     }
 
-    function isMigrationStarted() external override view returns (bool) {
+    function isMigrationStarted() external view override returns (bool) {
         return migration != address(0);
     }
 
@@ -1535,7 +1983,7 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
         emit Transfer(_initializerAccount, account, amount);
     }
 
-    function feeTiersLength() public view returns (uint) {
+    function feeTiersLength() public view returns (uint256) {
         return feeTiers.length;
     }
 
@@ -1551,8 +1999,10 @@ contract Safemoon is ISafemoon, Initializable, ContextUpgradeable, OwnableUpgrad
 
         _rOwned[_initializerAccount] = _rOwned[_initializerAccount].div(1000);
 
-        if(_tOwned[_initializerAccount] > 0) {
-            _tOwned[_initializerAccount] = _tOwned[_initializerAccount].div(1000);
+        if (_tOwned[_initializerAccount] > 0) {
+            _tOwned[_initializerAccount] = _tOwned[_initializerAccount].div(
+                1000
+            );
         }
     }
 }

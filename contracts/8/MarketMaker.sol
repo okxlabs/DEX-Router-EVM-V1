@@ -12,12 +12,16 @@ import "./interfaces/IApproveProxy.sol";
 import "./interfaces/IUniswapV2Pair.sol";
 import "./interfaces/IUniV3.sol";
 import "./interfaces/IUniswapV2Factory.sol";
+import "./libraries/UniversalERC20.sol";
+import "./interfaces/IWETH.sol";
+import "./interfaces/IWNativeRelayer.sol";
 
 /// @title MarketMaker
 /// @notice Explain to an end user what this does
 /// @dev Explain to a developer any extra detailsq
 contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712Upgradable {
   using SafeERC20 for IERC20;
+  using UniversalERC20 for IERC20;
 
   // ============ Storage ============
   // _ORDER_TYPEHASH = keccak256("PMMSwapRequest(uint256 pathIndex,address payer,address fromToken,address toToken,uint256 fromTokenAmountMax,uint256 toTokenAmountMax,uint256 salt,uint256 deadLine,bool isPushOrder,bytes extension)")
@@ -44,6 +48,8 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712Up
   address public backEnd;
   address public cancelerGuardian;
   address public uniV2Factory;
+  address public wNativeRelayer;
+  address public dexRouter;
 
   enum PMM_ERROR {
     NO_ERROR,
@@ -53,7 +59,8 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712Up
     REQUEST_TOO_MUCH,
     ORDER_CANCELLED_OR_FINALIZED,
     REMAINING_AMOUNT_NOT_ENOUGH,
-    FAIL_TO_CLAIM_TOKEN,
+    FROM_TOKEN_PAYER_ERROR,
+    TO_TOKEN_PAYER_ERROR,
     WRONG_FROM_TOKEN
   }
 
@@ -75,10 +82,10 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712Up
       uint256 deadLine;
       bool isPushOrder;
       bytes extension;
-      // address pmmAdapter;
+      // address marketMaker;
       // uint256 subIndex;
       // bytes signature;
-      // uint256 source;  1byte type + 1byte bool（reverse） + 20 bytes address
+      // uint256 source;  1byte type + 1byte bool（reverse） + 0...0 + 20 bytes address
   }
 
   struct OrderStatus {
@@ -87,19 +94,30 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712Up
     bool cancelledOrFinalized;
   }
 
+  struct BaseRequest {
+    address fromToken;
+    address toToken;
+    uint256 fromTokenAmount;
+    uint256 minReturnAmount;
+    uint256 deadLine;
+  }
+
   // ============ Event ============
 
-  event AddPmmAdapter(address indexed sender, address pmmAdapter);
-  event RemovePmmAdapter(address indexed sender, address pmmAdapter);
-  event ChangeFeeConfig(address indexed sender, address newFeeTo, uint256 newFeeRate);
-  event SetApproveProxy(address indexed sender, address approveProxy);
-  event SetBackEnd(address indexed sender, address backEnd);
-  event SetCanceler(address sender, address[] newCanceler, bool[] state);
-  event ChangeOperator(address indexed payer, address operator);
-  event SetCancelerGuardian(address sender, address newCancelerGuardian);
-  event CancelQuotes(address sender, uint256[] pathIndex);
-  event SetUniV2Factory(address sender, address newUniV2Factory);
+  event DexRouterSet(address indexed sender, address dexRouter);
+  event FeeConfigChanged(address indexed sender, address newFeeTo, uint256 newFeeRate);
+  event ApproveProxySet(address indexed sender, address approveProxy);
+  event BackEndSet(address indexed sender, address backEnd);
+  event CancelerSet(address sender, address[] newCanceler, bool[] state);
+  event OperatorChanged(address indexed payer, address operator);
+  event CancelerGuardianSet(address sender, address newCancelerGuardian);
+  event QuotesCancelled(address sender, uint256[] pathIndex);
+  event UniV2FactorySet(address sender, address newUniV2Factory);
   event PriceProtected(uint256 amount, uint256 protectedAmount);
+  event PMMSwap(uint256 pathIndex, uint256 subIndex, address payer, address fromToken, address toToken, uint256 fromAmount, uint256 toAmount, uint256 errorCode);
+  event WNativeRelayerChanged(address wNativeRelayer);
+
+  error PMMErrorCode(uint256 errorCode);
 
 
   function initialize(
@@ -130,27 +148,18 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712Up
 
   // ============ Modifier ============
 
-  modifier onlyPMMAdapter() {
-    require(pmmAdapter[msg.sender], "Only PMMAdapter!");
+  modifier onlyDexRouter() {
+    require(msg.sender == dexRouter, "Only DexRouter!");
     _;
   }
 
   // ============ OnlyOwner ============
 
-  function addPmmAdapter(address _pmmAdapter) external onlyOwner {
-    require(_pmmAdapter != address(0), "Wrong Address!");
-    require(!pmmAdapter[_pmmAdapter], "PMMAdapter already exist!");
-    pmmAdapter[_pmmAdapter] = true;
+  function setDexRouter(address _dexRouter) external onlyOwner {
+    require(_dexRouter != address(0), "Wrong Address!");
+    dexRouter = _dexRouter;
 
-    emit AddPmmAdapter(msg.sender, _pmmAdapter);
-  }
-
-  function removePmmAdapter(address _pmmAdapter) external onlyOwner {
-    require(_pmmAdapter != address(0), "Wrong Address!");
-    require(pmmAdapter[_pmmAdapter], "PMMAdapter dose not exist!");
-    pmmAdapter[_pmmAdapter] = false;
-
-    emit RemovePmmAdapter(msg.sender, _pmmAdapter);
+    emit DexRouterSet(msg.sender, _dexRouter);
   }
 
   function feeConfig(address _feeTo, uint256 _feeRate) external onlyOwner {
@@ -159,22 +168,22 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712Up
     feeTo = _feeTo;
     feeRate = _feeRate;
 
-    emit ChangeFeeConfig(msg.sender, _feeTo, _feeRate);
+    emit FeeConfigChanged(msg.sender, _feeTo, _feeRate);
   }
 
   function setApproveProxy(address newApproveProxy) external onlyOwner {
     approveProxy = newApproveProxy;
-    emit SetApproveProxy(msg.sender, newApproveProxy);
+    emit ApproveProxySet(msg.sender, newApproveProxy);
   }
 
   function setBackEnd(address newBackEnd) external onlyOwner {
     backEnd = newBackEnd;
-    emit SetBackEnd(msg.sender, newBackEnd);
+    emit BackEndSet(msg.sender, newBackEnd);
   }
 
   function setCancelerGuardian(address newCancelerGuardian) external onlyOwner {
     cancelerGuardian = newCancelerGuardian;
-    emit SetCancelerGuardian(msg.sender, newCancelerGuardian);
+    emit CancelerGuardianSet(msg.sender, newCancelerGuardian);
   }
 
   function setCanceler(address[] calldata canceler, bool[] calldata state) external {
@@ -183,19 +192,24 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712Up
     for (uint256 i = 0; i < canceler.length; i++) {
       cancelers[canceler[i]] = state[i];
     }
-    emit SetCanceler(msg.sender, canceler, state);
+    emit CancelerSet(msg.sender, canceler, state);
   }
 
   function setUniV2Factory(address newUniV2Factory) external onlyOwner {
     uniV2Factory = newUniV2Factory;
-    emit SetUniV2Factory(msg.sender, newUniV2Factory);
-  } 
+    emit UniV2FactorySet(msg.sender, newUniV2Factory);
+  }
+
+  function setWNativeRelayer(address relayer) external onlyOwner {
+    wNativeRelayer = relayer;
+    emit WNativeRelayerChanged(relayer);
+  }
 
   // ============ External ============
 
   function setOperator(address _operator) external {
     operator[msg.sender] = _operator;
-    emit ChangeOperator(msg.sender, _operator);
+    emit OperatorChanged(msg.sender, _operator);
   }
 
   function cancelQuotes(uint256[] calldata pathIndex) external{
@@ -203,7 +217,7 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712Up
     for (uint256 i = 0; i < pathIndex.length; i++) {
       orderStatus[pathIndex[i]].cancelledOrFinalized = true;
     } 
-    emit CancelQuotes(msg.sender, pathIndex);
+    emit QuotesCancelled(msg.sender, pathIndex);
   }
 
   function queryOrderStatus(uint256[] calldata pathIndex) external view returns (OrderStatus[] memory) {
@@ -215,18 +229,76 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712Up
     return status;
   }
 
-  function swap(
+  function dexRouterSwap(
     uint256 actualAmountRequest,
+    address fromTokenpayer,
     PMMSwapRequest memory request
-  ) external onlyPMMAdapter nonReentrant returns (uint256 errorCode) {
-    bytes32 digest = _hashTypedDataV4(hashOrder(request));
-    errorCode = validateSigBatch(digest, request.payer, request.extension);
-    if (errorCode > 0) {
-      return errorCode;
+  ) external onlyDexRouter nonReentrant returns (uint256 errorCode) {
+    return _swapInternal(actualAmountRequest, fromTokenpayer, request, false, false);
+  }
+
+  function userSwap(
+    BaseRequest memory baseRequest,
+    PMMSwapRequest memory request
+  ) external payable nonReentrant returns (uint256 returnAmount) {
+    bool fromNative = IERC20(baseRequest.fromToken).isETH();
+    bool toNative = IERC20(baseRequest.toToken).isETH();
+    if (fromNative) {
+      require(baseRequest.fromTokenAmount == msg.value, "market maker: msg.value not match");
+      // IWETH(weth).deposit{ value: msg.value }();
+      require(request.fromToken == weth, "from token not match");
+    } else {
+      require(baseRequest.fromToken == request.fromToken, "market maker: from token not match");
     }
-    errorCode = updateOrder(actualAmountRequest, request);
+
+    if (toNative) {
+      require(request.toToken == weth, "market maker: to token not match");
+    } else {
+      require(baseRequest.toToken == request.toToken, "market maker: from token not match");
+    }
+
+    require(baseRequest.deadLine >= block.timestamp, "market maker: base request expired");
+    require(baseRequest.fromTokenAmount <= request.fromTokenAmountMax, "market maker: from token amount not enough");
+
+    returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(msg.sender);
+    uint256 errorCode = _swapInternal(baseRequest.fromTokenAmount, msg.sender, request, fromNative, toNative);
     if (errorCode > 0) {
-      return errorCode;
+      revert PMMErrorCode(errorCode);
+    }
+
+    returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(msg.sender) - returnAmount;
+    require(returnAmount >= baseRequest.minReturnAmount, "market maker: return amount is not enough");
+    bytes memory extension = request.extension;
+    uint256 subIndex;
+    assembly{
+      subIndex := mload(add(extension, 0x40))
+    }
+    emit PMMSwap(request.pathIndex, subIndex, request.payer, request.fromToken, request.toToken, baseRequest.fromTokenAmount, returnAmount, errorCode);
+    return returnAmount;
+  }
+
+  function _swapInternal(
+    uint256 actualAmountRequest,
+    address fromTokenpayer,
+    PMMSwapRequest memory request,
+    bool fromNative,
+    bool toNative
+  ) internal returns (uint256 errorCode) {
+    // check from token amount
+    if (request.fromTokenAmountMax < actualAmountRequest) {
+      return uint256(PMM_ERROR.REQUEST_TOO_MUCH);
+    }
+
+    // check order deadline
+    if (request.deadLine < block.timestamp) {
+      return uint256(PMM_ERROR.QUOTE_EXPIRED);
+    }
+    address tokenApprove =  IApproveProxy(approveProxy).tokenApprove();
+    if (!fromNative && 
+          (IERC20(request.fromToken).balanceOf(fromTokenpayer) < actualAmountRequest || 
+          IERC20(request.fromToken).allowance(fromTokenpayer, tokenApprove) < actualAmountRequest)
+    ) {
+      return uint256(PMM_ERROR.FROM_TOKEN_PAYER_ERROR);      
     }
 
     // get transfer amount of toToken
@@ -242,28 +314,26 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712Up
       amount = protectedAmount;
       emit PriceProtected(amount, protectedAmount);
     }
-    // get toToken address
-    IERC20 token = IERC20(request.toToken);
-    if (request.toToken == _ETH_ADDRESS) {
-      token = IERC20(weth);
+
+    if (IERC20(request.toToken).balanceOf(request.payer) < amount || IERC20(request.toToken).allowance(request.payer, tokenApprove) < amount) {
+      return uint256(PMM_ERROR.TO_TOKEN_PAYER_ERROR);
     }
 
-    // try to transfer market maker's funds to "this"      
-    try IApproveProxy(approveProxy).claimTokens(address(token), request.payer, address(this), amount) {
-      if (feeTo != address(0) && feeRate != 0) {
-        uint256 fee = (amount * feeRate) / 10000;
-        token.safeTransfer(feeTo, fee);
-        amount -= fee;
-      }
-      token.safeTransfer(msg.sender, amount);
-      // transfer user's funds to market maker
-      IApproveProxy(approveProxy).claimTokens(request.fromToken, msg.sender, request.payer, actualAmountRequest);
-
-      // emit Swap(request.pathIndex, request.payer, request.fromToken, request.toToken, actualAmountRequest, amount);
-      errorCode = uint256(PMM_ERROR.NO_ERROR);
-    } catch {
-      errorCode = uint256(PMM_ERROR.FAIL_TO_CLAIM_TOKEN);
+    errorCode = validateSigBatch(_hashTypedDataV4(hashOrder(request)), request.payer, request.extension);
+    if (errorCode > 0) {
+      return errorCode;
     }
+    errorCode = updateOrder(actualAmountRequest, request);
+    if (errorCode > 0) {
+      return errorCode;
+    }
+
+    uint256 fee = (amount * feeRate) / 10000;
+    amount -= fee;
+    IApproveProxy(approveProxy).claimTokens(request.toToken, request.payer, feeTo, fee); 
+    _internalClaimFromMarketMaker(request.toToken, request.payer, msg.sender, amount, toNative);
+    _internalClaimFromUser(request.fromToken, fromTokenpayer, request.payer, actualAmountRequest, fromNative);
+    return uint256(PMM_ERROR.NO_ERROR);
   }
 
   // ============ Internal ============
@@ -346,14 +416,6 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712Up
     uint256 actualAmountRequest,
     PMMSwapRequest memory order
   ) internal returns (uint256) {
-    if (order.deadLine < block.timestamp) {
-      return uint256(PMM_ERROR.QUOTE_EXPIRED);
-    }
-
-    if (actualAmountRequest > order.fromTokenAmountMax) {
-      return uint256(PMM_ERROR.REQUEST_TOO_MUCH);
-    }
-
     OrderStatus storage status = orderStatus[order.pathIndex];
     // in case of canceled or finalized order
     if (status.cancelledOrFinalized) {
@@ -377,6 +439,24 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712Up
     status.fromTokenAmountUsed += actualAmountRequest;
 
     return uint256(PMM_ERROR.NO_ERROR);
+  }
+
+  function _internalClaimFromMarketMaker(address token, address from, address to, uint256 amount, bool toNative) internal {
+    if (toNative) {
+      IApproveProxy(approveProxy).claimTokens(token, from, wNativeRelayer, amount);
+      IWNativeRelayer(wNativeRelayer).withdraw(amount);
+      payable(to).transfer(amount);
+    } else {
+      IApproveProxy(approveProxy).claimTokens(token, from, to, amount);
+    }
+  }
+  function _internalClaimFromUser(address token, address from, address to, uint256 amount, bool fromNative) internal {
+    if (fromNative) {
+      IWETH(weth).deposit{ value: amount }();
+      IERC20(weth).safeTransfer(to, amount);
+    } else {
+      IApproveProxy(approveProxy).claimTokens(token, from, to, amount);
+    }
   }
 
   // =============== price protection ===============
@@ -459,4 +539,6 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712Up
     sorceType = uint8(SourceType.UniV2);
     sourceAddress = pair;
   }
+
+  receive() external payable {}
 }

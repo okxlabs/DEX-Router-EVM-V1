@@ -26,13 +26,16 @@ interface IMarketMaker {
         REQUEST_TOO_MUCH,
         ORDER_CANCELLED_OR_FINALIZED,
         REMAINING_AMOUNT_NOT_ENOUGH,
-        FAIL_TO_CLAIM_TOKEN,
+        FROM_TOKEN_PAYER_ERROR,
+        TO_TOKEN_PAYER_ERROR,
         WRONG_FROM_TOKEN
     }
 
-    function swap(uint256 actualAmountRequest, PMMSwapRequest memory pmmRequest)
-        external
-        returns (uint256);
+    function dexRouterSwap(
+        uint256 actualAmountRequest,
+        address fromTokenpayer,
+        PMMSwapRequest memory pmmRequest
+    ) external returns (uint256);
 
     function approveProxy() external returns (address);
 }

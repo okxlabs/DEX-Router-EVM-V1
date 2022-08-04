@@ -46,7 +46,11 @@ contract BancorAdapter is IAdapter {
         } else {
             sellAmount = IERC20(sourceToken).balanceOf(address(this));
             // approve
-            SafeERC20.safeApprove(IERC20(sourceToken), BANCOR_ADDRESS, sellAmount);
+            SafeERC20.safeApprove(
+                IERC20(sourceToken),
+                BANCOR_ADDRESS,
+                sellAmount
+            );
         }
 
         uint256 minReturn = bancorNetwork.rateByPath(path, sellAmount);
