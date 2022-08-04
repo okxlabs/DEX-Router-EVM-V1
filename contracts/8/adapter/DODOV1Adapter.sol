@@ -47,7 +47,5 @@ contract DODOV1Adapter is IAdapter {
             }
         }
 
-
-
     }
 }
