@@ -10,10 +10,6 @@ interface ISwap {
 
     function getAPrecise() external view returns (uint256);
 
-    function getAllowlist() external view returns (IAllowlist);
-
-    function getToken(uint8 index) external view returns (IERC20);
-
     function getTokenIndex(address tokenAddress) external view returns (uint8);
 
     function getTokenBalance(uint8 index) external view returns (uint256);
@@ -61,17 +57,6 @@ interface ISwap {
         uint8 tokenIndex
     ) external view returns (uint256 availableTokenAmount);
 
-    // state modifying functions
-    function initialize(
-        IERC20[] memory pooledTokens,
-        uint8[] memory decimals,
-        string memory lpTokenName,
-        string memory lpTokenSymbol,
-        uint256 a,
-        uint256 fee,
-        uint256 adminFee,
-        address lpTokenTargetAddress
-    ) external;
 
     function swap(
         uint8 tokenIndexFrom,
@@ -110,8 +95,6 @@ interface ISwap {
 interface IMetaSwap {
     // pool data view functions
     function getA() external view returns (uint256);
-
-    function getToken(uint8 index) external view returns (IERC20);
 
     function getTokenIndex(address tokenAddress) external view returns (uint8);
 
@@ -157,30 +140,6 @@ interface IMetaSwap {
         uint256 tokenAmount,
         uint8 tokenIndex
     ) external view returns (uint256 availableTokenAmount);
-
-    // state modifying functions
-    function initialize(
-        IERC20[] memory _pooledTokens,
-        uint8[] memory decimals,
-        string memory lpTokenName,
-        string memory lpTokenSymbol,
-        uint256 _a,
-        uint256 _fee,
-        uint256 _adminFee,
-        address lpTokenTargetAddress
-    ) external;
-
-    function initializeMetaSwap(
-        IERC20[] memory _pooledTokens,
-        uint8[] memory decimals,
-        string memory lpTokenName,
-        string memory lpTokenSymbol,
-        uint256 _a,
-        uint256 _fee,
-        uint256 _adminFee,
-        address lpTokenTargetAddress,
-        ISwap baseSwap
-    ) external;
 
     function swap(
         uint8 tokenIndexFrom,

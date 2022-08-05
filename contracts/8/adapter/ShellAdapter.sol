@@ -21,6 +21,7 @@ contract ShellAdapter is IAdapter {
         );
         uint256 sellAmount = IERC20(fromToken).balanceOf(address(this));
         SafeERC20.safeApprove(IERC20(fromToken), pool, sellAmount);
+
         IShell(pool).originSwap(fromToken, toToken, sellAmount, 0, _deadline);
 
         if (to != address(this)) {
