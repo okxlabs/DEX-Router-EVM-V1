@@ -107,6 +107,12 @@ const BREED = {
 
 }
 
+const renBTC = {
+  name: "renBTC",
+  decimals: 8,
+  baseTokenAddress: "0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D"
+}
+
 module.exports = {
   BTCB,
   DOT,
@@ -126,5 +132,6 @@ module.exports = {
   BNT,
   WUST,
   RND,
-  BREED
+  BREED,
+  renBTC
 }

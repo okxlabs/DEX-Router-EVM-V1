@@ -8,11 +8,19 @@ const DOT = {
   decimals: 6,
   baseTokenAddress: '0x7083609fce4d1d8dc0c979aab8c869ea2c873402',
 }
+
+const DAI = {
+  name: "DAI",
+  decimals: 18,
+  baseTokenAddress: '0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3',
+}
+
 const USDC = {
   name: "USDC",
   decimals: 6,
   baseTokenAddress: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
 }
+
 const USDT = {
   name: "USDT",
   decimals: 6,
@@ -60,5 +68,6 @@ module.exports = {
   WETH,
   CAKE,
   BUSD,
-  BNB
+  BNB,
+  DAI
 }

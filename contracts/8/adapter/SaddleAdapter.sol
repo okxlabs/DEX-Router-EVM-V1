@@ -6,6 +6,7 @@ import "../interfaces/ISaddle.sol";
 import "../interfaces/IERC20.sol";
 import "../libraries/UniversalERC20.sol";
 import "../libraries/SafeERC20.sol";
+import "hardhat/console.sol";
 
 contract SaddleAdapter is IAdapter {
     function _saddleSwap(
@@ -20,7 +21,7 @@ contract SaddleAdapter is IAdapter {
             uint8 tokenIndexTo,
             uint256 deadline,
             bool is_underlying
-        ) = abi.decode(moreInfo, (address, address, uint8, uint8, bool, uint256));
+        ) = abi.decode(moreInfo, (address, address, uint8, uint8, uint256, bool));
         uint256 sellAmount = IERC20(fromToken).balanceOf(address(this));
         // approve
         SafeERC20.safeApprove(IERC20(fromToken), pool, sellAmount);

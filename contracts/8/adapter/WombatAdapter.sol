@@ -23,15 +23,7 @@ contract WombatAdapter is IAdapter {
         // approve
         SafeERC20.safeApprove(IERC20(fromToken), pool, sellAmount);
 
-        IWombat(pool).swap(fromToken, toToken, sellAmount, 0, address(this), dealline);
-
-        if (to != address(this)) {
-            SafeERC20.safeTransfer(
-                IERC20(toToken),
-                to,
-                IERC20(toToken).balanceOf(address(this))
-            );
-        }
+        IWombat(pool).swap(fromToken, toToken, sellAmount, 0, to, dealline);
     }
 
     function sellBase(
