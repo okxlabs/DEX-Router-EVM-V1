@@ -14,7 +14,7 @@ async function deployContract() {
 // 0x3911F80530595fBd01Ab1516Ab61255d75AEb066
 async function execute(SaddleAdapter) {
     userAddress = "0xed55D1B71b6bfA952ddBC4f24375C91652878560"
-    therepoolAddress = "0x3911F80530595fBd01Ab1516Ab61255d75AEb066"
+    poolAddress = "0x3911F80530595fBd01Ab1516Ab61255d75AEb066"
 
     startMockAccount([userAddress]);
 
@@ -61,7 +61,7 @@ async function execute(SaddleAdapter) {
     )
     rxResult = await SaddleAdapter.sellQuote(
       SaddleAdapter.address,
-      therepoolAddress,
+      poolAddress,
       moreinfo
     );
 
@@ -78,7 +78,7 @@ async function execute(SaddleAdapter) {
 // underlyingToken: DAI/USDC/USDT 
 async function execute_underlying(SaddleAdapter) {
     userAddress = "0xed55D1B71b6bfA952ddBC4f24375C91652878560"
-    therepoolAddress = "0x3911F80530595fBd01Ab1516Ab61255d75AEb066"
+    poolAddress = "0xB62222B941e9B652BE3632EEa062cb0ff66b1d1c"
 
     startMockAccount([userAddress]);
 
@@ -125,7 +125,7 @@ async function execute_underlying(SaddleAdapter) {
     )
     rxResult = await SaddleAdapter.sellQuote(
       SaddleAdapter.address,
-      therepoolAddress,
+      poolAddress,
       moreinfo
     );
 

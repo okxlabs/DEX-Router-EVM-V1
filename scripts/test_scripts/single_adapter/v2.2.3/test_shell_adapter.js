@@ -1,7 +1,7 @@
 
 const { ethers } = require("hardhat");
-require("../../tools");
-const { getConfig } = require("../../config");
+require("../../../tools");
+const { getConfig } = require("../../../config");
 tokenConfig = getConfig("eth");
 
 async function deployContract() {
@@ -15,7 +15,7 @@ async function deployContract() {
 // https://etherscan.io/tx/0xd8eb9fac56eb397f0d9fec81a69edc03fe161a58fb05275d4eeeabfb4dace55a
 async function executeUsdPool(ShellAdapter) {
     userAddress = "0xda8A87b7027A6C235f88fe0Be9e34Afd439570b5"
-    therepoolAddress = "0x8f26D7bAB7a73309141A291525C965EcdEa7Bf42"
+    poolAddress = "0x8f26D7bAB7a73309141A291525C965EcdEa7Bf42"
 
     startMockAccount([userAddress]);
 
@@ -58,7 +58,7 @@ async function executeUsdPool(ShellAdapter) {
     )
     rxResult = await ShellAdapter.sellQuote(
         ShellAdapter.address,
-        therepoolAddress,
+        poolAddress,
         moreinfo
     );
 
