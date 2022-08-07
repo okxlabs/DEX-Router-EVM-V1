@@ -113,6 +113,12 @@ const renBTC = {
   baseTokenAddress: "0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D"
 }
 
+const alUSD = {
+  name: "alUSD",
+  decimals: 18,
+  baseTokenAddress: "0xBC6DA0FE9aD5f3b0d58160288917AA56653660E9"
+}
+
 module.exports = {
   BTCB,
   DOT,
@@ -133,5 +139,6 @@ module.exports = {
   WUST,
   RND,
   BREED,
-  renBTC
+  renBTC,
+  alUSD
 }
