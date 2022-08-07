@@ -1,8 +1,8 @@
 
 
 const { ethers } = require("hardhat");
-require("../../tools");
-const { getConfig } = require("../../config");
+require("../../../tools");
+const { getConfig } = require("../../../config");
 const tokenConfig = getConfig("eth")
 
 async function deployContract() {
@@ -17,7 +17,7 @@ async function deployContract() {
 
 async function sellBaseTesting (DODOV1Adapter) {
     userAddress = "0x1c11ba15939e1c16ec7ca1678df6160ea2063bc5"
-    therepoolAddress = "0x75c23271661d9d143DCb617222BC4BEc783eff34"
+    poolAddress = "0x75c23271661d9d143DCb617222BC4BEc783eff34"
     startMockAccount([userAddress]);
 
     signer = await ethers.getSigner(userAddress);
@@ -43,7 +43,7 @@ async function sellBaseTesting (DODOV1Adapter) {
     console.log("Before USDC Balance: ", usdcBalance.toString());
 
 
-    rxResult = await DODOV1Adapter.sellBase(DODOV1Adapter.address, therepoolAddress, "0x");
+    rxResult = await DODOV1Adapter.sellBase(DODOV1Adapter.address, poolAddress, "0x");
 
     wethBalance = await WETH.balanceOf(DODOV1Adapter.address);
     usdcBalance = await USDC.balanceOf(DODOV1Adapter.address);
@@ -53,7 +53,7 @@ async function sellBaseTesting (DODOV1Adapter) {
 
 async function sellQuoteTesting (DODOV1Adapter) {
     userAddress = "0x1c11ba15939e1c16ec7ca1678df6160ea2063bc5"
-    therepoolAddress = "0x75c23271661d9d143DCb617222BC4BEc783eff34"
+    poolAddress = "0x75c23271661d9d143DCb617222BC4BEc783eff34"
     startMockAccount([userAddress]);
 
     signer = await ethers.getSigner(userAddress);
@@ -76,7 +76,7 @@ async function sellQuoteTesting (DODOV1Adapter) {
     console.log("Before WETH Balance: ", wethBalance.toString());
     console.log("Before USDC Balance: ", usdcBalance.toString());
 
-    rxResult = await DODOV1Adapter.sellQuote(userAddress, therepoolAddress, "0x");
+    rxResult = await DODOV1Adapter.sellQuote(userAddress, poolAddress, "0x");
 
     wethBalance = await WETH.balanceOf(userAddress);
     usdcBalance = await USDC.balanceOf(userAddress);

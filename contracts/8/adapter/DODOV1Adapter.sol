@@ -5,7 +5,6 @@ import {IAdapter} from "../interfaces/IAdapter.sol";
 import {IERC20} from "../interfaces/IERC20.sol";
 import "../libraries/SafeERC20.sol";
 import "../interfaces/IDODOV1.sol";
-import "hardhat/console.sol";
 
 contract DODOV1Adapter is IAdapter {
 
@@ -14,11 +13,10 @@ contract DODOV1Adapter is IAdapter {
     constructor(address dodoSellHelper) {
         _DODO_SELL_HELPER_ = dodoSellHelper;
     }
-   
 
     function sellBase(address to, address pool, bytes memory) external override {
         address curBase = IDODOV1(pool)._BASE_TOKEN_();
-        uint256 curAmountIn = IERC20(curBase).balanceOf(address(this));
+        uint256 curAmountIn = IERC20(curBase).balanceOf(address(this));   
         SafeERC20.safeApprove(IERC20(curBase), pool, curAmountIn);
         IDODOV1(pool).sellBaseToken(curAmountIn, 0, "");
         if(to != address(this)) {
