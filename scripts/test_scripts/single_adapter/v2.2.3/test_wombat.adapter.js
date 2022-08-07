@@ -1,7 +1,7 @@
 
 const { ethers } = require("hardhat");
-require("../../tools");
-const { getConfig } = require("../../config");
+require("../../../tools");
+const { getConfig } = require("../../../config");
 tokenConfig = getConfig("bsc");
 
 async function deployContract() {
@@ -14,7 +14,7 @@ async function deployContract() {
 // https://bscscan.com/address/0x312Bc7eAAF93f1C60Dc5AfC115FcCDE161055fb0#writeProxyContract
 async function executeUsdPool(WombatAdapter) {
     userAddress = "0xed55D1B71b6bfA952ddBC4f24375C91652878560"
-    therepoolAddress = "0x312Bc7eAAF93f1C60Dc5AfC115FcCDE161055fb0"
+    poolAddress = "0x312Bc7eAAF93f1C60Dc5AfC115FcCDE161055fb0"
 
     startMockAccount([userAddress]);
 
@@ -57,7 +57,7 @@ async function executeUsdPool(WombatAdapter) {
     )
     rxResult = await ShellAdapter.sellQuote(
         ShellAdapter.address,
-        therepoolAddress,
+        poolAddress,
         moreinfo
     );
 

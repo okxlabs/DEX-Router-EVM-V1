@@ -5,7 +5,7 @@ tokenConfig = getConfig("bsc");
 let { initDexRouter, direction, FOREVER } = require("../utils")
 
 
-async function Erc20ToErc20() {
+async function usdPool() {
     const pmmReq = []
 
     let accountAddress = "0xf977814e90da44bfa03b6295a0616a897441acec";
@@ -32,20 +32,20 @@ async function Erc20ToErc20() {
 
     let { dexRouter, tokenApprove } = await initDexRouter();
 
-    EllipsisAdapter = await ethers.getContractFactory("EllipsisAdapter");
-    EllipsisAdapter = await EllipsisAdapter.deploy(tokenConfig.tokens.WETH.baseTokenAddress);
-    await EllipsisAdapter.deployed();
+    WombatAdapter = await ethers.getContractFactory("WombatAdapter");
+    WombatAdapter = await WombatAdapter.deploy();
+    await WombatAdapter.deployed();
 
     // transfer 500 USDT to curveAdapter
     let fromTokenAmount = ethers.utils.parseUnits("500000", tokenConfig.tokens.USDT.decimals);
     let minReturnAmount = 0;
     let deadLine = FOREVER;
-    let poolAddress = "0x160caed03795365f3a589f10c379ffa7d75d4e76"; 
-    await USDT.connect(account).transfer(EllipsisAdapter.address, fromTokenAmount);
-    console.log("before EllipsisAdapter USDT Balance: " + await USDT.balanceOf(EllipsisAdapter.address));
+    let poolAddress = "0x312Bc7eAAF93f1C60Dc5AfC115FcCDE161055fb0"; 
+    await USDT.connect(account).transfer(WombatAdapter.address, fromTokenAmount);
+    console.log("before WombatAdapter USDT Balance: " + await USDT.balanceOf(WombatAdapter.address));
 
     let mixAdapter1 = [
-        EllipsisAdapter.address
+        WombatAdapter.address
     ];
     let assertTo1 = [
         account.address
@@ -58,13 +58,12 @@ async function Erc20ToErc20() {
         weight1 + 
         poolAddress.replace("0x", "")  // three pools
     ];
-    let moreInfo =  ethers.utils.defaultAbiCoder.encode(
-        ["address", "address", "int128", "int128"],
+    let  moreInfo =  ethers.utils.defaultAbiCoder.encode(
+        ["address", "address", "uint256"],
         [
             USDT.address,
             USDC.address,
-            2,
-            1
+            FOREVER
         ]
       )
     let extraData1 = [moreInfo];
@@ -96,7 +95,7 @@ async function Erc20ToErc20() {
 
 
 async function main() {
-    await Erc20ToErc20()
+    await usdPool()
 }
 
 main()
