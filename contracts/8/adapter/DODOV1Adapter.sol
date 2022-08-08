@@ -27,13 +27,13 @@ contract DODOV1Adapter is IAdapter {
 
     function sellQuote(address to, address pool, bytes memory) external override {
         address curQuote = IDODOV1(pool)._QUOTE_TOKEN_();
-        uint256 curAmountIn = IERC20(curQuote).balanceOf(address(this));
+        uint256 maxPayQuote = IERC20(curQuote).balanceOf(address(this));
         uint256 canBuyBaseAmount = IDODOSellHelper(_DODO_SELL_HELPER_).querySellQuoteToken(
             pool,
-            curAmountIn
+            maxPayQuote
         );
         SafeERC20.safeApprove(IERC20(curQuote), pool, canBuyBaseAmount);
-        IDODOV1(pool).buyBaseToken(canBuyBaseAmount, curAmountIn, "");
+        IDODOV1(pool).buyBaseToken(canBuyBaseAmount, maxPayQuote, "");
         if(to != address(this)) {
             address curBase = IDODOV1(pool)._BASE_TOKEN_();
             SafeERC20.safeTransfer(IERC20(curBase), to, canBuyBaseAmount);
@@ -44,6 +44,5 @@ contract DODOV1Adapter is IAdapter {
                 SafeERC20.safeTransfer(IERC20(curQuote), to, curAmountLeft);
             }
         }
-
     }
 }
