@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {IAdapter} from "../interfaces/IAdapter.sol";
 import {IERC20} from "../interfaces/IERC20.sol";
 import "../libraries/SafeERC20.sol";
 import "../interfaces/IDODOV1.sol";
 
-contract DODOV1Adapter is IAdapter {
+contract DODOV1Adapter is IAdapter, OwnableUpgradeable {
 
     address public immutable _DODO_SELL_HELPER_;
 
@@ -37,12 +38,20 @@ contract DODOV1Adapter is IAdapter {
         if(to != address(this)) {
             address curBase = IDODOV1(pool)._BASE_TOKEN_();
             SafeERC20.safeTransfer(IERC20(curBase), to, canBuyBaseAmount);
-
-            // querySellQuoteToken may cause 2~3 wei token left
-            uint256 curAmountLeft = IERC20(curQuote).balanceOf(address(this));
-            if (curAmountLeft > 0) {
-                SafeERC20.safeTransfer(IERC20(curQuote), to, curAmountLeft);
-            }
         }
     }
+    
+    // QuerySellQuoteToken may cause 0～15 wei token left
+    // To withdraw the left tokens
+    // Design a withdrawLeftToken function to withdraw tokens
+
+    function withdrawLeftToken(address pool) external onlyOwner {
+        address curQuote = IDODOV1(pool)._QUOTE_TOKEN_();
+        uint256 curAmountLeft = IERC20(curQuote).balanceOf(address(this));
+        if (curAmountLeft > 0) {
+            SafeERC20.safeTransfer(IERC20(curQuote), msg.sender, curAmountLeft);
+        }
+    }
+
+
 }

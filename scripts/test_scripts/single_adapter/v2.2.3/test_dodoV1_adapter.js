@@ -35,7 +35,7 @@ async function sellBaseTesting (DODOV1Adapter) {
     )
 
     // transfer token
-    await WETH.connect(signer).transfer(DODOV1Adapter.address, ethers.utils.parseEther("5"));
+    await WETH.connect(signer).transfer(DODOV1Adapter.address, ethers.utils.parseEther("1000"));
 
     wethBalance = await WETH.balanceOf(DODOV1Adapter.address);
     usdcBalance = await USDC.balanceOf(DODOV1Adapter.address);
@@ -82,6 +82,16 @@ async function sellQuoteTesting (DODOV1Adapter) {
     usdcBalance = await USDC.balanceOf(userAddress);
     console.log("After WETH Balance: ", wethBalance.toString());
     console.log("After USDC Balance: ", usdcBalance.toString());
+
+    // // Withdraw tokens Left
+    // deployer = await ethers.getSigner();
+    // console.log("deployer: ", deployer.address);
+    // tokensLeft = await USDC.balanceOf(DODOV1Adapter.address);
+    // console.log("before withdraw, USDC tokensLeft: ", tokensLeft.toString());
+    // await DODOV1Adapter.connect(deployer).withdrawLeftToken(poolAddress);
+    // tokensLeft = await USDC.balanceOf(DODOV1Adapter.address);
+    // console.log("after withdraw, USDC tokensLeft: ", tokensLeft.toString());
+
 }
 
 async function main() {  

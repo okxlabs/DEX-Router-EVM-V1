@@ -20,6 +20,7 @@ contract MstableAdapter is IAdapter {
         SafeERC20.safeApprove(IERC20(fromToken), pool, sellAmount);
 
         IMstable(pool).swap(fromToken, toToken, sellAmount, 0, to);
+        
     }
 
     function sellBase(

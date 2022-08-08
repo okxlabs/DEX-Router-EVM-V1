@@ -47,7 +47,6 @@ contract EllipsisAdapter is IAdapter {
             );
         }
 
-
         // approve 0
         SafeERC20.safeApprove(
             IERC20(fromToken == ETH_ADDRESS ? WETH_ADDRESS : fromToken),
