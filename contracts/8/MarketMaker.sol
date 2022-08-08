@@ -346,13 +346,13 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712Up
       let mem := mload(0x40)
       mstore(mem, _ORDER_TYPEHASH)
       // order.pathIndex;
-      mstore(add(mem, 0x20), and(_ADDRESS_MASK, mload(order)))
+      mstore(add(mem, 0x20), mload(order))
       // order.payer;
       mstore(add(mem, 0x40), and(_ADDRESS_MASK, mload(add(order, 0x20))))
       // order.fromToken;
       mstore(add(mem, 0x60), and(_ADDRESS_MASK, mload(add(order, 0x40))))
       // order.toToken;
-      mstore(add(mem, 0x80), mload(add(order, 0x60)))
+      mstore(add(mem, 0x80), and(_ADDRESS_MASK, mload(add(order, 0x60))))
       // order.fromTokenAmountMax;
       mstore(add(mem, 0xA0), mload(add(order, 0x80)))
       // order.toTokenAmountMax;
