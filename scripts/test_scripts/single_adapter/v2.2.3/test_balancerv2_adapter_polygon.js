@@ -1,7 +1,7 @@
 const { config } = require("dotenv");
 const { ethers } = require("hardhat");
-require("../../tools");
-const { getConfig } = require("../../config");
+require("../../../tools");
+const { getConfig } = require("../../../config");
 tokenConfig = getConfig("polygon");
 
 const VaultAddress = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
@@ -20,7 +20,7 @@ async function deployContract() {
 async function checkWeightPool(BalancerV2Adapter) {
 
     const poolID = "0xd5d7bc115b32ad1449c6d0083e43c87be95f2809000100000000000000000033"
-    const accountAddress = "0x32d4703e5834f1b474b17dfdb0ac32cc22575145";
+    const accountAddress = "0xF74796Ee9cbb6D5ADeCF940b5C6512fD7c0aa10B";
     await startMockAccount([accountAddress]);
     const account = await ethers.getSigner(accountAddress);
 

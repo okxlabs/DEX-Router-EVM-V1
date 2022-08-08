@@ -7,7 +7,6 @@ import "../interfaces/IERC20.sol";
 import "../libraries/UniversalERC20.sol";
 import "../libraries/SafeERC20.sol";
 import "../interfaces/IWETH.sol";
-import "hardhat/console.sol";
 
 contract EllipsisAdapter is IAdapter {
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;

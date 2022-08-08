@@ -6,7 +6,6 @@ import "../interfaces/ISaddle.sol";
 import "../interfaces/IERC20.sol";
 import "../libraries/UniversalERC20.sol";
 import "../libraries/SafeERC20.sol";
-import "hardhat/console.sol";
 
 contract SaddleAdapter is IAdapter {
     function _saddleSwap(

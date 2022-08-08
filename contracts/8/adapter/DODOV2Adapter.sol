@@ -5,7 +5,6 @@ import {IDODOV2} from "../interfaces/IDODOV2.sol";
 import {IAdapter} from "../interfaces/IAdapter.sol";
 import {IERC20} from "../interfaces/IERC20.sol";
 import "../libraries/SafeERC20.sol";
-import "hardhat/console.sol";
 
 
 contract DODOV2Adapter is IAdapter {
