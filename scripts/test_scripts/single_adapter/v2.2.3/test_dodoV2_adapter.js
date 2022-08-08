@@ -1,6 +1,6 @@
 const { ethers } = require("hardhat");
-require("../../tools");
-const { getConfig } = require("../../config");
+require("../../../tools");
+const { getConfig } = require("../../../config");
 const tokenConfig = getConfig("eth")
 
 async function deployContract() {

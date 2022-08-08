@@ -1,8 +1,8 @@
 const { ethers } = require("hardhat");
 const {BigNumber,BigNumberish} =require("ethers");
-require("../../tools");
-const { getConfig } = require("../../config");
-const { USDC } = require("../../config/okc/tokens");
+require("../../../tools");
+const { getConfig } = require("../../../config");
+const { USDC } = require("../../../config/okc/tokens");
 
 tokenConfig = getConfig("avax");
 
