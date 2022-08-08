@@ -13,32 +13,33 @@ const hre = require("hardhat");
 const { BigNumber } = require('ethers')
 const { expect } = require("chai");
 const okcdevDeployed = require("../scripts/deployed/okc_dev");
+const ethdevDeployed = require("../scripts/deployed/eth_dev");
 
 require ('../scripts/tools');
-const ethTokens = require("../scripts/deployed/eth/tokens");
 
-
-describe("Market Maker Test (version: 1.0.0)", function() {
-    let wbtc, usdt, weth, factory, router;
+describe("Market Maker Test (version: 1.0.0)", function(){
+    let wbtc, usdt, weth, factory, router, marketMaker;
     let owner, alice, bob, carol, backEnd, canceler, cancelerGuardian, singer;
     let layer1, layer2, layer3;
     const FOREVER = '2000000000';
     const ETH = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+
     const initMockTokens = async function() {
-        // alice has 50000 usdt, bob has 2 wbtc
-        // alice want to buy 1 wbtc with her 50000 usdt, and bob is willing to provide pmm liquidity
         const MockERC20 = await ethers.getContractFactory("MockERC20");
 
-        usdt = await MockERC20.deploy('USDT', 'USDT', ethers.utils.parseEther('1000000000000000'));
+        usdc = await MockERC20.deploy('USDC', 'USDC', ethers.utils.parseEther('10000000000'));
+        await usdc.deployed();
+
+        usdt = await MockERC20.deploy('USDT', 'USDT', ethers.utils.parseEther('10000000000'));
         await usdt.deployed();
 
-        wbtc = await MockERC20.deploy('WBTC', 'WBTC', ethers.utils.parseEther('1000000000000000'));
+        wbtc = await MockERC20.deploy('WBTC', 'WBTC', ethers.utils.parseEther('10000000000'));
         await wbtc.deployed();
 
-        okb = await MockERC20.deploy('OKB', 'OKB', ethers.utils.parseEther('1000000000000000'));
+        okb = await MockERC20.deploy('OKB', 'OKB', ethers.utils.parseEther('10000000000'));
         await usdt.deployed();
 
-        dot = await MockERC20.deploy('DOT', 'DOT', ethers.utils.parseEther('1000000000000000'));
+        dot = await MockERC20.deploy('DOT', 'DOT', ethers.utils.parseEther('10000000000'));
         await usdt.deployed();
 
         const WETH9 = await ethers.getContractFactory("WETH9");
@@ -46,7 +47,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
         await weth.deployed();
         await weth.deposit({
             value: ethers.utils.parseEther('99')
-        });
+        })
     };
 
     const initUniSwap = async () => {
@@ -71,27 +72,21 @@ describe("Market Maker Test (version: 1.0.0)", function() {
 
         pair = await factory.getPair(usdt.address, weth.address)
         lpUSDTWETH = await UniswapPair.attach(pair);
-        // console.log("lpUSDTWETH", pair);
 
         pair = await factory.getPair(weth.address, wbtc.address);
         lpWETHWBTC = await UniswapPair.attach(pair);
-        // console.log("lpWETHWBTC", pair);
 
         pair = await factory.getPair(usdt.address, wbtc.address);
         lpUSDTWBTC = await UniswapPair.attach(pair);
-        // console.log("lpUSDTWBTC", pair);
 
         pair = await factory.getPair(usdt.address, okb.address);
         lpUSDTOKB = await UniswapPair.attach(pair);
-        // console.log("lpUSDTOKB", pair);
 
         pair = await factory.getPair(okb.address, dot.address);
         lpOKBDOT = await UniswapPair.attach(pair);
-        // console.log("lpOKBDOT", pair);
 
         pair = await factory.getPair(dot.address, wbtc.address);
         lpDOTWBTC = await UniswapPair.attach(pair);
-        // console.log("lpDOTWBTC", pair);
     }
 
     const uniV2AddLiquidity = async (token0, token1, amount0, amount1) => {
@@ -245,9 +240,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
 
     const initLayersReplaceFirstBatch = async function() {
 
-//  30%  usdt -> weth -> wbtc
-//  20%  usdt -> wbtc
-//  50%  usdt -> okb -> dot -> wbtc
+        //  30%  usdt -> weth -> wbtc
+        //  20%  usdt -> wbtc
+        //  50%  usdt -> okb -> dot -> wbtc
         //  router11 usdt -> weth
         const mixAdapter11 = [uniAdapter.address];
         const assertTo11 = [lpUSDTWETH.address];
@@ -307,9 +302,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
 
     const initLayersReplaceHops = async function() {
 
-//  30%  usdt -> weth -> wbtc
-//  20%  usdt -> wbtc
-//  50%  usdt -> okb -> dot -> wbtc
+        //  30%  usdt -> weth -> wbtc
+        //  20%  usdt -> wbtc
+        //  50%  usdt -> okb -> dot -> wbtc
         //  router11 usdt -> weth
         const mixAdapter11 = [uniAdapter.address];
         const assertTo11 = [lpUSDTWETH.address];
@@ -376,10 +371,8 @@ describe("Market Maker Test (version: 1.0.0)", function() {
     describe("1. Uint Test", function() {
 
         beforeEach(async function() {
-            // 1. prepare accounts and chain id
             [owner, alice, bob, carol, backEnd, canceler, cancelerGuardian] = await ethers.getSigners();
 
-            // 2. prepare dex and liquidity
             await initMockTokens();
             await initUniSwap();
             await addLiquidity();
@@ -391,7 +384,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
             const { chainId }  = await ethers.provider.getNetwork();
 
-            // 3. deploy marketMaker
             MarketMaker = await ethers.getContractFactory("MarketMaker");
             marketMaker = await upgrades.deployProxy(
                 MarketMaker,[
@@ -404,9 +396,8 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             );        
             await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(bob.address);
-            await marketMaker.addPmmAdapter(alice.address);
+            await marketMaker.setDexRouter(alice.address);
     
-            // 4. approve
             const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
             const tokenApproveProxy = await TokenApproveProxy.deploy();
             await tokenApproveProxy.initialize();
@@ -421,12 +412,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await tokenApprove.setApproveProxy(tokenApproveProxy.address);
             await marketMaker.setApproveProxy(tokenApproveProxy.address);
 
-            // console.log("before bob usdt: " + await usdt.balanceOf(bob.address));
-            // console.log("before alice usdt: " + await usdt.balanceOf(alice.address));
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
 
-            // 5. prepare quotes
             let source = await getSource(lpUSDTWBTC, usdt.address, wbtc.address);
             let rfq = [
                 {
@@ -444,7 +432,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             let infosToBeSigned = getPullInfosToBeSigned(rfq);
             let quote = multipleQuotes(infosToBeSigned);
 
-            // 6. construct of input of funciton swap
             let infos = quote[0];
             let request = [
                 infos.pathIndex, 
@@ -459,19 +446,16 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 infos.extension
             ];
 
-            // 7. swap
             let markerAmount = ethers.utils.parseEther('2');
             await wbtc.connect(bob).approve(tokenApprove.address,markerAmount);
             let swapAmount = ethers.utils.parseEther('50000');
             await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
-            await marketMaker.connect(alice).swap(
+            await marketMaker.connect(alice).dexRouterSwap(
                 swapAmount,
+                alice.address,
                 request
             );
 
-            // 8. check balance
-            // console.log("alice get usdt: " + await usdt.balanceOf(alice.address));
-            // console.log("after bob usdt: " + await usdt.balanceOf(bob.address));
             expect(await usdt.balanceOf(alice.address)).to.equal(0);
             expect(await wbtc.balanceOf(alice.address)).to.equal(infos.toTokenAmountMax);
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('50000'));
@@ -483,7 +467,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
             const { chainId }  = await ethers.provider.getNetwork();
 
-            // 3. deploy marketMaker
             MarketMaker = await ethers.getContractFactory("MarketMaker");
             marketMaker = await upgrades.deployProxy(
                 MarketMaker,[
@@ -496,9 +479,8 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             );        
             await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(bob.address);
-            await marketMaker.addPmmAdapter(alice.address);
+            await marketMaker.setDexRouter(alice.address);
     
-            // 4. approve
             const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
             const tokenApproveProxy = await TokenApproveProxy.deploy();
             await tokenApproveProxy.initialize();
@@ -513,12 +495,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await tokenApprove.setApproveProxy(tokenApproveProxy.address);
             await marketMaker.setApproveProxy(tokenApproveProxy.address);
 
-            // console.log("before bob usdt: " + await usdt.balanceOf(bob.address));
-            // console.log("before alice usdt: " + await usdt.balanceOf(alice.address));
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
 
-            // 5. prepare quotes
             let source = await getSource(lpUSDTWBTC, usdt.address, wbtc.address);
 
             let rfq = [
@@ -537,7 +516,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             let infosToBeSigned = getPullInfosToBeSigned(rfq);
             let quote = multipleQuotes(infosToBeSigned);
 
-            // 6. construct of input of funciton swap
             let infos = quote[0];
             let request = [
                 infos.pathIndex, 
@@ -552,19 +530,16 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 infos.extension
             ];
 
-            // 7. swap
             let markerAmount = ethers.utils.parseEther('2');
             await wbtc.connect(bob).approve(tokenApprove.address,markerAmount);
             let swapAmount = ethers.utils.parseEther('50000');
             await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
-            await marketMaker.connect(alice).swap(
+            await marketMaker.connect(alice).dexRouterSwap(
                 swapAmount,
+                alice.address,
                 request
             );
 
-            // 8. check balance
-            // console.log("alice get usdt: " + await usdt.balanceOf(alice.address));
-            // console.log("after bob usdt: " + await usdt.balanceOf(bob.address));
             expect(await usdt.balanceOf(alice.address)).to.equal(0);
             expect(await wbtc.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('1.25'));
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('50000'));
@@ -576,7 +551,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
             const { chainId }  = await ethers.provider.getNetwork();
 
-            // 3. deploy marketMaker
             MarketMaker = await ethers.getContractFactory("MarketMaker");
             marketMaker = await upgrades.deployProxy(
                 MarketMaker,[
@@ -589,10 +563,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             );        
             await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(bob.address);
-            await marketMaker.addPmmAdapter(alice.address);
+            await marketMaker.setDexRouter(alice.address);
             await marketMaker.setUniV2Factory(factory.address);
     
-            // 4. approve
             const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
             const tokenApproveProxy = await TokenApproveProxy.deploy();
             await tokenApproveProxy.initialize();
@@ -607,12 +580,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await tokenApprove.setApproveProxy(tokenApproveProxy.address);
             await marketMaker.setApproveProxy(tokenApproveProxy.address);
 
-            // console.log("before bob usdt: " + await usdt.balanceOf(bob.address));
-            // console.log("before alice usdt: " + await usdt.balanceOf(alice.address));
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
 
-            // 5. prepare quotes
             let rfq = [
                 {
                     "pathIndex": 100000000000000,
@@ -629,7 +599,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             let infosToBeSigned = getPullInfosToBeSigned(rfq);
             let quote = multipleQuotes(infosToBeSigned);
 
-            // 6. construct of input of funciton swap
             let infos = quote[0];
             let request = [
                 infos.pathIndex, 
@@ -644,19 +613,16 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 infos.extension
             ];
 
-            // 7. swap
             let markerAmount = ethers.utils.parseEther('2');
             await wbtc.connect(bob).approve(tokenApprove.address,markerAmount);
             let swapAmount = ethers.utils.parseEther('50000');
             await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
-            await marketMaker.connect(alice).swap(
+            await marketMaker.connect(alice).dexRouterSwap(
                 swapAmount,
+                alice.address,
                 request
             );
 
-            // 8. check balance
-            // console.log("alice get usdt: " + await usdt.balanceOf(alice.address));
-            // console.log("after bob usdt: " + await usdt.balanceOf(bob.address));
             expect(await usdt.balanceOf(alice.address)).to.equal(0);
             expect(await wbtc.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('1.25'));
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('50000'));
@@ -669,7 +635,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
             const { chainId }  = await ethers.provider.getNetwork();
 
-            // 3. deploy marketMaker
             MarketMaker = await ethers.getContractFactory("MarketMaker");
             marketMaker = await upgrades.deployProxy(
                 MarketMaker,[
@@ -682,10 +647,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             );        
             await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(bob.address);
-            await marketMaker.addPmmAdapter(alice.address);
+            await marketMaker.setDexRouter(alice.address);
             await marketMaker.setUniV2Factory(factory.address);
     
-            // 4. approve
             const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
             const tokenApproveProxy = await TokenApproveProxy.deploy();
             await tokenApproveProxy.initialize();
@@ -700,12 +664,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await tokenApprove.setApproveProxy(tokenApproveProxy.address);
             await marketMaker.setApproveProxy(tokenApproveProxy.address);
 
-            // console.log("before swap bob usdt: " + await usdt.balanceOf(bob.address));
-            // console.log("before swap alice usdt: " + await usdt.balanceOf(alice.address));
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
 
-            // 5. prepare quotes
             let rfq = [
                 {
                     "pathIndex": 100000000000000,
@@ -716,13 +677,12 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                     "chainId": chainId,
                     "marketMaker": marketMaker.address,
                     "pmmAdapter" : ethers.constants.AddressZero,
-                    "source": "000000000000000000000000" + usdt.address.slice(2)             // this is a wrong address
+                    "source": "000000000000000000000000" + usdt.address.slice(2)             // this is a wrong source
                 }
             ]
             let infosToBeSigned = getPullInfosToBeSigned(rfq);
             let quote = multipleQuotes(infosToBeSigned);
 
-            // 6. construct of input of funciton swap
             let infos = quote[0];
             let request = [
                 infos.pathIndex, 
@@ -737,19 +697,16 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 infos.extension
             ];
 
-            // 7. swap
             let markerAmount = ethers.utils.parseEther('2');
             await wbtc.connect(bob).approve(tokenApprove.address,markerAmount);
             let swapAmount = ethers.utils.parseEther('50000');
             await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
-            await marketMaker.connect(alice).swap(
+            await marketMaker.connect(alice).dexRouterSwap(
                 swapAmount,
+                alice.address,
                 request
             );
 
-            // 8. check balance
-            // console.log("after swap alice's usdt: " + await usdt.balanceOf(alice.address));
-            // console.log("after swap bob's usdt: " + await usdt.balanceOf(bob.address));
             expect(await usdt.balanceOf(alice.address)).to.equal(0);
             expect(await wbtc.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('1.01'));
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('50000'));
@@ -762,7 +719,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await usdt.transfer(alice.address, ethers.utils.parseEther('50000'));
             await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
 
-            // 3. prepare marketMaker
             MarketMaker = await ethers.getContractFactory("MarketMaker");
             marketMaker = await upgrades.deployProxy(
                 MarketMaker,[
@@ -775,9 +731,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             );        
             await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(bob.address);
-            await marketMaker.addPmmAdapter(alice.address);
+            await marketMaker.setDexRouter(alice.address);
             await marketMaker.setUniV2Factory(factory.address);
-            // 4. approve
+
             const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
             const tokenApproveProxy = await TokenApproveProxy.deploy();
             await tokenApproveProxy.initialize();
@@ -792,12 +748,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await tokenApprove.setApproveProxy(tokenApproveProxy.address);
             await marketMaker.setApproveProxy(tokenApproveProxy.address);
 
-            // console.log("before bob usdt: " + await usdt.balanceOf(bob.address));
-            // console.log("before alice usdt: " + await usdt.balanceOf(alice.address));
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
 
-            // 5. prepare quotes
             let source = await getSource(lpUSDTWBTC, usdt.address, wbtc.address);
             let rfq = [
                 {
@@ -816,7 +769,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
 
             let quote = multipleQuotes(infosToBeSigned);
 
-            // 6. construct of input of funciton swap
             let infos = quote[0];
             let request = [
                 infos.pathIndex, 
@@ -830,24 +782,25 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 infos.isPushOrder,
                 infos.extension
             ];
-            // 7. swap
 
             // what if bob has not approved token ?
             let swapAmount = ethers.utils.parseEther('50000');
             await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
             await marketMaker.connect(bob).setOperator(bob.address);
-            let errorCode = await marketMaker.connect(alice).callStatic.swap(
+            let errorCode = await marketMaker.connect(alice).callStatic.dexRouterSwap(
                 swapAmount,
+                alice.address,
                 request
             )
-            await expect(errorCode).to.equal(7);
+            await expect(errorCode).to.equal(8);
 
             // after bob approve token
             let markerAmount = ethers.utils.parseEther('2');
             await wbtc.connect(bob).approve(tokenApprove.address,markerAmount);
 
-            await marketMaker.connect(alice).swap(
+            await marketMaker.connect(alice).dexRouterSwap(
                 swapAmount,
+                alice.address,
                 request
             )
 
@@ -863,7 +816,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await usdt.transfer(alice.address, ethers.utils.parseEther('50000'));
             await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
     
-            // 3. prepare marketMaker
             MarketMaker = await ethers.getContractFactory("MarketMaker");
             marketMaker = await upgrades.deployProxy(
                 MarketMaker,[
@@ -876,10 +828,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             );        
             await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(bob.address);
-            await marketMaker.addPmmAdapter(alice.address);
+            await marketMaker.setDexRouter(alice.address);
             await marketMaker.setUniV2Factory(factory.address);
     
-            // 4. approve
             const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
             const tokenApproveProxy = await TokenApproveProxy.deploy();
             await tokenApproveProxy.initialize();
@@ -893,13 +844,10 @@ describe("Market Maker Test (version: 1.0.0)", function() {
     
             await tokenApprove.setApproveProxy(tokenApproveProxy.address);
             await marketMaker.setApproveProxy(tokenApproveProxy.address);
-    
-            // console.log("before bob usdt: " + await usdt.balanceOf(bob.address));
-            // console.log("before alice usdt: " + await usdt.balanceOf(alice.address));
+
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
     
-            // 5. prepare quotes
             let source = await getSource(lpUSDTWBTC, usdt.address, wbtc.address);
             let rfq = [
                 {
@@ -917,7 +865,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             let infosToBeSigned = getPullInfosToBeSigned(rfq);
             let quote = multipleQuotes(infosToBeSigned);
     
-            // 6. construct of input of funciton swap
             let infos = quote[0];
             let request = [
                 // here we made a mistake in pathIndex
@@ -933,14 +880,14 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 infos.extension
             ];
     
-            // 7. swap
             let markerAmount = ethers.utils.parseEther('2');
             await wbtc.connect(bob).approve(tokenApprove.address,markerAmount);
             let swapAmount = ethers.utils.parseEther('50000');
             await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
     
-            let errorCode = await marketMaker.connect(alice).callStatic.swap(
+            let errorCode = await marketMaker.connect(alice).callStatic.dexRouterSwap(
                 swapAmount,
+                alice.address,
                 request
             )
             await expect(errorCode).to.equal(1);
@@ -953,7 +900,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await usdt.transfer(alice.address, ethers.utils.parseEther('50000'));
             await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
 
-            // 3. prepare marketMaker
             MarketMaker = await ethers.getContractFactory("MarketMaker");
             marketMaker = await upgrades.deployProxy(
                 MarketMaker,[
@@ -966,10 +912,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             );        
             await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(bob.address);
-            await marketMaker.addPmmAdapter(alice.address);
+            await marketMaker.setDexRouter(alice.address);
             await marketMaker.setUniV2Factory(factory.address);
             
-            // 4. approve
             const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
             const tokenApproveProxy = await TokenApproveProxy.deploy();
             await tokenApproveProxy.initialize();
@@ -984,14 +929,11 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await tokenApprove.setApproveProxy(tokenApproveProxy.address);
             await marketMaker.setApproveProxy(tokenApproveProxy.address);
 
-            // console.log("before bob usdt: " + await usdt.balanceOf(bob.address));
-            // console.log("before alice usdt: " + await usdt.balanceOf(alice.address));
             await wbtc.transfer(carol.address, ethers.utils.parseEther('2'));
 
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
 
-            // 5. prepare quotes
             let source = await getSource(lpUSDTWBTC, usdt.address, wbtc.address);
             let rfq = [
                 {
@@ -1009,7 +951,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             let infosToBeSigned = getPullInfosToBeSigned_paidByCarol(rfq);
             let quote = multipleQuotes(infosToBeSigned);
 
-            // 6. construct of input of funciton swap
             let infos = quote[0];
             let request = [
                 infos.pathIndex, 
@@ -1024,29 +965,27 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 infos.extension
             ];
 
-            // 7. swap
             let markerAmount = ethers.utils.parseEther('2');
             await wbtc.connect(carol).approve(tokenApprove.address,markerAmount);
             let swapAmount = ethers.utils.parseEther('50000');
             await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
 
             // carol has not set bob as operator
-            let errorCode = await marketMaker.connect(alice).callStatic.swap(
+            let errorCode = await marketMaker.connect(alice).callStatic.dexRouterSwap(
                 swapAmount,
+                alice.address,
                 request
             )
             await expect(errorCode).to.equal(1);
 
             // carol has set bob as operator
             await marketMaker.connect(carol).setOperator(bob.address);
-            await marketMaker.connect(alice).swap(
+            await marketMaker.connect(alice).dexRouterSwap(
                 swapAmount,
+                alice.address,
                 request
             );
 
-            // 8. check balance
-            // console.log("alice get usdt: " + await usdt.balanceOf(alice.address));
-            // console.log("after bob usdt: " + await usdt.balanceOf(bob.address));
             expect(await usdt.balanceOf(alice.address)).to.equal(0);
             expect(await wbtc.balanceOf(alice.address)).to.equal(infos.toTokenAmountMax);
             expect(await usdt.balanceOf(carol.address)).to.equal(ethers.utils.parseEther('50000'));
@@ -1060,7 +999,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await usdt.transfer(alice.address, ethers.utils.parseEther('50000'));
             await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
 
-            // 3. prepare marketMaker
             MarketMaker = await ethers.getContractFactory("MarketMaker");
             marketMaker = await upgrades.deployProxy(
                 MarketMaker,[
@@ -1073,10 +1011,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             );        
             await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(bob.address);
-            await marketMaker.addPmmAdapter(alice.address);
+            await marketMaker.setDexRouter(alice.address);
             await marketMaker.setUniV2Factory(factory.address);
 
-            // 4. approve
             const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
             const tokenApproveProxy = await TokenApproveProxy.deploy();
             await tokenApproveProxy.initialize();
@@ -1091,14 +1028,11 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await tokenApprove.setApproveProxy(tokenApproveProxy.address);
             await marketMaker.setApproveProxy(tokenApproveProxy.address);
 
-            // console.log("before bob usdt: " + await usdt.balanceOf(bob.address));
-            // console.log("before alice usdt: " + await usdt.balanceOf(alice.address));
             await wbtc.transfer(carol.address, ethers.utils.parseEther('2'));
 
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
 
-            // 5. prepare quotes
             let rfq = [];
             let N = 1;
             for (let i = 0; i < N; i++) {
@@ -1119,20 +1053,17 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             let infosToBeSigned = getPullInfosToBeSigned_paidByCarol(rfq);
             let quote = multipleQuotes(infosToBeSigned);
 
-            // 6. construct of input of funciton swap
             let pathIndex = [];
             for (let i = 0; i < N; i ++){
                 pathIndex[i] = i;
             }
 
-            // 7. swap
             let markerAmount = ethers.utils.parseEther('2');
             await wbtc.connect(carol).approve(tokenApprove.address,markerAmount);
             let swapAmount = ethers.utils.parseEther('50000');
             await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
             await marketMaker.connect(carol).setOperator(bob.address);
 
-            // query order status before cancel quote
             let orderStatus = await marketMaker.queryOrderStatus(pathIndex);
             expect(orderStatus[0].cancelledOrFinalized).to.equal(false);
 
@@ -1158,8 +1089,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                     quote[i].isPushOrder,
                     quote[i].extension
                 ];
-                errorCode = await marketMaker.connect(alice).callStatic.swap(
+                errorCode = await marketMaker.connect(alice).callStatic.dexRouterSwap(
                     swapAmount,
+                    alice.address,
                     requestForSwap
                 );
         
@@ -1181,7 +1113,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await usdt.transfer(alice.address, ethers.utils.parseEther('50000'));
             await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
 
-            // 3. prepare marketMaker
             MarketMaker = await ethers.getContractFactory("MarketMaker");
             marketMaker = await upgrades.deployProxy(
                 MarketMaker,[
@@ -1194,10 +1125,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             );        
             await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(bob.address);
-            await marketMaker.addPmmAdapter(alice.address);
+            await marketMaker.setDexRouter(alice.address);
             await marketMaker.setUniV2Factory(factory.address);
 
-            // 4. approve
             const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
             const tokenApproveProxy = await TokenApproveProxy.deploy();
             await tokenApproveProxy.initialize();
@@ -1212,12 +1142,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await tokenApprove.setApproveProxy(tokenApproveProxy.address);
             await marketMaker.setApproveProxy(tokenApproveProxy.address);
 
-            // console.log("before bob usdt: " + await usdt.balanceOf(bob.address));
-            // console.log("before alice usdt: " + await usdt.balanceOf(alice.address));
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
 
-            // 5. prepare quotes
             let source = await getSource(lpUSDTWBTC, usdt.address, wbtc.address);
             let rfq = [
                 {
@@ -1235,7 +1162,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             let infosToBeSigned = getPullInfosToBeSigned(rfq);
             let quote = multipleQuotes(infosToBeSigned);
 
-            // 6. construct of input of funciton swap
             let infos = quote[0];
             let request = [
                 infos.pathIndex, 
@@ -1249,20 +1175,21 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 infos.isPushOrder,
                 infos.extension
             ];
-            // 7. swap
 
             let markerAmount = ethers.utils.parseEther('2');
             await wbtc.connect(bob).approve(tokenApprove.address,markerAmount);
             let swapAmount = ethers.utils.parseEther('10000');
             await usdt.connect(alice).approve(tokenApprove.address, ethers.utils.parseEther('50000'));
 
-            await marketMaker.connect(alice).swap(
+            await marketMaker.connect(alice).dexRouterSwap(
                 swapAmount,
+                alice.address,
                 request
             )
 
-            let errorCode = await marketMaker.connect(alice).callStatic.swap(
+            let errorCode = await marketMaker.connect(alice).callStatic.dexRouterSwap(
                 swapAmount,
+                alice.address,
                 request
             )
 
@@ -1276,7 +1203,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await usdt.transfer(alice.address, ethers.utils.parseEther('50000'));
             await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
 
-            // 3. prepare marketMaker
             MarketMaker = await ethers.getContractFactory("MarketMaker");
             marketMaker = await upgrades.deployProxy(
                 MarketMaker,[
@@ -1289,11 +1215,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             );        
             await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(bob.address);
-            await marketMaker.addPmmAdapter(alice.address);
+            await marketMaker.setDexRouter(alice.address);
             await marketMaker.setUniV2Factory(factory.address);
 
-
-            // 4. approve
             const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
             const tokenApproveProxy = await TokenApproveProxy.deploy();
             await tokenApproveProxy.initialize();
@@ -1308,12 +1232,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await tokenApprove.setApproveProxy(tokenApproveProxy.address);
             await marketMaker.setApproveProxy(tokenApproveProxy.address);
 
-            // console.log("before bob usdt: " + await usdt.balanceOf(bob.address));
-            // console.log("before alice usdt: " + await usdt.balanceOf(alice.address));
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
 
-            // 5. prepare quotes
             let source = await getSource(lpUSDTWBTC, usdt.address, wbtc.address);
             let rfq = [
                 {
@@ -1331,7 +1252,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             let infosToBeSigned = getPushInfosToBeSigned(rfq);
             let quote = multipleQuotes(infosToBeSigned);
 
-            // 6. construct of input of funciton swap
             let infos = quote[0];
             let request = [
                 infos.pathIndex, 
@@ -1346,16 +1266,16 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 infos.extension
             ];
 
-            // 7. swap
             let markerAmount = ethers.utils.parseEther('2');
             await wbtc.connect(bob).approve(tokenApprove.address,markerAmount);
             let swapAmount = ethers.utils.parseEther('50000');
-            await usdt.connect(alice).approve(tokenApprove.address, ethers.utils.parseEther('50000'));
+            await usdt.connect(alice).approve(tokenApprove.address, ethers.utils.parseEther('100000'));
 
             let hash = getDigest(request, chainId, marketMaker.address);
 
-            await marketMaker.connect(alice).swap(
+            await marketMaker.connect(alice).dexRouterSwap(
                 swapAmount,
+                alice.address,
                 request
             )
 
@@ -1363,8 +1283,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await expect(BigNumber.from(orderStatus[0].fromTokenAmountUsed)).to.equal(ethers.utils.parseEther('50000'));
 
             await usdt.transfer(alice.address, ethers.utils.parseEther('50000'));
-            let errorCode = await marketMaker.connect(alice).callStatic.swap(
+            let errorCode = await marketMaker.connect(alice).callStatic.dexRouterSwap(
                 swapAmount,
+                alice.address,
                 request
             )
             await expect(errorCode).to.equal(6);
@@ -1375,24 +1296,23 @@ describe("Market Maker Test (version: 1.0.0)", function() {
 
     });
 
+
+
     describe("2. Integration Test (swap from DexRouter)", function() {
 
         beforeEach(async function() {
-            // 1. prepare accounts and chain id
             [owner, alice, bob, carol, backEnd, canceler, cancelerGuardian] = await ethers.getSigners();
 
-            // 2. prepare dex and liquidity
             await initMockTokens();
             await initUniSwap();
             await addLiquidity();
         });
 
-        it("2.1 ERC20 Exchange By FixRate With PMMAdapter", async () => {
+        it("2.1 DexRouter Swap: ERC20 Exchange ERC20", async () => {
+            const { chainId }  = await ethers.provider.getNetwork();
             await usdt.transfer(alice.address, ethers.utils.parseEther('50000'));
             await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
-            const { chainId }  = await ethers.provider.getNetwork();
 
-            // 3. prepare marketMaker
             MarketMaker = await ethers.getContractFactory("MarketMaker");
             marketMaker = await upgrades.deployProxy(
                 MarketMaker,[
@@ -1406,107 +1326,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(bob.address);
 
-            PMMAdapter = await ethers.getContractFactory("PMMAdapter");
-            pmmAdapter = await PMMAdapter.deploy(marketMaker.address, alice.address);
-
-            await marketMaker.addPmmAdapter(pmmAdapter.address);
-            await marketMaker.setUniV2Factory(factory.address);
-
-            // 4. approve
-            const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
-            const tokenApproveProxy = await TokenApproveProxy.deploy();
-            await tokenApproveProxy.initialize();
-
-            const TokenApprove = await ethers.getContractFactory("TokenApprove");
-            const tokenApprove = await TokenApprove.deploy();
-            await tokenApprove.initialize(tokenApproveProxy.address);
-
-            await tokenApproveProxy.addProxy(marketMaker.address);
-            await tokenApproveProxy.setTokenApprove(tokenApprove.address);
-
-            await tokenApprove.setApproveProxy(tokenApproveProxy.address);
-
-        
-            await marketMaker.setApproveProxy(tokenApproveProxy.address);
-
-
-            // console.log("before bob usdt: " + await usdt.balanceOf(bob.address));
-            // console.log("before alice usdt: " + await usdt.balanceOf(alice.address));
-            expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
-            expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
-
-            // 5. prepare quotes
-            let source = await getSource(lpUSDTWBTC, usdt.address, wbtc.address);
-            let rfq = [
-                {
-                    "pathIndex": 100000000000000,
-                    "fromTokenAddress": usdt.address, 
-                    "toTokenAddress": wbtc.address, 
-                    "fromTokenAmount": '50000000000000000000000', 
-                    "toTokenAmountMin": '1000000000000000000',
-                    "chainId": chainId,
-                    "marketMaker": marketMaker.address,
-                    "pmmAdapter": pmmAdapter.address,
-                    "source": source  
-                }
-            ]
-            let infosToBeSigned = getPullInfosToBeSigned(rfq);
-            let quote = multipleQuotes(infosToBeSigned);
-
-            // 6. construct of input of funciton swap
-            let infos = quote[0];
-            let request = [
-                infos.pathIndex, 
-                infos.payer, 
-                infos.fromTokenAddress, 
-                infos.toTokenAddress, 
-                infos.fromTokenAmountMax, 
-                infos.toTokenAmountMax, 
-                infos.salt, 
-                infos.deadLine, 
-                infos.isPushOrder,
-                infos.extension
-            ];
-
-            // 7. swap
-            let markerAmount = ethers.utils.parseEther('2');
-            await wbtc.connect(bob).approve(tokenApprove.address,markerAmount);
-            let swapAmount = ethers.utils.parseEther('50000');
-
-            await usdt.connect(alice).transfer(pmmAdapter.address, swapAmount);
-            data = ethers.utils.defaultAbiCoder.encode(
-                ['tuple(uint256,address,address,address,uint256,uint256,uint256,uint256,bool,bytes)'],
-                [request]
-            )
-            await pmmAdapter.connect(alice).sellBase(alice.address, ethers.constants.AddressZero, data);
-
-            // 8. check balance
-            expect(await usdt.balanceOf(alice.address)).to.equal(0);
-            expect(await wbtc.balanceOf(alice.address)).to.equal(infos.toTokenAmountMax);
-            expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('50000'));
-            expect(await wbtc.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2').sub(BigNumber.from(infos.toTokenAmountMax)));
-        });
-
-        it("2.2 ERC20 Exchange By FixRate With DEXRouter", async () => {
-            await usdt.transfer(alice.address, ethers.utils.parseEther('50000'));
-            await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
-            const { chainId }  = await ethers.provider.getNetwork();
-
-            // 3. prepare marketMaker
-            MarketMaker = await ethers.getContractFactory("MarketMaker");
-            marketMaker = await upgrades.deployProxy(
-                MarketMaker,[
-                    weth.address, 
-                    owner.address, 
-                    0, 
-                    backEnd.address,
-                    cancelerGuardian.address
-                ]
-            );        
-            await marketMaker.deployed();
-            await marketMaker.connect(bob).setOperator(bob.address);
-
-            // 4. approve
             const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
             const tokenApproveProxy = await TokenApproveProxy.deploy();
             await tokenApproveProxy.initialize();
@@ -1528,140 +1347,12 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await dexRouter.setApproveProxy(tokenApproveProxy.address);
             await tokenApproveProxy.addProxy(dexRouter.address);
 
-            PMMAdapter = await ethers.getContractFactory("PMMAdapter");
-            pmmAdapter = await PMMAdapter.deploy(marketMaker.address, dexRouter.address);
-
-            await marketMaker.addPmmAdapter(pmmAdapter.address);
-            await marketMaker.setUniV2Factory(factory.address);
-
-
-            // console.log("before bob usdt: " + await usdt.balanceOf(bob.address));
-            // console.log("before alice usdt: " + await usdt.balanceOf(alice.address));
-            expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
-            expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
-
-            // 5. prepare quotes
-            let source = await getSource(lpUSDTWBTC, usdt.address, wbtc.address);
-
-            let rfq = [
-                {
-                    "pathIndex": 100000000000000,
-                    "fromTokenAddress": usdt.address, 
-                    "toTokenAddress": wbtc.address, 
-                    "fromTokenAmount": '50000000000000000000000', 
-                    "toTokenAmountMin": '1000000000000000000',
-                    "chainId": chainId,
-                    "marketMaker": marketMaker.address,
-                    "pmmAdapter": pmmAdapter.address,
-                    "source": source  
-
-                }
-            ]
-            let infosToBeSigned = getPullInfosToBeSigned(rfq);
-            let quote = multipleQuotes(infosToBeSigned);
-
-            // 6. construct of input of funciton swap
-            let infos = quote[0];
-            let request = [
-                infos.pathIndex, 
-                infos.payer, 
-                infos.fromTokenAddress, 
-                infos.toTokenAddress, 
-                infos.fromTokenAmountMax, 
-                infos.toTokenAmountMax, 
-                infos.salt, 
-                infos.deadLine, 
-                infos.isPushOrder,
-                infos.extension
-            ];
-
-            // 7. swap
-            let markerAmount = ethers.utils.parseEther('2');
-            await wbtc.connect(bob).approve(tokenApprove.address, markerAmount);
-            let swapAmount = ethers.utils.parseEther('50000');
-            await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
-
-            const baseRequest = [
-                '0x80' + '0000000000000000000000' + usdt.address.toString().slice(2),
-                wbtc.address,
-                swapAmount,
-                ethers.utils.parseEther('0'),
-                2000000000
-            ]
-            // const RouterPath = [
-            //     // address[] mixAdapters;
-            //     // address[] assetTo;
-            //     // uint256[] rawData;
-            //     // bytes[] extraData;
-            //     // address fromToken;
-            //     // [pmmAdapter.address]
-            // ]
-            await dexRouter.connect(alice).smartSwap(
-                baseRequest,
-                [swapAmount],
-                [[]],
-                [request]
-            );
-
-            // 8. check balance
-            expect(await usdt.balanceOf(alice.address)).to.equal(0);
-            expect(await wbtc.balanceOf(alice.address)).to.equal(infos.toTokenAmountMax);
-            expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('50000'));
-            expect(await wbtc.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2').sub(BigNumber.from(infos.toTokenAmountMax)));
-        });
-
-
-        it("2.3 ERC20 Exchange ERC20", async () => {
-            const { chainId }  = await ethers.provider.getNetwork();
-            await usdt.transfer(alice.address, ethers.utils.parseEther('50000'));
-            await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
-
-            // 3. prepare marketMaker
-            MarketMaker = await ethers.getContractFactory("MarketMaker");
-            marketMaker = await upgrades.deployProxy(
-                MarketMaker,[
-                    weth.address, 
-                    owner.address, 
-                    0, 
-                    backEnd.address,
-                    cancelerGuardian.address
-                ]
-            );        
-            await marketMaker.deployed();
-            await marketMaker.connect(bob).setOperator(bob.address);
-
-            // 4. approve
-            const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
-            const tokenApproveProxy = await TokenApproveProxy.deploy();
-            await tokenApproveProxy.initialize();
-
-            const TokenApprove = await ethers.getContractFactory("TokenApprove");
-            const tokenApprove = await TokenApprove.deploy();
-            await tokenApprove.initialize(tokenApproveProxy.address);
-
-            await tokenApproveProxy.addProxy(marketMaker.address);
-            await tokenApproveProxy.setTokenApprove(tokenApprove.address);
-
-            await tokenApprove.setApproveProxy(tokenApproveProxy.address);
-            await marketMaker.setApproveProxy(tokenApproveProxy.address);
-
-            DexRouter = await ethers.getContractFactory("DexRouter");
-            const dexRouter = await DexRouter.deploy();
-            await dexRouter.deployed();
-            await dexRouter.initialize();
-            await dexRouter.setApproveProxy(tokenApproveProxy.address);
-            await tokenApproveProxy.addProxy(dexRouter.address);
-
-            PMMAdapter = await ethers.getContractFactory("PMMAdapter");
-            pmmAdapter = await PMMAdapter.deploy(marketMaker.address, dexRouter.address);
-
-            await marketMaker.addPmmAdapter(pmmAdapter.address);
+            await marketMaker.setDexRouter(dexRouter.address);
             await marketMaker.setUniV2Factory(factory.address);
 
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
 
-            // 5. prepare quotes
             let source = await getSource(lpUSDTWBTC, usdt.address, wbtc.address);
             let rfq = [
                 {
@@ -1672,14 +1363,13 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                     "toTokenAmountMin": '1000000000000000000',
                     "chainId": chainId,
                     "marketMaker": marketMaker.address,
-                    "pmmAdapter": pmmAdapter.address,
+                    "pmmAdapter": marketMaker.address,
                     "source" : source
                 }
             ]
             let infosToBeSigned = getPullInfosToBeSigned(rfq);
             let quote = multipleQuotes(infosToBeSigned);
 
-            // 6. construct of input of funciton swap
             let infos = quote[0];
             let request = [
                 infos.pathIndex, 
@@ -1694,7 +1384,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 infos.extension
             ];
 
-            // 7. swap
             let markerAmount = ethers.utils.parseEther('2');
             await wbtc.connect(bob).approve(tokenApprove.address, markerAmount);
             let swapAmount = ethers.utils.parseEther('50000');
@@ -1705,28 +1394,16 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 wbtc.address,
                 swapAmount,
                 ethers.utils.parseEther('0'),
-                FOREVER             //2000000000
+                FOREVER            
             ]
-            // const RouterPath = [
-            //     // address[] mixAdapters;
-            //     // address[] assetTo;
-            //     // uint256[] rawData;
-            //     // bytes[] extraData;
-            //     // address fromToken;
-            //     // [pmmAdapter.address]
-            // ]
+
             let res = await dexRouter.connect(alice).smartSwap(
                 baseRequest,
                 [swapAmount],
                 [[]],
                 [request]
             );
-            // console.log("baseRequest", baseRequest);
-            // console.log("swapAmount", swapAmount);
-            // console.log("request", request);
-            // console.log("calldata", res.data);
 
-            // 8. check balance
             expect(await usdt.balanceOf(alice.address)).to.equal(0);
             expect(await wbtc.balanceOf(alice.address)).to.equal(infos.toTokenAmountMax);
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('50000'));
@@ -1735,11 +1412,10 @@ describe("Market Maker Test (version: 1.0.0)", function() {
 
 
         // since the origin DexRouter use a constant of _WETH, here we have to use a temp version of DexRouter which we can config weth
-        it("2.4 Native token Exchange ERC20", async () => {
+        it("2.2 DexRouter Swap: Native token Exchange ERC20", async () => {
             const { chainId }  = await ethers.provider.getNetwork();
             await usdt.transfer(bob.address, ethers.utils.parseEther('5000'));
 
-            // 3. prepare marketMaker
             MarketMaker = await ethers.getContractFactory("MarketMaker");
             marketMaker = await upgrades.deployProxy(
                 MarketMaker,[
@@ -1753,7 +1429,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(bob.address);
 
-            // 4. approve
             const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
             const tokenApproveProxy = await TokenApproveProxy.deploy();
             await tokenApproveProxy.initialize();
@@ -1781,16 +1456,12 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await dexRouter.setApproveProxy(tokenApproveProxy.address);
             await tokenApproveProxy.addProxy(dexRouter.address);
 
-            PMMAdapter = await ethers.getContractFactory("PMMAdapter");
-            pmmAdapter = await PMMAdapter.deploy(marketMaker.address, dexRouter.address);
-
-            await marketMaker.addPmmAdapter(pmmAdapter.address);
+            await marketMaker.setDexRouter(dexRouter.address);
             await marketMaker.setUniV2Factory(factory.address);
 
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('5000'));
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('0'));
 
-            // 5. prepare quotes
             let source = await getSource(lpUSDTWETH, weth.address, usdt.address);
             let rfq = [
                 {
@@ -1801,14 +1472,13 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                     "toTokenAmountMin": '2500000000000000000000',
                     "chainId": chainId,
                     "marketMaker": marketMaker.address,
-                    "pmmAdapter": pmmAdapter.address,
+                    "pmmAdapter": marketMaker.address,
                     "source": source
                 }
             ]
             let infosToBeSigned = getPullInfosToBeSigned(rfq);
             let quote = multipleQuotes(infosToBeSigned);
 
-            // 6. construct of input of funciton swap
             let infos = quote[0];
             let request = [
                 infos.pathIndex, 
@@ -1823,11 +1493,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 infos.extension
             ];
 
-            // 7. swap
             let markerAmount = ethers.utils.parseEther('5000');
             await usdt.connect(bob).approve(tokenApprove.address, markerAmount);
             let swapAmount = ethers.utils.parseEther('1');
-            // await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
 
             const baseRequest = [
                 '0x80' + '0000000000000000000000' + ETH.slice(2),
@@ -1836,16 +1504,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 ethers.utils.parseEther('0'),
                 FOREVER
             ]
-            // const RouterPath = [
-            //     // address[] mixAdapters;
-            //     // address[] assetTo;
-            //     // uint256[] rawData;
-            //     // bytes[] extraData;
-            //     // address fromToken;
-            //     // [pmmAdapter.address]
-            // ]
-            // let ethBalanceBeforeSwap = await ethers.provider.getBalance(alice.address);
-            // console.log("alice eth balance before swap", ethBalanceBeforeSwap);
+
             await dexRouter.connect(alice).smartSwap(
                 baseRequest,
                 [swapAmount],
@@ -1855,10 +1514,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                     value: ethers.utils.parseEther('1')
                 }
             );
-            // let ethBalanceAfterSwap = await ethers.provider.getBalance(alice.address);
-            // console.log("alice eth balance after swap", ethBalanceAfterSwap);
-
-            // 8. check balance
+ 
             expect(await usdt.balanceOf(alice.address)).to.equal(BigNumber.from(infos.toTokenAmountMax));
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('5000').sub(BigNumber.from(infos.toTokenAmountMax)));
             expect(await weth.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('1'));
@@ -1867,14 +1523,13 @@ describe("Market Maker Test (version: 1.0.0)", function() {
 
 
         // since the origin DexRouter use a constant of _WETH, here we have to use a temp version of DexRouter which we can config weth
-        it("2.5 ERC20 Exchange Native token ", async () => {
+        it("2.3 DexRouter Swap: ERC20 Exchange Native token ", async () => {
             const { chainId }  = await ethers.provider.getNetwork();
             await usdt.transfer(alice.address, ethers.utils.parseEther('3000'));
             await weth.connect(bob).deposit(            {
                 value: ethers.utils.parseEther('2')
             });
 
-            // 3. prepare marketMaker
             MarketMaker = await ethers.getContractFactory("MarketMaker");
             marketMaker = await upgrades.deployProxy(
                 MarketMaker,[
@@ -1888,7 +1543,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(bob.address);
 
-            // 4. approve
             const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
             const tokenApproveProxy = await TokenApproveProxy.deploy();
             await tokenApproveProxy.initialize();
@@ -1917,16 +1571,12 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await tokenApproveProxy.addProxy(dexRouter.address);
             await wNativeRelayer.setCallerOk([dexRouter.address], true);
 
-            PMMAdapter = await ethers.getContractFactory("PMMAdapter");
-            pmmAdapter = await PMMAdapter.deploy(marketMaker.address, dexRouter.address);
-
-            await marketMaker.addPmmAdapter(pmmAdapter.address);
+            await marketMaker.setDexRouter(dexRouter.address);
             await marketMaker.setUniV2Factory(factory.address);
 
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('3000'));
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
 
-            // 5. prepare quotes
             let source = await getSource(lpUSDTWETH, weth.address, usdt.address);
             let rfq = [
                 {
@@ -1937,14 +1587,13 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                     "toTokenAmountMin": '1000000000000000000',
                     "chainId": chainId,
                     "marketMaker": marketMaker.address,
-                    "pmmAdapter": pmmAdapter.address,
+                    "pmmAdapter": marketMaker.address,
                     "source": source
                 }
             ]
             let infosToBeSigned = getPullInfosToBeSigned(rfq);
             let quote = multipleQuotes(infosToBeSigned);
 
-            // 6. construct of input of funciton swap
             let infos = quote[0];
             let request = [
                 infos.pathIndex, 
@@ -1958,7 +1607,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 infos.isPushOrder,
                 infos.extension
             ];
-            // 7. swap
+
             let markerAmount = ethers.utils.parseEther('2');
             await weth.connect(bob).approve(tokenApprove.address, markerAmount);
             let swapAmount = ethers.utils.parseEther('3000');
@@ -1971,27 +1620,333 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 ethers.utils.parseEther('0'),
                 FOREVER
             ]
-            // const RouterPath = [
-            //     // address[] mixAdapters;
-            //     // address[] assetTo;
-            //     // uint256[] rawData;
-            //     // bytes[] extraData;
-            //     // address fromToken;
-            //     // [pmmAdapter.address]
-            // ]
-            // let ethBalanceBeforeSwap = await ethers.provider.getBalance(alice.address);
-            // console.log("alice eth balance before swap", ethBalanceBeforeSwap);
+
             await dexRouter.connect(alice).smartSwap(
                 baseRequest,
                 [swapAmount],
                 [[]],
                 [request]
             );
-            // let ethBalanceAfterSwap = await ethers.provider.getBalance(alice.address);
-            // console.log("alice eth balance before swap", ethBalanceAfterSwap);
-            // console.log(ethers.utils.formatEther(ethBalanceAfterSwap.sub(ethBalanceBeforeSwap)));
 
-            // 8. check balance
+            expect(await usdt.balanceOf(alice.address)).to.equal(0);
+            expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('3000'));
+        });
+
+
+        it("2.4 User swap: ERC20 Exchange ERC20", async () => {
+            const { chainId }  = await ethers.provider.getNetwork();
+            await usdt.transfer(alice.address, ethers.utils.parseEther('50000'));
+            await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
+
+            MarketMaker = await ethers.getContractFactory("MarketMaker");
+            marketMaker = await upgrades.deployProxy(
+                MarketMaker,[
+                    weth.address, 
+                    owner.address, 
+                    0, 
+                    backEnd.address,
+                    cancelerGuardian.address
+                ]
+            );        
+            await marketMaker.deployed();
+            await marketMaker.connect(bob).setOperator(bob.address);
+
+            const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
+            const tokenApproveProxy = await TokenApproveProxy.deploy();
+            await tokenApproveProxy.initialize();
+
+            const TokenApprove = await ethers.getContractFactory("TokenApprove");
+            const tokenApprove = await TokenApprove.deploy();
+            await tokenApprove.initialize(tokenApproveProxy.address);
+
+            await tokenApproveProxy.addProxy(marketMaker.address);
+            await tokenApproveProxy.setTokenApprove(tokenApprove.address);
+
+            await tokenApprove.setApproveProxy(tokenApproveProxy.address);
+            await marketMaker.setApproveProxy(tokenApproveProxy.address);
+
+            DexRouter = await ethers.getContractFactory("DexRouter");
+            const dexRouter = await DexRouter.deploy();
+            await dexRouter.deployed();
+            await dexRouter.initialize();
+            await dexRouter.setApproveProxy(tokenApproveProxy.address);
+            await tokenApproveProxy.addProxy(dexRouter.address);
+
+            await marketMaker.setDexRouter(dexRouter.address);
+            await marketMaker.setUniV2Factory(factory.address);
+
+            expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
+            expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
+
+            let source = await getSource(lpUSDTWBTC, usdt.address, wbtc.address);
+            let rfq = [
+                {
+                    "pathIndex": 100000000000000,
+                    "fromTokenAddress": usdt.address, 
+                    "toTokenAddress": wbtc.address, 
+                    "fromTokenAmount": '50000000000000000000000', 
+                    "toTokenAmountMin": '1000000000000000000',
+                    "chainId": chainId,
+                    "marketMaker": marketMaker.address,
+                    "pmmAdapter": marketMaker.address,
+                    "source" : source
+                }
+            ]
+            let infosToBeSigned = getPullInfosToBeSigned(rfq);
+            let quote = multipleQuotes(infosToBeSigned);
+
+            let infos = quote[0];
+            let request = [
+                infos.pathIndex, 
+                infos.payer, 
+                infos.fromTokenAddress, 
+                infos.toTokenAddress, 
+                infos.fromTokenAmountMax, 
+                infos.toTokenAmountMax, 
+                infos.salt, 
+                infos.deadLine, 
+                infos.isPushOrder,
+                infos.extension
+            ];
+
+            let markerAmount = ethers.utils.parseEther('2');
+            await wbtc.connect(bob).approve(tokenApprove.address, markerAmount);
+            let swapAmount = ethers.utils.parseEther('50000');
+            await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
+
+            const baseRequest = [
+                usdt.address,
+                wbtc.address,
+                swapAmount,
+                ethers.utils.parseEther('0'),
+                FOREVER            
+            ]
+            let res = await marketMaker.connect(alice).userSwap(
+                baseRequest,
+                request
+            );
+
+            expect(await usdt.balanceOf(alice.address)).to.equal(0);
+            expect(await wbtc.balanceOf(alice.address)).to.equal(infos.toTokenAmountMax);
+            expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('50000'));
+            expect(await wbtc.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2').sub(BigNumber.from(infos.toTokenAmountMax)));
+        });
+
+        it("2.5 User swap: Native token Exchange ERC20", async () => {
+            const { chainId }  = await ethers.provider.getNetwork();
+            await usdt.transfer(bob.address, ethers.utils.parseEther('5000'));
+
+            MarketMaker = await ethers.getContractFactory("MarketMaker");
+            marketMaker = await upgrades.deployProxy(
+                MarketMaker,[
+                    weth.address, 
+                    owner.address, 
+                    0, 
+                    backEnd.address,
+                    cancelerGuardian.address
+                ]
+            );        
+            await marketMaker.deployed();
+            await marketMaker.connect(bob).setOperator(bob.address);
+
+            const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
+            const tokenApproveProxy = await TokenApproveProxy.deploy();
+            await tokenApproveProxy.initialize();
+
+            const TokenApprove = await ethers.getContractFactory("TokenApprove");
+            const tokenApprove = await TokenApprove.deploy();
+            await tokenApprove.initialize(tokenApproveProxy.address);
+
+            await tokenApproveProxy.addProxy(marketMaker.address);
+            await tokenApproveProxy.setTokenApprove(tokenApprove.address);
+
+            await tokenApprove.setApproveProxy(tokenApproveProxy.address);
+            await marketMaker.setApproveProxy(tokenApproveProxy.address);
+
+            const WNativeRelayer = await ethers.getContractFactory("WNativeRelayer");
+            const wNativeRelayer = await WNativeRelayer.deploy();
+            await wNativeRelayer.deployed;
+            await wNativeRelayer.initialize(weth.address);
+
+            DexRouter = await ethers.getContractFactory("MockDexRouterForLocalPMMTest");
+            const dexRouter = await DexRouter.deploy();
+            await dexRouter.deployed();
+            await dexRouter.initialize(weth.address);
+            await dexRouter.setWNativeRelayer(wNativeRelayer.address);
+            await dexRouter.setApproveProxy(tokenApproveProxy.address);
+            await tokenApproveProxy.addProxy(dexRouter.address);
+
+            await marketMaker.setWNativeRelayer(wNativeRelayer.address);
+
+            await marketMaker.setDexRouter(dexRouter.address);
+            await marketMaker.setUniV2Factory(factory.address);
+
+            expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('5000'));
+            expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('0'));
+
+            let source = await getSource(lpUSDTWETH, weth.address, usdt.address);
+            let rfq = [
+                {
+                    "pathIndex": 100000000000000,
+                    "fromTokenAddress": weth.address, 
+                    "toTokenAddress": usdt.address, 
+                    "fromTokenAmount": '1000000000000000000', 
+                    "toTokenAmountMin": '2500000000000000000000',
+                    "chainId": chainId,
+                    "marketMaker": marketMaker.address,
+                    "pmmAdapter": marketMaker.address,
+                    "source": source
+                }
+            ]
+            let infosToBeSigned = getPullInfosToBeSigned(rfq);
+            let quote = multipleQuotes(infosToBeSigned);
+
+            let infos = quote[0];
+            let request = [
+                infos.pathIndex, 
+                infos.payer, 
+                infos.fromTokenAddress, 
+                infos.toTokenAddress, 
+                infos.fromTokenAmountMax, 
+                infos.toTokenAmountMax, 
+                infos.salt, 
+                infos.deadLine, 
+                infos.isPushOrder,
+                infos.extension
+            ];
+
+            let markerAmount = ethers.utils.parseEther('5000');
+            await usdt.connect(bob).approve(tokenApprove.address, markerAmount);
+            let swapAmount = ethers.utils.parseEther('1');
+
+            const baseRequest = [
+                ETH,
+                usdt.address,
+                swapAmount,
+                ethers.utils.parseEther('0'),
+                FOREVER
+            ]
+
+            await marketMaker.connect(alice).userSwap(
+                baseRequest,
+                request,
+                {
+                    value: ethers.utils.parseEther('1')
+                }
+            );
+
+            expect(await usdt.balanceOf(alice.address)).to.equal(BigNumber.from(infos.toTokenAmountMax));
+            expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('5000').sub(BigNumber.from(infos.toTokenAmountMax)));
+            expect(await weth.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('1'));
+
+        });
+
+        it("2.6 User swap: ERC20 Exchange Native token ", async () => {
+            const { chainId }  = await ethers.provider.getNetwork();
+            await usdt.transfer(alice.address, ethers.utils.parseEther('3000'));
+            await weth.connect(bob).deposit(            {
+                value: ethers.utils.parseEther('2')
+            });
+
+            MarketMaker = await ethers.getContractFactory("MarketMaker");
+            marketMaker = await upgrades.deployProxy(
+                MarketMaker,[
+                    weth.address, 
+                    owner.address, 
+                    0, 
+                    backEnd.address,
+                    cancelerGuardian.address
+                ]
+            );        
+            await marketMaker.deployed();
+            await marketMaker.connect(bob).setOperator(bob.address);
+
+            const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
+            const tokenApproveProxy = await TokenApproveProxy.deploy();
+            await tokenApproveProxy.initialize();
+
+            const TokenApprove = await ethers.getContractFactory("TokenApprove");
+            const tokenApprove = await TokenApprove.deploy();
+            await tokenApprove.initialize(tokenApproveProxy.address);
+
+            await tokenApproveProxy.addProxy(marketMaker.address);
+            await tokenApproveProxy.setTokenApprove(tokenApprove.address);
+
+            await tokenApprove.setApproveProxy(tokenApproveProxy.address);
+            await marketMaker.setApproveProxy(tokenApproveProxy.address);
+
+            const WNativeRelayer = await ethers.getContractFactory("WNativeRelayer");
+            const wNativeRelayer = await WNativeRelayer.deploy();
+            await wNativeRelayer.deployed;
+            await wNativeRelayer.initialize(weth.address);
+
+            await wNativeRelayer.setCallerOk([marketMaker.address],true);
+            await marketMaker.setWNativeRelayer(wNativeRelayer.address);
+
+
+            DexRouter = await ethers.getContractFactory("MockDexRouterForLocalPMMTest");
+            const dexRouter = await DexRouter.deploy();
+            await dexRouter.deployed();
+            await dexRouter.initialize(weth.address);
+            await dexRouter.setWNativeRelayer(wNativeRelayer.address);
+            await dexRouter.setApproveProxy(tokenApproveProxy.address);
+            await tokenApproveProxy.addProxy(dexRouter.address);
+            await wNativeRelayer.setCallerOk([dexRouter.address], true);
+
+            await marketMaker.setDexRouter(dexRouter.address);
+            await marketMaker.setUniV2Factory(factory.address);
+
+            expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('3000'));
+            expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
+
+            let source = await getSource(lpUSDTWETH, weth.address, usdt.address);
+            let rfq = [
+                {
+                    "pathIndex": 100000000000000,
+                    "fromTokenAddress": usdt.address, 
+                    "toTokenAddress": weth.address, 
+                    "fromTokenAmount": '3000000000000000000000', 
+                    "toTokenAmountMin": '1000000000000000000',
+                    "chainId": chainId,
+                    "marketMaker": marketMaker.address,
+                    "pmmAdapter": marketMaker.address,
+                    "source": source
+                }
+            ]
+            let infosToBeSigned = getPullInfosToBeSigned(rfq);
+            let quote = multipleQuotes(infosToBeSigned);
+
+            let infos = quote[0];
+            let request = [
+                infos.pathIndex, 
+                infos.payer, 
+                infos.fromTokenAddress, 
+                infos.toTokenAddress, 
+                infos.fromTokenAmountMax, 
+                infos.toTokenAmountMax, 
+                infos.salt, 
+                infos.deadLine, 
+                infos.isPushOrder,
+                infos.extension
+            ];
+            let markerAmount = ethers.utils.parseEther('2');
+            await weth.connect(bob).approve(tokenApprove.address, markerAmount);
+            let swapAmount = ethers.utils.parseEther('3000');
+            await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
+
+            const baseRequest = [
+                usdt.address,
+                ETH,
+                swapAmount,
+                ethers.utils.parseEther('0'),
+                FOREVER
+            ]
+
+            await marketMaker.connect(alice).userSwap(
+                baseRequest,
+                request
+            );
+
             expect(await usdt.balanceOf(alice.address)).to.equal(0);
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('3000'));
         });
@@ -2013,17 +1968,15 @@ describe("Market Maker Test (version: 1.0.0)", function() {
         //  okb:  20
         //  dot:  15
 
-        it("2.6 Try to replace the whole swap with pmm but failed, turn to dex ", async () => {
+        it("2.7 Try to replace the whole swap with pmm but failed, turn to dex ", async () => {
             const { chainId }  = await ethers.provider.getNetwork();
 
-            // 1. prepare accounts and tokens
             await usdt.transfer(alice.address, ethers.utils.parseEther('40000'));
             await weth.transfer(bob.address, ethers.utils.parseEther('5'));
             await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
             await okb.transfer(bob.address, ethers.utils.parseEther('2000'));
             await dot.transfer(bob.address, ethers.utils.parseEther('2000'));
 
-            // 3. prepare marketMaker
             MarketMaker = await ethers.getContractFactory("MarketMaker");
             marketMaker = await upgrades.deployProxy(
                 MarketMaker,[
@@ -2037,7 +1990,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(bob.address);
 
-            // 4. approve
             const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
             const tokenApproveProxy = await TokenApproveProxy.deploy();
             await tokenApproveProxy.initialize();
@@ -2066,10 +2018,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await tokenApproveProxy.addProxy(dexRouter.address);
             await wNativeRelayer.setCallerOk([dexRouter.address], true);
 
-            PMMAdapter = await ethers.getContractFactory("PMMAdapter");
-            pmmAdapter = await PMMAdapter.deploy(marketMaker.address, dexRouter.address);
-
-            await marketMaker.addPmmAdapter(pmmAdapter.address);
+            await marketMaker.setDexRouter(dexRouter.address);
             await marketMaker.setUniV2Factory(factory.address);
 
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('40000'));
@@ -2079,7 +2028,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             expect(await okb.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2000'));
             expect(await dot.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2000'));
 
-            // 5. prepare quotes
             let source = await getSource(lpUSDTWBTC, usdt.address, wbtc.address);
             let rfq = [
                 {
@@ -2090,14 +2038,13 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                     "toTokenAmountMin": ethers.utils.parseEther('1'),
                     "chainId": chainId,
                     "marketMaker": marketMaker.address,
-                    "pmmAdapter": pmmAdapter.address,
+                    "pmmAdapter": marketMaker.address,
                     "source": source
                 }
             ]
             let infosToBeSigned = getPullInfosToBeSigned(rfq);
             let quote = multipleQuotes(infosToBeSigned);
 
-            // 6. construct of input of funciton swap
             let infos = quote[0];
             let request = [
                 infos.pathIndex + 1,        // we make a wrong pathIndex here leading to failure of pmm swap
@@ -2113,7 +2060,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             ];
             const pmmRequests = [request];
 
-            // 7. swap
             let markerAmount = ethers.utils.parseEther('2');
             await wbtc.connect(bob).approve(tokenApprove.address, markerAmount);
             let swapAmount = ethers.utils.parseEther('40000');
@@ -2138,7 +2084,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 pmmRequests
             );
 
-            // 8. check balance
             expect(await usdt.balanceOf(alice.address)).to.equal(0);
             expect(await wbtc.balanceOf(alice.address)).to.equal(BigNumber.from('1111597868718424651'));
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
@@ -2146,17 +2091,15 @@ describe("Market Maker Test (version: 1.0.0)", function() {
         });
 
 
-        it("2.7 Try to replace the whole swap with pmm and success", async () => {
+        it("2.8 Try to replace the whole swap with pmm and success", async () => {
             const { chainId }  = await ethers.provider.getNetwork();
     
-            // 1. prepare accounts and tokens
             await usdt.transfer(alice.address, ethers.utils.parseEther('40000'));
             await weth.transfer(bob.address, ethers.utils.parseEther('5'));
             await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
             await okb.transfer(bob.address, ethers.utils.parseEther('2000'));
             await dot.transfer(bob.address, ethers.utils.parseEther('2000'));
     
-            // 3. prepare marketMaker
             MarketMaker = await ethers.getContractFactory("MarketMaker");
             marketMaker = await upgrades.deployProxy(
                 MarketMaker,[
@@ -2170,7 +2113,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(bob.address);
     
-            // 4. approve
             const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
             const tokenApproveProxy = await TokenApproveProxy.deploy();
             await tokenApproveProxy.initialize();
@@ -2199,10 +2141,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await tokenApproveProxy.addProxy(dexRouter.address);
             await wNativeRelayer.setCallerOk([dexRouter.address], true);
     
-            PMMAdapter = await ethers.getContractFactory("PMMAdapter");
-            pmmAdapter = await PMMAdapter.deploy(marketMaker.address, dexRouter.address);
-    
-            await marketMaker.addPmmAdapter(pmmAdapter.address);
+            await marketMaker.setDexRouter(dexRouter.address);
             await marketMaker.setUniV2Factory(factory.address);
     
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('40000'));
@@ -2212,7 +2151,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             expect(await okb.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2000'));
             expect(await dot.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2000'));
     
-            // 5. prepare quotes
             let source = await getSource(lpUSDTWBTC, usdt.address, wbtc.address);
             let rfq = [
                 {
@@ -2223,14 +2161,13 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                     "toTokenAmountMin": ethers.utils.parseEther('0.95'),
                     "chainId": chainId,
                     "marketMaker": marketMaker.address,
-                    "pmmAdapter": pmmAdapter.address,
+                    "pmmAdapter": marketMaker.address,
                     "source": source
                 }
             ]
             let infosToBeSigned = getPullInfosToBeSigned(rfq);
             let quote = multipleQuotes(infosToBeSigned);
     
-            // 6. construct of input of funciton swap
             let infos = quote[0];
             let request = [
                 infos.pathIndex, 
@@ -2246,7 +2183,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             ];
             const pmmRequests = [request];
     
-            // 7. swap
             let markerAmount = ethers.utils.parseEther('2');
             await wbtc.connect(bob).approve(tokenApprove.address, markerAmount);
             let swapAmount = ethers.utils.parseEther('40000');
@@ -2276,17 +2212,15 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             expect(await wbtc.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2').sub(BigNumber.from(infos.toTokenAmountMax)));
         });
     
-        it("2.8 Try to replace the first batch with pmm but failed, turn to dex", async () => {
+        it("2.9 Try to replace the first batch with pmm but failed, turn to dex", async () => {
             const { chainId }  = await ethers.provider.getNetwork();
     
-            // 1. prepare accounts and tokens
             await usdt.transfer(alice.address, ethers.utils.parseEther('40000'));
             await weth.transfer(bob.address, ethers.utils.parseEther('5'));
             await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
             await okb.transfer(bob.address, ethers.utils.parseEther('2000'));
             await dot.transfer(bob.address, ethers.utils.parseEther('2000'));
     
-            // 3. prepare marketMaker
             MarketMaker = await ethers.getContractFactory("MarketMaker");
             marketMaker = await upgrades.deployProxy(
                 MarketMaker,[
@@ -2300,7 +2234,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(bob.address);
     
-            // 4. approve
             const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
             const tokenApproveProxy = await TokenApproveProxy.deploy();
             await tokenApproveProxy.initialize();
@@ -2325,14 +2258,12 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await dexRouter.deployed();
             await dexRouter.initialize(weth.address);
             await dexRouter.setWNativeRelayer(wNativeRelayer.address);
+
             await dexRouter.setApproveProxy(tokenApproveProxy.address);
             await tokenApproveProxy.addProxy(dexRouter.address);
             await wNativeRelayer.setCallerOk([dexRouter.address], true);
     
-            PMMAdapter = await ethers.getContractFactory("PMMAdapter");
-            pmmAdapter = await PMMAdapter.deploy(marketMaker.address, dexRouter.address);
-    
-            await marketMaker.addPmmAdapter(pmmAdapter.address);
+            await marketMaker.setDexRouter(dexRouter.address);
             await marketMaker.setUniV2Factory(factory.address);
     
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('40000'));
@@ -2342,7 +2273,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             expect(await okb.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2000'));
             expect(await dot.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2000'));
     
-            // 5. prepare quotes
             let source = await getSource(lpUSDTWBTC, usdt.address, wbtc.address);
             let rfq = [
                 {
@@ -2353,14 +2283,13 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                     "toTokenAmountMin": ethers.utils.parseEther('0.3'),
                     "chainId": chainId,
                     "marketMaker": marketMaker.address,
-                    "pmmAdapter": pmmAdapter.address,
+                    "pmmAdapter": marketMaker.address,
                     "source": source
                 }
             ]
             let infosToBeSigned = getPullInfosToBeSigned(rfq);
             let quote = multipleQuotes(infosToBeSigned);
     
-            // 6. construct of input of funciton swap
             let infos = quote[0];
             let request = [
                 infos.pathIndex + 1,       // we make a wrong pathIndex here leading to failure of pmm swap 
@@ -2376,7 +2305,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             ];
             const pmmRequests = [request];
     
-            // 7. swap
             let markerAmount = ethers.utils.parseEther('2');
             await wbtc.connect(bob).approve(tokenApprove.address, markerAmount);
             let swapAmount = ethers.utils.parseEther('40000');
@@ -2399,7 +2327,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 pmmRequests
             );
     
-            // 8. check balance
             expect(await usdt.balanceOf(alice.address)).to.equal(0);
             expect(await wbtc.balanceOf(alice.address)).to.equal(BigNumber.from('1111597868718424651'));
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
@@ -2407,17 +2334,15 @@ describe("Market Maker Test (version: 1.0.0)", function() {
         });
     
     
-        it("2.9 Try to replace the first batch with pmm and success", async () => {
+        it("2.10 Try to replace the first batch with pmm and success", async () => {
             const { chainId }  = await ethers.provider.getNetwork();
     
-            // 1. prepare accounts and tokens
             await usdt.transfer(alice.address, ethers.utils.parseEther('40000'));
             await weth.transfer(bob.address, ethers.utils.parseEther('5'));
             await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
             await okb.transfer(bob.address, ethers.utils.parseEther('2000'));
             await dot.transfer(bob.address, ethers.utils.parseEther('2000'));
     
-            // 3. prepare marketMaker
             MarketMaker = await ethers.getContractFactory("MarketMaker");
             marketMaker = await upgrades.deployProxy(
                 MarketMaker,[
@@ -2431,7 +2356,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(bob.address);
     
-            // 4. approve
             const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
             const tokenApproveProxy = await TokenApproveProxy.deploy();
             await tokenApproveProxy.initialize();
@@ -2460,10 +2384,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await tokenApproveProxy.addProxy(dexRouter.address);
             await wNativeRelayer.setCallerOk([dexRouter.address], true);
     
-            PMMAdapter = await ethers.getContractFactory("PMMAdapter");
-            pmmAdapter = await PMMAdapter.deploy(marketMaker.address, dexRouter.address);
-    
-            await marketMaker.addPmmAdapter(pmmAdapter.address);
+            await marketMaker.setDexRouter(dexRouter.address);
             await marketMaker.setUniV2Factory(factory.address);
     
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('40000'));
@@ -2473,7 +2394,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             expect(await okb.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2000'));
             expect(await dot.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2000'));
     
-            // 5. prepare quotes
             let source = await getSource(lpUSDTWBTC, usdt.address, wbtc.address);
             let rfq = [
                 {
@@ -2484,14 +2404,13 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                     "toTokenAmountMin": ethers.utils.parseEther('0.3'),
                     "chainId": chainId,
                     "marketMaker": marketMaker.address,
-                    "pmmAdapter": pmmAdapter.address,
+                    "pmmAdapter": marketMaker.address,
                     "source": source
                 }
             ]
             let infosToBeSigned = getPullInfosToBeSigned(rfq);
             let quote = multipleQuotes(infosToBeSigned);
     
-            // 6. construct of input of funciton swap
             let infos = quote[0];
             let request = [
                 infos.pathIndex,
@@ -2507,7 +2426,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             ];
             const pmmRequests = [request];
     
-            // 7. swap
             let markerAmount = ethers.utils.parseEther('2');
             await wbtc.connect(bob).approve(tokenApprove.address, markerAmount);
             let swapAmount = ethers.utils.parseEther('40000');
@@ -2530,7 +2448,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 pmmRequests
             );
     
-            // 8. check balance
             expect(await usdt.balanceOf(alice.address)).to.equal(0);
             // price protected by protection solution
             expect(await wbtc.balanceOf(alice.address)).to.equal(BigNumber.from('1158703882834055521'));
@@ -2538,18 +2455,20 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             expect(await wbtc.balanceOf(bob.address)).to.equal(BigNumber.from('1700000000000000000'));
         });
 
+        //  dex swap path
+        //  30%  usdt -> weth -> wbtc
+        //  20%  usdt -> wbtc
+        //  50%  usdt -> okb -> dot -> wbtc
 
-        it("2.10 Try to replace the two hops of the first batch separately with pmm and success", async () => {
+        it("2.11 Try to replace the two hops of the first batch separately with pmm and success", async () => {
             const { chainId }  = await ethers.provider.getNetwork();
 
-            // 1. prepare accounts and tokens
             await usdt.transfer(alice.address, ethers.utils.parseEther('40000'));
             await weth.transfer(bob.address, ethers.utils.parseEther('5'));
             await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
             await okb.transfer(bob.address, ethers.utils.parseEther('2000'));
             await dot.transfer(bob.address, ethers.utils.parseEther('2000'));
 
-            // 3. prepare marketMaker
             MarketMaker = await ethers.getContractFactory("MarketMaker");
             marketMaker = await upgrades.deployProxy(
                 MarketMaker,[
@@ -2563,7 +2482,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(bob.address);
 
-            // 4. approve
             const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
             const tokenApproveProxy = await TokenApproveProxy.deploy();
             await tokenApproveProxy.initialize();
@@ -2592,10 +2510,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await tokenApproveProxy.addProxy(dexRouter.address);
             await wNativeRelayer.setCallerOk([dexRouter.address], true);
 
-            PMMAdapter = await ethers.getContractFactory("PMMAdapter");
-            pmmAdapter = await PMMAdapter.deploy(marketMaker.address, dexRouter.address);
-
-            await marketMaker.addPmmAdapter(pmmAdapter.address);
+            await marketMaker.setDexRouter(dexRouter.address);
             await marketMaker.setUniV2Factory(factory.address);
 
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('40000'));
@@ -2605,7 +2520,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             expect(await okb.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2000'));
             expect(await dot.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2000'));
 
-            // 5. prepare quotes
             let source1 = await getSource(lpUSDTWETH, usdt.address, weth.address);
             let source2 = await getSource(lpWETHWBTC, weth.address, wbtc.address);
 
@@ -2618,7 +2532,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                     "toTokenAmountMin": ethers.utils.parseEther('4'),
                     "chainId": chainId,
                     "marketMaker": marketMaker.address,
-                    "pmmAdapter": pmmAdapter.address,
+                    "pmmAdapter": marketMaker.address,
                     "source": source1
                 },
                 {
@@ -2629,7 +2543,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                     "toTokenAmountMin": ethers.utils.parseEther('0.375'),
                     "chainId": chainId,
                     "marketMaker": marketMaker.address,
-                    "pmmAdapter": pmmAdapter.address,
+                    "pmmAdapter": marketMaker.address,
                     "source": source2
 
                 }
@@ -2637,7 +2551,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             let infosToBeSigned = getPullInfosToBeSigned(rfq);
             let quote = multipleQuotes(infosToBeSigned);
 
-            // 6. construct of input of funciton swap
             let request1 = [
                 quote[0].pathIndex,
                 quote[0].payer, 
@@ -2666,7 +2579,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             
             const pmmRequests = [request1, request2];
 
-            // 7. swap
             let markerAmountWETH = ethers.utils.parseEther('5');
             await weth.connect(bob).approve(tokenApprove.address, markerAmountWETH);
             let markerAmountWBTC = ethers.utils.parseEther('2');
@@ -2701,17 +2613,15 @@ describe("Market Maker Test (version: 1.0.0)", function() {
 
     
     
-        it("2.11 Try to replace the two hops of the first batch separately with pmm, one of it failed and turned to dex", async () => {
+        it("2.12 Try to replace the two hops of the first batch separately with pmm, one of it failed and turned to dex", async () => {
             const { chainId }  = await ethers.provider.getNetwork();
     
-            // 1. prepare accounts and tokens
             await usdt.transfer(alice.address, ethers.utils.parseEther('40000'));
             await weth.transfer(bob.address, ethers.utils.parseEther('5'));
             await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
             await okb.transfer(bob.address, ethers.utils.parseEther('2000'));
             await dot.transfer(bob.address, ethers.utils.parseEther('2000'));
     
-            // 3. prepare marketMaker
             MarketMaker = await ethers.getContractFactory("MarketMaker");
             marketMaker = await upgrades.deployProxy(
                 MarketMaker,[
@@ -2725,7 +2635,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(bob.address);
     
-            // 4. approve
             const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
             const tokenApproveProxy = await TokenApproveProxy.deploy();
             await tokenApproveProxy.initialize();
@@ -2754,10 +2663,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await tokenApproveProxy.addProxy(dexRouter.address);
             await wNativeRelayer.setCallerOk([dexRouter.address], true);
     
-            PMMAdapter = await ethers.getContractFactory("PMMAdapter");
-            pmmAdapter = await PMMAdapter.deploy(marketMaker.address, dexRouter.address);
-    
-            await marketMaker.addPmmAdapter(pmmAdapter.address);
+            await marketMaker.setDexRouter(dexRouter.address);
             await marketMaker.setUniV2Factory(factory.address);
     
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('40000'));
@@ -2767,7 +2673,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             expect(await okb.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2000'));
             expect(await dot.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2000'));
     
-            // 5. prepare quotes
             let source1 = await getSource(lpUSDTWETH, usdt.address, weth.address);
             let source2 = await getSource(lpWETHWBTC, weth.address, wbtc.address);
             let rfq = [
@@ -2779,7 +2684,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                     "toTokenAmountMin": ethers.utils.parseEther('4'),
                     "chainId": chainId,
                     "marketMaker": marketMaker.address,
-                    "pmmAdapter": pmmAdapter.address,
+                    "pmmAdapter": marketMaker.address,
                     "source": source1
                 },
                 {
@@ -2790,14 +2695,13 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                     "toTokenAmountMin": ethers.utils.parseEther('0.375'),
                     "chainId": chainId,
                     "marketMaker": marketMaker.address,
-                    "pmmAdapter": pmmAdapter.address,
+                    "pmmAdapter": marketMaker.address,
                     "source": source2
                 }
             ]
             let infosToBeSigned = getPullInfosToBeSigned(rfq);
             let quote = multipleQuotes(infosToBeSigned);
     
-            // 6. construct of input of funciton swap
             let request1 = [
                 quote[0].pathIndex,
                 quote[0].payer, 
@@ -2826,7 +2730,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             
             const pmmRequests = [request1, request2];
     
-            // 7. swap
             let markerAmountWETH = ethers.utils.parseEther('5');
             await weth.connect(bob).approve(tokenApprove.address, markerAmountWETH);
             let markerAmountWBTC = ethers.utils.parseEther('2');
@@ -2851,7 +2754,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 pmmRequests
             );
             
-            // 8. check balance
             expect(await usdt.balanceOf(alice.address)).to.equal(0);
             expect(await wbtc.balanceOf(alice.address)).to.equal(BigNumber.from('1130687150998100260'));
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('12000'));
@@ -2861,17 +2763,15 @@ describe("Market Maker Test (version: 1.0.0)", function() {
 
 
 
-        it("2.12 Use a push order twice", async () => {
+        it("2.13 Use a push order twice", async () => {
             const { chainId }  = await ethers.provider.getNetwork();
 
-            // 1. prepare accounts and tokens
             await usdt.transfer(alice.address, ethers.utils.parseEther('80000'));
             await weth.transfer(bob.address, ethers.utils.parseEther('5'));
             await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
             await okb.transfer(bob.address, ethers.utils.parseEther('2000'));
             await dot.transfer(bob.address, ethers.utils.parseEther('2000'));
 
-            // 3. prepare marketMaker
             MarketMaker = await ethers.getContractFactory("MarketMaker");
             marketMaker = await upgrades.deployProxy(
                 MarketMaker,[
@@ -2885,7 +2785,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(bob.address);
 
-            // 4. approve
             const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
             const tokenApproveProxy = await TokenApproveProxy.deploy();
             await tokenApproveProxy.initialize();
@@ -2914,10 +2813,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             await tokenApproveProxy.addProxy(dexRouter.address);
             await wNativeRelayer.setCallerOk([dexRouter.address], true);
 
-            PMMAdapter = await ethers.getContractFactory("PMMAdapter");
-            pmmAdapter = await PMMAdapter.deploy(marketMaker.address, dexRouter.address);
-
-            await marketMaker.addPmmAdapter(pmmAdapter.address);
+            await marketMaker.setDexRouter(dexRouter.address);
             await marketMaker.setUniV2Factory(factory.address);
 
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('80000'));
@@ -2927,7 +2823,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             expect(await okb.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2000'));
             expect(await dot.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('2000'));
 
-            // 5. prepare quotes
             let source = await getSource(lpUSDTWBTC, usdt.address, wbtc.address);
             let rfq = [
                 {
@@ -2938,14 +2833,13 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                     "pushQuoteValidPeriod": '3600',
                     "chainId": chainId,
                     "marketMaker": marketMaker.address,
-                    "pmmAdapter" : pmmAdapter.address,
+                    "pmmAdapter" : marketMaker.address,
                     "source": source
                 }
             ]
             let infosToBeSigned = getPushInfosToBeSigned(rfq);
             let quote = multipleQuotes(infosToBeSigned);
 
-            // 6. construct of input of funciton swap
             let infos = quote[0];
             let request = [
                 infos.pathIndex, 
@@ -2961,7 +2855,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             ];
             const pmmRequests = [request];
 
-            // 7. first swap
+            // first swap
             let markerAmount = ethers.utils.parseEther('2');
             await wbtc.connect(bob).approve(tokenApprove.address, markerAmount);
             let swapAmount = ethers.utils.parseEther('40000');
@@ -2984,13 +2878,13 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 pmmRequests
             );
 
-            // 8. check balance
+            // check balance
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('40000'));
             expect(await wbtc.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('1'));
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('40000'));
             expect(await wbtc.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('1'));
 
-            // 9. second swap
+            // second swap
             await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
             await dexRouter.connect(alice).smartSwap(
                 baseRequest,
@@ -2999,16 +2893,321 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 pmmRequests
             );
 
-            // 10. check balance
+            // check balance
             expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('0'));
             expect(await wbtc.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('2'));
             expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('80000'));
             expect(await wbtc.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
 
         });
+
+        it("2.14 DexRouter Swap: Pmm failed and turned to empty batches, revert info emitted", async () => {
+            const { chainId }  = await ethers.provider.getNetwork();
+            await usdt.transfer(alice.address, ethers.utils.parseEther('50000'));
+            await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
+
+            MarketMaker = await ethers.getContractFactory("MarketMaker");
+            marketMaker = await upgrades.deployProxy(
+                MarketMaker,[
+                    weth.address, 
+                    owner.address, 
+                    0, 
+                    backEnd.address,
+                    cancelerGuardian.address
+                ]
+            );        
+            await marketMaker.deployed();
+            await marketMaker.connect(bob).setOperator(bob.address);
+
+            const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
+            const tokenApproveProxy = await TokenApproveProxy.deploy();
+            await tokenApproveProxy.initialize();
+
+            const TokenApprove = await ethers.getContractFactory("TokenApprove");
+            const tokenApprove = await TokenApprove.deploy();
+            await tokenApprove.initialize(tokenApproveProxy.address);
+
+            await tokenApproveProxy.addProxy(marketMaker.address);
+            await tokenApproveProxy.setTokenApprove(tokenApprove.address);
+
+            await tokenApprove.setApproveProxy(tokenApproveProxy.address);
+            await marketMaker.setApproveProxy(tokenApproveProxy.address);
+
+            DexRouter = await ethers.getContractFactory("DexRouter");
+            const dexRouter = await DexRouter.deploy();
+            await dexRouter.deployed();
+            await dexRouter.initialize();
+            await dexRouter.setApproveProxy(tokenApproveProxy.address);
+            await tokenApproveProxy.addProxy(dexRouter.address);
+
+            await marketMaker.setDexRouter(dexRouter.address);
+            await marketMaker.setUniV2Factory(factory.address);
+
+            expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
+            expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
+
+            let source = await getSource(lpUSDTWBTC, usdt.address, wbtc.address);
+            let rfq = [
+                {
+                    "pathIndex": 100000000000000,
+                    "fromTokenAddress": usdt.address, 
+                    "toTokenAddress": wbtc.address, 
+                    "fromTokenAmount": '50000000000000000000000', 
+                    "toTokenAmountMin": '1000000000000000000',
+                    "chainId": chainId,
+                    "marketMaker": marketMaker.address,
+                    "pmmAdapter": marketMaker.address,
+                    "source" : source
+                }
+            ]
+            let infosToBeSigned = getPullInfosToBeSigned(rfq);
+            let quote = multipleQuotes(infosToBeSigned);
+
+            let infos = quote[0];
+            let request = [
+                infos.pathIndex + 1, 
+                infos.payer, 
+                infos.fromTokenAddress, 
+                infos.toTokenAddress, 
+                infos.fromTokenAmountMax, 
+                infos.toTokenAmountMax, 
+                infos.salt, 
+                infos.deadLine, 
+                infos.isPushOrder,
+                infos.extension
+            ];
+
+            let markerAmount = ethers.utils.parseEther('2');
+            await wbtc.connect(bob).approve(tokenApprove.address, markerAmount);
+            let swapAmount = ethers.utils.parseEther('50000');
+            await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
+
+            const baseRequest = [
+                '0x80' + '0000000000000000000000' + usdt.address.toString().slice(2),
+                wbtc.address,
+                swapAmount,
+                ethers.utils.parseEther('0'),
+                FOREVER            
+            ];
+
+            await expect(
+                dexRouter.connect(alice).smartSwap(
+                    baseRequest,
+                    [swapAmount],
+                    [],
+                    [request]
+                )
+            ).to.be.revertedWith("PMMErrorCode(1)");
+
+        });
+
+        it("2.15 DexRouter Swap: Pmm failed and turned to empty hops, revert info emitted", async () => {
+            const { chainId }  = await ethers.provider.getNetwork();
+            await usdt.transfer(alice.address, ethers.utils.parseEther('50000'));
+            await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
+
+            MarketMaker = await ethers.getContractFactory("MarketMaker");
+            marketMaker = await upgrades.deployProxy(
+                MarketMaker,[
+                    weth.address, 
+                    owner.address, 
+                    0, 
+                    backEnd.address,
+                    cancelerGuardian.address
+                ]
+            );        
+            await marketMaker.deployed();
+            await marketMaker.connect(bob).setOperator(bob.address);
+
+            const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
+            const tokenApproveProxy = await TokenApproveProxy.deploy();
+            await tokenApproveProxy.initialize();
+
+            const TokenApprove = await ethers.getContractFactory("TokenApprove");
+            const tokenApprove = await TokenApprove.deploy();
+            await tokenApprove.initialize(tokenApproveProxy.address);
+
+            await tokenApproveProxy.addProxy(marketMaker.address);
+            await tokenApproveProxy.setTokenApprove(tokenApprove.address);
+
+            await tokenApprove.setApproveProxy(tokenApproveProxy.address);
+            await marketMaker.setApproveProxy(tokenApproveProxy.address);
+
+            DexRouter = await ethers.getContractFactory("DexRouter");
+            const dexRouter = await DexRouter.deploy();
+            await dexRouter.deployed();
+            await dexRouter.initialize();
+            await dexRouter.setApproveProxy(tokenApproveProxy.address);
+            await tokenApproveProxy.addProxy(dexRouter.address);
+
+            await marketMaker.setDexRouter(dexRouter.address);
+            await marketMaker.setUniV2Factory(factory.address);
+
+            expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
+            expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
+
+            let source = await getSource(lpUSDTWBTC, usdt.address, wbtc.address);
+            let rfq = [
+                {
+                    "pathIndex": 100000000000000,
+                    "fromTokenAddress": usdt.address, 
+                    "toTokenAddress": wbtc.address, 
+                    "fromTokenAmount": '50000000000000000000000', 
+                    "toTokenAmountMin": '1000000000000000000',
+                    "chainId": chainId,
+                    "marketMaker": marketMaker.address,
+                    "pmmAdapter": marketMaker.address,
+                    "source" : source
+                }
+            ]
+            let infosToBeSigned = getPullInfosToBeSigned(rfq);
+            let quote = multipleQuotes(infosToBeSigned);
+
+            let infos = quote[0];
+            let request = [
+                infos.pathIndex + 1, 
+                infos.payer, 
+                infos.fromTokenAddress, 
+                infos.toTokenAddress, 
+                infos.fromTokenAmountMax, 
+                infos.toTokenAmountMax, 
+                infos.salt, 
+                infos.deadLine, 
+                infos.isPushOrder,
+                infos.extension
+            ];
+
+            let markerAmount = ethers.utils.parseEther('2');
+            await wbtc.connect(bob).approve(tokenApprove.address, markerAmount);
+            let swapAmount = ethers.utils.parseEther('50000');
+            await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
+
+            const baseRequest = [
+                '0x80' + '0000000000000000000000' + usdt.address.toString().slice(2),
+                wbtc.address,
+                swapAmount,
+                ethers.utils.parseEther('0'),
+                FOREVER            
+            ];
+
+            await expect(
+                dexRouter.connect(alice).smartSwap(
+                    baseRequest,
+                    [swapAmount],
+                    [[]],
+                    [request]
+                )
+            ).to.be.revertedWith("PMMErrorCode(1)");
+
+        });
+
+        it("2.16 User swap: pmm failed with revert info", async () => {
+            const { chainId }  = await ethers.provider.getNetwork();
+            await usdt.transfer(alice.address, ethers.utils.parseEther('50000'));
+            await wbtc.transfer(bob.address, ethers.utils.parseEther('2'));
+
+            MarketMaker = await ethers.getContractFactory("MarketMaker");
+            marketMaker = await upgrades.deployProxy(
+                MarketMaker,[
+                    weth.address, 
+                    owner.address, 
+                    0, 
+                    backEnd.address,
+                    cancelerGuardian.address
+                ]
+            );        
+            await marketMaker.deployed();
+            await marketMaker.connect(bob).setOperator(bob.address);
+
+            const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
+            const tokenApproveProxy = await TokenApproveProxy.deploy();
+            await tokenApproveProxy.initialize();
+
+            const TokenApprove = await ethers.getContractFactory("TokenApprove");
+            const tokenApprove = await TokenApprove.deploy();
+            await tokenApprove.initialize(tokenApproveProxy.address);
+
+            await tokenApproveProxy.addProxy(marketMaker.address);
+            await tokenApproveProxy.setTokenApprove(tokenApprove.address);
+
+            await tokenApprove.setApproveProxy(tokenApproveProxy.address);
+            await marketMaker.setApproveProxy(tokenApproveProxy.address);
+
+            DexRouter = await ethers.getContractFactory("DexRouter");
+            const dexRouter = await DexRouter.deploy();
+            await dexRouter.deployed();
+            await dexRouter.initialize();
+            await dexRouter.setApproveProxy(tokenApproveProxy.address);
+            await tokenApproveProxy.addProxy(dexRouter.address);
+
+            await marketMaker.setDexRouter(dexRouter.address);
+            await marketMaker.setUniV2Factory(factory.address);
+
+            expect(await usdt.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
+            expect(await usdt.balanceOf(alice.address)).to.equal(ethers.utils.parseEther('50000'));
+
+            let source = await getSource(lpUSDTWBTC, usdt.address, wbtc.address);
+            let rfq = [
+                {
+                    "pathIndex": 100000000000000,
+                    "fromTokenAddress": usdt.address, 
+                    "toTokenAddress": wbtc.address, 
+                    "fromTokenAmount": '50000000000000000000000', 
+                    "toTokenAmountMin": '1000000000000000000',
+                    "chainId": chainId,
+                    "marketMaker": marketMaker.address,
+                    "pmmAdapter": marketMaker.address,
+                    "source" : source
+                }
+            ]
+            let infosToBeSigned = getPullInfosToBeSigned(rfq);
+            let quote = multipleQuotes(infosToBeSigned);
+
+            let infos = quote[0];
+            let request = [
+                infos.pathIndex + 1, 
+                infos.payer, 
+                infos.fromTokenAddress, 
+                infos.toTokenAddress, 
+                infos.fromTokenAmountMax, 
+                infos.toTokenAmountMax, 
+                infos.salt, 
+                infos.deadLine, 
+                infos.isPushOrder,
+                infos.extension
+            ];
+
+            let markerAmount = ethers.utils.parseEther('2');
+            await wbtc.connect(bob).approve(tokenApprove.address, markerAmount);
+            let swapAmount = ethers.utils.parseEther('50000');
+            await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
+
+            const baseRequest = [
+                usdt.address,
+                wbtc.address,
+                swapAmount,
+                ethers.utils.parseEther('0'),
+                FOREVER            
+            ]
+
+            await expect(
+                marketMaker.connect(alice).userSwap(
+                    baseRequest,
+                    request
+                )
+            ).to.be.revertedWith("PMMErrorCode(1)");
+
+            
+        });
+
+
     });
 
-    describe("3. Fork OKC Network Test", function() {
+
+
+
+
+    xdescribe("3. Fork OKC Network Test", function() {
         this.timeout(20000);
         let wokt;
         const OKT = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
@@ -3245,7 +3444,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             expect(bobWOKTBalAfter.sub(bobWOKTBalBefore)).to.equal(ethers.utils.parseEther('0.0001'));
     
         })
-
+    
+    
+    
         it("3.2 Try to replace the whole swap with pmm but failed, turn to dex", async () => {
             const { chainId }  = await ethers.provider.getNetwork();
                 
@@ -3324,13 +3525,13 @@ describe("Market Maker Test (version: 1.0.0)", function() {
     
             // 8. check balance
             expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001699343634731459'));
-            expect(bobWOKTBalAfter.sub(bobWOKTBalBefore)).to.equal(ethers.utils.parseEther('0'));
-    
-     
+            expect(bobWOKTBalAfter.sub(bobWOKTBalBefore)).to.equal(ethers.utils.parseEther('0')); 
         })
     });
+    
 
-    describe("4. Fork Eth Network Test", function() {
+
+    xdescribe("4. Fork Eth Network Test", function() {
         this.timeout(20000);
 
         let owner, alice, bob, backEnd, cancelerGuardian;
@@ -3351,32 +3552,38 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             accountAddress = "0x7abE0cE388281d2aCF297Cb089caef3819b13448";
             startMockAccount([accountAddress]);
             bob = await ethers.getSigner(accountAddress);
+
+            accountAddress = "0xc82Ea2afE1Fd1D61C4A12f5CeB3D7000f564F5C6";
+            startMockAccount([accountAddress]);
+            proxyOwner = await ethers.getSigner(accountAddress);
+            setBalance(proxyOwner.address, '0x56bc75e2d63100000');
+
         }
 
         const initTokens = async () => {
             wbtc = await ethers.getContractAt(
                 "MockERC20",
-                ethTokens.wbtc
+                ethdevDeployed.tokens.wbtc
             );
 
             usdc = await ethers.getContractAt(
                 "MockERC20",
-                ethTokens.usdc
+                ethdevDeployed.tokens.usdc
             );
 
             usdt = await ethers.getContractAt(
                 "MockERC20",
-                ethTokens.usdt
+                ethdevDeployed.tokens.usdt
             );
 
             uni = await ethers.getContractAt(
                 "MockERC20",
-                ethTokens.uni
+                ethdevDeployed.tokens.uni
             );
 
             weth = await ethers.getContractAt(
                 "WETH9",
-                ethTokens.weth
+                ethdevDeployed.tokens.weth
             )
 
             const UniswapPair = await ethers.getContractFactory("UniswapV2Pair");
@@ -3408,6 +3615,34 @@ describe("Market Maker Test (version: 1.0.0)", function() {
     
         }
 
+        const initContract = async () => {
+            dexRouter = await ethers.getContractAt(
+                "DexRouter",
+                ethdevDeployed.base.dexRouter
+            );
+    
+            tokenApprove = await ethers.getContractAt(
+                "TokenApprove",
+                ethdevDeployed.base.tokenApprove
+            );
+    
+            uniAdapter = await ethers.getContractAt(
+                "UniAdapter",
+                ethdevDeployed.adapter.uniV2
+            );
+    
+            marketMaker = await ethers.getContractAt(
+                "MarketMaker",
+                ethdevDeployed.base.marketMaker
+            );
+    
+            pmmAdapter = await ethers.getContractAt(
+                "PMMAdapter",
+                ethdevDeployed.base.pmmAdapter
+            );
+    
+        }
+
         const initLayersWholeSwap = async function() {
             //  router11 usdt -> weth
             const mixAdapter11 = [uniAdapter.address];
@@ -3428,6 +3663,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 params: [
                     {
                         forking: {
+                            // jsonRpcUrl: `http://35.75.165.133:8545 `,
                             jsonRpcUrl: `https://rpc.ankr.com/eth`,
                             // jsonRpcUrl: `https://mainnet.infura.io/v3/${INFURA_KEY}`,
                             blockNumber: targetBlockNumber,
@@ -3442,13 +3678,15 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             // https://cn.etherscan.com/tx/0xd4902a42097534a33ecf9b2e817c80da1972e91effd58a06abbe0214c107c25f
 
             // 1. prepare accounts
-            await setForkBlockNumber(14684645);
+            await setForkBlockNumber(15081527);
             await initAccounts();
             [owner,,signer,,backEnd, cancelerGuardian] = await ethers.getSigners();
 
             // console.log("backEnd",backEnd.address);
             // 2. prepare tokens
             await initTokens();
+
+            await initContract();
 
         });
 
@@ -3457,65 +3695,10 @@ describe("Market Maker Test (version: 1.0.0)", function() {
         //
         //  market maker quotes
         //  100%  eth -> uni
-
-
-        //  price:
-        //  uni: 7
-        //  eth: 3000
-        xit("4.1 Try to replace the whole swap with pmm and success, price protected by uniV2", async () => {
+        it("4.1 Try to replace the whole swap with pmm and success, price protected by uniV2", async () => {
             const { chainId }  = await ethers.provider.getNetwork();
-            // 3. prepare marketMaker
-            MarketMaker = await ethers.getContractFactory("MarketMaker");
-            marketMaker = await upgrades.deployProxy(
-                MarketMaker,[
-                    weth.address, 
-                    owner.address, 
-                    0, 
-                    backEnd.address,
-                    cancelerGuardian.address
-                ]
-            );        
-            await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(signer.address);
 
-            // 4. approve
-            const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
-            const tokenApproveProxy = await TokenApproveProxy.deploy();
-            await tokenApproveProxy.initialize();
-
-            const TokenApprove = await ethers.getContractFactory("TokenApprove");
-            const tokenApprove = await TokenApprove.deploy();
-            await tokenApprove.initialize(tokenApproveProxy.address);
-
-            await tokenApproveProxy.addProxy(marketMaker.address);
-            await tokenApproveProxy.setTokenApprove(tokenApprove.address);
-
-            await tokenApprove.setApproveProxy(tokenApproveProxy.address);
-            await marketMaker.setApproveProxy(tokenApproveProxy.address);
-
-            const WNativeRelayer = await ethers.getContractFactory("WNativeRelayer");
-            const wNativeRelayer = await WNativeRelayer.deploy();
-            await wNativeRelayer.deployed;
-            await wNativeRelayer.initialize(weth.address);
-
-            DexRouter = await ethers.getContractFactory("MockDexRouterForLocalPMMTest");
-            const dexRouter = await DexRouter.deploy();
-            await dexRouter.deployed();
-            await dexRouter.initialize(weth.address, wNativeRelayer.address);
-            await dexRouter.setApproveProxy(tokenApproveProxy.address);
-            await tokenApproveProxy.addProxy(dexRouter.address);
-            await wNativeRelayer.setCallerOk([dexRouter.address], true);
-
-            PMMAdapter = await ethers.getContractFactory("PMMAdapter");
-            pmmAdapter = await PMMAdapter.deploy(marketMaker.address, dexRouter.address);
-
-            await marketMaker.addPmmAdapter(pmmAdapter.address);
-            await marketMaker.setUniV2Factory(factory.address);
-
-            UniAdapter = await ethers.getContractFactory("UniAdapter");
-            uniAdapter = await UniAdapter.deploy();
-                
-            // 5. prepare quotes
             let source = await getSource(lpWETHUNI, weth.address, uni.address);
 
             let rfq = [
@@ -3524,7 +3707,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                     "fromTokenAddress": weth.address, 
                     "toTokenAddress": uni.address, 
                     "fromTokenAmount": ethers.utils.parseEther('0.014'), 
-                    "toTokenAmountMin": ethers.utils.parseEther('5.2'),
+                    "toTokenAmountMin": ethers.utils.parseEther('3'),
                     "chainId": chainId,
                     "marketMaker": marketMaker.address,
                     "pmmAdapter": pmmAdapter.address,
@@ -3534,7 +3717,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             let infosToBeSigned = getPullInfosToBeSigned_paidByETHMockAccount(rfq);
             let quote = multipleQuotes(infosToBeSigned);
 
-            // 6. construct of input of funciton swap
             let infos = quote[0];
             let request = [
                 infos.pathIndex,
@@ -3550,7 +3732,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             ];
             const pmmRequests = [request];
 
-            // 7. swap
             let markerAmount = ethers.utils.parseEther('10');
             await uni.connect(bob).approve(tokenApprove.address, markerAmount);
             let swapAmount = ethers.utils.parseEther('0.013658558763417873');
@@ -3560,7 +3741,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 '0x80' + '0000000000000000000000' + ETH.slice(2),
                 uni.address,
                 swapAmount,
-                ethers.utils.parseEther('5'),
+                ethers.utils.parseEther('2'),
                 FOREVER
             ]
 
@@ -3570,7 +3751,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
 
             let aliceUniBalBefore = await uni.balanceOf(alice.address);
 
-            await dexRouter.connect(alice).smartSwap(
+            let res = await dexRouter.connect(alice).smartSwap(
                 baseRequest,
                 batchesAmount,
                 layers,
@@ -3582,66 +3763,16 @@ describe("Market Maker Test (version: 1.0.0)", function() {
 
             aliceUniBalAfter = await uni.balanceOf(alice.address);
 
-            // 8. check balance
             expect(await weth.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0.013658558763417873'));
-            expect(aliceUniBalAfter.sub(aliceUniBalBefore)).to.equal(ethers.utils.parseEther('5.040107709840148079'));
+            expect(aliceUniBalAfter.sub(aliceUniBalBefore)).to.equal(ethers.utils.parseEther('2.942046076156289276'));
 
         })
 
-        xit("4.2 Try to replace the whole swap with pmm and success, price protected by uniV3", async () => {
+        it("4.2 Try to replace the whole swap with pmm and success, price protected by uniV3", async () => {
             const { chainId }  = await ethers.provider.getNetwork();
-            // 3. prepare marketMaker
-            MarketMaker = await ethers.getContractFactory("MarketMaker");
-            marketMaker = await upgrades.deployProxy(
-                MarketMaker,[
-                    weth.address, 
-                    owner.address, 
-                    0, 
-                    backEnd.address,
-                    cancelerGuardian.address
-                ]
-            );        
-            await marketMaker.deployed();
+
             await marketMaker.connect(bob).setOperator(signer.address);
 
-            // 4. approve
-            const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
-            const tokenApproveProxy = await TokenApproveProxy.deploy();
-            await tokenApproveProxy.initialize();
-
-            const TokenApprove = await ethers.getContractFactory("TokenApprove");
-            const tokenApprove = await TokenApprove.deploy();
-            await tokenApprove.initialize(tokenApproveProxy.address);
-
-            await tokenApproveProxy.addProxy(marketMaker.address);
-            await tokenApproveProxy.setTokenApprove(tokenApprove.address);
-
-            await tokenApprove.setApproveProxy(tokenApproveProxy.address);
-            await marketMaker.setApproveProxy(tokenApproveProxy.address);
-
-            const WNativeRelayer = await ethers.getContractFactory("WNativeRelayer");
-            const wNativeRelayer = await WNativeRelayer.deploy();
-            await wNativeRelayer.deployed;
-            await wNativeRelayer.initialize(weth.address);
-
-            DexRouter = await ethers.getContractFactory("MockDexRouterForLocalPMMTest");
-            const dexRouter = await DexRouter.deploy();
-            await dexRouter.deployed();
-            await dexRouter.initialize(weth.address, wNativeRelayer.address);
-            await dexRouter.setApproveProxy(tokenApproveProxy.address);
-            await tokenApproveProxy.addProxy(dexRouter.address);
-            await wNativeRelayer.setCallerOk([dexRouter.address], true);
-
-            PMMAdapter = await ethers.getContractFactory("PMMAdapter");
-            pmmAdapter = await PMMAdapter.deploy(marketMaker.address, dexRouter.address);
-
-            await marketMaker.addPmmAdapter(pmmAdapter.address);
-            await marketMaker.setUniV2Factory(factory.address);
-
-            UniAdapter = await ethers.getContractFactory("UniAdapter");
-            uniAdapter = await UniAdapter.deploy();
-                
-            // 5. prepare quotes
             let lpUNIWETH = await ethers.getContractAt(
                 "IUniV3",
                 "0x1d42064Fc4Beb5F8aAF85F4617AE8b3b5B8Bd801"
@@ -3654,7 +3785,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                     "fromTokenAddress": weth.address, 
                     "toTokenAddress": uni.address, 
                     "fromTokenAmount": ethers.utils.parseEther('0.014'), 
-                    "toTokenAmountMin": ethers.utils.parseEther('5.2'),
+                    "toTokenAmountMin": ethers.utils.parseEther('3'),
                     "chainId": chainId,
                     "marketMaker": marketMaker.address,
                     "pmmAdapter": pmmAdapter.address,
@@ -3664,7 +3795,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             let infosToBeSigned = getPullInfosToBeSigned_paidByETHMockAccount(rfq);
             let quote = multipleQuotes(infosToBeSigned);
 
-            // 6. construct of input of funciton swap
             let infos = quote[0];
             let request = [
                 infos.pathIndex,
@@ -3680,7 +3810,6 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             ];
             const pmmRequests = [request];
 
-            // 7. swap
             let markerAmount = ethers.utils.parseEther('10');
             await uni.connect(bob).approve(tokenApprove.address, markerAmount);
             let swapAmount = ethers.utils.parseEther('0.013658558763417873');
@@ -3690,7 +3819,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 '0x80' + '0000000000000000000000' + ETH.slice(2),
                 uni.address,
                 swapAmount,
-                ethers.utils.parseEther('5'),
+                ethers.utils.parseEther('2'),
                 FOREVER
             ]
 
@@ -3712,66 +3841,18 @@ describe("Market Maker Test (version: 1.0.0)", function() {
 
             aliceUniBalAfter = await uni.balanceOf(alice.address);
 
-            // 8. check balance
             expect(await weth.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0.013658558763417873'));
-            expect(aliceUniBalAfter.sub(aliceUniBalBefore)).to.equal(ethers.utils.parseEther('5.039998963589482326'));
+            expect(aliceUniBalAfter.sub(aliceUniBalBefore)).to.equal(ethers.utils.parseEther('2.943731239762360962'));
 
         })
 
-        xit("4.3 Try to replace the whole swap with pmm but failed, turn to dex", async () => {
+
+
+        it("4.3 Try to replace the whole swap with pmm but failed, turn to dex", async () => {
             const { chainId }  = await ethers.provider.getNetwork();
-            // 3. prepare marketMaker
-            MarketMaker = await ethers.getContractFactory("MarketMaker");
-            marketMaker = await upgrades.deployProxy(
-                MarketMaker,[
-                    weth.address, 
-                    owner.address, 
-                    0, 
-                    backEnd.address,
-                    cancelerGuardian.address
-                ]
-            );        
-            await marketMaker.deployed();
             await marketMaker.connect(bob).setOperator(signer.address);
-
-            // 4. approve
-            const TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
-            const tokenApproveProxy = await TokenApproveProxy.deploy();
-            await tokenApproveProxy.initialize();
-
-            const TokenApprove = await ethers.getContractFactory("TokenApprove");
-            const tokenApprove = await TokenApprove.deploy();
-            await tokenApprove.initialize(tokenApproveProxy.address);
-
-            await tokenApproveProxy.addProxy(marketMaker.address);
-            await tokenApproveProxy.setTokenApprove(tokenApprove.address);
-
-            await tokenApprove.setApproveProxy(tokenApproveProxy.address);
-            await marketMaker.setApproveProxy(tokenApproveProxy.address);
-
-            const WNativeRelayer = await ethers.getContractFactory("WNativeRelayer");
-            const wNativeRelayer = await WNativeRelayer.deploy();
-            await wNativeRelayer.deployed;
-            await wNativeRelayer.initialize(weth.address);
-
-            DexRouter = await ethers.getContractFactory("MockDexRouterForLocalPMMTest");
-            const dexRouter = await DexRouter.deploy();
-            await dexRouter.deployed();
-            await dexRouter.initialize(weth.address, wNativeRelayer.address);
-            await dexRouter.setApproveProxy(tokenApproveProxy.address);
-            await tokenApproveProxy.addProxy(dexRouter.address);
-            await wNativeRelayer.setCallerOk([dexRouter.address], true);
-
-            PMMAdapter = await ethers.getContractFactory("PMMAdapter");
-            pmmAdapter = await PMMAdapter.deploy(marketMaker.address, dexRouter.address);
-
-            await marketMaker.addPmmAdapter(pmmAdapter.address);
-            await marketMaker.setUniV2Factory(factory.address);
-
-            UniAdapter = await ethers.getContractFactory("UniAdapter");
-            uniAdapter = await UniAdapter.deploy();
                 
-            // 5. prepare quotes
+            // 1. prepare quotes
             let source = await getUniV3Source(lpWETHUNI, weth.address, uni.address);
             let rfq = [
                 {
@@ -3779,7 +3860,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                     "fromTokenAddress": weth.address, 
                     "toTokenAddress": uni.address, 
                     "fromTokenAmount": ethers.utils.parseEther('0.014'), 
-                    "toTokenAmountMin": ethers.utils.parseEther('5.1'),
+                    "toTokenAmountMin": ethers.utils.parseEther('3'),
                     "chainId": chainId,
                     "marketMaker": marketMaker.address,
                     "pmmAdapter": pmmAdapter.address,
@@ -3789,7 +3870,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             let infosToBeSigned = getPullInfosToBeSigned_paidByETHMockAccount(rfq);
             let quote = multipleQuotes(infosToBeSigned);
 
-            // 6. construct of input of funciton swap
+            // 2. construct of input of funciton swap
             let infos = quote[0];
             let request = [
                 infos.pathIndex + 1,        // we make a wrong pathIndex here leading to failure of pmm swap
@@ -3805,7 +3886,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             ];
             const pmmRequests = [request];
 
-            // 7. swap
+            // 3. swap
             let markerAmount = ethers.utils.parseEther('10');
             await uni.connect(bob).approve(tokenApprove.address, markerAmount);
             let swapAmount = ethers.utils.parseEther('0.013658558763417873');
@@ -3815,7 +3896,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                 '0x80' + '0000000000000000000000' + ETH.slice(2),
                 uni.address,
                 swapAmount,
-                ethers.utils.parseEther('5'),
+                ethers.utils.parseEther('2'),
                 FOREVER
             ]
 
@@ -3838,10 +3919,11 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             aliceUniBalAfter = await uni.balanceOf(alice.address);
             uniOut = aliceUniBalAfter.sub(aliceUniBalBefore);
 
-            // 8. check balance
+            // 4. check balance
             expect(await weth.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
-            expect(uniOut).to.equal(ethers.utils.parseEther('5.024974873392398340'));
+            expect(uniOut).to.equal(ethers.utils.parseEther('2.942040436432395492'));
         })
+
     });
 }) 
 

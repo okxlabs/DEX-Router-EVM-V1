@@ -406,7 +406,7 @@ describe("Unoswap swap test", function() {
     expect(await usdt.balanceOf(xBridge.address)).to.be.equal("298802094311970964947");
   });
 
-  it("unxswapByVault source token WETH to usdt", async () => {
+  it("claim unxswapByXBridge source token WETH to usdt", async () => {
     const token0 = await lpWETHUSDT.token0();
     reserves = await lpWETHUSDT.getReserves();
     if (token0 == weth.address) {
@@ -426,7 +426,7 @@ describe("Unoswap swap test", function() {
     poolFee = Number(997000000).toString(16).replace('0x', '');
     pool0 = flag + '000000000000000' + poolFee + poolAddr;
 
-    let encodeABI = dexRouter.interface.encodeFunctionData('unxswapByVault', [sourceToken.address, fromTokenAmount, 0, [pool0]]);
+    let encodeABI = dexRouter.interface.encodeFunctionData('unxswapByXBridge', [sourceToken.address, fromTokenAmount, 0, [pool0]]);
     let xBridge = await initMockXBridge();
     let beforeBalance = await usdt.balanceOf(bob.address);
     let request = {
@@ -451,7 +451,7 @@ describe("Unoswap swap test", function() {
     expect(await usdt.balanceOf(bob.address)).to.be.equal(beforeBalance.add("298802094311970964947"));
   });
 
-  it("unxswapByVault source token ETH to usdt", async () => {
+  it("claim unxswapByXBridge source token ETH to usdt", async () => {
       const token0 = await lpWETHUSDT.token0();
       const reserves = await lpWETHUSDT.getReserves();
       if (token0 == weth.address) {
@@ -471,7 +471,7 @@ describe("Unoswap swap test", function() {
       poolFee = Number(997000000).toString(16).replace('0x', '');
       pool0 = flag + '000000000000000' + poolFee + poolAddr;
 
-      let encodeABI = dexRouter.interface.encodeFunctionData('unxswapByVault', ['0x0000000000000000000000000000000000000000', fromTokenAmount, 0, [pool0]]);
+      let encodeABI = dexRouter.interface.encodeFunctionData('unxswapByXBridge', ['0x0000000000000000000000000000000000000000', fromTokenAmount, 0, [pool0]]);
       let xBridge = await initMockXBridge();
       const beforeBalance = await usdt.balanceOf(owner.address);
       let request = {

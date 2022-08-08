@@ -13,20 +13,24 @@ import "../interfaces/IApproveProxy.sol";
 /// @title XBridge
 /// @notice Entrance for Bridge
 /// @dev Entrance for Bridge
-contract MockXBridge is PausableUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
+contract MockXBridge is
+    PausableUpgradeable,
+    OwnableUpgradeable,
+    ReentrancyGuardUpgradeable
+{
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     struct SwapAndBridgeRequest {
         address fromToken; // the source token
-        address toToken;  // the token to be bridged
+        address toToken; // the token to be bridged
         address to; // the address to be bridged to
         uint256 adaptorId;
         uint256 toChainId;
         uint256 fromTokenAmount; // the source token amount
         uint256 toTokenMinAmount;
         uint256 toChainToTokenMinAmount;
-        bytes   data;
-        bytes   dexData;  // the call data for dexRouter
+        bytes data;
+        bytes dexData; // the call data for dexRouter
     }
 
     struct SwapRequest {
@@ -37,11 +41,12 @@ contract MockXBridge is PausableUpgradeable, OwnableUpgradeable, ReentrancyGuard
         uint256 gasFeeAmount; // tx gas fee slash from fromToken
         uint256 srcChainId;
         bytes32 srcTxHash;
-        bytes   dexData;
-        bytes   extData;
+        bytes dexData;
+        bytes extData;
     }
 
-    address public constant NATIVE_TOKEN = address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+    address public constant NATIVE_TOKEN =
+        address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
     //-------------------------------
     //------- storage ---------------
@@ -73,6 +78,7 @@ contract MockXBridge is PausableUpgradeable, OwnableUpgradeable, ReentrancyGuard
         __Ownable_init();
         admin = msg.sender;
     }
+
     //-------------------------------
     //------- Events ----------------
     //-------------------------------
@@ -117,15 +123,29 @@ contract MockXBridge is PausableUpgradeable, OwnableUpgradeable, ReentrancyGuard
         IApproveProxy(approveProxy).claimTokens(token, from, to, amount);
     }
 
-    function _getBalanceOf(address token) internal view returns(uint256) {
-        return token == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) ? address(this).balance : IERC20Upgradeable(token).balanceOf(address(this));
+    function _getBalanceOf(address token) internal view returns (uint256) {
+        return
+            token == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
+                ? address(this).balance
+                : IERC20Upgradeable(token).balanceOf(address(this));
     }
 
-    function _getBalanceOf(address token, address who) internal view returns(uint256) {
-        return token == NATIVE_TOKEN ? who.balance : IERC20Upgradeable(token).balanceOf(who);
+    function _getBalanceOf(address token, address who)
+        internal
+        view
+        returns (uint256)
+    {
+        return
+            token == NATIVE_TOKEN
+                ? who.balance
+                : IERC20Upgradeable(token).balanceOf(who);
     }
 
-    function _approve(address token, address spender, uint256 amount) internal {
+    function _approve(
+        address token,
+        address spender,
+        uint256 amount
+    ) internal {
         if (IERC20Upgradeable(token).allowance(address(this), spender) == 0) {
             IERC20Upgradeable(token).safeApprove(spender, amount);
         } else {
@@ -134,7 +154,11 @@ contract MockXBridge is PausableUpgradeable, OwnableUpgradeable, ReentrancyGuard
         }
     }
 
-    function _transferToken(address to, address token, uint256 amount) internal {
+    function _transferToken(
+        address to,
+        address token,
+        uint256 amount
+    ) internal {
         if (amount > 0) {
             if (token == NATIVE_TOKEN) {
                 payable(to).transfer(amount);
@@ -161,7 +185,7 @@ contract MockXBridge is PausableUpgradeable, OwnableUpgradeable, ReentrancyGuard
         if (_request.fromToken == NATIVE_TOKEN) {
             require(msg.value == _request.fromTokenAmount, "invalid amount");
             fromTokenBalance = fromTokenBalance - msg.value;
-            (success, ) = dexRouter.call{value : msg.value}(_request.dexData);
+            (success, ) = dexRouter.call{value: msg.value}(_request.dexData);
         } else {
             require(msg.value == 0, "invalid msg value");
             (success, ) = dexRouter.call(_request.dexData);
@@ -202,32 +226,78 @@ contract MockXBridge is PausableUpgradeable, OwnableUpgradeable, ReentrancyGuard
         _transferToken(feeTo, _request.fromToken, _request.gasFeeAmount);
 
         // 2. swap or transfer token to user
-        if (_request.dexData.length > 0) { // swap
+        if (_request.dexData.length > 0) {
+            // swap
             payer = address(this);
             receiver = _request.to;
-            uint256 toTokenReceiverBalance = _getBalanceOf(_request.toToken, receiver);
+            uint256 toTokenReceiverBalance = _getBalanceOf(
+                _request.toToken,
+                receiver
+            );
             if (_request.fromToken == NATIVE_TOKEN) {
-                (success, result) = dexRouter.call{value : _request.amount}(_request.dexData);
+                (success, result) = dexRouter.call{value: _request.amount}(
+                    _request.dexData
+                );
             } else {
-                _approve(_request.fromToken, IApproveProxy(approveProxy).tokenApprove(), _request.amount);
+                _approve(
+                    _request.fromToken,
+                    IApproveProxy(approveProxy).tokenApprove(),
+                    _request.amount
+                );
                 (success, result) = dexRouter.call(_request.dexData);
             }
-            toTokenReceiverBalance = _getBalanceOf(_request.toToken, receiver) - toTokenReceiverBalance;
+            toTokenReceiverBalance =
+                _getBalanceOf(_request.toToken, receiver) -
+                toTokenReceiverBalance;
             delete payer; // payer = 0;
             delete receiver; // receiver = 0;
-            if (!success) { // transfer fromToken if swap failed
-                _transferToken(_request.to, _request.fromToken, _request.amount);
-                emit Claimed(_request.to, _request.fromToken, _request.toToken, _request.amount, 0, _request.gasFeeAmount, ext);
+            if (!success) {
+                // transfer fromToken if swap failed
+                _transferToken(
+                    _request.to,
+                    _request.fromToken,
+                    _request.amount
+                );
+                emit Claimed(
+                    _request.to,
+                    _request.fromToken,
+                    _request.toToken,
+                    _request.amount,
+                    0,
+                    _request.gasFeeAmount,
+                    ext
+                );
             } else {
-                emit Claimed(_request.to, _request.fromToken, _request.toToken, 0, toTokenReceiverBalance, _request.gasFeeAmount, ext);
+                emit Claimed(
+                    _request.to,
+                    _request.fromToken,
+                    _request.toToken,
+                    0,
+                    toTokenReceiverBalance,
+                    _request.gasFeeAmount,
+                    ext
+                );
             }
-        } else { // transfer token
+        } else {
+            // transfer token
             _transferToken(_request.to, _request.fromToken, _request.amount);
-            emit Claimed(_request.to, _request.fromToken, _request.toToken, _request.amount, 0, _request.gasFeeAmount, ext);
+            emit Claimed(
+                _request.to,
+                _request.fromToken,
+                _request.toToken,
+                _request.amount,
+                0,
+                _request.gasFeeAmount,
+                ext
+            );
         }
 
         // 3. check balance
-        require(fromTokenOriginBalance - _getBalanceOf(_request.fromToken) <= fromTokenNeed, "slash much too money");
+        require(
+            fromTokenOriginBalance - _getBalanceOf(_request.fromToken) <=
+                fromTokenNeed,
+            "slash much too money"
+        );
     }
 
     //-------------------------------
@@ -272,7 +342,7 @@ contract MockXBridge is PausableUpgradeable, OwnableUpgradeable, ReentrancyGuard
         _swapAndBridgeToInternal(_request);
     }
 
-    function payerReceiver() external view returns(address, address) {
+    function payerReceiver() external view returns (address, address) {
         return (payer, receiver);
     }
 

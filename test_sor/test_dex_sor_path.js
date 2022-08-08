@@ -752,7 +752,7 @@ describe("Smart route path test", function() {
     expect(await ethers.provider.getBalance(xBridge.address)).to.be.eq(receiveAmount);
   });
 
-  it("smartSwapByVault ETH to WBTC", async () => {
+  it("claim smartSwapByXBridge ETH to WBTC", async () => {
       expect(await dexRouter._WETH()).to.be.equal(weth.address);
       // ETH -> WBTC
       ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
@@ -787,7 +787,7 @@ describe("Smart route path test", function() {
         deadLine,
       ]
       // selector 0xe051c6e8
-      let encodeABI = dexRouter.interface.encodeFunctionData('smartSwapByVault', [baseRequest, [fromTokenAmount], [layer1], []]);
+      let encodeABI = dexRouter.interface.encodeFunctionData('smartSwapByXBridge', [baseRequest, [fromTokenAmount], [layer1], []]);
       let xBridge = await initMockXBridge();
       const beforeToTokenBalance = await toToken.balanceOf(bob.address);
       expect(await wbtc.balanceOf(xBridge.address)).to.be.equal(0);
@@ -814,7 +814,7 @@ describe("Smart route path test", function() {
       expect(await toToken.balanceOf(bob.address)).to.be.eq(receive);
     });
 
-  it("smartSwapByXVault WBTC to ETH", async () => {
+  it("claim smartSwapByXBridge WBTC to ETH", async () => {
     await dexRouter.setWNativeRelayer(wNativeRelayer.address);
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
 
@@ -854,7 +854,7 @@ describe("Smart route path test", function() {
     ]
 
     //encodeFunctionData
-    let encodeABI = dexRouter.interface.encodeFunctionData('smartSwapByVault', [baseRequest, [fromTokenAmount], [layer1], []]);
+    let encodeABI = dexRouter.interface.encodeFunctionData('smartSwapByXBridge', [baseRequest, [fromTokenAmount], [layer1], []]);
 
     let xBridge = await initMockXBridge();
     expect(await wbtc.balanceOf(xBridge.address)).to.be.equal(0);
