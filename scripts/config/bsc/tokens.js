@@ -8,11 +8,19 @@ const DOT = {
   decimals: 6,
   baseTokenAddress: '0x7083609fce4d1d8dc0c979aab8c869ea2c873402',
 }
+
+const DAI = {
+  name: "DAI",
+  decimals: 18,
+  baseTokenAddress: '0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3',
+}
+
 const USDC = {
   name: "USDC",
   decimals: 6,
-  baseTokenAddress: '0x64715Ed6c2B49dfcc823bC0D1af39A9731C56F83',
+  baseTokenAddress: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
 }
+
 const USDT = {
   name: "USDT",
   decimals: 6,
@@ -44,6 +52,12 @@ const BUSD = {
   baseTokenAddress: '0xe9e7cea3dedca5984780bafc599bd69add087d56',
 }
 
+const BNB = {
+  name: "BNB",
+  decimals: 18,
+  baseTokenAddress: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+}
+
 module.exports = {
   BTCB,
   DOT,
@@ -53,5 +67,7 @@ module.exports = {
   WBTC,
   WETH,
   CAKE,
-  BUSD
+  BUSD,
+  BNB,
+  DAI
 }
