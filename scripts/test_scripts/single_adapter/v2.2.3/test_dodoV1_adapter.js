@@ -77,6 +77,7 @@ async function sellQuoteTesting (DODOV1Adapter) {
     console.log("Before USDC Balance: ", usdcBalance.toString());
 
     await USDC.connect(signer).transfer(DODOV1Adapter.address, ethers.utils.parseUnits("300", tokenConfig.tokens.USDC.decimals));
+
     rxResult = await DODOV1Adapter.sellQuote(userAddress, poolAddress, "0x");
 
     wethBalance = await WETH.balanceOf(userAddress);
@@ -112,4 +113,4 @@ main()
   .catch(error => {
     console.error(error);
     process.exit(1);
-  });
+});
