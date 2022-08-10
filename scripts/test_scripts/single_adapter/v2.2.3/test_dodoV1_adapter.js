@@ -35,7 +35,7 @@ async function sellBaseTesting (DODOV1Adapter) {
     )
 
     // transfer token
-    await WETH.connect(signer).transfer(DODOV1Adapter.address, ethers.utils.parseEther("1000"));
+    await WETH.connect(signer).transfer(DODOV1Adapter.address, ethers.utils.parseEther("10000"));
 
     wethBalance = await WETH.balanceOf(DODOV1Adapter.address);
     usdcBalance = await USDC.balanceOf(DODOV1Adapter.address);
@@ -76,7 +76,7 @@ async function sellQuoteTesting (DODOV1Adapter) {
     console.log("Before WETH Balance: ", wethBalance.toString());
     console.log("Before USDC Balance: ", usdcBalance.toString());
 
-    await USDC.connect(signer).transfer(DODOV1Adapter.address, ethers.utils.parseUnits("300000", tokenConfig.tokens.USDC.decimals));
+    await USDC.connect(signer).transfer(DODOV1Adapter.address, ethers.utils.parseUnits("300", tokenConfig.tokens.USDC.decimals));
     rxResult = await DODOV1Adapter.sellQuote(userAddress, poolAddress, "0x");
 
     wethBalance = await WETH.balanceOf(userAddress);
@@ -100,9 +100,11 @@ async function main() {
     console.log("======= sellBaseTesting ====== ")
     await sellBaseTesting(DODOV1Adapter);
 
-    DODOV1Adapter2 = await deployContract()
-    console.log("======= sellQuoteTesting ====== ")
-    await sellQuoteTesting(DODOV1Adapter2);
+    console.log("======= sellQuoteTesting 1 ====== ")
+    await sellQuoteTesting(DODOV1Adapter);
+
+    console.log("======= sellQuoteTesting 2 ====== ")
+    await sellQuoteTesting(DODOV1Adapter);
 }
 
 main()

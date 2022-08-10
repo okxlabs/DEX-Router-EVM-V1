@@ -39,9 +39,7 @@ contract DODOV1Adapter is IAdapter, OwnableUpgradeable {
         SafeERC20.safeApprove(IERC20(curQuote), pool, maxPayQuote);
         IDODOV1(pool).buyBaseToken(canBuyBaseAmount, maxPayQuote, "");
 
-        uint256 allowanceLeft = IERC20(curQuote).allowance(address(this), pool);
-        SafeERC20.safeDecreaseAllowance(IERC20(curQuote), pool, allowanceLeft);        
-
+        SafeERC20.safeApprove(IERC20(curQuote), pool, 0);
         if(to != address(this)) {
             address curBase = IDODOV1(pool)._BASE_TOKEN_();
             SafeERC20.safeTransfer(IERC20(curBase), to, canBuyBaseAmount);
