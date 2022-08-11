@@ -3207,7 +3207,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
 
 
 
-    xdescribe("3. Fork OKC Network Test", function() {
+    describe("3. Fork OKC Network Test", function() {
         this.timeout(20000);
         let wokt;
         const OKT = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
@@ -3294,11 +3294,6 @@ describe("Market Maker Test (version: 1.0.0)", function(){
                 okcdevDeployed.base.marketMaker
             );
     
-            pmmAdapter = await ethers.getContractAt(
-                "PMMAdapter",
-                okcdevDeployed.base.pmmAdapter
-            )
-    
         }
     
         const initLayersWholeSwap = async function() {
@@ -3334,7 +3329,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
             // fork states 
     
             // 1. prepare accounts
-            await setForkBlockNumber(12180000);
+            await setForkBlockNumber(13150000);
     
             await initAccounts();
     
@@ -3376,7 +3371,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
                     "toTokenAmountMin": ethers.utils.parseEther('0.025'),
                     "chainId": chainId,
                     "marketMaker": marketMaker.address,
-                    "pmmAdapter": pmmAdapter.address,
+                    "pmmAdapter": marketMaker.address,
                     "source": source
                 }
             ]
@@ -3440,10 +3435,10 @@ describe("Market Maker Test (version: 1.0.0)", function(){
     
     
             // 8. check balance
-            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001699343650332257'));
+            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001836650889467037'));
             expect(bobWOKTBalAfter.sub(bobWOKTBalBefore)).to.equal(ethers.utils.parseEther('0.0001'));
     
-        })
+        });
     
     
     
@@ -3461,7 +3456,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
                     "toTokenAmountMin": ethers.utils.parseEther('0.025'),
                     "chainId": chainId,
                     "marketMaker": marketMaker.address,
-                    "pmmAdapter": pmmAdapter.address,
+                    "pmmAdapter": marketMaker.address,
                     "source": source
                 }
             ]
@@ -3524,14 +3519,251 @@ describe("Market Maker Test (version: 1.0.0)", function(){
             bobWOKTBalAfter = await wokt.balanceOf(bob.address);
     
             // 8. check balance
-            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001699343634731459'));
+            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001836650872607920'));
             expect(bobWOKTBalAfter.sub(bobWOKTBalBefore)).to.equal(ethers.utils.parseEther('0')); 
-        })
+        });
+
+        it("3.3 User Swap: ERC20 -> ERC20", async () => {
+            const { chainId }  = await ethers.provider.getNetwork();
+                
+            // 5. prepare quotes
+            let source = await getSource(lpWOKTUSDT, wokt.address, usdt.address);
+            let rfq = [
+                {
+                    "pathIndex": '202000000000000002',
+                    "fromTokenAddress": wokt.address, 
+                    "toTokenAddress": usdt.address, 
+                    "fromTokenAmount": ethers.utils.parseEther('0.001'), 
+                    "toTokenAmountMin": ethers.utils.parseEther('0.025'),
+                    "chainId": chainId,
+                    "marketMaker": marketMaker.address,
+                    "pmmAdapter": marketMaker.address,
+                    "source": source
+                }
+            ]
+            let infosToBeSigned = getPullInfosToBeSigned_paidByOKCMockAccount(rfq);
+            let quote = multipleQuotes(infosToBeSigned);
+    
+            // 6. construct of input of funciton swap
+            let infos = quote[0];
+            let request = [
+                infos.pathIndex,
+                infos.payer, 
+                infos.fromTokenAddress, 
+                infos.toTokenAddress, 
+                infos.fromTokenAmountMax, 
+                infos.toTokenAmountMax, 
+                infos.salt, 
+                infos.deadLine, 
+                infos.isPushOrder,
+                infos.extension
+            ];
+            const pmmRequests = request;
+    
+            // 7. swap
+            await marketMaker.connect(bob).setOperator(singer.address);
+            let markerAmount = ethers.utils.parseEther('10');
+            await usdt.connect(bob).approve(tokenApprove.address, markerAmount);
+            let swapAmount = ethers.utils.parseEther('0.0001');
+            // await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
+    
+            const baseRequest = [
+                wokt.address,
+                usdt.address,
+                swapAmount,
+                ethers.utils.parseEther('0'),
+                FOREVER
+            ]
+        
+            let aliceUSDTBalBefore = await usdt.balanceOf(alice.address);
+            let bobWOKTBalBefore = await wokt.balanceOf(bob.address);
+
+            let res = await marketMaker.connect(alice).userSwap(
+                baseRequest,
+                pmmRequests
+                // {
+                //     value: ethers.utils.parseEther('0.0001')
+                // }
+            );
+            // let receipt = await res.wait();
+            // console.log("receipt.logs", receipt.logs);
+            // console.log("res", res);
+    
+            aliceUSDTBalAfter = await usdt.balanceOf(alice.address);
+            bobWOKTBalAfter = await wokt.balanceOf(bob.address);
+            // console.log("aliceUSDTBalAfter",aliceUSDTBalAfter);
+            // console.log("bobWOKTBalAfter",bobWOKTBalAfter);
+
+    
+            // 8. check balance
+            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001836650889467037'));
+            expect(bobWOKTBalAfter.sub(bobWOKTBalBefore)).to.equal(ethers.utils.parseEther('0.0001')); 
+        });
+
+        it("3.4 User Swap: Native Token -> ERC20", async () => {
+            const { chainId }  = await ethers.provider.getNetwork();
+                
+            // 5. prepare quotes
+            let source = await getSource(lpWOKTUSDT, wokt.address, usdt.address);
+            let rfq = [
+                {
+                    "pathIndex": '202000000000000002',
+                    "fromTokenAddress": wokt.address, 
+                    "toTokenAddress": usdt.address, 
+                    "fromTokenAmount": ethers.utils.parseEther('0.001'), 
+                    "toTokenAmountMin": ethers.utils.parseEther('0.025'),
+                    "chainId": chainId,
+                    "marketMaker": marketMaker.address,
+                    "pmmAdapter": marketMaker.address,
+                    "source": source
+                }
+            ]
+            let infosToBeSigned = getPullInfosToBeSigned_paidByOKCMockAccount(rfq);
+            let quote = multipleQuotes(infosToBeSigned);
+    
+            // 6. construct of input of funciton swap
+            let infos = quote[0];
+            let request = [
+                infos.pathIndex,
+                infos.payer, 
+                infos.fromTokenAddress, 
+                infos.toTokenAddress, 
+                infos.fromTokenAmountMax, 
+                infos.toTokenAmountMax, 
+                infos.salt, 
+                infos.deadLine, 
+                infos.isPushOrder,
+                infos.extension
+            ];
+            const pmmRequests = request;
+    
+            // 7. swap
+            await marketMaker.connect(bob).setOperator(singer.address);
+            let markerAmount = ethers.utils.parseEther('10');
+            await usdt.connect(bob).approve(tokenApprove.address, markerAmount);
+            let swapAmount = ethers.utils.parseEther('0.0001');
+            // await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
+    
+            const baseRequest = [
+                OKT,
+                usdt.address,
+                swapAmount,
+                ethers.utils.parseEther('0'),
+                FOREVER
+            ]
+        
+            let aliceUSDTBalBefore = await usdt.balanceOf(alice.address);
+            let bobWOKTBalBefore = await wokt.balanceOf(bob.address);
+
+            let res = await marketMaker.connect(alice).userSwap(
+                baseRequest,
+                pmmRequests,
+                {
+                    value: ethers.utils.parseEther('0.0001')
+                }
+            );
+            // let receipt = await res.wait();
+            // console.log("receipt.logs", receipt.logs);
+            // console.log("res", res);
+    
+            aliceUSDTBalAfter = await usdt.balanceOf(alice.address);
+            bobWOKTBalAfter = await wokt.balanceOf(bob.address);
+            // console.log("aliceUSDTBalAfter",aliceUSDTBalAfter);
+            // console.log("bobWOKTBalAfter",bobWOKTBalAfter);
+
+    
+            // 8. check balance
+            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001836650889467037'));
+            expect(bobWOKTBalAfter.sub(bobWOKTBalBefore)).to.equal(ethers.utils.parseEther('0.0001')); 
+        });
+
+        it("3.5 User Swap: ERC20 -> Native Token", async () => {
+            const { chainId }  = await ethers.provider.getNetwork();
+                
+            // 5. prepare quotes
+            let source = await getSource(lpWOKTUSDT, usdt.address, wokt.address);
+            let rfq = [
+                {
+                    "pathIndex": '202000000000000002',
+                    "fromTokenAddress": usdt.address, 
+                    "toTokenAddress": wokt.address, 
+                    "fromTokenAmount": ethers.utils.parseEther('0.018'), 
+                    "toTokenAmountMin": ethers.utils.parseEther('0.001'),
+                    "chainId": chainId,
+                    "marketMaker": marketMaker.address,
+                    "pmmAdapter": marketMaker.address,
+                    "source": source
+                }
+            ]
+            let infosToBeSigned = getPullInfosToBeSigned_paidByOKCMockAccount(rfq);
+            let quote = multipleQuotes(infosToBeSigned);
+    
+            // 6. construct of input of funciton swap
+            let infos = quote[0];
+            let request = [
+                infos.pathIndex,
+                infos.payer, 
+                infos.fromTokenAddress, 
+                infos.toTokenAddress, 
+                infos.fromTokenAmountMax, 
+                infos.toTokenAmountMax, 
+                infos.salt, 
+                infos.deadLine, 
+                infos.isPushOrder,
+                infos.extension
+            ];
+            const pmmRequests = request;
+    
+            // 7. swap
+            await marketMaker.connect(bob).setOperator(singer.address);
+            let markerAmount = ethers.utils.parseEther('10');
+            await wokt.connect(bob).deposit({value: ethers.utils.parseEther('0.001')});
+            await wokt.connect(bob).approve(tokenApprove.address, markerAmount);
+            let swapAmount = ethers.utils.parseEther('0.0018');
+            await usdt.connect(alice).approve(tokenApprove.address, swapAmount);
+    
+            const baseRequest = [
+                usdt.address,
+                OKT,
+                swapAmount,
+                ethers.utils.parseEther('0'),
+                FOREVER
+            ];
+       
+            let aliceOKTBalBefore = await ethers.provider.getBalance(alice.address);
+            let bobUSDTBalBefore = await usdt.balanceOf(bob.address);
+            // console.log("aliceOKTBalBefore",aliceOKTBalBefore);
+            // console.log("bobUSDTBalBefore",bobUSDTBalBefore);
+
+            let res = await marketMaker.connect(alice).userSwap(
+                baseRequest,
+                pmmRequests,
+                // {
+                //     value: ethers.utils.parseEther('0.0001')
+                // }
+            );
+            let gasPrice = res.gasPrice;
+            let receipt = await res.wait();
+            // console.log("receipt.logs", receipt.logs);
+            // console.log("res", res);
+            let gasUsed = await receipt.gasUsed;
+    
+            aliceOKTBalAfter = await ethers.provider.getBalance(alice.address);
+            bobUSDTBalAfter = await usdt.balanceOf(bob.address);
+            // console.log("aliceOKTBalAfter",aliceOKTBalAfter);
+            // console.log("bobUSDTBalAfter",bobUSDTBalAfter);
+
+    
+            // 8. check balance
+            expect(aliceOKTBalAfter.add(gasUsed.mul(gasPrice)).sub(aliceOKTBalBefore)).to.equal(ethers.utils.parseEther('0.000097417326845342'));
+            expect(bobUSDTBalAfter.sub(bobUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.0018')); 
+        });
+
     });
     
 
 
-    xdescribe("4. Fork Eth Network Test", function() {
+    describe("4. Fork Eth Network Test", function() {
         this.timeout(20000);
 
         let owner, alice, bob, backEnd, cancelerGuardian;
@@ -3636,11 +3868,6 @@ describe("Market Maker Test (version: 1.0.0)", function(){
                 ethdevDeployed.base.marketMaker
             );
     
-            pmmAdapter = await ethers.getContractAt(
-                "PMMAdapter",
-                ethdevDeployed.base.pmmAdapter
-            );
-    
         }
 
         const initLayersWholeSwap = async function() {
@@ -3678,7 +3905,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
             // https://cn.etherscan.com/tx/0xd4902a42097534a33ecf9b2e817c80da1972e91effd58a06abbe0214c107c25f
 
             // 1. prepare accounts
-            await setForkBlockNumber(15081527);
+            await setForkBlockNumber(15319760);
             await initAccounts();
             [owner,,signer,,backEnd, cancelerGuardian] = await ethers.getSigners();
 
@@ -3710,7 +3937,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
                     "toTokenAmountMin": ethers.utils.parseEther('3'),
                     "chainId": chainId,
                     "marketMaker": marketMaker.address,
-                    "pmmAdapter": pmmAdapter.address,
+                    "pmmAdapter": marketMaker.address,
                     "source": source
                 }
             ]
@@ -3764,7 +3991,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
             aliceUniBalAfter = await uni.balanceOf(alice.address);
 
             expect(await weth.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0.013658558763417873'));
-            expect(aliceUniBalAfter.sub(aliceUniBalBefore)).to.equal(ethers.utils.parseEther('2.942046076156289276'));
+            expect(aliceUniBalAfter.sub(aliceUniBalBefore)).to.equal(ethers.utils.parseEther('2.791831899247925653'));
 
         })
 
@@ -3788,7 +4015,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
                     "toTokenAmountMin": ethers.utils.parseEther('3'),
                     "chainId": chainId,
                     "marketMaker": marketMaker.address,
-                    "pmmAdapter": pmmAdapter.address,
+                    "pmmAdapter": marketMaker.address,
                     "source": source
                 }
             ]
@@ -3842,7 +4069,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
             aliceUniBalAfter = await uni.balanceOf(alice.address);
 
             expect(await weth.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0.013658558763417873'));
-            expect(aliceUniBalAfter.sub(aliceUniBalBefore)).to.equal(ethers.utils.parseEther('2.943731239762360962'));
+            expect(aliceUniBalAfter.sub(aliceUniBalBefore)).to.equal(ethers.utils.parseEther('2.790818780501934289'));
 
         })
 
@@ -3863,7 +4090,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
                     "toTokenAmountMin": ethers.utils.parseEther('3'),
                     "chainId": chainId,
                     "marketMaker": marketMaker.address,
-                    "pmmAdapter": pmmAdapter.address,
+                    "pmmAdapter": marketMaker.address,
                     "source": source
                 }
             ]
@@ -3921,8 +4148,8 @@ describe("Market Maker Test (version: 1.0.0)", function(){
 
             // 4. check balance
             expect(await weth.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
-            expect(uniOut).to.equal(ethers.utils.parseEther('2.942040436432395492'));
-        })
+            expect(uniOut).to.equal(ethers.utils.parseEther('2.791826638643971471'));
+        });
 
     });
 }) 
