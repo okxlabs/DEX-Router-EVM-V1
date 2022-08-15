@@ -488,7 +488,43 @@ describe("Unoswap swap test", function() {
       await liquidity.sendTransaction({to: xBridge.address, value: fromTokenAmount});
       await xBridge.connect(alice).claim(request);
       expect(await usdt.balanceOf(owner.address)).to.be.equal(beforeBalance.add("298802094311970964947"));
-    });
+  });
+
+  it("ERC20 token single pool exchange with order id", async () => {
+    const reserves = await lpWBTCUSDT.getReserves();
+    const token0 = await lpWBTCUSDT.token0();
+    if (await lpWBTCUSDT.token0() == wbtc.address) {
+      expect(reserves[0]).to.be.eq("100000000000000000000");
+      expect(reserves[1]).to.be.eq("4000000000000000000000000");
+    } else {
+      expect(reserves[1]).to.be.eq("100000000000000000000");
+      expect(reserves[0]).to.be.eq("4000000000000000000000000");
+    }
+
+    sourceToken = wbtc;
+    targetToken = usdt;
+    const fromTokenAmount = ethers.utils.parseEther('0.1');
+    // 0x4 WETH -> ETH 0x8 reverse pair
+    flag = sourceToken.address == token0 ? '0x0' : "0x8";
+    poolAddr = lpWBTCUSDT.address.toString().replace('0x', '');
+    poolFee = Number(997000000).toString(16).replace('0x', '');
+    pool0 = flag + '000000000000000' + poolFee + poolAddr;
+
+    await sourceToken.connect(alice).approve(tokenApprove.address, fromTokenAmount);
+
+    const orderId = 000000000000000000000001;
+    const tx = await dexRouter.connect(alice).unxswapByOrderId(
+        "0x" + orderId + sourceToken.address.replace("0x", ""),
+        fromTokenAmount,
+        0,
+        [pool0]
+    );
+    const receipt = await tx.wait();
+    expect(receipt.events[0].event).to.be.eq("SwapOrderId");
+    // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
+    const amount = getAmountOut(fromTokenAmount, "4000000000000000000000000", "100000000000000000000");
+    expect(await usdt.balanceOf(alice.address)).to.be.equal(amount);
+  });
 
   const initMockTokens = async () => {
     const MockERC20 = await ethers.getContractFactory("MockERC20");
