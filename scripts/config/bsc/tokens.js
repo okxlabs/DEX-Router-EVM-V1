@@ -58,6 +58,12 @@ const BNB = {
   baseTokenAddress: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
 }
 
+const TUSD = {
+  name: "TUSD",
+  decimals: 18,
+  baseTokenAddress: '0x14016E85a25aeb13065688cAFB43044C2ef86784'
+}
+
 module.exports = {
   BTCB,
   DOT,
@@ -69,5 +75,6 @@ module.exports = {
   CAKE,
   BUSD,
   BNB,
-  DAI
+  DAI,
+  TUSD
 }

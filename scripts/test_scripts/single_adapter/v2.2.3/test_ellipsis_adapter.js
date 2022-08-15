@@ -43,12 +43,13 @@ async function Erc20ToErc20(EllipsisAdapter) {
     USDCbeforeBalance = await USDC.balanceOf(EllipsisAdapter.address);
 
     moreinfo =  ethers.utils.defaultAbiCoder.encode(
-        ["address", "address", "int128", "int128"],
+        ["address", "address", "int128", "int128", "bool"],
         [
             USDT.address,
             USDC.address,
             2,
-            1
+            1,
+            false
         ]
       )
     rxResult = await EllipsisAdapter.sellQuote(
@@ -91,12 +92,13 @@ async function NativeToErc20(EllipsisAdapter) {
 
 
   moreinfo =  ethers.utils.defaultAbiCoder.encode(
-      ["address", "address", "int128", "int128"],
+      ["address", "address", "int128", "int128", "bool"],
       [
           tokenConfig.tokens.BNB.baseTokenAddress,
           ZBNB.address,
           0,
-          1
+          1,
+          false
       ]
     )
   rxResult = await EllipsisAdapter.sellQuote(
@@ -135,12 +137,13 @@ async function ERC20ToNative(EllipsisAdapter) {
   console.log( "WBNBAftereBalance: ", WBNBAftereBalance.toString(), ", ZBNBAfterBalance: ", ZBNBAfterBalance.toString())
 
   moreinfo =  ethers.utils.defaultAbiCoder.encode(
-      ["address", "address", "int128", "int128"],
+      ["address", "address", "int128", "int128", "bool"],
       [
           ZBNB.address,
           tokenConfig.tokens.BNB.baseTokenAddress,
           1,
-          0
+          0,
+          false
       ]
     )
   rxResult = await EllipsisAdapter.sellQuote(
@@ -156,7 +159,57 @@ async function ERC20ToNative(EllipsisAdapter) {
   console.log( "WBNBAftereBalance: ", WBNBAftereBalance.toString(), ", ZBNBAfterBalance: ", ZBNBAfterBalance.toString())
 }
 
+// Meta Pool
+async function MetaPool(EllipsisAdapter) {
 
+    // fork network
+    // await setForkNetWorkAndBlockNumber("bsc")
+    
+    UserAddress = "0xf977814e90da44bfa03b6295a0616a897441acec"
+    poolAddress = "0x3F52c27C0634C897Faf776b11bE1Dd408E7a429e"
+
+    startMockAccount([UserAddress])
+    signer = await ethers.getSigner(UserAddress)
+
+    // prepare USDT Token
+    // holder: 0xf977814e90da44bfa03b6295a0616a897441acec
+    USDT = await ethers.getContractAt(
+        "MockERC20",
+        "0x55d398326f99059fF775485246999027B3197955"
+      )
+    // perapre DAI Token
+    TUSD = await ethers.getContractAt(
+        "MockERC20",
+        "0x14016E85a25aeb13065688cAFB43044C2ef86784"
+    )
+
+    await USDT.connect(signer).transfer(EllipsisAdapter.address, ethers.utils.parseEther("1000"));
+    USDTbeforeBalance = await USDT.balanceOf(EllipsisAdapter.address);
+    TUSDbeforeBalance = await TUSD.balanceOf(EllipsisAdapter.address);
+
+    moreinfo =  ethers.utils.defaultAbiCoder.encode(
+        ["address", "address", "int128", "int128", "bool"],
+        [
+            USDT.address,
+            TUSD.address,
+            3,
+            0,
+            true
+        ]
+      )
+    rxResult = await EllipsisAdapter.sellQuote(
+      EllipsisAdapter.address,
+      poolAddress,
+      moreinfo
+    );
+
+    // check balance
+    USDTAftereBalance = await USDT.balanceOf(EllipsisAdapter.address);
+    TUSDAfterBalance = await TUSD.balanceOf(EllipsisAdapter.address);
+    console.log("usdt before balance: ", USDTbeforeBalance.toString(), "usdt after balance: ", USDTAftereBalance.toString())
+    console.log("tusd before balance: ", TUSDbeforeBalance.toString(), "tusd after balance: ", TUSDAfterBalance.toString())
+
+}
 
 async function main() {  
     EllipsisAdapter = await deployContract()
@@ -166,6 +219,8 @@ async function main() {
     await NativeToErc20(EllipsisAdapter)
     console.log("==== swap ZBNB to BNB in ellipisis pool ====== ")
     await ERC20ToNative(EllipsisAdapter)
+    console.log("==== swap TUSD 2 USDT in meta pool ====== ")
+    await MetaPool(EllipsisAdapter)
 }
 
 main()
