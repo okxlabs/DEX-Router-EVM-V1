@@ -21,13 +21,25 @@ contract EllipsisAdapter is IAdapter {
         address pool,
         bytes memory moreInfo
     ) internal {
-        (address fromToken, address toToken, int128 i, int128 j) = abi.decode(
+        (address fromToken, address toToken, int128 i, int128 j, bool is_underlying) = abi.decode(
             moreInfo,
-            (address, address, int128, int128)
+            (address, address, int128, int128, bool)
         );
 
         uint256 sellAmount = 0;
-        if (fromToken == ETH_ADDRESS) {
+
+
+        if (is_underlying) {  // meta pool
+            sellAmount = IERC20(fromToken).balanceOf(address(this));
+            SafeERC20.safeApprove(IERC20(fromToken), pool, sellAmount);
+            IEllipsis(pool).exchange_underlying(
+                i,
+                j,
+                sellAmount,
+                0
+            );
+        }
+        else if (fromToken == ETH_ADDRESS) { // plain pool
             sellAmount = IWETH(WETH_ADDRESS).balanceOf(address(this));
             IWETH(WETH_ADDRESS).withdraw(sellAmount);
             IEllipsis(pool).exchange{value: sellAmount}(
@@ -36,7 +48,7 @@ contract EllipsisAdapter is IAdapter {
                 sellAmount,
                 0
             );
-        } else {
+        } else {  // base pool
             sellAmount = IERC20(fromToken).balanceOf(address(this));
             SafeERC20.safeApprove(IERC20(fromToken), pool, sellAmount);
             IEllipsis(pool).exchange(
@@ -46,6 +58,7 @@ contract EllipsisAdapter is IAdapter {
                 0
             );
         }
+        
 
         // approve 0
         SafeERC20.safeApprove(

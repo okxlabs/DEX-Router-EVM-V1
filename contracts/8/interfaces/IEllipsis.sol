@@ -10,4 +10,12 @@ interface IEllipsis {
         uint256 dx,
         uint256 minDy
     ) external payable ;
+
+    function exchange_underlying(
+        int128 i, 
+        int128 j, 
+        uint256 dx, 
+        uint256 min_dy
+    ) external;
+
 }
