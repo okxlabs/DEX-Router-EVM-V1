@@ -70,7 +70,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     uint256 toAmount,
     uint256 errorCode
   );
-
+  event SwapOrderId(uint256 id);
   error PMMErrorCode(uint256 errorCode);
 
   //-------------------------------
@@ -426,10 +426,32 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     IERC20 srcToken,
     uint256 amount,
     uint256 minReturn,
-  // solhint-disable-next-line no-unused-vars
+    // solhint-disable-next-line no-unused-vars
     bytes32[] calldata pools
   ) public payable onlyXBridge returns (uint256 returnAmount) {
     (address payer, address receiver) = IXBridge(xBridge).payerReceiver();
     returnAmount = _unxswapInternal(srcToken, amount, minReturn, pools, payer, receiver);
+  }
+
+  function smartSwapByOrderId(
+    uint256 orderId,
+    BaseRequest calldata baseRequest,
+    uint256[] calldata batchesAmount,
+    RouterPath[][] calldata batches,
+    IMarketMaker.PMMSwapRequest[] calldata extraData
+  ) public payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) {
+    emit SwapOrderId(orderId);
+    returnAmount = _smartSwapInternal(baseRequest, batchesAmount, batches, extraData, msg.sender, msg.sender);
+  }
+
+  function unxswapByOrderId(
+    uint256 srcToken,
+    uint256 amount,
+    uint256 minReturn,
+    // solhint-disable-next-line no-unused-vars
+    bytes32[] calldata pools
+  ) public payable returns (uint256 returnAmount) {
+    emit SwapOrderId((srcToken & _ORDER_ID_MASK) >> 160);
+    returnAmount = _unxswapInternal(IERC20(address(uint160(srcToken& _ADDRESS_MASK))), amount, minReturn, pools, msg.sender, msg.sender);
   }
 }

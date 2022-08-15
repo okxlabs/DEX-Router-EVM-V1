@@ -812,7 +812,7 @@ describe("Smart route path test", function() {
       const receive0 = getAmountOut(fromTokenAmount, '1000000000000000000000', '10000000000000000000000');
       const receive = receive0.add(beforeToTokenBalance);
       expect(await toToken.balanceOf(bob.address)).to.be.eq(receive);
-    });
+  });
 
   it("claim smartSwapByXBridge WBTC to ETH", async () => {
     await dexRouter.setWNativeRelayer(wNativeRelayer.address);
@@ -881,6 +881,56 @@ describe("Smart route path test", function() {
     // 10000000000000000000 * 997 * 10000000000000000000000 / (1000000000000000000000 * 1000 +  10000000000000000000 * 997) = 98715803439706130000
     const receiveAmount = getAmountOut(fromTokenAmount, '10000000000000000000000', '1000000000000000000000');
     expect(await ethers.provider.getBalance(bob.address)).to.be.eq(receiveAmount.add(beforeToTokenBalance));
+  });
+
+  it("mixSwap with single path with order id", async () => {
+    // wbtc -> weth -> usdt
+
+    await memeToken.transfer(alice.address, ethers.utils.parseEther('100000000'));
+
+    fromToken = memeToken;
+    toToken = usdt;
+    const fromTokenAmount = ethers.utils.parseEther('1000');
+    const minReturnAmount = ethers.utils.parseEther('0');
+    const deadLine = FOREVER;
+
+    await fromToken.connect(alice).approve(tokenApprove.address, ethers.utils.parseEther('1000000'));
+
+    // node1
+    const mixAdapter1 = [
+      uniAdapter.address
+    ];
+    const assertTo1 = [
+      lpMemeUSDT.address
+    ];
+    const weight1 = getWeight(10000);
+    const rawData1 = [
+      "0x" + await direction(memeToken.address, usdt.address, lpMemeUSDT) + "0000000000000000000" + weight1 + lpMemeUSDT.address.replace("0x", "")
+    ];
+    const extraData1 = [0x0];
+    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1, memeToken.address];
+
+    // layer1
+    const layer1 = [router1];
+
+    const baseRequest = [
+      fromToken.address,
+      toToken.address,
+      fromTokenAmount,
+      minReturnAmount,
+      deadLine,
+    ]
+    const orderId = 1;
+    const tx = await dexRouter.connect(alice).smartSwapByOrderId(
+        orderId,
+        baseRequest,
+        [fromTokenAmount],
+        [layer1],
+        []
+    );
+    const receipt = await tx.wait();
+    expect(receipt.events[0].event).to.be.eq("SwapOrderId");
+    expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
   });
 
   const direction = async (fromToken, toToken, pair) => {
