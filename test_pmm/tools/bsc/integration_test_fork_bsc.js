@@ -133,11 +133,6 @@ describe("Integration Test Forking BSC Mainnet", function() {
             bscdevDeployed.base.marketMaker
         );
 
-        pmmAdapter = await ethers.getContractAt(
-            "PMMAdapter",
-            bscdevDeployed.base.pmmAdapter
-        );
-
         marketMakerProxyAdmin = await ethers.getContractAt(
             "ProxyAdmin",
             bscdevDeployed.base.marketMakerProxyAdmin
@@ -210,7 +205,7 @@ describe("Integration Test Forking BSC Mainnet", function() {
                 "toTokenAmountMin": ethers.utils.parseEther('0.025'),
                 "chainId": chainId,
                 "marketMaker": marketMaker.address,
-                "pmmAdapter": pmmAdapter.address,
+                "pmmAdapter": marketMaker.address,
                 "source": source
             }
         ]

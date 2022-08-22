@@ -164,11 +164,6 @@ describe("Integration Test Forking ETH Mainnet", function() {
             ethdevDeployed.base.marketMaker
         );
 
-        pmmAdapter = await ethers.getContractAt(
-            "PMMAdapter",
-            ethdevDeployed.base.pmmAdapter
-        );
-
         marketMakerProxyAdmin = await ethers.getContractAt(
             "ProxyAdmin",
             ethdevDeployed.base.marketMakerProxyAdmin
@@ -256,7 +251,7 @@ describe("Integration Test Forking ETH Mainnet", function() {
                 "toTokenAmountMin": BigNumber.from("100000"),
                 "chainId": chainId,
                 "marketMaker": marketMaker.address,
-                "pmmAdapter": pmmAdapter.address,
+                "pmmAdapter": marketMaker.address,
                 "source": source
             }
         ]

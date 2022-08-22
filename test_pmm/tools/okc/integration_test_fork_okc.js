@@ -133,11 +133,6 @@ describe("Integration Test Forking OKC Mainnet", function() {
             okcdevDeployed.base.marketMaker
         );
 
-        pmmAdapter = await ethers.getContractAt(
-            "PMMAdapter",
-            okcdevDeployed.base.pmmAdapter
-        );
-
         marketMakerProxyAdmin = await ethers.getContractAt(
             "ProxyAdmin",
             okcdevDeployed.base.marketMakerProxyAdmin
@@ -207,7 +202,7 @@ describe("Integration Test Forking OKC Mainnet", function() {
                 "toTokenAmountMin": ethers.utils.parseEther('0.025'),
                 "chainId": chainId,
                 "marketMaker": marketMaker.address,
-                "pmmAdapter": pmmAdapter.address,
+                "pmmAdapter": marketMaker.address,
                 "source": source
             }
         ]

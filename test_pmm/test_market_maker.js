@@ -3208,7 +3208,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
 
 
     describe("3. Fork OKC Network Test", function() {
-        this.timeout(20000);
+        this.timeout(30000);
         let wokt;
         const OKT = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
         const FOREVER = '2000000000';
@@ -3764,7 +3764,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
 
 
     describe("4. Fork Eth Network Test", function() {
-        this.timeout(20000);
+        this.timeout(30000);
 
         let owner, alice, bob, backEnd, cancelerGuardian;
         let weth, factory;
@@ -3905,7 +3905,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
             // https://cn.etherscan.com/tx/0xd4902a42097534a33ecf9b2e817c80da1972e91effd58a06abbe0214c107c25f
 
             // 1. prepare accounts
-            await setForkBlockNumber(15319760);
+            await setForkBlockNumber(15382800);
             await initAccounts();
             [owner,,signer,,backEnd, cancelerGuardian] = await ethers.getSigners();
 
@@ -3991,7 +3991,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
             aliceUniBalAfter = await uni.balanceOf(alice.address);
 
             expect(await weth.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0.013658558763417873'));
-            expect(aliceUniBalAfter.sub(aliceUniBalBefore)).to.equal(ethers.utils.parseEther('2.791831899247925653'));
+            expect(aliceUniBalAfter.sub(aliceUniBalBefore)).to.equal(ethers.utils.parseEther('2.956102360939725370'));
 
         })
 
@@ -4069,7 +4069,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
             aliceUniBalAfter = await uni.balanceOf(alice.address);
 
             expect(await weth.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0.013658558763417873'));
-            expect(aliceUniBalAfter.sub(aliceUniBalBefore)).to.equal(ethers.utils.parseEther('2.790818780501934289'));
+            expect(aliceUniBalAfter.sub(aliceUniBalBefore)).to.equal(ethers.utils.parseEther('2.956102360939725370'));
 
         })
 
@@ -4148,7 +4148,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
 
             // 4. check balance
             expect(await weth.balanceOf(bob.address)).to.equal(ethers.utils.parseEther('0'));
-            expect(uniOut).to.equal(ethers.utils.parseEther('2.791826638643971471'));
+            expect(uniOut).to.equal(ethers.utils.parseEther('3.028693610581796279'));
         });
 
     });
