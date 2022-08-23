@@ -257,7 +257,8 @@ module.exports = {
   abiExporter: {
     path: './abi',
     clear: true,
-    flat: true
+    flat: false,
+    runOnCompile: true,
   },
   contractSizer: {
     alphaSort: true,
