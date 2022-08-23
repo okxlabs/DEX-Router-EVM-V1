@@ -125,6 +125,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   function _exeHop(
     address payer,
     uint256 batchAmount,
+    uint256 forceInternalTransferFrom,
     RouterPath[] calldata hops,
     IMarketMaker.PMMSwapRequest[] memory extraData
   ) internal {
@@ -157,9 +158,13 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
           continue;
         }
       }
-
-      // 3.2 execute forks
-      _exeForks(payer, batchAmount, hops[i], i > 0);
+      if(forceInternalTransferFrom == 1){
+        // 3.2 execute forks
+        _exeForks(payer, batchAmount, hops[i], true);
+      }else{
+        // 3.2 execute forks
+        _exeForks(payer, batchAmount, hops[i], i > 0);
+      }
     }
   }
 
@@ -349,7 +354,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     // 4. execute batch
     for (uint256 i = 0; i < batches.length; ) {
       // execute hop, if the whole swap replacing by pmm fails, the funds will return to dexRouter	
-      _exeHop(payer, batchesAmount[i], batches[i], extraData);
+      _exeHop(payer, batchesAmount[i], 0, batches[i], extraData);
       unchecked {
         ++i;
       }
@@ -364,6 +369,90 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     require(returnAmount >= localBaseRequest.minReturnAmount, "Min return not reached");
 
     emit OrderRecord(baseRequestFromToken, localBaseRequest.toToken, tx.origin, localBaseRequest.fromTokenAmount, returnAmount);
+    return returnAmount;
+  }
+
+  struct SwapInvest{
+    address baseRequestFromToken;
+    uint256 actualFromTokenAmount;
+    uint256 errorCode;
+  }
+
+  function _smartSwapInvestInternal(
+    BaseRequest calldata baseRequest,
+    uint256[] calldata batchesAmount,
+    RouterPath[][] calldata batches,
+    IMarketMaker.PMMSwapRequest[] calldata extraData,
+    address payer,
+    address receiver
+  ) internal returns (uint256 returnAmount) {
+    // avoid stack too deep
+    SwapInvest memory vars;
+    // 1. token has been transferred in
+    BaseRequest memory localBaseRequest = baseRequest;
+    require(localBaseRequest.fromTokenAmount > 0, "Route: fromTokenAmount must be > 0");
+    vars.baseRequestFromToken = bytes32ToAddress(localBaseRequest.fromToken);
+    returnAmount = IERC20(localBaseRequest.toToken).universalBalanceOf(receiver);
+
+    vars.actualFromTokenAmount = IERC20(vars.baseRequestFromToken).universalBalanceOf(address(this));
+    require(vars.actualFromTokenAmount > 0, "Route: actualFromTokenAmount must be > 0");
+
+    localBaseRequest.minReturnAmount = localBaseRequest.minReturnAmount * vars.actualFromTokenAmount / localBaseRequest.fromTokenAmount;
+    
+    if (UniversalERC20.isETH(IERC20(vars.baseRequestFromToken))) {
+      IWETH(address(uint160(_WETH))).deposit{ value: vars.actualFromTokenAmount }();
+    }
+
+    // 2. check total batch amount
+    {
+      // avoid stack too deep
+      uint256 totalBatchAmount;
+      for (uint256 i = 0; i < batchesAmount.length; ) {
+        totalBatchAmount += batchesAmount[i];
+        unchecked {
+          ++i;
+        }
+      }
+      require(
+        totalBatchAmount <= localBaseRequest.fromTokenAmount,
+        "Route: number of batches should be <= fromTokenAmount"
+      );
+    }
+
+    // 3. try to replace the whole swap by pmm
+    if (isReplace(localBaseRequest.fromToken)) {
+      uint8 pmmIndex = getPmmIIndex(localBaseRequest.fromToken);
+      vars.errorCode = _tryPmmSwap(payer, vars.baseRequestFromToken, vars.actualFromTokenAmount, extraData[pmmIndex], false);
+      if ( vars.errorCode == 0) {
+        _transferTokenToUser(localBaseRequest.toToken, receiver);
+        returnAmount = IERC20(localBaseRequest.toToken).universalBalanceOf(receiver) - returnAmount;
+        require(returnAmount >= localBaseRequest.minReturnAmount, "Route: Return amount is not enough");
+        emit OrderRecord(vars.baseRequestFromToken, localBaseRequest.toToken, tx.origin, vars.actualFromTokenAmount, returnAmount);
+        return returnAmount;
+      }
+    }
+
+    if (batches.length == 0 || batches[0].length == 0) {
+      revert PMMErrorCode(vars.errorCode);
+    }
+    // 4. execute batch
+    for (uint256 i = 0; i < batches.length; ) {
+      // execute hop, if the whole swap replacing by pmm fails, the funds will return to dexRouter
+      _exeHop(payer, batchesAmount[i] * vars.actualFromTokenAmount / localBaseRequest.fromTokenAmount, 1, batches[i], extraData);
+      unchecked {
+        ++i;
+      }
+    }
+
+    // 5. transfer tokens to user
+    _transferTokenToUser(vars.baseRequestFromToken, tx.origin);
+    _transferTokenToUser(localBaseRequest.toToken, receiver);
+
+    // 6. check minReturnAmount
+    returnAmount = IERC20(localBaseRequest.toToken).universalBalanceOf(receiver) - returnAmount;
+    require(returnAmount >= localBaseRequest.minReturnAmount, "Min return not reached");
+
+    emit OrderRecord(vars.baseRequestFromToken, localBaseRequest.toToken, tx.origin, vars.actualFromTokenAmount, returnAmount);
     return returnAmount;
   }
 
@@ -453,5 +542,15 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   ) public payable returns (uint256 returnAmount) {
     emit SwapOrderId((srcToken & _ORDER_ID_MASK) >> 160);
     returnAmount = _unxswapInternal(IERC20(address(uint160(srcToken& _ADDRESS_MASK))), amount, minReturn, pools, msg.sender, msg.sender);
+  }
+
+  function smartSwapByInvest(
+    BaseRequest calldata baseRequest,
+    uint256[] calldata batchesAmount,
+    RouterPath[][] calldata batches,
+    IMarketMaker.PMMSwapRequest[] calldata extraData,
+    address to
+  ) public payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) {
+    returnAmount = _smartSwapInvestInternal(baseRequest, batchesAmount, batches, extraData, msg.sender, to);
   }
 }
