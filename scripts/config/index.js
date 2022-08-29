@@ -9,9 +9,6 @@ const op = require('./op')
 const ftm = require('./ftm')
 const polygon = require('./polygon')
 
-
-
-
 let config
 
 if (network == "okc") {
@@ -28,10 +25,10 @@ if (network == "okc") {
   config = op
 } else if (network == 'ftm') {
   config = ftm
-} else if (network == '') {
+} else if (network == 'polygon') {
   config = polygon
 } else {
-  config = eth
+  throw error("network not config")
 }
 
 const getConfig = function (network) {
