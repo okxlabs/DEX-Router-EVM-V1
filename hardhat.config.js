@@ -13,6 +13,7 @@ require("solidity-coverage");
 const PRIVATE_KEY = process.env.PRIVATE_KEY || 'ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
 const ALCHEMY_KEY = process.env.ALCHEMY_KEY || '';
 const INFURA_KEY = process.env.INFURA_KEY || '';
+const INFSTONES_KEY = process.env.INFSTONES_KEY || '';
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || '';
 const BSC_API_KEY = process.env.BSC_API_KEY || '';
 const OKC_API_KEY = process.env.OKC_API_KEY || '';
@@ -20,24 +21,6 @@ const OKC_API_KEY = process.env.OKC_API_KEY || '';
 module.exports = {
   solidity: {
     compilers: [
-			{
-				version: '0.7.6',
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200
-          }
-        }
-			},
-      {
-				version: '0.8.6',
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200
-          }
-        }
-			},
       {
 				version: '0.8.9',
         settings: {
@@ -80,7 +63,7 @@ module.exports = {
       // }
     },
     okc: {
-      url: "https://exchainrpc.okex.org",
+      url: INFSTONES_KEY == '' ? "https://exchainrpc.okex.org" : `https://api.infstones.com/okc-archive/mainnet/${INFSTONES_KEY}`,
       chainId: 66,
       accounts: [`${PRIVATE_KEY}`],
       settings: {
@@ -114,7 +97,6 @@ module.exports = {
     },
     bsc_dev: {
       url: "https://rpc.ankr.com/bsc",
-      // url: "https://bsc-dataseed.binance.org",
       chainId: 56,
       accounts: [`${PRIVATE_KEY}`],
       settings: {
@@ -136,7 +118,7 @@ module.exports = {
       },
     },
     eth: {
-      url: `https://mainnet.infura.io/v3/${INFURA_KEY}`,
+      url: ALCHEMY_KEY == '' ? "https://rpc.ankr.com/eth" : `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
@@ -145,15 +127,14 @@ module.exports = {
         },
       }
     },
-    kovan: {
-      url: `https://kovan.infura.io/v3/${INFURA_KEY}`,
+    goerli: {
+      url: `https://eth-goerli.g.alchemy.com/v2/${ALCHEMY_KEY}`,
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
           enabled: true,
           runs: 200
         },
-      }
     },
     cro: {
       url: "https://evm-cronos.crypto.org",
@@ -200,7 +181,7 @@ module.exports = {
       },
     },
     polygon: {
-      url: "https://matic-mainnet-archive-rpc.bwarelabs.com",
+      url: ALCHEMY_KEY == '' ? "https://matic-mainnet-archive-rpc.bwarelabs.com" : `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
       accounts: [`${PRIVATE_KEY}`],
       gasPrice: 250000000000,
       settings: {
@@ -250,6 +231,7 @@ module.exports = {
         },
       },
     }
+    },
   },
   paths: {
     sources: './contracts/8'
