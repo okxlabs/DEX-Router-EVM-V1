@@ -135,6 +135,7 @@ module.exports = {
           enabled: true,
           runs: 200
         },
+      },
     },
     cro: {
       url: "https://evm-cronos.crypto.org",
@@ -231,7 +232,6 @@ module.exports = {
         },
       },
     }
-    },
   },
   paths: {
     sources: './contracts/8'

@@ -1,10 +1,9 @@
 const { ethers } = require("hardhat");
-const { getConfig } = require("../config");
-tokenConfig = getConfig("eth");
+const deployed = require("../deployed");
 
 async function main() {
     UniV3Adapter = await ethers.getContractFactory("UniV3Adapter");
-    uniV3Adapter = await UniV3Adapter.deploy(tokenConfig.tokens.WETH.baseTokenAddress);
+    uniV3Adapter = await UniV3Adapter.deploy(deployed.base.wNativeToken);
     await uniV3Adapter.deployed();
 
     console.log(`uniV3Adapter deployed: ${uniV3Adapter.address}`);
