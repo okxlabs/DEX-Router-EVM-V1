@@ -37,28 +37,42 @@ async function execute(FraxswapAdapter) {
     // check user token
     beforeBalance = await Frax.balanceOf(userAddress);
     console.log("user balance: ", beforeBalance.toString());
+    
+    fromAmount = ethers.utils.parseEther("100")
 
     // transfer token
-    await Frax.connect(signer).transfer(poolAddress, ethers.utils.parseEther("100", 18));
-
+    await Frax.connect(signer).transfer(poolAddress, fromAmount);
+     
     // swap
-    beforeBalance = await Fxs.balanceOf(signer.address);
+    beforeBalance = await Fxs.balanceOf(FraxswapAdapter.address);
     console.log("Fxs beforeBalance: ", beforeBalance.toString());
 
     rxResult = await FraxswapAdapter.sellQuote(
-        FraxswapAdapter.address,
+        signer.address,
         poolAddress,
-        "0x"
+        moreInfo
     );
 
     // console.log(rxResult)
 
-    afterBalance = await Frax.balanceOf(signer.address);
-    usdtBalance = await Fxs.balanceOf(signer.address);
-    console.log("Frax afterBalance: ", usdtBalance.toString());
-    console.log("Fxs afterBalance: ", afterBalance.toString());
-}
+    FxsBalance = await Fxs.balanceOf(signer.address);
+    console.log("Fxs afterBalance: ", FxsBalance.toString());
 
+    // ================== SellBase ==================
+    await Fxs.connect(signer).transfer(poolAddress, await Fxs.balanceOf(signer.address));
+
+    rxResult = await FraxswapAdapter.sellBase(
+      signer.address,
+      poolAddress,
+      moreInfo
+  );
+  console.log("================== SellBase ==================")
+  FraxBalance = await Frax.balanceOf(signer.address);
+  console.log("Frax afterBalance: ", FraxBalance.toString());
+  FxsBalance = await Fxs.balanceOf(signer.address);
+  console.log("Fxs afterBalance: ", FxsBalance.toString());
+
+}
 
 
 async function main() {

@@ -10,26 +10,29 @@ import "hardhat/console.sol";
 /// @notice Explain to an end user what this does
 /// @dev Explain to a developer any extra details
 contract FraxswapAdapter is IAdapter {
-    // fromToken == token0
     
+    function getReservesWithTwamm(address pool) internal returns (uint256 reserve0, uint256 reserve1, uint256 twammReserve0, uint256 twammReserve1, uint256 fee) {
+        IFraxswap(pool).executeVirtualOrders(block.timestamp);
+        ( reserve0, reserve1, ,twammReserve0, twammReserve1,  fee) = IFraxswap(pool).getTwammReserves();
+    }
+
+    function _getAmountOut( address quoteToken, address pool, uint256 reserveIn, uint256 reserveOut, uint256 twammReserveIn, uint256 twammReserveOut, uint256 fee) internal view returns (uint256 receiveBaseAmount)  {
+        uint256 sellQuoteAmount = IERC20(quoteToken).balanceOf(pool) - reserveIn - twammReserveIn ;        
+        uint256 sellQuoteAmountWithFee = sellQuoteAmount * (10000 - fee);
+        uint256 numerator = sellQuoteAmountWithFee * reserveOut;
+        uint256 denominator = reserveIn * 10000 + sellQuoteAmountWithFee;
+        receiveBaseAmount = numerator / denominator;    
+    }
+    
+    // fromToken == token0
     function sellBase(
         address to,
         address pool,
-        bytes memory
+        bytes memory moreInfo
     ) external override {
         address baseToken = IFraxswap(pool).token0();
-        (uint256 reserveIn, uint256 reserveOut, ) = IFraxswap(pool).getReserves();
-        require(
-            reserveIn > 0 && reserveOut > 0,
-            "FraxswapAdapter: INSUFFICIENT_LIQUIDITY"
-        );
-
-        uint256 balance0 = IERC20(baseToken).balanceOf(pool);
-        uint256 sellBaseAmount = balance0 - reserveIn;
-        uint256 sellBaseAmountWithFee = sellBaseAmount * IFraxswap(pool).fee();
-        uint256 numerator = sellBaseAmountWithFee * reserveOut;
-        uint256 denominator = reserveIn * 10000 + sellBaseAmountWithFee;
-        uint256 receiveQuoteAmount = numerator / denominator;
+        (uint256 reserveIn, uint256 reserveOut, uint256 twammReserveIn, uint256 twammReserveOut, uint256 fee) = getReservesWithTwamm(pool);
+        uint256 receiveQuoteAmount = _getAmountOut(baseToken, pool, reserveIn, reserveOut, twammReserveIn, twammReserveOut, fee);
         IFraxswap(pool).swap(0, receiveQuoteAmount, to, new bytes(0));
     }
 
@@ -37,29 +40,11 @@ contract FraxswapAdapter is IAdapter {
     function sellQuote(
         address to,
         address pool,
-        bytes memory
+        bytes memory moreInfo
     ) external override {
         address quoteToken = IFraxswap(pool).token1();
-        (uint256 reserveOut, uint256 reserveIn, ) = IFraxswap(pool).getReserves();
-        require(
-            reserveIn > 0 && reserveOut > 0,
-            "FraxswapAdapter: INSUFFICIENT_LIQUIDITY"
-        );
-
-        uint256 balance1 = IERC20(quoteToken).balanceOf(pool);
-        uint256 sellQuoteAmount = balance1 - reserveIn;
-        uint256 receiveBaseAmount = IFraxswap(pool).getAmountOut(sellQuoteAmount, quoteToken);
-        
-        // ==== DEBUG ====
-        console.log(sellQuoteAmount);
-        console.log(quoteToken);
-        console.log(receiveBaseAmount);
-
-        address baseToken = IFraxswap(pool).token0();
-        uint256 balance2 = IERC20(quoteToken).balanceOf(pool);
-        console.log(baseToken);
-        console.log(balance2);
-
+        (uint256 reserveOut, uint256 reserveIn, uint256 twammReserveOut, uint256 twammReserveIn, uint256 fee) = getReservesWithTwamm(pool);
+        uint256 receiveBaseAmount = _getAmountOut(quoteToken, pool, reserveIn, reserveOut, twammReserveIn, twammReserveOut, fee);
         IFraxswap(pool).swap(receiveBaseAmount, 0, to, new bytes(0));
     }
 }
