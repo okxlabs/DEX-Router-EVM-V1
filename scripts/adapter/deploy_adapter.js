@@ -1,5 +1,5 @@
 const { ethers } = require("hardhat");
-const { config } = require("../config");
+const { deployed } = require("../deployed");
 
 async function deployAdapter(adapterName, args) {
   Adapter = await ethers.getContractFactory(adapterName);
@@ -10,7 +10,6 @@ async function deployAdapter(adapterName, args) {
 }
 
 async function main() {
-
   const adapterList = [
     'BalancerAdapter',
     'BalancerV2Adapter',
@@ -25,14 +24,14 @@ async function main() {
 
   const adapterArgs = [
     [], // BalancerAdapter
-    [config.contracts.BalancerVault.address, config.tokens.WETH.baseTokenAddress], // BalancerV2Adapter
-    [config.contracts.BancorNetwork.address, config.tokens.WETH.baseTokenAddress], // BancorAdapter
+    [config.contracts.BalancerVault.address, deployed.base.wNativeToken], // BalancerV2Adapter
+    [config.contracts.BancorNetwork.address, deployed.base.wNativeToken], // BancorAdapter
     [], // CurveAdapter
-    [config.tokens.WETH.baseTokenAddress], // CurveV2Adapter
+    [deployed.base.wNativeToken], // CurveV2Adapter
     [], // KyberAdapter
     [], // PancakeAdapter
     [], // UniAdapter
-    [config.tokens.WETH.baseTokenAddress], // UniV3Adapter
+    [deployed.base.wNativeToken], // UniV3Adapter
   ]
 
   for (let i = 0; i < adapterList.length; i++) {
