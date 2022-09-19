@@ -203,7 +203,7 @@ module.exports = {
       },
     },
     arb: {
-      url: "https://rpc.ankr.com/arbitrum",
+      url: "https://arb1.arbitrum.io/rpc",
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
