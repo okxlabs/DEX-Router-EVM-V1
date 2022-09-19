@@ -28,7 +28,7 @@ if (network == "okc") {
 } else if (network == 'polygon') {
   config = polygon
 } else {
-  throw error("network not config")
+  // throw error("network not config")
 }
 
 const getConfig = function (network) {

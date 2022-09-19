@@ -9,12 +9,11 @@ function getNetworkURL(net) {
     } else if (net == 'okc_test') {
         return 'https://exchaintestrpc.okex.org'
     } else if (net == 'eth') {
-        return `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}`
+        return ALCHEMY_KEY == '' ? "https://rpc.ankr.com/eth" : `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}`
     } else if (net == 'bsc') {
         return `https://rpc.ankr.com/bsc`
     } else if (net == 'polygon') {
-        // return `https://rpc.ankr.com/polygon`
-        return `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
+        return ALCHEMY_KEY == '' ? `https://rpc.ankr.com/polygon` : `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
     } else if (net == 'avax') {
         //  return `https://speedy-nodes-nyc.moralis.io/e88a69edd7e8b87e8c86975b/avalanche/mainnet/archive`
         return `https://avalancheapi.terminet.io/ext/bc/C/rpc`
@@ -26,15 +25,15 @@ function getNetworkURL(net) {
     }
 }
 
-
-setForkNetWorkAndBlockNumber = async (net, blockNumber) => {
+setForkNetWorkAndBlockNumber = async (net, targetBlockNumber) => {
     url = getNetworkURL(net)
     await network.provider.request({
         method: "hardhat_reset",
         params: [
             {
                 forking: {
-                    jsonRpcUrl: url
+                    jsonRpcUrl: url,
+                    blockNumber: targetBlockNumber,
                 }
             },
         ],
@@ -70,9 +69,10 @@ stopMockAccount = async (account) => {
 }
 
 setBalance = async (user, amount) => {
+    const isHex = (amount.toString()).startsWith('0x')
     await network.provider.send("hardhat_setBalance", [
         user,
-        amount,
+        isHex ? amount : "0x" + parseInt(amount).toString(16)
     ]);
 }
 
