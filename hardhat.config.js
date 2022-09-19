@@ -63,7 +63,7 @@ module.exports = {
       // }
     },
     okc: {
-      url: INFSTONES_KEY == '' ? "https://exchainrpc.okex.org" : `https://api.infstones.com/okc-archive/mainnet/${INFSTONES_KEY}`,
+      url: INFSTONES_KEY == '' ? "http://35.72.176.238:26659" : `https://api.infstones.com/okc-archive/mainnet/${INFSTONES_KEY}`,
       chainId: 66,
       accounts: [`${PRIVATE_KEY}`],
       settings: {
