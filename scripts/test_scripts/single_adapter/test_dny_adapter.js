@@ -16,8 +16,8 @@ async function execute() {
     const account = await ethers.getSigner(accountAddress);
 
     WETH = await ethers.getContractAt(
-      "MockERC20",
-      tokenConfig.tokens.WETH.baseTokenAddress
+        "MockERC20",
+        tokenConfig.tokens.WETH.baseTokenAddress
     )
     RND = await ethers.getContractAt(
         "MockERC20",
@@ -34,14 +34,17 @@ async function execute() {
     console.log("before RND Balance: " + await RND.balanceOf(account.address));
 
     // transfer 0.0625 WETH to poolAddr
-    
+
     await WETH.connect(account).transfer(poolAddr, ethers.utils.parseEther('100'));
 
     // WETH to RND token pool
     rxResult = await univ2Adapter.sellQuote(
         account.address,                                // receive token address
         poolAddr,                                       // WETH-RND Pool
-        "0x"
+        ethers.utils.defaultAbiCoder.encode(
+            ["uint256"],
+            ["30"]
+        )
     );
     // console.log(rxResult);
 
@@ -55,7 +58,10 @@ async function execute() {
     rxResult = await univ2Adapter.sellBase(
         account.address,                                // receive token address
         poolAddr,                                       // WETH-RND Pool
-        "0x"
+        ethers.utils.defaultAbiCoder.encode(
+            ["uint256"],
+            ["30"]
+        )
     );
     // console.log(rxResult);
 
@@ -64,12 +70,12 @@ async function execute() {
 }
 
 async function main() {
-  await execute();
+    await execute();
 }
 
 main()
-  .then(() => process.exit(0))
-  .catch(error => {
-    console.error(error);
-    process.exit(1);
-  });
+    .then(() => process.exit(0))
+    .catch(error => {
+        console.error(error);
+        process.exit(1);
+    });
