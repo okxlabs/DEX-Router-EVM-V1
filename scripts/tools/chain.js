@@ -19,7 +19,7 @@ function getNetworkURL(net) {
         return `https://avalancheapi.terminet.io/ext/bc/C/rpc`
         // return `https://rpc.ankr.com/avalanche`
     } else if (net == 'artibrum') {
-        return "https://rpc.ankr.com/arbitrum"
+        return ALCHEMY_KEY == '' ? `https://rpc.ankr.com/arbitrum` : `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
     } else {
         return 'http://127.0.0.1:8545'
     }
