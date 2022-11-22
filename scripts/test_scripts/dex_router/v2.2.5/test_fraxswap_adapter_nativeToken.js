@@ -1,6 +1,8 @@
 const { ethers } = require("hardhat");
 require("../../../tools");
 const { initDexRouter, direction, FOREVER } = require("../utils")
+const { getConfig } = require("../../../config");
+tokenConfig = getConfig("eth")
 
 async function deployContract() {
     FraxswapAdapter = await ethers.getContractFactory("FraxswapAdapter");
@@ -9,29 +11,28 @@ async function deployContract() {
     return FraxswapAdapter
 }
 
-async function executeSellQuote(FraxswapAdapter) {
+async function executeSellBase(FraxswapAdapter) {
     pmmReq = []
     userAddress = "0x3af7fa91f0b2b2d148622831e3a21c165c8c8e49"
-    poolAddress = "0x03B59Bd1c8B9F6C265bA0c3421923B93f15036Fa"
+    poolAddress = "0x31351bf3fba544863fbff44ddc27ba880916a199"
 
     startMockAccount([userAddress]);
 
     signer = await ethers.getSigner(userAddress);
 
-    // Quote Token
+    // Base Token
     Frax = await ethers.getContractAt(
       "MockERC20",
       "0x853d955aCEf822Db058eb8505911ED77F175b99e"
     )
 
-    // Base Token
-    Fxs = await ethers.getContractAt(
+    WETH = await ethers.getContractAt(
       "MockERC20",
-      "0x3432B6A60D23Ca0dFCa7761B7ab56459D9C964D0"
+      "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
     )
 
     // check user token
-    beforeBalance = await Fxs.balanceOf(userAddress);
+    beforeBalance = await WETH.balanceOf(userAddress);
     console.log("user before balance: ", beforeBalance.toString());
     
     fromTokenAmount = ethers.utils.parseEther("100")
@@ -49,7 +50,7 @@ async function executeSellQuote(FraxswapAdapter) {
     let weight1 = Number(10000).toString(16).replace('0x', '');
     let rawData1 = [
         "0x" +
-        direction(Frax.address, Fxs.address) +
+        direction(Frax.address, WETH.address) +
         "0000000000000000000" +
         weight1 +
         poolAddress.replace("0x", "")
@@ -65,7 +66,7 @@ async function executeSellQuote(FraxswapAdapter) {
 
     let baseRequest = [
         Frax.address,
-        Fxs.address,
+        WETH.address,
         fromTokenAmount,
         minReturnAmount,
         deadLine,
@@ -81,38 +82,36 @@ async function executeSellQuote(FraxswapAdapter) {
     let gasCost = await getTransactionCost(tx);
     console.log(gasCost);
 
-    FxsBalance = await Fxs.balanceOf(signer.address);
-    console.log("Fxs afterBalance: ", FxsBalance.toString());
-    console.log("change >>> ", (FxsBalance - beforeBalance).toString());
-
+    wethBalance = await WETH.balanceOf(signer.address);
+    console.log("weth afterBalance: ", wethBalance.toString());
+    console.log("change >>> ", (wethBalance    - beforeBalance).toString());
 }
 
-async function executeSellBase(FraxswapAdapter) {
+async function executeSellQuote(FraxswapAdapter) {
   pmmReq = []
   userAddress = "0x3af7fa91f0b2b2d148622831e3a21c165c8c8e49"
-  poolAddress = "0x03B59Bd1c8B9F6C265bA0c3421923B93f15036Fa"
+  poolAddress = "0x31351bf3fba544863fbff44ddc27ba880916a199"
 
   startMockAccount([userAddress]);
 
   signer = await ethers.getSigner(userAddress);
 
-  // Quote Token
+  // Base Token
   Frax = await ethers.getContractAt(
     "MockERC20",
     "0x853d955aCEf822Db058eb8505911ED77F175b99e"
   )
 
-  // Base Token
-  Fxs = await ethers.getContractAt(
+  WETH = await ethers.getContractAt(
     "MockERC20",
-    "0x3432B6A60D23Ca0dFCa7761B7ab56459D9C964D0"
+    "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
   )
 
   // check user token
   beforeBalance = await Frax.balanceOf(userAddress);
   console.log("user before balance: ", beforeBalance.toString());
   
-  fromTokenAmount = ethers.utils.parseEther("100")
+  fromTokenAmount =  await WETH.balanceOf(userAddress);
 
   let { dexRouter, tokenApprove } = await initDexRouter();
 
@@ -127,7 +126,7 @@ async function executeSellBase(FraxswapAdapter) {
   let weight1 = Number(10000).toString(16).replace('0x', '');
   let rawData1 = [
       "0x" +
-      direction(Fxs.address, Frax.address) +
+      direction(WETH.address, Frax.address) +
       "0000000000000000000" +
       weight1 +
       poolAddress.replace("0x", "")
@@ -135,21 +134,21 @@ async function executeSellBase(FraxswapAdapter) {
 
   let moreInfo = "0x";
   let extraData1 = [moreInfo];
-  let router1 = [mixAdapter1, assertTo1, rawData1, extraData1, Fxs.address];
+  let router1 = [mixAdapter1, assertTo1, rawData1, extraData1, WETH.address];
 
   // layer1
   // let request1 = [requestParam1];
   let layer1 = [router1];
 
   let baseRequest = [
-      Fxs.address,
+      WETH.address,
       Frax.address,
       fromTokenAmount,
       minReturnAmount,
       deadLine,
   ]
 
-  await Fxs.connect(signer).approve(tokenApprove.address, fromTokenAmount);
+  await WETH.connect(signer).approve(tokenApprove.address, fromTokenAmount);
   let tx = await dexRouter.connect(signer).smartSwap(
       baseRequest,
       [fromTokenAmount],
@@ -159,10 +158,9 @@ async function executeSellBase(FraxswapAdapter) {
   let gasCost = await getTransactionCost(tx);
   console.log(gasCost);
 
-  FraxBalance = await Frax.balanceOf(signer.address);
-  console.log("Frax afterBalance: ", FraxBalance.toString());
-  console.log("change >>> ", (FraxBalance - beforeBalance).toString());
-
+  fraxBalance = await Frax.balanceOf(signer.address);
+  console.log("frax afterBalance: ", fraxBalance.toString());
+  console.log("change >>> ", (fraxBalance  - beforeBalance).toString());
 }
 
 
@@ -175,10 +173,11 @@ const getTransactionCost = async (txResult) => {
 async function main() {
     FraxswapAdapter = await deployContract()
     console.log("===== executeSellQuote =====")
-    await executeSellQuote(FraxswapAdapter);
-
-    console.log("===== executeSellBase =====")
     await executeSellBase(FraxswapAdapter);
+
+
+    console.log("===== FraxswapAdapter =====")
+    await executeSellQuote(FraxswapAdapter);
 }
 
 main()
