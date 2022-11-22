@@ -3309,7 +3309,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                     {
                         forking: {
                             // jsonRpcUrl: `http://35.73.164.192:26659`,
-                            jsonRpcUrl: ` http://43.206.83.79:26659`,
+                            jsonRpcUrl: ` http://35.72.176.238:26659`,
                             // jsonRpcUrl: `https://okc-mainnet.gateway.pokt.network/v1/lb/6275309bea1b320039c893ff`,
                             blockNumber: targetBlockNumber,
                         },
@@ -3322,7 +3322,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             // fork states 
     
             // 1. prepare accounts
-            await setForkBlockNumber(15486100);
+            await setForkBlockNumber(15474100);
     
             await initAccounts();
     
@@ -3425,7 +3425,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             bobWOKTBalAfter = await wokt.balanceOf(bob.address);
     
             // 8. check balance
-            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001571792601397013'));
+            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001563737353628804'));
             expect(bobWOKTBalAfter.sub(bobWOKTBalBefore)).to.equal(ethers.utils.parseEther('0.0001'));
 
         });
@@ -3507,7 +3507,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             bobWOKTBalAfter = await wokt.balanceOf(bob.address);
     
             // 8. check balance
-            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001571792578457451'));
+            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001563737330861485'));
             expect(bobWOKTBalAfter.sub(bobWOKTBalBefore)).to.equal(ethers.utils.parseEther('0')); 
         });
 
@@ -3584,7 +3584,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
 
     
             // 8. check balance
-            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001571792601397013'));
+            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001563737353628804'));
             expect(bobWOKTBalAfter.sub(bobWOKTBalBefore)).to.equal(ethers.utils.parseEther('0.0001')); 
         });
 
@@ -3661,7 +3661,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
 
     
             // 8. check balance
-            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001571792601397013'));
+            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001563737353628804'));
             expect(bobWOKTBalAfter.sub(bobWOKTBalBefore)).to.equal(ethers.utils.parseEther('0.0001')); 
         });
 
