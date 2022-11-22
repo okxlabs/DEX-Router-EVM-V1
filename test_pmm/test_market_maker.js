@@ -17,14 +17,14 @@ const ethdevDeployed = require("../scripts/deployed/eth_dev");
 
 require ('../scripts/tools');
 
-describe("Market Maker Test (version: 1.0.0)", function(){
+describe("Market Maker Test (version: 1.0.0)", function() {
     let wbtc, usdt, weth, factory, router, marketMaker;
     let owner, alice, bob, carol, backEnd, canceler, cancelerGuardian, singer;
     let layer1, layer2, layer3;
     const FOREVER = '2000000000';
     const ETH = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 
-    const initMockTokens = async function() {
+    const initMockTokens = async () => {
         const MockERC20 = await ethers.getContractFactory("MockERC20");
 
         usdc = await MockERC20.deploy('USDC', 'USDC', ethers.utils.parseEther('10000000000'));
@@ -119,7 +119,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
 //  weth: 3000
 //  okb:  20
 //  dot:  15
-    const addLiquidity = async function(){
+    const addLiquidity = async () => {
         const pairs = [
             [usdt, weth, ethers.utils.parseEther('150000'), ethers.utils.parseEther('50')],
             [weth, wbtc, ethers.utils.parseEther('40'), ethers.utils.parseEther('3')],
@@ -153,7 +153,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
         return ethers.utils.hexZeroPad(weight, 2).slice(2);
     }
 
-    const getSource = async function(pair, fromToken, toToken) {
+    const getSource = async (pair, fromToken, toToken) => {
         let isReverse = "0000";
         let token0 = await pair.token0();
         let token1 = await pair.token1();
@@ -164,7 +164,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
         return source;
     }
 
-    const getUniV3Source = async function(pair, fromToken, toToken) {
+    const getUniV3Source = async (pair, fromToken, toToken) => {
         let isReverse = "0100";
         let token0 = await pair.token0();
         let token1 = await pair.token1();
@@ -176,7 +176,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
     }
 
 
-    const initLayersWholeSwap = async function() {
+    const initLayersWholeSwap = async () => {
 
         //  30%  usdt -> weth -> wbtc
         //  20%  usdt -> wbtc
@@ -238,7 +238,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
     }
         
 
-    const initLayersReplaceFirstBatch = async function() {
+    const initLayersReplaceFirstBatch = async () => {
 
         //  30%  usdt -> weth -> wbtc
         //  20%  usdt -> wbtc
@@ -299,8 +299,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
         return layers;
     }
 
-
-    const initLayersReplaceHops = async function() {
+    const initLayersReplaceHops = async () => {
 
         //  30%  usdt -> weth -> wbtc
         //  20%  usdt -> wbtc
@@ -1295,8 +1294,6 @@ describe("Market Maker Test (version: 1.0.0)", function(){
 
 
     });
-
-
 
     describe("2. Integration Test (swap from DexRouter)", function() {
 
@@ -3203,10 +3200,6 @@ describe("Market Maker Test (version: 1.0.0)", function(){
 
     });
 
-
-
-
-
     describe("3. Fork OKC Network Test", function() {
         this.timeout(30000);
         let wokt;
@@ -3296,7 +3289,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
     
         }
     
-        const initLayersWholeSwap = async function() {
+        const initLayersWholeSwap = async () => {
             //  router11 usdt -> weth
             const mixAdapter11 = [uniAdapter.address];
             const assertTo11 = [lpWOKTUSDT.address];
@@ -3316,7 +3309,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
                     {
                         forking: {
                             // jsonRpcUrl: `http://35.73.164.192:26659`,
-                            jsonRpcUrl: ` http://13.230.141.168:26659`,
+                            jsonRpcUrl: ` http://43.206.83.79:26659`,
                             // jsonRpcUrl: `https://okc-mainnet.gateway.pokt.network/v1/lb/6275309bea1b320039c893ff`,
                             blockNumber: targetBlockNumber,
                         },
@@ -3329,7 +3322,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
             // fork states 
     
             // 1. prepare accounts
-            await setForkBlockNumber(13150000);
+            await setForkBlockNumber(15486100);
     
             await initAccounts();
     
@@ -3340,8 +3333,6 @@ describe("Market Maker Test (version: 1.0.0)", function(){
             await initTokens();
     
             await initContract();
-    
-    
         });
     
         //  =========================  Multiple  Exchange Test  ============================
@@ -3433,14 +3424,11 @@ describe("Market Maker Test (version: 1.0.0)", function(){
             aliceUSDTBalAfter = await usdt.balanceOf(alice.address);
             bobWOKTBalAfter = await wokt.balanceOf(bob.address);
     
-    
             // 8. check balance
-            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001836650889467037'));
+            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001571792601397013'));
             expect(bobWOKTBalAfter.sub(bobWOKTBalBefore)).to.equal(ethers.utils.parseEther('0.0001'));
-    
+
         });
-    
-    
     
         it("3.2 Try to replace the whole swap with pmm but failed, turn to dex", async () => {
             const { chainId }  = await ethers.provider.getNetwork();
@@ -3519,7 +3507,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
             bobWOKTBalAfter = await wokt.balanceOf(bob.address);
     
             // 8. check balance
-            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001836650872607920'));
+            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001571792578457451'));
             expect(bobWOKTBalAfter.sub(bobWOKTBalBefore)).to.equal(ethers.utils.parseEther('0')); 
         });
 
@@ -3596,7 +3584,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
 
     
             // 8. check balance
-            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001836650889467037'));
+            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001571792601397013'));
             expect(bobWOKTBalAfter.sub(bobWOKTBalBefore)).to.equal(ethers.utils.parseEther('0.0001')); 
         });
 
@@ -3673,7 +3661,7 @@ describe("Market Maker Test (version: 1.0.0)", function(){
 
     
             // 8. check balance
-            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001836650889467037'));
+            expect(aliceUSDTBalAfter.sub(aliceUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.001571792601397013'));
             expect(bobWOKTBalAfter.sub(bobWOKTBalBefore)).to.equal(ethers.utils.parseEther('0.0001')); 
         });
 
@@ -3755,13 +3743,11 @@ describe("Market Maker Test (version: 1.0.0)", function(){
 
     
             // 8. check balance
-            expect(aliceOKTBalAfter.add(gasUsed.mul(gasPrice)).sub(aliceOKTBalBefore)).to.equal(ethers.utils.parseEther('0.000097417326845342'));
+            expect(aliceOKTBalAfter.add(gasUsed.mul(gasPrice)).sub(aliceOKTBalBefore)).to.equal(ethers.utils.parseEther('0.000100697000000000'));
             expect(bobUSDTBalAfter.sub(bobUSDTBalBefore)).to.equal(ethers.utils.parseEther('0.0018')); 
         });
 
     });
-    
-
 
     describe("4. Fork Eth Network Test", function() {
         this.timeout(30000);
