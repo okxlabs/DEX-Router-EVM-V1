@@ -16,7 +16,7 @@ contract FraxswapAdapter is IAdapter {
         ( reserve0, reserve1, ,twammReserve0, twammReserve1,  fee) = IFraxswap(pool).getTwammReserves();
     }
 
-    function _getAmountOut( address quoteToken, address pool, uint256 reserveIn, uint256 reserveOut, uint256 twammReserveIn, uint256 _twammReserveOut, uint256 fee) internal view returns (uint256 receiveBaseAmount)  {
+    function _getAmountOut( address quoteToken, address pool, uint256 reserveIn, uint256 reserveOut, uint256 twammReserveIn, uint256 /*_twammReserveOut*/, uint256 fee) internal view returns (uint256 receiveBaseAmount)  {
         uint256 sellQuoteAmount = IERC20(quoteToken).balanceOf(pool) - reserveIn - twammReserveIn ;        
         uint256 sellQuoteAmountWithFee = sellQuoteAmount * (10000 - fee);
         uint256 numerator = sellQuoteAmountWithFee * reserveOut;
