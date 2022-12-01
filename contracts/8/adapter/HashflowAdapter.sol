@@ -5,14 +5,21 @@ import "../interfaces/IHashflow.sol";
 import "../interfaces/IERC20.sol";
 import "../libraries/SafeERC20.sol";
 import "../interfaces/IWETH.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-contract HashflowAdapter is IAdapter {
 
-    address public immutable HASHFLOWROUTER ;
+contract HashflowAdapter is IAdapter, OwnableUpgradeable, ReentrancyGuardUpgradeable {
+
+    address public HASHFLOWROUTER ;
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    address public immutable WETH_ADDRESS;
-
-    constructor (address _HashflowRouter, address _weth) {
+    address public  WETH_ADDRESS;
+    
+    function initialize(
+        address _HashflowRouter,
+        address _weth
+    ) public initializer {
+        __Ownable_init();
         HASHFLOWROUTER = _HashflowRouter;
         WETH_ADDRESS = _weth;
     }
@@ -70,14 +77,6 @@ contract HashflowAdapter is IAdapter {
         bytes memory moreInfo
     ) external override {
         _hashflowSwap(to, pool, moreInfo);
-    }
-
-
-    function withdrawLeftToken(address curQuote) public {
-        uint256 curAmountLeft = IERC20(curQuote).balanceOf(address(this));
-        if (curAmountLeft > 0) {
-            SafeERC20.safeTransfer(IERC20(curQuote), msg.sender, curAmountLeft);
-        }
     }
 
     event Received(address, uint256);

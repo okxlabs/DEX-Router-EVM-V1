@@ -7,17 +7,18 @@ require('dotenv').config();
 let { initDexRouter, direction, FOREVER } = require("../utils")
 
 
-const _HashflowRouter = "0xF6a94dfD0E6ea9ddFdFfE4762Ad4236576136613"
+const _HashFlowRouter = "0xF6a94dfD0E6ea9ddFdFfE4762Ad4236576136613"
 
 async function deployContract() {
+    HashFlowAdapter = await ethers.getContractFactory("HashflowAdapter");
+    hashFlowAdapter = await upgrades.deployProxy(
+      HashFlowAdapter, [_HashFlowRouter, tokenConfig.tokens.WETH.baseTokenAddress]
+    );
+    await hashFlowAdapter.deployed();
 
-    HashflowAdapter = await ethers.getContractFactory("HashflowAdapter");
-    HashflowAdapter = await HashflowAdapter.deploy(_HashflowRouter, tokenConfig.tokens.WETH.baseTokenAddress);
-    await HashflowAdapter.deployed();
-    return HashflowAdapter
+    console.log(hashFlowAdapter.owner());
 
-    // HashflowAdapter = await ethers.getContractAt("HashflowAdapter", "0x9C8Ca4Ad9DFaF095bA0B9185681e75ad39b1fE73")
-    // return HashflowAdapter
+    return hashFlowAdapter
 }
 
 const instance = axios.create({
@@ -195,9 +196,9 @@ async function ETH2USDT(HashflowAdapter) {
 
 async function main() {
 
-    FraxswapAdapter = await deployContract()
+    HashflowAdapter = await deployContract();
     console.log("===== ETH2USDT =====")
-    await ETH2USDT(FraxswapAdapter);
+    await ETH2USDT(HashflowAdapter);
 }
 
 main()
