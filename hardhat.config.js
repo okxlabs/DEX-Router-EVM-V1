@@ -12,7 +12,6 @@ require("solidity-coverage");
 // Note: If no private key is configured in the project, the first test account of Hardhat is used by default
 const PRIVATE_KEY = process.env.PRIVATE_KEY || 'ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
 const ALCHEMY_KEY = process.env.ALCHEMY_KEY || '';
-const INFURA_KEY = process.env.INFURA_KEY || '';
 const INFSTONES_KEY = process.env.INFSTONES_KEY || '';
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || '';
 const BSC_API_KEY = process.env.BSC_API_KEY || '';
@@ -23,24 +22,6 @@ module.exports = {
     compilers: [
       {
 				version: '0.8.9',
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200
-          }
-        }
-			},
-      {
-				version: '0.5.16',
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200
-          }
-        }
-			},
-      {
-				version: '0.6.6',
         settings: {
           optimizer: {
             enabled: true,
