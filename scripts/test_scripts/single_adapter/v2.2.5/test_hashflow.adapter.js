@@ -8,16 +8,16 @@ require('dotenv').config();
 const _HashflowRouter = "0xF6a94dfD0E6ea9ddFdFfE4762Ad4236576136613"
 
 async function deployContract() {
+  HashFlowAdapter = await ethers.getContractFactory("HashflowAdapter");
+  hashFlowAdapter = await upgrades.deployProxy(
+    HashFlowAdapter, [_HashflowRouter, tokenConfig.tokens.WETH.baseTokenAddress]
+  );
+  await hashFlowAdapter.deployed();
 
-    HashflowAdapter = await ethers.getContractFactory("HashflowAdapter");
-    HashflowAdapter = await HashflowAdapter.deploy(_HashflowRouter, tokenConfig.tokens.WETH.baseTokenAddress);
-    await HashflowAdapter.deployed();
-    return HashflowAdapter
+  console.log(hashFlowAdapter.owner());
 
-    // HashflowAdapter = await ethers.getContractAt("HashflowAdapter", "0x9C8Ca4Ad9DFaF095bA0B9185681e75ad39b1fE73")
-    // return HashflowAdapter
+  return hashFlowAdapter
 }
-
 const instance = axios.create({
     baseURL: 'https://api.hashflow.com'
   });
@@ -147,6 +147,7 @@ async function ETH2USDT(HashflowAdapter) {
     // swap
     beforeBalance = await WETH.balanceOf(HashflowAdapter.address);
     console.log("WETH beforeBalance: ", beforeBalance.toString());
+    console.log("toToken beforeBalance: ",await toToken.balanceOf(signer.address));
 
     
     await HashflowAdapter.sellQuote(
@@ -196,7 +197,8 @@ async function USDT2ETH(HashflowAdapter) {
 
   // transfer token
   await fromToken.connect(signer).transfer(HashflowAdapter.address, fromAmount);
-   
+  console.log("toToken beforeBalance: ",await WETH.balanceOf(signer.address));
+
   // swap
   beforeBalance = await fromToken.balanceOf(HashflowAdapter.address);
   console.log("WETH beforeBalance: ", beforeBalance.toString());
@@ -253,6 +255,7 @@ async function USDT2USDC(HashflowAdapter) {
   // swap
   beforeBalance = await fromToken.balanceOf(HashflowAdapter.address);
   console.log("WETH beforeBalance: ", beforeBalance.toString());
+  console.log("toToken beforeBalance: ",await toToken.balanceOf(signer.address));
 
   
   await HashflowAdapter.sellQuote(

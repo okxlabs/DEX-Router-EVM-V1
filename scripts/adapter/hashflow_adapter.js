@@ -17,8 +17,21 @@ async function deployContract() {
     return hashFlowAdapter
 }
 
+async function upgradeContract(hashflowAdapterAddress) {
+    HashflowAdapter = await ethers.getContractFactory("HashflowAdapter");
+    r = await upgrades.upgradeProxy(
+        hashflowAdapterAddress,
+        HashflowAdapter
+    );
+  
+    console.log("update finish");
+}
+
 async function main() {
-    HashFlowAdapter = await deployContract();
+    // HashFlowAdapter = await deployContract();
+    
+    hashflowAdapterAddress = "0xc6de6a35eC4fF403914272a024820F2aBC5Bded7"
+    await upgradeContract(hashflowAdapterAddress)
     console.log(`HashFlowAdapter deployed: ${HashFlowAdapter.address}`);
 }
 

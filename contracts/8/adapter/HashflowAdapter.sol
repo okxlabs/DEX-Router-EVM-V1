@@ -32,14 +32,13 @@ contract HashflowAdapter is IAdapter, OwnableUpgradeable, ReentrancyGuardUpgrade
         ( address fromToken, address toToken, IQuote memory Quote) = abi.decode(moreInfo, (address, address, IQuote));
         require( Quote.pool == pool, "error pool" );
         
-        uint256 sellAmount = 0;
         if (fromToken == ETH_ADDRESS) {
-            sellAmount = IWETH(WETH_ADDRESS).balanceOf(address(this));
-            IWETH(WETH_ADDRESS).withdraw(sellAmount);
-            IHashflow(HASHFLOWROUTER).tradeSingleHop{value: sellAmount}(Quote);
+            Quote.effectiveBaseTokenAmount = IWETH(WETH_ADDRESS).balanceOf(address(this));
+            IWETH(WETH_ADDRESS).withdraw(Quote.effectiveBaseTokenAmount);
+            IHashflow(HASHFLOWROUTER).tradeSingleHop{value: Quote.effectiveBaseTokenAmount}(Quote);
         } else {
-            sellAmount = IERC20(fromToken).balanceOf(address(this));
-            SafeERC20.safeApprove(IERC20(fromToken), HASHFLOWROUTER,  sellAmount );
+            Quote.effectiveBaseTokenAmount = IERC20(fromToken).balanceOf(address(this));
+            SafeERC20.safeApprove(IERC20(fromToken), HASHFLOWROUTER,  Quote.effectiveBaseTokenAmount );
             IHashflow(HASHFLOWROUTER).tradeSingleHop(Quote);
         }
 
