@@ -24,6 +24,11 @@
       "address": "0x3b3ae790Df4F312e745D270119c6052904FB6790",
       "txHash": "0xb3a3e14dced43dc34ea5f93cafebf4ffa4b19502748eb9ce128287505ed3821a",
       "kind": "transparent"
+    },
+    {
+      "address": "0xeEAF37958CE59aA12a2fa828cF618AA4f6778e47",
+      "txHash": "0xe26a5f4ce71592174dd0d78fe3ab9838effb5ba2b3c234d816c61d355ae505c3",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -1469,6 +1474,114 @@
             "type": "t_address",
             "contract": "DexRouter",
             "src": "contracts/8/DexRouter.sol:28"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    },
+    "1441ffa62608e2af2274f79b567ae9c7a16b4dccb7caff42e1b6899131216d53": {
+      "address": "0xF00B760E51FFa10D0C276fA3bf64045c3036665a",
+      "txHash": "0x40e0910f3ebdc628fc128cfb3eb7794a355b91d4cbd3c8c12e28f08597443978",
+      "layout": {
+        "solcVersion": "0.8.9",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "_status",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_uint256",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:38"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:80"
+          },
+          {
+            "label": "HASHFLOWROUTER",
+            "offset": 0,
+            "slot": "151",
+            "type": "t_address",
+            "contract": "HashflowAdapter",
+            "src": "contracts/8/adapter/HashflowAdapter.sol:14"
+          },
+          {
+            "label": "WETH_ADDRESS",
+            "offset": 0,
+            "slot": "152",
+            "type": "t_address",
+            "contract": "HashflowAdapter",
+            "src": "contracts/8/adapter/HashflowAdapter.sol:16"
           }
         ],
         "types": {
