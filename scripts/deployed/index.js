@@ -9,6 +9,7 @@ const ftm = require('./ftm')
 const arb = require('./arb')
 const op = require('./op')
 const cro = require('./cro')
+const ethw = require('./ethw')
 
 let config
 
@@ -32,6 +33,8 @@ if (network.name === 'okc') {
     config = op
 } else if (network.name === 'cro') {
     config = cro
+} else if (network.name === 'ethw') {
+    config = ethw
 }
 
 module.exports = config
