@@ -3309,7 +3309,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                     {
                         forking: {
                             // jsonRpcUrl: `http://35.73.164.192:26659`,
-                            jsonRpcUrl: ` http://35.72.176.238:26659`,
+                            jsonRpcUrl: ` http://35.73.150.207:26659`,
                             // jsonRpcUrl: `https://okc-mainnet.gateway.pokt.network/v1/lb/6275309bea1b320039c893ff`,
                             blockNumber: targetBlockNumber,
                         },
