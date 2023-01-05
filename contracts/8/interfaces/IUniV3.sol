@@ -27,4 +27,8 @@ interface IUniV3 {
     function token0() external view returns (address);
 
     function token1() external view returns (address);
+
+    /// @notice The pool's fee in hundredths of a bip, i.e. 1e-6
+    /// @return The fee
+    function fee() external view returns (uint24);
 }

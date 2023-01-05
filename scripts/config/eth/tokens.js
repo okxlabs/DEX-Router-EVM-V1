@@ -56,6 +56,18 @@ const SETH = {
   baseTokenAddress: '0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb',
 }
 
+const stETH = {
+  name: "stETH",
+  decimals: 18,
+  baseTokenAddress: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84',
+}
+
+const rETH = {
+  name: "rETH",
+  decimals: 18,
+  baseTokenAddress: '0xae78736Cd615f374D3085123A210448E74Fc6393',
+}
+
 const AAVE = {
   name: "AAVE",
   decimals: 18,
@@ -107,6 +119,12 @@ const BREED = {
 
 }
 
+const BADGER = {
+  name: "BADGER",
+  decimals: 18,
+  baseTokenAddress: "0x3472A5A71965499acd81997a54BBA8D852C6E53d"
+}
+
 const renBTC = {
   name: "renBTC",
   decimals: 8,
@@ -131,6 +149,8 @@ module.exports = {
   BUSD,
   ETH,
   SETH,
+  stETH,
+  rETH,
   AAVE,
   IPAL,
   DAI,
@@ -139,6 +159,7 @@ module.exports = {
   WUST,
   RND,
   BREED,
+  BADGER,
   renBTC,
   alUSD
 }

@@ -9,6 +9,8 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeab
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 import "../interfaces/IApproveProxy.sol";
+import "../libraries/RevertReasonParser.sol";
+import "hardhat/console.sol";
 
 /// @title XBridge
 /// @notice Entrance for Bridge
@@ -20,7 +22,7 @@ contract MockXBridge is
 {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
-    struct SwapAndBridgeRequest {
+    struct SwapBridgeRequestV2 {
         address fromToken; // the source token
         address toToken; // the token to be bridged
         address to; // the address to be bridged to
@@ -31,6 +33,7 @@ contract MockXBridge is
         uint256 toChainToTokenMinAmount;
         bytes data;
         bytes dexData; // the call data for dexRouter
+        bytes extData;
     }
 
     struct SwapRequest {
@@ -168,7 +171,7 @@ contract MockXBridge is
         }
     }
 
-    function _swapAndBridgeToInternal(SwapAndBridgeRequest calldata _request) internal {
+    function _swapAndBridgeToInternal(SwapBridgeRequestV2 calldata _request) internal {
         require(_request.fromToken != address(0), "address 0");
         require(_request.toToken != address(0), "address 0");
         require(_request.fromToken != _request.toToken, "address equal");
@@ -177,8 +180,9 @@ contract MockXBridge is
         uint256 fromTokenBalance = _getBalanceOf(_request.fromToken);
         uint256 toTokenBalance = _getBalanceOf(_request.toToken);
         bool success;
+        bytes memory result;
         bytes4 selectorId = bytes4(_request.dexData);
-        require(selectorId == 0xd6576868 || selectorId == 0xe051c6e8, "selector id error");
+        require(selectorId == 0xd6576868 || selectorId == 0xe051c6e8 || selectorId == 0x1e00140d, "selector id error");
         payer = msg.sender;
         receiver = address(this);
         // 1. prepare and swap
@@ -188,13 +192,13 @@ contract MockXBridge is
             (success, ) = dexRouter.call{value: msg.value}(_request.dexData);
         } else {
             require(msg.value == 0, "invalid msg value");
-            (success, ) = dexRouter.call(_request.dexData);
+            (success, result) = dexRouter.call(_request.dexData);
         }
         delete payer;
         delete receiver;
 
         // 2. check result and balance
-        require(success, "dex router error");
+        require(success, RevertReasonParser.parse(result, ""));
         emit LogSwapAndBridgeTo(
             _request.adaptorId,
             msg.sender,
@@ -329,16 +333,18 @@ contract MockXBridge is
         //emit FeeToChanged(_newFeeTo);
     }
 
-    function setMpc(address[] memory mpcList) external onlyOwner {
-        for (uint256 i = 0; i < mpcList.length; i++) {
-            mpc[mpcList[i]] = true;
+    function setMpc(address[] memory _mpcList, bool[] memory _v) external onlyOwner {
+        require(_mpcList.length == _v.length, "LENGTH_NOT_EQUAL");
+        for (uint256 i = 0; i < _mpcList.length; i++) {
+            mpc[_mpcList[i]] = _v[i];
         }
     }
+
 
     //-------------------------------
     //------- Users Functions -------
     //-------------------------------
-    function swapAndBridgeToImprove(SwapAndBridgeRequest calldata _request) external payable nonReentrant whenNotPaused {
+    function swapBridgeToV2(SwapBridgeRequestV2 calldata _request) external payable nonReentrant whenNotPaused {
         _swapAndBridgeToInternal(_request);
     }
 

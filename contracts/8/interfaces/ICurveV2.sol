@@ -11,6 +11,15 @@ interface ICurveV2 {
         uint256 minDy
     ) external;
 
+    // solium-disable-next-line mixedcase
+    function exchange(
+        uint256 i,
+        uint256 j,
+        uint256 dx,
+        uint256 minDy,
+        bool use_eth
+    ) external payable;
+
     // For two crypto pools
     function exchange(
         int128 i,

@@ -51,10 +51,14 @@ const NAME_HASH = '0x9569cad29571f225e7f2c73ecd677d78be383da74efd13f4af2bade05dc
 
 // keccak256("1.0")
 const VERSION_HASH = '0xe6bbd6277e1bf288eed5e8d1780f9a50b239e86b153736bceebccf4ea79d90b3';
+// keccak256("2.0")
+// const VERSION_HASH = '0x88f72b566ae0c96f6fffac4bc8ac74909f61512ac0c06a8124d5ed420d306f90';
 
-// ORDER_TYPEHASH = keccak256("PMMSwapRequest(uint256 pathIndex,address payer,address fromToken,address toToken,uint256 fromTokenAmountMax,uint256 toTokenAmountMax,uint256 salt,uint256 deadLine,bool isPushOrder,bytes extension)")
+// // _ORDER_TYPEHASH = keccak256("PMMSwapRequest(uint256 pathIndex,address payer,address fromToken,address toToken,uint256 fromTokenAmountMax,uint256 toTokenAmountMax,uint256 deadLine)")
+// const ORDER_TYPEHASH = '0xfa0a4a288f6666a30e0dc0e865205ec9caac1b3c273b9f7d06f25e0e4b3af4f5';
+
+// _ORDER_TYPEHASH = keccak256("PMMSwapRequest(uint256 pathIndex,address payer,address fromToken,address toToken,uint256 fromTokenAmountMax,uint256 toTokenAmountMax,uint256 salt,uint256 deadLine,bool isPushOrder,bytes extension)")
 const ORDER_TYPEHASH = '0x5d068ce469dcf41137bcb6c3e1894e076ad915392f28fda19ba41601d33c32a6';
-
 
 // PATHINDEX_TYPEHASH = keccak256("uint256[] pathIndex");
 const PATHINDEX_TYPEHASH = '0xd6af40fe7727e56223847d4ed76576b369a54472264ba930c5b50d885f73abd6';

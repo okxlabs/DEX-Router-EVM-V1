@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 
 import "./TokenApproveProxy.sol";
 import "./UnxswapRouter.sol";
+import "./UnxswapV3Router.sol";
 
 import "./interfaces/IWETH.sol";
 import "./interfaces/IAdapter.sol";
@@ -16,10 +17,14 @@ import "./interfaces/IMarketMaker.sol";
 import "./interfaces/IWNativeRelayer.sol";
 import "./interfaces/IXBridge.sol";
 
-/// @title DexRouter
+import "./libraries/Permitable.sol";
+import "./libraries/PMMLib.sol";
+import "./libraries/EthReceiver.sol";
+
+/// @title DexRouterV1
 /// @notice Entrance of Split trading in Dex platform
 /// @dev Entrance of Split trading in Dex platform
-contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradeable {
+contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable, UnxswapV3Router {
   using UniversalERC20 for IERC20;
 
   // In the test scenario, we take it as a settable state and adjust it to a constant after it stabilizes
@@ -31,6 +36,9 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   bytes32 public constant _PMM_FLAG4_MASK = 0x4000000000000000000000000000000000000000000000000000000000000000;
   bytes32 public constant _PMM_INDEX_I_MASK = 0x00ff000000000000000000000000000000000000000000000000000000000000;
   bytes32 public constant _PMM_INDEX_J_MASK = 0x0000ff0000000000000000000000000000000000000000000000000000000000;
+  uint256 private constant _ORDER_ID_MASK = 0xffffffffffffffffffffffff0000000000000000000000000000000000000000;
+  uint256 private constant _WEIGHT_MASK = 0x00000000000000000000ffff0000000000000000000000000000000000000000;
+  uint256 private constant WETH = 0x000000000000000000000000C02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
   struct BaseRequest {
     uint256 fromToken;
@@ -127,7 +135,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     uint256 batchAmount,
     uint256 forceInternalTransferFrom,
     RouterPath[] calldata hops,
-    IMarketMaker.PMMSwapRequest[] memory extraData
+    PMMLib.PMMSwapRequest[] memory extraData
   ) internal {
     address fromToken;
     uint8 pmmIndex;
@@ -205,7 +213,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     address payer,
     address fromToken,
     uint256 actualRequest,
-    IMarketMaker.PMMSwapRequest memory pmmRequest,
+    PMMLib.PMMSwapRequest memory pmmRequest,
     bool isNotFirst
   ) internal returns (uint256 errorCode) {
     address marketMaker;
@@ -213,7 +221,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     bytes memory extension = pmmRequest.extension;
     if (UniversalERC20.isETH(IERC20(fromToken))) {
       // market makers will get WETH
-      fromToken = bytes32ToAddress(_WETH);
+      fromToken = _WETH;
     }
     assembly{
       marketMaker := mload(add(extension, 0x20))
@@ -221,7 +229,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     }
     // check from token
     if (pmmRequest.fromToken != fromToken) {
-      errorCode = uint256(IMarketMaker.PMM_ERROR.WRONG_FROM_TOKEN);
+      errorCode = uint256(PMMLib.PMM_ERROR.WRONG_FROM_TOKEN);
       emit PMMSwap (
         pmmRequest.pathIndex,
         subIndex,
@@ -235,7 +243,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
       return errorCode;
     }
 
-    if (isNotFirst || fromToken == bytes32ToAddress(_WETH)) {
+    if (isNotFirst || fromToken == _WETH) {
       payer = address(this);
     }
 
@@ -294,7 +302,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     BaseRequest calldata baseRequest,
     uint256[] calldata batchesAmount,
     RouterPath[][] calldata batches,
-    IMarketMaker.PMMSwapRequest[] calldata extraData,
+    PMMLib.PMMSwapRequest[] calldata extraData,
     address payer,
     address receiver
   ) internal returns (uint256 returnAmount) {
@@ -382,7 +390,7 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     BaseRequest calldata baseRequest,
     uint256[] calldata batchesAmount,
     RouterPath[][] calldata batches,
-    IMarketMaker.PMMSwapRequest[] calldata extraData,
+    PMMLib.PMMSwapRequest[] calldata extraData,
     address payer,
     address receiver
   ) internal returns (uint256 returnAmount) {
@@ -481,42 +489,42 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
   //------- Users Functions -------
   //-------------------------------
 
-  function smartSwap(
-    BaseRequest calldata baseRequest,
-    uint256[] calldata batchesAmount,
-    RouterPath[][] calldata batches,
-    IMarketMaker.PMMSwapRequest[] calldata extraData
-  ) public payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) {
-    returnAmount = _smartSwapInternal(baseRequest, batchesAmount, batches, extraData, msg.sender, msg.sender);
-  }
+  // function smartSwap(
+  //   BaseRequest calldata baseRequest,
+  //   uint256[] calldata batchesAmount,
+  //   RouterPath[][] calldata batches,
+  //   PMMLib.PMMSwapRequest[] calldata extraData
+  // ) public payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) {
+  //   returnAmount = _smartSwapInternal(baseRequest, batchesAmount, batches, extraData, msg.sender, msg.sender);
+  // }
 
   function smartSwapWithPermit(
     BaseRequest calldata baseRequest,
     uint256[] calldata batchesAmount,
     RouterPath[][] calldata batches,
-    IMarketMaker.PMMSwapRequest[] calldata extraData,
+    PMMLib.PMMSwapRequest[] calldata extraData,
     bytes calldata permit
   ) external payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) {
     _permit(address(uint160(baseRequest.fromToken)), permit);
     returnAmount = _smartSwapInternal(baseRequest, batchesAmount, batches, extraData, msg.sender, msg.sender);
   }
 
-  function smartSwapByXBridge(
-    BaseRequest calldata baseRequest,
-    uint256[] calldata batchesAmount,
-    RouterPath[][] calldata batches,
-    IMarketMaker.PMMSwapRequest[] calldata extraData
-  ) public payable isExpired(baseRequest.deadLine) nonReentrant onlyXBridge returns (uint256 returnAmount) {
-    (address payer, address receiver) = IXBridge(xBridge).payerReceiver();
-    returnAmount = _smartSwapInternal(baseRequest, batchesAmount, batches, extraData, payer, receiver);
-  }
+  // function smartSwapByXBridge(
+  //   BaseRequest calldata baseRequest,
+  //   uint256[] calldata batchesAmount,
+  //   RouterPath[][] calldata batches,
+  //   PMMLib.PMMSwapRequest[] calldata extraData
+  // ) public payable isExpired(baseRequest.deadLine) nonReentrant onlyXBridge returns (uint256 returnAmount) {
+  //   (address payer, address receiver) = IXBridge(xBridge).payerReceiver();
+  //   returnAmount = _smartSwapInternal(baseRequest, batchesAmount, batches, extraData, payer, receiver);
+  // }
 
   function smartSwapByOrderIdByXBridge(
     uint256 orderId,
     BaseRequest calldata baseRequest,
     uint256[] calldata batchesAmount,
     RouterPath[][] calldata batches,
-    IMarketMaker.PMMSwapRequest[] calldata extraData
+    PMMLib.PMMSwapRequest[] calldata extraData
   ) public payable isExpired(baseRequest.deadLine) nonReentrant onlyXBridge returns (uint256 returnAmount) {
     emit SwapOrderId(orderId);
     (address payer, address receiver) = IXBridge(xBridge).payerReceiver();
@@ -546,12 +554,23 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     returnAmount = _unxswapInternal(IERC20(address(uint160(srcToken& _ADDRESS_MASK))), amount, minReturn, pools, payer, receiver);
   }
 
+  function uniswapV3SwapToByXBridge(
+    uint256 recipient,
+    uint256 amount,
+    uint256 minReturn,
+    uint256[] calldata pools
+  ) external payable onlyXBridge returns(uint256 returnAmount) {
+    emit SwapOrderId((recipient & _ORDER_ID_MASK) >> 160);
+    (address payer, address receiver) = IXBridge(xBridge).payerReceiver();
+    return _uniswapV3Swap(payer, payable(receiver), amount, minReturn, pools);
+  }
+
   function smartSwapByOrderId(
     uint256 orderId,
     BaseRequest calldata baseRequest,
     uint256[] calldata batchesAmount,
     RouterPath[][] calldata batches,
-    IMarketMaker.PMMSwapRequest[] calldata extraData
+    PMMLib.PMMSwapRequest[] calldata extraData
   ) public payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) {
     emit SwapOrderId(orderId);
     returnAmount = _smartSwapInternal(baseRequest, batchesAmount, batches, extraData, msg.sender, msg.sender);
@@ -572,9 +591,47 @@ contract DexRouter is UnxswapRouter, OwnableUpgradeable, ReentrancyGuardUpgradea
     BaseRequest calldata baseRequest,
     uint256[] calldata batchesAmount,
     RouterPath[][] calldata batches,
-    IMarketMaker.PMMSwapRequest[] calldata extraData,
+    PMMLib.PMMSwapRequest[] calldata extraData,
     address to
   ) public payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) {
     returnAmount = _smartSwapInvestInternal(baseRequest, batchesAmount, batches, extraData, msg.sender, to);
+  }
+
+  /// @notice Same as `uniswapV3SwapTo` but calls permit first,
+  /// allowing to approve token spending and make a swap in one transaction.
+  /// @param recipient Address that will receive swap funds
+  /// @param srcToken Source token
+  /// @param amount Amount of source tokens to swap
+  /// @param minReturn Minimal allowed returnAmount to make transaction commit
+  /// @param pools Pools chain used for swaps. Pools src and dst tokens should match to make swap happen
+  /// @param permit Should contain valid permit that can be used in `IERC20Permit.permit` calls.
+  /// See tests for examples
+  function uniswapV3SwapToWithPermit(
+    uint256 recipient,
+    IERC20 srcToken,
+    uint256 amount,
+    uint256 minReturn,
+    uint256[] calldata pools,
+    bytes calldata permit
+  ) external returns(uint256 returnAmount) {
+    emit SwapOrderId((recipient & _ORDER_ID_MASK) >> 160);
+    _permit(address(srcToken), permit);
+    return _uniswapV3Swap(msg.sender, payable(bytes32ToAddress(recipient)), amount, minReturn, pools);
+  }
+
+  /// @notice Performs swap using Uniswap V3 exchange. Wraps and unwraps ETH if required.
+  /// Sending non-zero `msg.value` for anything but ETH swaps is prohibited
+  /// @param recipient Address that will receive swap funds
+  /// @param amount Amount of source tokens to swap
+  /// @param minReturn Minimal allowed returnAmount to make transaction commit
+  /// @param pools Pools chain used for swaps. Pools src and dst tokens should match to make swap happen
+  function uniswapV3SwapTo(
+    uint256 recipient,
+    uint256 amount,
+    uint256 minReturn,
+    uint256[] calldata pools
+  ) external payable returns(uint256 returnAmount) {
+    emit SwapOrderId((recipient & _ORDER_ID_MASK) >> 160);
+    return _uniswapV3Swap(msg.sender, payable(bytes32ToAddress(recipient)), amount, minReturn, pools);
   }
 }

@@ -79,7 +79,6 @@ const getPullInfosToBeSigned_paidByETHMockAccount = function (pull_data) {
     for (let i = 0; i < quantity; i++) {
         let chunk = pull_data[i];
         let toTokenAmount = getToTokenAmount(chunk);
-
         pullInfosToBeSigned[i] = {
             "orderTypeHash" : ORDER_TYPEHASH,
             "pathIndex" : chunk.pathIndex,

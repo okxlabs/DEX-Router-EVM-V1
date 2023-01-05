@@ -6,4 +6,6 @@ module.exports = {
     dot: "",
     usdc: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
     uni: "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
+    dai: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+    busd: "0x4Fabb145d64652a948d72533023f6E7A623C7C53",
 }

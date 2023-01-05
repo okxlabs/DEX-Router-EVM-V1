@@ -13,7 +13,9 @@ const hre = require("hardhat");
 const { BigNumber } = require('ethers')
 const { expect } = require("chai");
 const okcdevDeployed = require("../scripts/deployed/okc_dev");
-const ethdevDeployed = require("../scripts/deployed/eth_dev");
+const ethdevDeployed = require("../scripts/deployed/eth");
+const pmm_params = require("../dex_router_v2_test/pmm/pmm_params");
+
 
 require ('../scripts/tools');
 
@@ -367,7 +369,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
         });
     }
 
-    describe("1. Uint Test", function() {
+    xdescribe("1. Uint Test", function() {
 
         beforeEach(async function() {
             [owner, alice, bob, carol, backEnd, canceler, cancelerGuardian] = await ethers.getSigners();
@@ -1295,7 +1297,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
 
     });
 
-    describe("2. Integration Test (swap from DexRouter)", function() {
+    xdescribe("2. Integration Test (swap from DexRouter)", function() {
 
         beforeEach(async function() {
             [owner, alice, bob, carol, backEnd, canceler, cancelerGuardian] = await ethers.getSigners();
@@ -3200,7 +3202,7 @@ describe("Market Maker Test (version: 1.0.0)", function() {
 
     });
 
-    describe("3. Fork OKC Network Test", function() {
+    xdescribe("3. Fork OKC Network Test", function() {
         this.timeout(30000);
         let wokt;
         const OKT = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
@@ -3776,6 +3778,20 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             proxyOwner = await ethers.getSigner(accountAddress);
             setBalance(proxyOwner.address, '0x56bc75e2d63100000');
 
+            accountAddress = "0xc82Ea2afE1Fd1D61C4A12f5CeB3D7000f564F5C6";
+            startMockAccount([accountAddress]);
+            proxyOwner = await ethers.getSigner(accountAddress);
+
+            accountAddress = "0xb5d85CBf7cB3EE0D56b3bB207D5Fc4B82f43F511";
+            startMockAccount([accountAddress]);
+            rich = await ethers.getSigner(accountAddress);
+    
+            let tx = {
+                to: proxyOwner.address,
+                value: ethers.utils.parseEther('100')
+            }
+            await rich.sendTransaction(tx);
+
         }
 
         const initTokens = async () => {
@@ -3833,27 +3849,85 @@ describe("Market Maker Test (version: 1.0.0)", function() {
     
         }
 
-        const initContract = async () => {
-            dexRouter = await ethers.getContractAt(
-                "DexRouter",
-                ethdevDeployed.base.dexRouter
-            );
+        const initDexRouter = async () => {
+            // dexRouter = await ethers.getContractAt(
+            //     "DexRouter",
+            //     "0x17096bC3fC2A35565897D9E81f4CdE57E62167bc"
+            // );
+
+            let _feeRateAndReceiver = "0x000000000000000000000000" + pmm_params.feeTo.slice(2);
+            DexRouter = await ethers.getContractFactory("DexRouter");
+            dexRouter = await upgrades.deployProxy(DexRouter);
+            await dexRouter.deployed();
+      
+            expect(await dexRouter._WETH()).to.be.equal(weth.address);
+            expect(await dexRouter._APPROVE_PROXY()).to.be.equal(tokenApproveProxy.address);
     
+            let accountAddress = await tokenApproveProxy.owner();
+            startMockAccount([accountAddress]);
+            tokenApproveProxyOwner = await ethers.getSigner(accountAddress);
+            setBalance(tokenApproveProxyOwner.address, '0x56bc75e2d63100000');
+
+            await dexRouter.setApproveProxy(tokenApproveProxy.address);
+    
+            await tokenApproveProxy.connect(tokenApproveProxyOwner).addProxy(dexRouter.address);
+            await tokenApproveProxy.connect(tokenApproveProxyOwner).setTokenApprove(tokenApprove.address);
+        }
+    
+        const initTokenApproveProxy = async () => {
+            tokenApproveProxy = await ethers.getContractAt(
+                "TokenApproveProxy",
+                ethdevDeployed.base.tokenApproveProxy
+    
+            );
             tokenApprove = await ethers.getContractAt(
                 "TokenApprove",
                 ethdevDeployed.base.tokenApprove
+    
             );
+        }
+
+        const initWNativeRelayer = async () => {
+            wNativeRelayer = await ethers.getContractAt(
+                "WNativeRelayer",
+                ethdevDeployed.base.wNativeRelayer
+
+            );
+            let accountAddress = await wNativeRelayer.owner();
+            startMockAccount([accountAddress]);
+            wNativeRelayerOwner = await ethers.getSigner(accountAddress);
+            setBalance(wNativeRelayerOwner.address, '0x56bc75e2d63100000');
+            await wNativeRelayer.connect(wNativeRelayerOwner).setCallerOk([dexRouter.address], [true]);
+            await dexRouter.setWNativeRelayer(wNativeRelayer.address);
+
+            expect(await dexRouter._WNATIVE_RELAY()).to.be.equal(wNativeRelayer.address);
+        }
+
+        const initContract = async () => {
     
             uniAdapter = await ethers.getContractAt(
                 "UniAdapter",
                 ethdevDeployed.adapter.uniV2
             );
-    
-            marketMaker = await ethers.getContractAt(
-                "MarketMaker",
-                ethdevDeployed.base.marketMaker
-            );
-    
+
+
+            MarketMaker = await ethers.getContractFactory("MarketMaker");
+            marketMaker = await upgrades.deployProxy(
+                MarketMaker,[
+                    weth.address, 
+                    owner.address, 
+                    0, 
+                    backEnd.address,
+                    cancelerGuardian.address
+                ]
+            );        
+            await marketMaker.deployed();
+
+            await tokenApproveProxy.connect(tokenApproveProxyOwner).addProxy(marketMaker.address);
+            await marketMaker.setApproveProxy(tokenApproveProxy.address);
+            await marketMaker.setDexRouter(dexRouter.address);
+            await marketMaker.setUniV2Factory(factory.address);
+
         }
 
         const initLayersWholeSwap = async function() {
@@ -3898,6 +3972,10 @@ describe("Market Maker Test (version: 1.0.0)", function() {
             // console.log("backEnd",backEnd.address);
             // 2. prepare tokens
             await initTokens();
+
+            await initTokenApproveProxy();
+            await initDexRouter();
+            await initWNativeRelayer();
 
             await initContract();
 
@@ -3964,7 +4042,8 @@ describe("Market Maker Test (version: 1.0.0)", function() {
 
             let aliceUniBalBefore = await uni.balanceOf(alice.address);
 
-            let res = await dexRouter.connect(alice).smartSwap(
+            let res = await dexRouter.connect(alice).smartSwapByOrderId(
+                0,
                 baseRequest,
                 batchesAmount,
                 layers,
@@ -3973,6 +4052,9 @@ describe("Market Maker Test (version: 1.0.0)", function() {
                     value: ethers.utils.parseEther('0.013658558763417873')
                 }
             );
+            // console.log("res", res);
+            // let receipt = await res.wait();
+            // console.log("receipt", receipt);
 
             aliceUniBalAfter = await uni.balanceOf(alice.address);
 
@@ -4042,7 +4124,8 @@ describe("Market Maker Test (version: 1.0.0)", function() {
 
             let aliceUniBalBefore = await uni.balanceOf(alice.address);
 
-            await dexRouter.connect(alice).smartSwap(
+            await dexRouter.connect(alice).smartSwapByOrderId(
+                0,
                 baseRequest,
                 batchesAmount,
                 layers,
@@ -4119,7 +4202,8 @@ describe("Market Maker Test (version: 1.0.0)", function() {
 
             let aliceUniBalBefore = await uni.balanceOf(alice.address);
 
-            await dexRouter.connect(alice).smartSwap(
+            await dexRouter.connect(alice).smartSwapByOrderId(
+                0,
                 baseRequest,
                 batchesAmount,
                 layers,

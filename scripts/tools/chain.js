@@ -1,4 +1,4 @@
-const ALCHEMY_KEY = process.env.ALCHEMY_KEY || '';
+const ALCHEMY_KEY = process.env.ALCHEMY_KEY || 'xALpTiRVSIOkY1V1FPmG52PYkKzHfhyk';
 const MORALIS_KEY = process.env.MORALIS_KEY || '';
 const { network } = require("hardhat");
 const hre = require("hardhat");
@@ -46,7 +46,8 @@ setForkBlockNumber = async (targetBlockNumber) => {
         params: [
             {
                 forking: {
-                    jsonRpcUrl: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}`,
+                    // jsonRpcUrl: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}`,
+                    jsonRpcUrl: `https://rpc.ankr.com/eth`,
                     blockNumber: targetBlockNumber,
                 },
             },

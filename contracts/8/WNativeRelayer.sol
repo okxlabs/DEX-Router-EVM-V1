@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import "./interfaces/IWETH.sol";
+import "./libraries/RevertReasonParser.sol";
 
 contract WNativeRelayer is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
@@ -30,8 +31,9 @@ contract WNativeRelayer is OwnableUpgradeable, ReentrancyGuardUpgradeable {
   function setCallerOk(address[] calldata whitelistedCallers, bool isOk) external onlyOwner {
     uint256 len = whitelistedCallers.length;
     for (uint256 idx = 0; idx < len; idx++) {
-      okCallers[whitelistedCallers[idx]] = isOk;
 
+      okCallers[whitelistedCallers[idx]] = isOk;
+      
       emit SetCaller(whitelistedCallers[idx], isOk);
     }
   }

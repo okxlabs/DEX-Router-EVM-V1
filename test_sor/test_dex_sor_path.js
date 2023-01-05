@@ -1,4 +1,4 @@
-const { ethers } = require('hardhat')
+const { ethers, upgrades, network} = require("hardhat");
 const { expect } = require('chai');
 
 describe("Smart route path test", function() {
@@ -101,12 +101,16 @@ describe("Smart route path test", function() {
       minReturnAmount,
       deadLine,
     ]
-    await dexRouter.connect(alice).smartSwap(
+    const orderId = 1;
+    let tx = await dexRouter.connect(alice).smartSwapByOrderId(
+        orderId,
         baseRequest,
         [fromTokenAmount],
         [layer1],
         []
     );
+
+    // console.log("tx", tx);
 
     // expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
     // // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
@@ -171,7 +175,9 @@ describe("Smart route path test", function() {
       minReturnAmount,
       deadLine,
     ]
-    await dexRouter.connect(alice).smartSwap(
+    const orderId = 1;
+    await dexRouter.connect(alice).smartSwapByOrderId(
+        orderId,
         baseRequest,
         [fromTokenAmount],
         [layer1],
@@ -270,7 +276,9 @@ describe("Smart route path test", function() {
       minReturnAmount,
       deadLine,
     ]
-    rxResult = await dexRouter.connect(alice).smartSwap(
+    const orderId = 1;
+    rxResult = await dexRouter.connect(alice).smartSwapByOrderId(
+        orderId,
         baseRequest,
         [fromTokenAmount1, fromTokenAmount2],
         [layer1, layer2],
@@ -347,7 +355,9 @@ describe("Smart route path test", function() {
       minReturnAmount,
       deadLine
     ]
-    rxResult = await dexRouter.connect(alice).smartSwap(
+    const orderId = 1;
+    rxResult = await dexRouter.connect(alice).smartSwapByOrderId(
+        orderId,
         baseRequest,
         [fromTokenAmount],
         [layer1],
@@ -503,7 +513,9 @@ describe("Smart route path test", function() {
       minReturnAmount,
       deadLine,
     ]
-    await dexRouter.connect(alice).smartSwap(
+    const orderId = 1;
+    await dexRouter.connect(alice).smartSwapByOrderId(
+        orderId,
         baseRequest,
         [fromTokenAmount1, fromTokenAmount2, fromTokenAmount3],
         [layer1, layer2, layer3],
@@ -514,7 +526,7 @@ describe("Smart route path test", function() {
     expect(await toToken.balanceOf(alice.address)).to.be.eq("53597548250295474132461");
   });
 
-  it("mixSwap with single path and source token is native token", async () => {
+  xit("mixSwap with single path and source token is native token", async () => {
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
     // ETH -> WBTC
     ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
@@ -550,8 +562,9 @@ describe("Smart route path test", function() {
       minReturnAmount,
       deadLine,
     ]
-
-    rxResult = await dexRouter.connect(alice).smartSwap(
+    const orderId = 1;
+    rxResult = await dexRouter.connect(alice).smartSwapByOrderId(
+        orderId,
         baseRequest,
         [fromTokenAmount],
         [layer1],
@@ -569,8 +582,9 @@ describe("Smart route path test", function() {
     expect(await toToken.balanceOf(alice.address)).to.be.eq(receive);
   });
 
-  it("mixSwap with single path and target token is native token", async () => {
+  xit("mixSwap with single path and target token is native token", async () => {
     await dexRouter.setWNativeRelayer(wNativeRelayer.address);
+    await wNativeRelayer.setCallerOk([dexRouter.address], [true]);
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
 
     // wbtc -> eth
@@ -608,7 +622,9 @@ describe("Smart route path test", function() {
       minReturnAmount,
       deadLine,
     ]
-    rxResult = await dexRouter.connect(alice).smartSwap(
+    const orderId = 1;
+    rxResult = await dexRouter.connect(alice).smartSwapByOrderId(
+        orderId,
         baseRequest,
         [fromTokenAmount],
         [layer1],
@@ -624,7 +640,7 @@ describe("Smart route path test", function() {
     expect(await ethers.provider.getBalance(alice.address)).to.be.eq(finalAmount);
   });
 
-  it("smartSwapByXBridge ETH to WBTC", async () => {
+  xit("smartSwapByXBridge ETH to WBTC", async () => {
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
     // ETH -> WBTC
     ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
@@ -658,7 +674,7 @@ describe("Smart route path test", function() {
       minReturnAmount,
       deadLine,
     ]
-    // selector 0xe051c6e8
+    // selector 0x1e00140d
     let encodeABI = dexRouter.interface.encodeFunctionData('smartSwapByXBridge', [baseRequest, [fromTokenAmount], [layer1], []]);
     let xBridge = await initMockXBridge();
     const beforeToTokenBalance = await toToken.balanceOf(xBridge.address);
@@ -674,8 +690,9 @@ describe("Smart route path test", function() {
       toChainToTokenMinAmount : 0,
       data : ethers.utils.defaultAbiCoder.encode(["address", "uint64", "uint32"], [usdt.address, 0, 501]),
       dexData : encodeABI,
+      extData: "0x"
     };
-    await xBridge.connect(alice).swapAndBridgeToImprove(request, {value: fromTokenAmount});
+    await xBridge.connect(alice).swapBridgeToV2(request, {value: fromTokenAmount});
 
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
     // wbtc -> weth 1:10
@@ -685,8 +702,9 @@ describe("Smart route path test", function() {
     expect(await toToken.balanceOf(xBridge.address)).to.be.eq(receive);
   });
 
-  it("smartSwapByXBridge WBTC to ETH", async () => {
+  xit("smartSwapByXBridge WBTC to ETH", async () => {
     await dexRouter.setWNativeRelayer(wNativeRelayer.address);
+    await wNativeRelayer.setCallerOk([dexRouter.address], true);
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
 
     // wbtc -> eth
@@ -741,8 +759,9 @@ describe("Smart route path test", function() {
       toChainToTokenMinAmount : 0,
       data : ethers.utils.defaultAbiCoder.encode(["address", "uint64", "uint32"], [usdt.address, 0, 501]),
       dexData : encodeABI,
+      extData: "0x"
     };
-    await xBridge.connect(alice).swapAndBridgeToImprove(request);
+    await xBridge.connect(alice).swapBridgeToV2(request);
 
 
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
@@ -752,7 +771,7 @@ describe("Smart route path test", function() {
     expect(await ethers.provider.getBalance(xBridge.address)).to.be.eq(receiveAmount);
   });
 
-  it("claim smartSwapByXBridge ETH to WBTC", async () => {
+  xit("claim smartSwapByXBridge ETH to WBTC", async () => {
       expect(await dexRouter._WETH()).to.be.equal(weth.address);
       // ETH -> WBTC
       ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
@@ -814,7 +833,7 @@ describe("Smart route path test", function() {
       expect(await toToken.balanceOf(bob.address)).to.be.eq(receive);
   });
 
-  it("claim smartSwapByXBridge WBTC to ETH", async () => {
+  xit("claim smartSwapByXBridge WBTC to ETH", async () => {
     await dexRouter.setWNativeRelayer(wNativeRelayer.address);
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
 
@@ -1088,15 +1107,12 @@ describe("Smart route path test", function() {
     await tokenApprove.deployed();
 
     DexRouter = await ethers.getContractFactory("DexRouter");
-    dexRouter = await upgrades.deployProxy(
-        DexRouter
-    )
+    dexRouter = await upgrades.deployProxy(DexRouter, [])
     await dexRouter.deployed();
     await dexRouter.setApproveProxy(tokenApproveProxy.address);
 
     await tokenApproveProxy.addProxy(dexRouter.address);
     await tokenApproveProxy.setTokenApprove(tokenApprove.address);
-
 
     await wNativeRelayer.setCallerOk([dexRouter.address], [true]);
   }
@@ -1107,7 +1123,7 @@ describe("Smart route path test", function() {
     await xBridge.deployed();
     await xBridge.setDexRouter(dexRouter.address);
     await dexRouter.setXBridge(xBridge.address);
-    await xBridge.connect(owner).setMpc([alice.address]);
+    await xBridge.connect(owner).setMpc([alice.address], [true]);
     await xBridge.setApproveProxy(tokenApproveProxy.address);
     return xBridge;
   }

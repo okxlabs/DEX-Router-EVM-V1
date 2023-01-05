@@ -3,128 +3,124 @@ pragma solidity ^0.8.0;
 
 import "./SafeMath.sol";
 import "./Address.sol";
+import "./RevertReasonForwarder.sol";
 import "../interfaces/IERC20.sol";
+import "../interfaces/IERC20Permit.sol";
+import "../interfaces/IDaiLikePermit.sol";
 
-/**
- * @title SafeERC20
- * @dev Wrappers around ERC20 operations that throw on failure (when the token
- * contract returns false). Tokens that return no value (and instead revert or
- * throw on failure) are also supported, non-reverting calls are assumed to be
- * successful.
- * To use this library you can add a `using SafeERC20 for ERC20;` statement to your contract,
- * which allows you to call the safe operations as `token.safeTransfer(...)`, etc.
- */
+// File @1inch/solidity-utils/contracts/libraries/SafeERC20.sol@v2.1.1
+
 library SafeERC20 {
-    using SafeMath for uint256;
-    using Address for address;
+    error SafeTransferFailed();
+    error SafeTransferFromFailed();
+    error ForceApproveFailed();
+    error SafeIncreaseAllowanceFailed();
+    error SafeDecreaseAllowanceFailed();
+    error SafePermitBadLength();
 
-    function safeTransfer(
-        IERC20 token,
-        address to,
-        uint256 value
-    ) internal {
-        callOptionalReturn(
-            token,
-            abi.encodeWithSelector(token.transfer.selector, to, value)
-        );
+    // Ensures method do not revert or return boolean `true`, admits call to non-smart-contract
+    function safeTransferFrom(IERC20 token, address from, address to, uint256 amount) internal {
+        bytes4 selector = token.transferFrom.selector;
+        bool success;
+        /// @solidity memory-safe-assembly
+        assembly { // solhint-disable-line no-inline-assembly
+            let data := mload(0x40)
+
+            mstore(data, selector)
+            mstore(add(data, 0x04), from)
+            mstore(add(data, 0x24), to)
+            mstore(add(data, 0x44), amount)
+            success := call(gas(), token, 0, data, 100, 0x0, 0x20)
+            if success {
+                switch returndatasize()
+                case 0 { success := gt(extcodesize(token), 0) }
+                default { success := and(gt(returndatasize(), 31), eq(mload(0), 1)) }
+            }
+        }
+        if (!success) revert SafeTransferFromFailed();
     }
 
-    function safeTransferFrom(
-        IERC20 token,
-        address from,
-        address to,
-        uint256 value
-    ) internal {
-        callOptionalReturn(
-            token,
-            abi.encodeWithSelector(token.transferFrom.selector, from, to, value)
-        );
+    // Ensures method do not revert or return boolean `true`, admits call to non-smart-contract
+    function safeTransfer(IERC20 token, address to, uint256 value) internal {
+        if (!_makeCall(token, token.transfer.selector, to, value)) {
+            revert SafeTransferFailed();
+        }
     }
 
-    function safeApprove(
-        IERC20 token,
-        address spender,
-        uint256 value
-    ) internal {
-        // safeApprove should only be called when setting an initial allowance,
-        // or when resetting it to zero. To increase and decrease it, use
-        // 'safeIncreaseAllowance' and 'safeDecreaseAllowance'
-        // solhint-disable-next-line max-line-length
-        require(
-            (value == 0) || (token.allowance(address(this), spender) == 0),
-            "SafeERC20: approve from non-zero to non-zero allowance"
-        );
-        callOptionalReturn(
-            token,
-            abi.encodeWithSelector(token.approve.selector, spender, value)
-        );
+    function safeApprove(IERC20 token, address spender, uint256 value) internal {
+        forceApprove(token, spender, value);
     }
 
-    function safeIncreaseAllowance(
-        IERC20 token,
-        address spender,
-        uint256 value
-    ) internal {
-        uint256 newAllowance = token.allowance(address(this), spender).add(
-            value
-        );
-        callOptionalReturn(
-            token,
-            abi.encodeWithSelector(
-                token.approve.selector,
-                spender,
-                newAllowance
-            )
-        );
+    // If `approve(from, to, amount)` fails, try to `approve(from, to, 0)` before retry
+    function forceApprove(IERC20 token, address spender, uint256 value) internal {
+        if (!_makeCall(token, token.approve.selector, spender, value)) {
+            if (!_makeCall(token, token.approve.selector, spender, 0) ||
+                !_makeCall(token, token.approve.selector, spender, value))
+            {
+                revert ForceApproveFailed();
+            }
+        }
     }
 
-    function safeDecreaseAllowance(
-        IERC20 token,
-        address spender,
-        uint256 value
-    ) internal {
-        uint256 newAllowance = token.allowance(address(this), spender).sub(
-            value,
-            "SafeERC20: decreased allowance below zero"
-        );
-        callOptionalReturn(
-            token,
-            abi.encodeWithSelector(
-                token.approve.selector,
-                spender,
-                newAllowance
-            )
-        );
+    
+
+    function safeIncreaseAllowance(IERC20 token, address spender, uint256 value) internal {
+        uint256 allowance = token.allowance(address(this), spender);
+        if (value > type(uint256).max - allowance) revert SafeIncreaseAllowanceFailed();
+        forceApprove(token, spender, allowance + value);
     }
 
-    /**
-     * @dev Imitates a Solidity high-level call (i.e. a regular function call to a contract), relaxing the requirement
-     * on the return value: the return value is optional (but if data is returned, it must not be false).
-     * @param token The token targeted by the call.
-     * @param data The call data (encoded using abi.encode or one of its variants).
-     */
-    function callOptionalReturn(IERC20 token, bytes memory data) private {
-        // We need to perform a low level call here, to bypass Solidity's return data size checking mechanism, since
-        // we're implementing it ourselves.
+    function safeDecreaseAllowance(IERC20 token, address spender, uint256 value) internal {
+        uint256 allowance = token.allowance(address(this), spender);
+        if (value > allowance) revert SafeDecreaseAllowanceFailed();
+        forceApprove(token, spender, allowance - value);
+    }
 
-        // A Solidity high level call has three parts:
-        //  1. The target address is checked to verify it contains contract code
-        //  2. The call itself is made, and success asserted
-        //  3. The return value is decoded, which in turn checks the size of the returned data.
-        // solhint-disable-next-line max-line-length
-        require(address(token).isContract(), "SafeERC20: call to non-contract");
+    function safePermit(IERC20 token, bytes calldata permit) internal {
+        bool success;
+        if (permit.length == 32 * 7) {
+            success = _makeCalldataCall(token, IERC20Permit.permit.selector, permit);
+        } else if (permit.length == 32 * 8) {
+            success = _makeCalldataCall(token, IDaiLikePermit.permit.selector, permit);
+        } else {
+            revert SafePermitBadLength();
+        }
+        if (!success) RevertReasonForwarder.reRevert();
+    }
 
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory returndata) = address(token).call(data);
-        require(success, "SafeERC20: low-level call failed");
+    function _makeCall(IERC20 token, bytes4 selector, address to, uint256 amount) private returns(bool success) {
+        /// @solidity memory-safe-assembly
+        assembly { // solhint-disable-line no-inline-assembly
+            let data := mload(0x40)
 
-        if (returndata.length > 0) {
-            // Return data is optional
-            // solhint-disable-next-line max-line-length
-            require(
-                abi.decode(returndata, (bool)),
-                "SafeERC20: ERC20 operation did not succeed"
-            );
+            mstore(data, selector)
+            mstore(add(data, 0x04), to)
+            mstore(add(data, 0x24), amount)
+            success := call(gas(), token, 0, data, 0x44, 0x0, 0x20)
+            if success {
+                switch returndatasize()
+                case 0 { success := gt(extcodesize(token), 0) }
+                default { success := and(gt(returndatasize(), 31), eq(mload(0), 1)) }
+            }
+        }
+    }
+
+    function _makeCalldataCall(IERC20 token, bytes4 selector, bytes calldata args) private returns(bool success) {
+        /// @solidity memory-safe-assembly
+        assembly { // solhint-disable-line no-inline-assembly
+            let len := add(4, args.length)
+            let data := mload(0x40)
+
+            mstore(data, selector)
+            calldatacopy(add(data, 0x04), args.offset, args.length)
+            success := call(gas(), token, 0, data, len, 0x0, 0x20)
+            if success {
+                switch returndatasize()
+                case 0 { success := gt(extcodesize(token), 0) }
+                default { success := and(gt(returndatasize(), 31), eq(mload(0), 1)) }
+            }
         }
     }
 }
+
+
