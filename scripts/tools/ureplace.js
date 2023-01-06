@@ -1,7 +1,7 @@
 const fs = require("fs");
 const deployed = require('../deployed');
 
-const UNXSWAP_ROUTER_PATH = "./contracts/8/UnxswapRouter.sol";
+const UNXSWAP_ROUTER_PATH = "./contracts/8/libraries/CommonUtils.sol";
 
 // Replaces the contract address in the constant part of the UnxswapRouter file
 // _WETH, _APPROVE_PROXY_32, _WNATIVE_RELAY_32 Three constant addresses
@@ -16,9 +16,10 @@ function replace_contant(UnxswapRouterPath) {
       }
       
       let context = data.toString();
-      context = context.replace(/_WETH\s=\s\w*/, "_WETH = 0x000000000000000000000000" + deployed.base.wNativeToken.replace("0x", ""))
-      context = context.replace(/_APPROVE_PROXY_32\s=\s\w*/, "_APPROVE_PROXY_32 = 0x000000000000000000000000" + deployed.base.tokenApproveProxy.replace("0x", ""))
-      context = context.replace(/_WNATIVE_RELAY_32\s=\s\w*/, "_WNATIVE_RELAY_32 = 0x000000000000000000000000" + deployed.base.wNativeRelayer.replace("0x", "")) 
+      // address public constant
+      context = context.replace(/_WETH\s=\s\w*/, "_WETH = " + deployed.base.wNativeToken)
+      context = context.replace(/_APPROVE_PROXY\s=\s\w*/, "_APPROVE_PROXY = " + deployed.base.tokenApproveProxy )
+      context = context.replace(/_WNATIVE_RELAY\s=\s\w*/, "_WNATIVE_RELAY = " + deployed.base.wNativeRelayer ) 
 
       fs.writeFile(UnxswapRouterPath, context, (err) => {
         if (err) {
