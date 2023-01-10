@@ -6,13 +6,12 @@ import "./interfaces/IUniV3.sol";
 import "./interfaces/IWETH.sol";
 import "./interfaces/IWNativeRelayer.sol";
 
-import "./libraries/EthReceiver.sol";
 import "./libraries/Address.sol";
 import "./libraries/CommonUtils.sol";
 import "./libraries/RouterErrors.sol";
 import "./libraries/SafeCast.sol";
 
-contract UnxswapV3Router is IUniswapV3SwapCallback, EthReceiver, CommonUtils {
+contract UnxswapV3Router is IUniswapV3SwapCallback, CommonUtils {
     using Address for address payable;
 
     error BadPool();

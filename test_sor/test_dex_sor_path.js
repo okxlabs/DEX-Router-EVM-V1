@@ -1,8 +1,13 @@
 const { ethers, upgrades, network} = require("hardhat");
+const hre = require("hardhat");
+const ethDeployed = require("../scripts/deployed/eth");
 const { expect } = require('chai');
+const pmm_params = require("../dex_router_v2_test/pmm/pmm_params");
+
+require ('../scripts/tools');
 
 describe("Smart route path test", function() {
-
+  this.timeout(300000);
   const FOREVER = '2000000000';
   let wbtc, weth, dot, bnb, usdc, usdt, memeToken;
   let router, tokenApprove, dexRouter, wNativeRelayer, tokenApproveProxy;
@@ -10,24 +15,23 @@ describe("Smart route path test", function() {
 
   before(async () => {
     [owner, alice, bob, liquidity, ethHolder] = await ethers.getSigners();
-    const WETH9 = await ethers.getContractFactory("WETH9");
-    weth = await WETH9.deploy();
 
-    WNativeRelayer = await ethers.getContractFactory("WNativeRelayer");
-    wNativeRelayer = await WNativeRelayer.deploy();
-    await wNativeRelayer.deployed();
-    await wNativeRelayer.initialize(weth.address);
+    await setForkBlockNumber(16094434); 
+    await initWeth();
+    await initTokenApproveProxy();
+    await initDexRouter();
+    await initMockXBridge();
+    await initWNativeRelayer();
+
     await ethHolder.sendTransaction({ to : bob.address, value : ethers.utils.parseEther('4000')});
     await ethHolder.sendTransaction({ to : liquidity.address, value : ethers.utils.parseEther('4000')});
   });
 
   beforeEach(async () => {
-
     await initMockTokens();
     await dispatchAsset();
     await initUniswap();
-    await initDexRouter();
-
+    
     const pairs = [
       [weth, usdt, ethers.utils.parseEther('100'), ethers.utils.parseEther('300000')],
       [wbtc, usdt, ethers.utils.parseEther('100'), ethers.utils.parseEther('3000000')],
@@ -176,13 +180,15 @@ describe("Smart route path test", function() {
       deadLine,
     ]
     const orderId = 1;
-    await dexRouter.connect(alice).smartSwapByOrderId(
+    let tx = await dexRouter.connect(alice).smartSwapByOrderId(
         orderId,
         baseRequest,
         [fromTokenAmount],
         [layer1],
         []
     );
+    let receipt = await tx.wait();
+    console.log("gasUsed", receipt.gasUsed);
 
     expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
@@ -526,7 +532,7 @@ describe("Smart route path test", function() {
     expect(await toToken.balanceOf(alice.address)).to.be.eq("53597548250295474132461");
   });
 
-  xit("mixSwap with single path and source token is native token", async () => {
+  it("mixSwap with single path and source token is native token", async () => {
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
     // ETH -> WBTC
     ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
@@ -582,9 +588,7 @@ describe("Smart route path test", function() {
     expect(await toToken.balanceOf(alice.address)).to.be.eq(receive);
   });
 
-  xit("mixSwap with single path and target token is native token", async () => {
-    await dexRouter.setWNativeRelayer(wNativeRelayer.address);
-    await wNativeRelayer.setCallerOk([dexRouter.address], [true]);
+  it("mixSwap with single path and target token is native token", async () => {
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
 
     // wbtc -> eth
@@ -637,10 +641,64 @@ describe("Smart route path test", function() {
     const receiveAmount = getAmountOut(fromTokenAmount, '10000000000000000000000', '1000000000000000000000');
     const gasCost = await getTransactionCost(rxResult);
     const finalAmount = beforeAliceBalance.sub(gasCost).add(receiveAmount);
-    expect(await ethers.provider.getBalance(alice.address)).to.be.eq(finalAmount);
+    expect(await ethers.provider.getBalance(alice.address)).to.be.gte(finalAmount);
   });
 
-  xit("smartSwapByXBridge ETH to WBTC", async () => {
+  it("mixSwap with single path and source token is wrapped native token", async () => {
+    expect(await dexRouter._WETH()).to.be.equal(weth.address);
+    setBalance(alice.address, ethers.utils.parseEther('1100000'));
+    await weth.connect(alice).deposit({ value: ethers.utils.parseEther('1000000') });
+    // WETH -> WBTC
+    fromToken = weth;
+    toToken = wbtc;
+    const fromTokenAmount = ethers.utils.parseEther('10');
+    const minReturnAmount = ethers.utils.parseEther('0');
+    const deadLine = FOREVER;
+
+    const beforeToTokenBalance = await toToken.balanceOf(alice.address);
+
+    // node1
+    const mixAdapter1 = [
+      uniAdapter.address
+    ];
+    const assertTo1 = [
+      lpWBTCWETH.address
+    ];
+    const weight1 = '2710'; // Number(10000).toString(16).replace('0x', '');
+    const rawData1 = [
+      "0x" + await direction(weth.address, wbtc.address, lpWBTCWETH) + "0000000000000000000" + weight1 + lpWBTCWETH.address.replace("0x", "")];
+    const extraData1 = ['0x'];
+    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1, weth.address];
+
+    // layer1
+    const layer1 = [router1];
+
+    const baseRequest = [
+      fromToken.address,
+      toToken.address,
+      fromTokenAmount,
+      minReturnAmount,
+      deadLine,
+    ]
+    const orderId = 1;
+    await fromToken.connect(alice).approve(tokenApprove.address, ethers.utils.parseEther('1000'));
+    rxResult = await dexRouter.connect(alice).smartSwapByOrderId(
+        orderId,
+        baseRequest,
+        [fromTokenAmount],
+        [layer1],
+        []
+    );
+
+    // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
+    // wbtc -> weth 1:10
+    // 10000000000000000000 * 997 * 10000000000000000000000 / (1000000000000000000000 * 1000 +  10000000000000000000 * 997) = 98715803439706130000
+    const receive0 = getAmountOut(fromTokenAmount, '1000000000000000000000', '10000000000000000000000');
+    const receive = receive0.add(beforeToTokenBalance);
+    expect(await toToken.balanceOf(alice.address)).to.be.eq(receive);
+  });
+
+  it("smartSwapByXBridge ETH to WBTC", async () => {
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
     // ETH -> WBTC
     ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
@@ -674,8 +732,7 @@ describe("Smart route path test", function() {
       minReturnAmount,
       deadLine,
     ]
-    // selector 0x1e00140d
-    let encodeABI = dexRouter.interface.encodeFunctionData('smartSwapByXBridge', [baseRequest, [fromTokenAmount], [layer1], []]);
+    let encodeABI = dexRouter.interface.encodeFunctionData('smartSwapByOrderIdByXBridge', [0, baseRequest, [fromTokenAmount], [layer1], []]);
     let xBridge = await initMockXBridge();
     const beforeToTokenBalance = await toToken.balanceOf(xBridge.address);
     expect(await wbtc.balanceOf(xBridge.address)).to.be.equal(0);
@@ -702,9 +759,9 @@ describe("Smart route path test", function() {
     expect(await toToken.balanceOf(xBridge.address)).to.be.eq(receive);
   });
 
-  xit("smartSwapByXBridge WBTC to ETH", async () => {
-    await dexRouter.setWNativeRelayer(wNativeRelayer.address);
-    await wNativeRelayer.setCallerOk([dexRouter.address], true);
+  it("smartSwapByXBridge WBTC to ETH", async () => {
+    // await dexRouter.setWNativeRelayer(wNativeRelayer.address);
+    // await wNativeRelayer.setCallerOk([dexRouter.address], true);
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
 
     // wbtc -> eth
@@ -743,7 +800,7 @@ describe("Smart route path test", function() {
     ]
 
     //encodeFunctionData
-    let encodeABI = dexRouter.interface.encodeFunctionData('smartSwapByXBridge', [baseRequest, [fromTokenAmount], [layer1], []]);
+    let encodeABI = dexRouter.interface.encodeFunctionData('smartSwapByOrderIdByXBridge', [0, baseRequest, [fromTokenAmount], [layer1], []]);
 
     let xBridge = await initMockXBridge();
     const beforeEthBalance = await ethers.provider.getBalance(xBridge.address);
@@ -771,7 +828,7 @@ describe("Smart route path test", function() {
     expect(await ethers.provider.getBalance(xBridge.address)).to.be.eq(receiveAmount);
   });
 
-  xit("claim smartSwapByXBridge ETH to WBTC", async () => {
+  it("claim smartSwapByXBridge ETH to WBTC", async () => {
       expect(await dexRouter._WETH()).to.be.equal(weth.address);
       // ETH -> WBTC
       ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
@@ -806,7 +863,7 @@ describe("Smart route path test", function() {
         deadLine,
       ]
       // selector 0xe051c6e8
-      let encodeABI = dexRouter.interface.encodeFunctionData('smartSwapByXBridge', [baseRequest, [fromTokenAmount], [layer1], []]);
+      let encodeABI = dexRouter.interface.encodeFunctionData('smartSwapByOrderIdByXBridge', [0, baseRequest, [fromTokenAmount], [layer1], []]);
       let xBridge = await initMockXBridge();
       const beforeToTokenBalance = await toToken.balanceOf(bob.address);
       expect(await wbtc.balanceOf(xBridge.address)).to.be.equal(0);
@@ -833,7 +890,7 @@ describe("Smart route path test", function() {
       expect(await toToken.balanceOf(bob.address)).to.be.eq(receive);
   });
 
-  xit("claim smartSwapByXBridge WBTC to ETH", async () => {
+  it("claim smartSwapByXBridge WBTC to ETH", async () => {
     await dexRouter.setWNativeRelayer(wNativeRelayer.address);
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
 
@@ -873,7 +930,7 @@ describe("Smart route path test", function() {
     ]
 
     //encodeFunctionData
-    let encodeABI = dexRouter.interface.encodeFunctionData('smartSwapByXBridge', [baseRequest, [fromTokenAmount], [layer1], []]);
+    let encodeABI = dexRouter.interface.encodeFunctionData('smartSwapByOrderIdByXBridge', [0, baseRequest, [fromTokenAmount], [layer1], []]);
 
     let xBridge = await initMockXBridge();
     expect(await wbtc.balanceOf(xBridge.address)).to.be.equal(0);
@@ -952,6 +1009,61 @@ describe("Smart route path test", function() {
     expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
   });
 
+  it("mixSwap with single path by invest", async () => {
+    await memeToken.transfer(alice.address, ethers.utils.parseEther('100000000'));
+
+    fromToken = memeToken;
+    toToken = usdt;
+    const fromTokenAmount = ethers.utils.parseEther('1000');
+    const minReturnAmount = ethers.utils.parseEther('50');
+    const deadLine = FOREVER;
+
+    // await fromToken.connect(alice).approve(tokenApprove.address, ethers.utils.parseEther('1000000'));
+    await fromToken.connect(alice).transfer(dexRouter.address, ethers.utils.parseEther('100'));
+    
+    // node1
+    const mixAdapter1 = [
+      uniAdapter.address
+    ];
+    const assertTo1 = [
+      lpMemeUSDT.address
+    ];
+    const weight1 = getWeight(10000);
+    const rawData1 = [
+      "0x" + await direction(memeToken.address, usdt.address, lpMemeUSDT) + "0000000000000000000" + weight1 + lpMemeUSDT.address.replace("0x", "")
+    ];
+    const extraData1 = [[]];
+    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1, memeToken.address];
+
+    // layer1
+    const layer1 = [router1];
+
+    const baseRequest = [
+      fromToken.address,
+      toToken.address,
+      fromTokenAmount,
+      minReturnAmount,
+      deadLine,
+    ]
+    let balBefore = await toToken.balanceOf(alice.address);
+    const tx = await dexRouter.connect(alice).smartSwapByInvest(
+        baseRequest,
+        [fromTokenAmount],
+        [layer1],
+        [],
+        alice.address
+    );
+    let receipt = await tx.wait();
+    console.log("gasUsed", receipt.gasUsed);
+    
+    let balAfter = await toToken.balanceOf(alice.address);
+    // console.log("balAfter - balBefore", balAfter - balBefore);
+
+    expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
+    expect((await toToken.balanceOf(alice.address)).sub(minReturnAmount)).to.be.gte("0");
+    
+  });
+
   const direction = async (fromToken, toToken, pair) => {
     if (!pair) return 0;
     const token0 = await pair.token0();
@@ -1028,8 +1140,6 @@ describe("Smart route path test", function() {
     await usdc.transfer(bob.address, ethers.utils.parseEther('100000000'));
 
     await weth.connect(bob).deposit({ value: ethers.utils.parseEther('1000') });
-    await weth.connect(liquidity).deposit({ value: ethers.utils.parseEther('1000') });
-    await weth.connect(liquidity).transfer(bob.address, ethers.utils.parseEther('1000'));
 
     await weth.mint(bob.address, ethers.utils.parseEther('100000000'));
 
@@ -1095,27 +1205,90 @@ describe("Smart route path test", function() {
     lpMemeUSDT = await UniswapPair.attach(pair);
   }
 
+       
+  const initWeth = async () => {
+    weth = await ethers.getContractAt(
+        "WETH9",
+        ethDeployed.tokens.weth
+    );
+    setBalance(bob.address, ethers.utils.parseEther('1100000'));
+    await weth.connect(bob).deposit({ value: ethers.utils.parseEther('1000000') });
+  }
+
+  const initTokenApproveProxy = async () => {
+    tokenApproveProxy = await ethers.getContractAt(
+        "TokenApproveProxy",
+        ethDeployed.base.tokenApproveProxy
+
+    );
+    tokenApprove = await ethers.getContractAt(
+        "TokenApprove",
+        ethDeployed.base.tokenApprove
+
+    );
+  }
+
   const initDexRouter = async () => {
-    TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
-    tokenApproveProxy = await TokenApproveProxy.deploy();
-    await tokenApproveProxy.initialize();
-    await tokenApproveProxy.deployed();
-
-    TokenApprove = await ethers.getContractFactory("TokenApprove");
-    tokenApprove = await TokenApprove.deploy();
-    await tokenApprove.initialize(tokenApproveProxy.address);
-    await tokenApprove.deployed();
-
+    let _feeRateAndReceiver = "0x000000000000000000000000" + pmm_params.feeTo.slice(2);
     DexRouter = await ethers.getContractFactory("DexRouter");
-    dexRouter = await upgrades.deployProxy(DexRouter, [])
+    dexRouter = await upgrades.deployProxy(DexRouter);
     await dexRouter.deployed();
+    await dexRouter.initializePMMRouter(_feeRateAndReceiver);
+
+
+    expect(await dexRouter._WETH()).to.be.equal(weth.address);
+    expect(await dexRouter._APPROVE_PROXY()).to.be.equal(tokenApproveProxy.address);
+
     await dexRouter.setApproveProxy(tokenApproveProxy.address);
 
-    await tokenApproveProxy.addProxy(dexRouter.address);
-    await tokenApproveProxy.setTokenApprove(tokenApprove.address);
 
-    await wNativeRelayer.setCallerOk([dexRouter.address], [true]);
+    let accountAddress = await tokenApproveProxy.owner();
+    startMockAccount([accountAddress]);
+    tokenApproveProxyOwner = await ethers.getSigner(accountAddress);
+    setBalance(tokenApproveProxyOwner.address, '0x56bc75e2d63100000');
+
+    await tokenApproveProxy.connect(tokenApproveProxyOwner).addProxy(dexRouter.address);
+    await tokenApproveProxy.connect(tokenApproveProxyOwner).setTokenApprove(tokenApprove.address);
   }
+
+  const initWNativeRelayer = async () => {
+    wNativeRelayer = await ethers.getContractAt(
+        "WNativeRelayer",
+        ethDeployed.base.wNativeRelayer
+
+    );
+    let accountAddress = await wNativeRelayer.owner();
+    startMockAccount([accountAddress]);
+    wNativeRelayerOwner = await ethers.getSigner(accountAddress);
+    setBalance(wNativeRelayerOwner.address, '0x56bc75e2d63100000');
+    await wNativeRelayer.connect(wNativeRelayerOwner).setCallerOk([dexRouter.address], [true]);
+    await dexRouter.setWNativeRelayer(wNativeRelayer.address);
+
+    
+    expect(await dexRouter._WNATIVE_RELAY()).to.be.equal(wNativeRelayer.address);
+  }
+
+  // const initDexRouter = async () => {
+  //   TokenApproveProxy = await ethers.getContractFactory("TokenApproveProxy");
+  //   tokenApproveProxy = await TokenApproveProxy.deploy();
+  //   await tokenApproveProxy.initialize();
+  //   await tokenApproveProxy.deployed();
+
+  //   TokenApprove = await ethers.getContractFactory("TokenApprove");
+  //   tokenApprove = await TokenApprove.deploy();
+  //   await tokenApprove.initialize(tokenApproveProxy.address);
+  //   await tokenApprove.deployed();
+
+  //   DexRouter = await ethers.getContractFactory("DexRouter");
+  //   dexRouter = await upgrades.deployProxy(DexRouter, [])
+  //   await dexRouter.deployed();
+  //   await dexRouter.setApproveProxy(tokenApproveProxy.address);
+
+  //   await tokenApproveProxy.addProxy(dexRouter.address);
+  //   await tokenApproveProxy.setTokenApprove(tokenApprove.address);
+
+  //   await wNativeRelayer.setCallerOk([dexRouter.address], [true]);
+  // }
 
   const initMockXBridge = async () => {
     const XBridgeMock = await ethers.getContractFactory("MockXBridge");

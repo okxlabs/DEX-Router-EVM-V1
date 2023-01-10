@@ -1,8 +1,8 @@
 {
   "manifestVersion": "3.2",
   "admin": {
-    "address": "0xE8F7d98bE6722d42F29b50500B0E318EF2be4fc8",
-    "txHash": "0x2f40817c12be553212af2d11563e9aae680ccaded0597f776a9ec132f369a811"
+    "address": "0x24432a08869578aAf4d1eadA12e1e78f171b1a2b",
+    "txHash": "0x950d062a95774cdb1a8bfeeb42aaea1e10cf61c7a7f1aa65491db62c6c174898"
   },
   "proxies": [
     {
@@ -383,6 +383,11 @@
     {
       "address": "0x572316aC11CB4bc5daf6BDae68f43EA3CCE3aE0e",
       "txHash": "0xede750af54dd39472659e7136b5046ff30f3fafe8e6e0ea040e5fce2256fd780",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xdB05A386810c809aD5a77422eb189D36c7f24402",
+      "txHash": "0xece09e2a7998a8a41df564c1c317678a2ee4acbee528cbb82e987afc1d4af96f",
       "kind": "transparent"
     }
   ],
@@ -1318,6 +1323,221 @@
           "t_bool": {
             "label": "bool",
             "numberOfBytes": "1"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    },
+    "32180a725f7bb282e3476ec4f975c815a6f5c10c894a01c0f8bd3304319f0124": {
+      "address": "0x2538a10b7fFb1B78c890c870FC152b10be121f04",
+      "txHash": "0xae06986912ee0b8c47342405f525be3921d5e6052a851b7a7addf166c0e510e4",
+      "layout": {
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "_status",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_uint256",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:38"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:74"
+          },
+          {
+            "label": "approveProxy",
+            "offset": 0,
+            "slot": "151",
+            "type": "t_address",
+            "contract": "DexRouterStorage",
+            "src": "contracts/8/DexRouterStorage.sol:7"
+          },
+          {
+            "label": "wNativeRelayer",
+            "offset": 0,
+            "slot": "152",
+            "type": "t_address",
+            "contract": "DexRouterStorage",
+            "src": "contracts/8/DexRouterStorage.sol:8"
+          },
+          {
+            "label": "xBridge",
+            "offset": 0,
+            "slot": "153",
+            "type": "t_address",
+            "contract": "DexRouterStorage",
+            "src": "contracts/8/DexRouterStorage.sol:9"
+          },
+          {
+            "label": "_dexRouterGap",
+            "offset": 0,
+            "slot": "154",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "DexRouterStorage",
+            "src": "contracts/8/DexRouterStorage.sol:10"
+          },
+          {
+            "label": "_CACHED_DOMAIN_SEPARATOR",
+            "offset": 0,
+            "slot": "204",
+            "type": "t_bytes32",
+            "contract": "EIP712Upgradable",
+            "src": "contracts/8/libraries/draft-EIP712Upgradable.sol:31"
+          },
+          {
+            "label": "_CACHED_CHAIN_ID",
+            "offset": 0,
+            "slot": "205",
+            "type": "t_uint256",
+            "contract": "EIP712Upgradable",
+            "src": "contracts/8/libraries/draft-EIP712Upgradable.sol:32"
+          },
+          {
+            "label": "_CACHED_THIS",
+            "offset": 0,
+            "slot": "206",
+            "type": "t_address",
+            "contract": "EIP712Upgradable",
+            "src": "contracts/8/libraries/draft-EIP712Upgradable.sol:33"
+          },
+          {
+            "label": "_HASHED_NAME",
+            "offset": 0,
+            "slot": "207",
+            "type": "t_bytes32",
+            "contract": "EIP712Upgradable",
+            "src": "contracts/8/libraries/draft-EIP712Upgradable.sol:35"
+          },
+          {
+            "label": "_HASHED_VERSION",
+            "offset": 0,
+            "slot": "208",
+            "type": "t_bytes32",
+            "contract": "EIP712Upgradable",
+            "src": "contracts/8/libraries/draft-EIP712Upgradable.sol:36"
+          },
+          {
+            "label": "_TYPE_HASH",
+            "offset": 0,
+            "slot": "209",
+            "type": "t_bytes32",
+            "contract": "EIP712Upgradable",
+            "src": "contracts/8/libraries/draft-EIP712Upgradable.sol:37"
+          },
+          {
+            "label": "operator",
+            "offset": 0,
+            "slot": "210",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "PMMRouterStorage",
+            "src": "contracts/8/PMMRouterStorage.sol:6"
+          },
+          {
+            "label": "orderRemaining",
+            "offset": 0,
+            "slot": "211",
+            "type": "t_mapping(t_bytes32,t_uint256)",
+            "contract": "PMMRouterStorage",
+            "src": "contracts/8/PMMRouterStorage.sol:7"
+          },
+          {
+            "label": "feeRateAndReceiver",
+            "offset": 0,
+            "slot": "212",
+            "type": "t_uint256",
+            "contract": "PMMRouterStorage",
+            "src": "contracts/8/PMMRouterStorage.sol:8"
+          },
+          {
+            "label": "_pmmRouterGap",
+            "offset": 0,
+            "slot": "213",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "PMMRouterStorage",
+            "src": "contracts/8/PMMRouterStorage.sol:9"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)",
+            "numberOfBytes": "32"
           },
           "t_uint256": {
             "label": "uint256",

@@ -77,18 +77,18 @@ contract DexRouterV2 is ReentrancyGuardUpgradeable, EthReceiver, OwnableUpgradea
     returnAmount = _unxswapInternal(IERC20(bytes32ToAddress(srcToken)), amount, minReturn, pools, msg.sender, msg.sender);
   }
 
-  function unxswapForExactTokens(
-    uint256 srcToken,
-    uint256 amountOut,
-    uint256 amountInMax,
-    bytes32[] calldata pools,
-    bytes calldata permit
-  ) external payable returns (uint256 returnAmount) {
-    if (permit.length > 0) {
-      _permit(address(uint160(srcToken)), permit);
-    }
-    return _unxswapForExactTokensInternal(IERC20(bytes32ToAddress(srcToken)), amountOut, amountInMax, pools);
-  }
+  // function unxswapForExactTokens(
+  //   uint256 srcToken,
+  //   uint256 amountOut,
+  //   uint256 amountInMax,
+  //   bytes32[] calldata pools,
+  //   bytes calldata permit
+  // ) external payable returns (uint256 returnAmount) {
+  //   if (permit.length > 0) {
+  //     _permit(address(uint160(srcToken)), permit);
+  //   }
+  //   return _unxswapForExactTokensInternal(IERC20(bytes32ToAddress(srcToken)), amountOut, amountInMax, pools);
+  // }
 
   function unxswapByOrderIdByXBridge(
     uint256 srcToken,
@@ -155,7 +155,7 @@ contract DexRouterV2 is ReentrancyGuardUpgradeable, EthReceiver, OwnableUpgradea
     PMMLib.PMMBaseRequest calldata baseRequest,
     PMMLib.PMMSwapRequest calldata request
   ) public payable nonReentrant returns (uint256 returnAmount) {
-    return _PMMV2Swap(baseRequest, request);
+    return _PMMV2Swap(msg.sender, msg.sender, baseRequest, request);
   }
 
   function PMMV2SwapFromSmartRouter(
@@ -164,7 +164,7 @@ contract DexRouterV2 is ReentrancyGuardUpgradeable, EthReceiver, OwnableUpgradea
     PMMLib.PMMSwapRequest calldata request
   ) external returns (uint256 errorCode) {
     if (msg.sender != smartRouter) {revert OnlySmartRouter();}
-    return _swapInternal(actualAmountRequest, fromTokenpayer, request, false, false);
+    return _pmmSwapInternal(actualAmountRequest, fromTokenpayer, msg.sender, request, false, false);
   }
 
   //-------------------------------

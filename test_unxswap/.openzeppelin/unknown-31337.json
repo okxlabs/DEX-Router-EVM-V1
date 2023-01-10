@@ -2,19 +2,19 @@
   "manifestVersion": "3.2",
   "admin": {
     "address": "0x2538a10b7fFb1B78c890c870FC152b10be121f04",
-    "txHash": "0xebcaa616fc0777637131013a9f45d5f8023957f6c26d826ac6a8c21aaa5e8386"
+    "txHash": "0x7d414e2a690de71d54ab29691d985dc7e092eddfba785f94e2d32468c9360d80"
   },
   "proxies": [
     {
       "address": "0x24432a08869578aAf4d1eadA12e1e78f171b1a2b",
-      "txHash": "0xf0d07675fedc7d5b6d7bade1a4d0e3eaf85ae0b3d3fea0ea4c602707b6f9ff6b",
+      "txHash": "0x093dc42fef1e6a9d7c48e64c8b3e5c0eee34a9547e926f7496ac2af690e85478",
       "kind": "transparent"
     }
   ],
   "impls": {
-    "ef43ce4755543c12f79bd7236a135668dd4ad760a4383557800b3b1ec10356ef": {
+    "33590b22b172b227ffe5ecc148d9deadf1d09440fcdf583940990a09a1fc1c38": {
       "address": "0x707531c9999AaeF9232C8FEfBA31FBa4cB78d84a",
-      "txHash": "0x373c700f6d273fb4ecf8ad3b2089bd31ca626c3d8e26f59a6816c96055fed444",
+      "txHash": "0x1ad6d0872637c596cc9b5965a1053ee3e50f24c8d39d4811f31f4005fcd7aac8",
       "layout": {
         "storage": [
           {

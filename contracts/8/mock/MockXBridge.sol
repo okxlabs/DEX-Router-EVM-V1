@@ -10,7 +10,6 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 import "../interfaces/IApproveProxy.sol";
 import "../libraries/RevertReasonParser.sol";
-import "hardhat/console.sol";
 
 /// @title XBridge
 /// @notice Entrance for Bridge
@@ -182,7 +181,7 @@ contract MockXBridge is
         bool success;
         bytes memory result;
         bytes4 selectorId = bytes4(_request.dexData);
-        require(selectorId == 0xd6576868 || selectorId == 0xe051c6e8 || selectorId == 0x1e00140d, "selector id error");
+        require(selectorId == 0xd6576868 || selectorId == 0xe051c6e8 || selectorId == 0x1e00140d || selectorId == 0xd1b260d4 || selectorId == 0x9989d481, "selector id error");
         payer = msg.sender;
         receiver = address(this);
         // 1. prepare and swap
@@ -196,7 +195,6 @@ contract MockXBridge is
         }
         delete payer;
         delete receiver;
-
         // 2. check result and balance
         require(success, RevertReasonParser.parse(result, ""));
         emit LogSwapAndBridgeTo(

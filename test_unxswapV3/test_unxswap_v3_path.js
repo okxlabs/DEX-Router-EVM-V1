@@ -482,6 +482,8 @@ describe("Test unxswapV3 path", function() {
         DexRouter = await ethers.getContractFactory("DexRouter");
         dexRouter = await upgrades.deployProxy(DexRouter);
         await dexRouter.deployed();
+        await dexRouter.initializePMMRouter(_feeRateAndReceiver);
+
   
         expect(await dexRouter._WETH()).to.be.equal(weth.address);
         expect(await dexRouter._APPROVE_PROXY()).to.be.equal(tokenApproveProxy.address);

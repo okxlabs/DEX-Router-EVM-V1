@@ -9,30 +9,28 @@ import "./libraries/draft-EIP712Upgradable.sol";
 import "./interfaces/IApproveProxy.sol";
 import "./interfaces/IUniswapV2Pair.sol";
 import "./interfaces/IUniV3.sol";
+import "./interfaces/IUniswapV2Factory.sol";
 import "./interfaces/IWETH.sol";
 import "./interfaces/IWNativeRelayer.sol";
 import "./libraries/CommonUtils.sol";
 import "./libraries/PMMLib.sol";
+import "./PMMRouterStorage.sol";
 
 /// @title PMMRouter
 /// @notice Private Market Maker Router for order book
-abstract contract PMMRouter is EIP712Upgradable, CommonUtils {
+abstract contract PMMRouter is CommonUtils, EIP712Upgradable, PMMRouterStorage {
   using SafeERC20 for IERC20;
   using UniversalERC20 for IERC20;
 
-  // _ORDER_TYPEHASH = keccak256("PMMSwapRequest(uint256 pathIndex,address payer,address fromToken,address toToken,uint256 fromTokenAmountMax,uint256 toTokenAmountMax,uint256 deadLine)")
-  bytes32 private constant _ORDER_TYPEHASH = 0xfa0a4a288f6666a30e0dc0e865205ec9caac1b3c273b9f7d06f25e0e4b3af4f5;
+  // _ORDER_TYPEHASH = keccak256("PMMSwapRequest(uint256 pathIndex,address payer,address fromToken,address toToken,uint256 fromTokenAmountMax,uint256 toTokenAmountMax,uint256 salt,uint256 deadLine,bool isPushOrder,bytes extension)")
+  bytes32 private constant _ORDER_TYPEHASH = 0x5d068ce469dcf41137bcb6c3e1894e076ad915392f28fda19ba41601d33c32a6;
   bytes32 private constant _NUM_MASK = 0xffff000000000000000000000000000000000000000000000000000000000000;
   string private constant _NAME = "METAX MARKET MAKER";
-  string private constant _VERSION = "2.0"; 
+  string private constant _VERSION = "1.0"; 
   uint256 private constant _ORDER_FINALIZED = 0x8000000000000000000000000000000000000000000000000000000000000000;
   uint256 private constant _MAX_FEE_RATE = 10000;
-  
-  // pmm payer => pmm operator
-  mapping(address => address) public operator;
-  mapping(bytes32 => uint256) public orderRemaining;
-
-  uint256 public feeRateAndReceiver;    // 2bytes feeRate + 0000... + 20bytes feeReceiver
+  address private constant _FACTORY = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;  //ETH
+  // address private constant _FACTORY = 0xF45B1CdbA9AACE2e9bbE80bf376CE816bb7E73FB;  //hardhat
 
   // ============ Event ============
   event PMMFeeConfigChanged(address indexed _sender, uint256 _feeRateAndReceiver);
@@ -55,10 +53,7 @@ abstract contract PMMRouter is EIP712Upgradable, CommonUtils {
     uint256 _feeRateAndReceiver
   ) internal {
     _EIP712_init(_NAME, _VERSION);
-    (uint256 _feeRate, address _feeReceiver) = decodeNumAndAddress(_feeRateAndReceiver);
-    if(_feeRate > _MAX_FEE_RATE) { revert InvaldFeeRate();}
-    if(_feeReceiver == address(0)) { revert InvalidFeeReceiver();} 
-    feeRateAndReceiver = _feeRateAndReceiver;
+    _setPMMFeeConfig(_feeRateAndReceiver);
   }
 
   // ============ OnlyOwner ============
@@ -91,7 +86,9 @@ abstract contract PMMRouter is EIP712Upgradable, CommonUtils {
   }
 
   function _PMMV2Swap(
-    PMMLib.PMMBaseRequest calldata baseRequest,
+    address fromTokenPayer,
+    address receiver,
+    PMMLib.PMMBaseRequest memory baseRequest,
     PMMLib.PMMSwapRequest calldata request
   ) internal returns (uint256 returnAmount) {
     if(baseRequest.fromTokenAmount == 0) {revert InvalidFromAmount();}
@@ -99,26 +96,26 @@ abstract contract PMMRouter is EIP712Upgradable, CommonUtils {
     if(baseRequest.toNative && request.toToken != _WETH) {revert InvalidToToken();}
     if(baseRequest.deadLine < block.timestamp) {revert SwapExpired();}
 
-    returnAmount = baseRequest.toNative ? msg.sender.balance : IERC20(request.toToken).balanceOf(msg.sender);
-
-    uint256 errorCode = _swapInternal(baseRequest.fromTokenAmount, msg.sender, request, baseRequest.fromNative, baseRequest.toNative);
+    returnAmount = baseRequest.toNative ? receiver.balance : IERC20(request.toToken).balanceOf(receiver);
+    uint256 errorCode = _pmmSwapInternal(baseRequest.fromTokenAmount, fromTokenPayer, receiver, request, baseRequest.fromNative, baseRequest.toNative);
     if (errorCode > 0) {
       revert PMMLib.PMMErrorCode(errorCode);
 
     }
-    returnAmount = baseRequest.toNative ? msg.sender.balance - returnAmount : IERC20(request.toToken).balanceOf(msg.sender) - returnAmount;
+    returnAmount = baseRequest.toNative ? receiver.balance - returnAmount : IERC20(request.toToken).balanceOf(receiver) - returnAmount;
     if(returnAmount < baseRequest.minReturnAmount) {revert MinReturnNotReached();}
     uint256 subIndex;
     assembly{
-      subIndex := calldataload(add(request,0x120))
+      subIndex := calldataload(add(request,0x180))
     }
     emit PMMLib.PMMSwap(request.pathIndex, subIndex, request.payer, request.fromToken, request.toToken, baseRequest.fromTokenAmount, returnAmount, errorCode);
     return returnAmount;
   }
 
-  function _swapInternal(
+  function _pmmSwapInternal(
     uint256 actualAmountRequest,
-    address fromTokenpayer,
+    address fromTokenPayer,
+    address receiver,
     PMMLib.PMMSwapRequest calldata request,
     bool fromNative,
     bool toNative
@@ -131,9 +128,9 @@ abstract contract PMMRouter is EIP712Upgradable, CommonUtils {
     uint256 amount = (actualAmountRequest * request.toTokenAmountMax) / request.fromTokenAmountMax;
     uint256 source;
     assembly{
-      source := calldataload(add(request,0x180))
+      source := calldataload(add(request,0x220))
     }
-    uint256 protectedAmount = _getProtectedAmount(actualAmountRequest, source);
+    uint256 protectedAmount = _getProtectedAmount(actualAmountRequest, source, request.fromToken, request.toToken);
     if (amount > protectedAmount) {
       amount = protectedAmount;
       emit PriceProtected(amount, protectedAmount);
@@ -164,18 +161,21 @@ abstract contract PMMRouter is EIP712Upgradable, CommonUtils {
     if (toNative) {
       IApproveProxy(_APPROVE_PROXY).claimTokens(request.toToken, request.payer, _WNATIVE_RELAY, amount);
       IWNativeRelayer(_WNATIVE_RELAY).withdraw(amount);
-      payable(fromTokenpayer).transfer(amount);
+      payable(receiver).transfer(amount);
     } else {
-      IApproveProxy(_APPROVE_PROXY).claimTokens(request.toToken, request.payer, msg.sender, amount);
+      IApproveProxy(_APPROVE_PROXY).claimTokens(request.toToken, request.payer, receiver, amount);
     }
 
     // Taker -> Maker
     if (fromNative) {
       IWETH(_WETH).deposit{ value: actualAmountRequest }();
       IERC20(_WETH).safeTransfer(request.payer, actualAmountRequest);
+    } else if(fromTokenPayer == address(this)) {
+      IERC20(request.fromToken).safeTransfer(request.payer, actualAmountRequest);
     } else {
-      IApproveProxy(_APPROVE_PROXY).claimTokens(request.fromToken, fromTokenpayer, request.payer, actualAmountRequest);
+      IApproveProxy(_APPROVE_PROXY).claimTokens(request.fromToken, fromTokenPayer, request.payer, actualAmountRequest);
     }
+
   }
 
   // ============ Internal ============
@@ -188,8 +188,8 @@ abstract contract PMMRouter is EIP712Upgradable, CommonUtils {
     bytes32 operatorSigVs;
 
     assembly{
-      operatorSigR := mload(add(extension, 0x40))
-      operatorSigVs := mload(add(extension, 0x60))
+      operatorSigR := mload(add(extension, 0x60))
+      operatorSigVs := mload(add(extension, 0x80))
     }
 
     if (!validateOperatorSig(payer, ECDSA.recover(digest, operatorSigR, operatorSigVs))) {
@@ -228,8 +228,13 @@ abstract contract PMMRouter is EIP712Upgradable, CommonUtils {
   }
 
   // =============== price protection ===============
-  function _getProtectedAmount(uint256 fromTokenAmount, uint256 source) internal view returns (uint256 protectedAmount) {
+  function _getProtectedAmount(uint256 fromTokenAmount, uint256 source, address fromToken, address toToken) internal view returns (uint256 protectedAmount) {
     (uint256 reverse, address pair) = decodeNumAndAddress(source);
+    if (pair == address(0)) {
+      pair = IUniswapV2Factory(_FACTORY).getPair(fromToken, toToken);
+      address token0 = IUniswapV2Pair(pair).token0();
+      if (token0 == toToken) {reverse = 1;}
+    }
     (uint112 reserve0, uint112 reserve1, ) = IUniswapV2Pair(pair).getReserves();
     if (reserve0 == 0 || reserve1 == 0) {return type(uint256).max;}
     if (reverse == 1) {
@@ -253,8 +258,8 @@ abstract contract PMMRouter is EIP712Upgradable, CommonUtils {
     assembly {
       let mem := mload(0x40)
       mstore(mem, _ORDER_TYPEHASH)
-      calldatacopy(add(mem, 0x20), order, 0xE0)
-      structHash := keccak256(mem, 0x100)
+      calldatacopy(add(mem, 0x20), order, 0x120)
+      structHash := keccak256(mem, 0x140)
     }
   }
 

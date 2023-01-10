@@ -64,7 +64,7 @@ const getPullInfosToBeSigned = function (pull_data) {
             "isPushOrder" : false,
             "chainId" : chunk.chainId,
             "marketMaker" : chunk.marketMaker,
-            "pmmAdapter" : chunk.pmmAdapter,
+            "pmmAdapter" : chunk.marketMaker,
             "source": chunk.source
         };
     }
@@ -92,7 +92,7 @@ const getPullInfosToBeSigned_paidByETHMockAccount = function (pull_data) {
             "isPushOrder" : false,
             "chainId" : chunk.chainId,
             "marketMaker" : chunk.marketMaker,
-            "pmmAdapter" : chunk.pmmAdapter,
+            "pmmAdapter" : chunk.marketMaker,
             "source" : chunk.source
         };
     }
@@ -121,7 +121,7 @@ const getPullInfosToBeSigned_paidByOKCMockAccount = function (pull_data) {
             "isPushOrder" : false,
             "chainId" : chunk.chainId,
             "marketMaker" : chunk.marketMaker,
-            "pmmAdapter" : chunk.pmmAdapter,
+            "pmmAdapter" : chunk.marketMaker,
             "source": chunk.source
         };
     }
@@ -151,7 +151,7 @@ const getPullInfosToBeSigned_paidByAccount3 = function (pull_data) {
             "isPushOrder" : false,
             "chainId" : chunk.chainId,
             "marketMaker" : chunk.marketMaker,
-            "pmmAdapter" : chunk.pmmAdapter,
+            "pmmAdapter" : chunk.marketMaker,
             "source": chunk.source
         };
     }
@@ -181,7 +181,7 @@ const getPullInfosToBeSigned_paidByCarol = function (pull_data) {
             "isPushOrder" : false,
             "chainId" : chunk.chainId,
             "marketMaker" : chunk.marketMaker,
-            "pmmAdapter" : chunk.pmmAdapter,
+            "pmmAdapter" : chunk.marketMaker,
             "source" : chunk.source
         };
     }
@@ -210,7 +210,7 @@ const getPushInfosToBeSigned = function (push_data){
             "isPushOrder" : true,
             "chainId" : chunk.chainId,
             "marketMaker" : chunk.marketMaker,
-            "pmmAdapter" : chunk.pmmAdapter,
+            "pmmAdapter" : chunk.marketMaker,
             "source" : chunk.source
         };
     }
@@ -234,7 +234,7 @@ const singleQuote = function (domain_separator, infosToBeSigned, pmmAdapter) {
             "salt" : infosToBeSigned.salt, 
             "deadLine" : infosToBeSigned.deadLine, 
             "isPushOrder" : infosToBeSigned.isPushOrder,
-            "extension" : '0x000000000000000000000000' + pmmAdapter.slice(2) + subIndex + signature.slice(2) + infosToBeSigned.source,
+            "extension" : '0x000000000000000000000000' + pmmAdapter.slice(2) + subIndex + signature.slice(2) + infosToBeSigned.source.slice(2),
         }
         return quote;
     } catch {
