@@ -109,6 +109,7 @@ abstract contract PMMRouter is CommonUtils, EIP712Upgradable, PMMRouterStorage {
       subIndex := calldataload(add(request,0x180))
     }
     emit PMMLib.PMMSwap(request.pathIndex, subIndex, request.payer, request.fromToken, request.toToken, baseRequest.fromTokenAmount, returnAmount, errorCode);
+    emit OrderRecord(request.fromToken, request.toToken, request.payer, baseRequest.fromTokenAmount, returnAmount);
     return returnAmount;
   }
 
