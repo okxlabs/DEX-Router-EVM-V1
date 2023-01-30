@@ -33,6 +33,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
   bytes32 private constant _PMM_INDEX_J_MASK = 0x0000ff0000000000000000000000000000000000000000000000000000000000;
   uint256 private constant _ORDER_ID_MASK = 0xffffffffffffffffffffffff0000000000000000000000000000000000000000;
   uint256 private constant _WEIGHT_MASK = 0x00000000000000000000ffff0000000000000000000000000000000000000000;
+  uint256 private constant _CALL_GAS_LIMIT = 5000;
 
   struct BaseRequest {
     uint256 fromToken;
@@ -175,7 +176,8 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
       }
       uint256 ethBal = address(this).balance;
       if (ethBal > 0) {
-        payable(to).transfer(ethBal);
+        (bool success, ) = payable(to).call{value: ethBal, gas: _CALL_GAS_LIMIT}('');
+        require(success, "transfer native token failed");
       }
     } else {
       uint256 bal = IERC20(token).balanceOf(address(this));
