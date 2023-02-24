@@ -78,7 +78,7 @@ async function executeTricrypto() {
     // layer1
     // let request1 = [requestParam1];
     let layer1 = [router1];
-
+    let orderId = 0;
     let baseRequest = [
         USDT.address,
         WETH.address,
@@ -87,7 +87,8 @@ async function executeTricrypto() {
         deadLine,
     ]
     await USDT.connect(account).approve(tokenApprove.address, fromTokenAmount);
-    await dexRouter.connect(account).smartSwap(
+    await dexRouter.connect(account).smartSwapByOrderId(
+        orderId,
         baseRequest,
         [fromTokenAmount],
         [layer1],
@@ -159,7 +160,7 @@ async function executeTwoCrypto() {
     //   // layer1
     // request1 = [requestParam1];
     let layer1 = [router1];
-
+    let orderId = 0;
     let baseRequest = [
         tokenConfig.tokens.ETH.baseTokenAddress,
         tokenConfig.tokens.SETH.baseTokenAddress,
@@ -168,7 +169,8 @@ async function executeTwoCrypto() {
         deadLine,
     ]
     await WETH.connect(account).approve(tokenApprove.address, fromTokenAmount);
-    await dexRouter.connect(account).smartSwap(
+    await dexRouter.connect(account).smartSwapByOrderId(
+        orderId,
         baseRequest,
         [fromTokenAmount],
         [layer1],

@@ -108,7 +108,6 @@ async function executeCurveSETPool2(CurveAdapter) {
 
 }
 
-
 async function executeCurveSETPool(CurveAdapter) {
     let pmmReq = []
 
@@ -190,7 +189,7 @@ async function executeCurveSETPool(CurveAdapter) {
         minReturnAmount,
         deadLine,
     ]
-
+    await WETH.connect(account).approve(tokenApprove.address, fromTokenAmount);
     await dexRouter.connect(account).smartSwapByOrderId(
         orderId,
         baseRequest,
@@ -209,7 +208,7 @@ async function executeCurveSETPool(CurveAdapter) {
 async function executeCurvePool(CurveAdapter) {
     let pmmReq = []
 
-    let accountAddress = "0x3DdfA8eC3052539b6C9549F12cEA2C295cfF5296";
+    let accountAddress = "0x99C2d01c89EA89839516B2758fBCa737FB939263";
     await startMockAccount([accountAddress]);
     let account = await ethers.getSigner(accountAddress);
   
@@ -219,13 +218,13 @@ async function executeCurvePool(CurveAdapter) {
     WETH = await ethers.getContractAt(
         "MockERC20",
         tokenConfig.tokens.WETH.baseTokenAddress
-      )
+    )
 
     // USDT
     USDT = await ethers.getContractAt(
         "MockERC20",
         tokenConfig.tokens.USDT.baseTokenAddress
-        )
+    )
     
     // DAI
     DAI = await ethers.getContractAt(
@@ -246,11 +245,6 @@ async function executeCurvePool(CurveAdapter) {
     console.log("before Account USDT Balance: " + await USDT.balanceOf(account.address));
     console.log("before Account DAI Balance: " + await DAI.balanceOf(account.address));
 
-    // arguments
-    // let requestParam1 = [
-    //     tokenConfig.tokens.USDT.baseTokenAddress,
-    //     [fromTokenAmount]
-    // ];
     let mixAdapter1 = [
         CurveAdapter.address
     ];
@@ -306,7 +300,7 @@ async function execute_underlying(CurveAdapter) {
     const pmmReq = [];
 
     // V神
-    let accountAddress = "0x1Db3439a222C519ab44bb1144fC28167b4Fa6EE6";
+    let accountAddress = "0x99C2d01c89EA89839516B2758fBCa737FB939263";
     await startMockAccount([accountAddress]);
     let account = await ethers.getSigner(accountAddress);
   
@@ -316,7 +310,7 @@ async function execute_underlying(CurveAdapter) {
     WETH = await ethers.getContractAt(
         "MockERC20",
         tokenConfig.tokens.WETH.baseTokenAddress
-      )
+    )
 
     // USDT
     DAI = await ethers.getContractAt(
@@ -341,11 +335,6 @@ async function execute_underlying(CurveAdapter) {
     let deadLine = FOREVER;
     let poolAddress = "0x890f4e345b1daed0367a877a1612f86a1f86985f"; 
 
-    // arguments
-    // let requestParam1 = [
-    //     tokenConfig.tokens.DAI.baseTokenAddress,
-    //     [fromTokenAmount]
-    // ];
     let mixAdapter1 = [
         CurveAdapter.address
     ];
@@ -372,9 +361,8 @@ async function execute_underlying(CurveAdapter) {
       )
     let extraData1 = [moreInfo];
     let router1 = [mixAdapter1, assertTo1, rawData1, extraData1,DAI.address];
-      
-    //   // layer1
-    // let request1 = [requestParam1];
+
+    // layer1
     let layer1 = [router1];
     let orderId = 0;
     let baseRequest = [

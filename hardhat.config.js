@@ -47,10 +47,10 @@ module.exports = {
       blockGasLimit: 0x1fffffffffffff,
       allowUnlimitedContractSize: true,
       timeout: 1800000,
-      // forking:
-      // {
-      //   url: "https://rpc.ankr.com/bsc"
-      // }
+      forking:
+      {
+        url: "https://rpc.ankr.com/eth"
+      }
     },
     okc: {
       url: INFSTONES_KEY == '' ? "http://35.72.176.238:26659" : `https://api.infstones.com/okc-archive/mainnet/${INFSTONES_KEY}`,
