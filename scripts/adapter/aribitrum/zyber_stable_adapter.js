@@ -1,5 +1,4 @@
 const { ethers } = require("hardhat");
-const deployed = require("../deployed");
 
 async function main() {
     ZyberStableAdapter = await ethers.getContractFactory("ZyberStableAdapter");

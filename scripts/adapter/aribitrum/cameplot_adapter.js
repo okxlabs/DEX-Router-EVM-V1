@@ -1,5 +1,4 @@
 const { ethers } = require("hardhat");
-const deployed = require("../deployed");
 
 async function main() {
     CameplotAdapter = await ethers.getContractFactory("CameplotAdapter");
