@@ -128,7 +128,6 @@ contract MarketMaker is OwnableUpgradeable, ReentrancyGuardUpgradeable, EIP712Up
     address _cancelerGuardian
   ) public initializer {
     __Ownable_init();
-    _EIP712_init(_NAME, _VERSION);
     require(_weth != address(0), "Wrong Address!");
     require(_feeTo != address(0), "Wrong Address!");
     require(_feeRate <= 100, "fee Rate cannot exceed 1%");

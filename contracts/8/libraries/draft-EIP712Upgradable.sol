@@ -25,16 +25,18 @@ import "./ECDSA.sol";
  * _Available since v3.4._
  */
 abstract contract EIP712Upgradable {
+    uint256[6] private slots; // to take over 6 slots
+
     /* solhint-disable var-name-mixedcase */
     // Cache the domain separator as an immutable value, but also store the chain id that it corresponds to, in order to
     // invalidate the cached domain separator if the chain id changes.
-    bytes32 private _CACHED_DOMAIN_SEPARATOR;
-    uint256 private _CACHED_CHAIN_ID;
-    address private _CACHED_THIS;
+    bytes32 constant private _CACHED_DOMAIN_SEPARATOR = 0xa1dd89da16c54d4e250879e6df2d3033eb473974f277eca7f41cd882a24eb131;
+    uint256 constant private _CACHED_CHAIN_ID = 1;
+    address constant private _CACHED_THIS = 0x3b3ae790Df4F312e745D270119c6052904FB6790;
 
-    bytes32 private _HASHED_NAME;
-    bytes32 private _HASHED_VERSION;
-    bytes32 private _TYPE_HASH;
+    bytes32 constant private _HASHED_NAME = 0x9569cad29571f225e7f2c73ecd677d78be383da74efd13f4af2bade05dc1a8de;
+    bytes32 constant private _HASHED_VERSION = 0xe6bbd6277e1bf288eed5e8d1780f9a50b239e86b153736bceebccf4ea79d90b3;
+    bytes32 constant private _TYPE_HASH = 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f;
 
     /* solhint-enable var-name-mixedcase */
 
@@ -50,6 +52,7 @@ abstract contract EIP712Upgradable {
      * NOTE: These parameters cannot be changed except through a xref:learn::upgrading-smart-contracts.adoc[smart
      * contract upgrade].
      */
+    /*
     function _EIP712_init(string memory name, string memory version) internal {
         bytes32 hashedName = keccak256(bytes(name));
         bytes32 hashedVersion = keccak256(bytes(version));
@@ -66,7 +69,7 @@ abstract contract EIP712Upgradable {
         );
         _CACHED_THIS = address(this);
         _TYPE_HASH = typeHash;
-    }
+    }*/
 
     /**
      * @dev Returns the domain separator for the current chain.

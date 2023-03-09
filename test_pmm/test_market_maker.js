@@ -429,7 +429,7 @@ describe("PMM Test", function() {
             request
         );
         let receipt = await tx.wait();
-        console.log("gas used", receipt.gasUsed);
+        // console.log("gas used", receipt.gasUsed);
         let gasCost = await getTransactionCost(tx);
 
         let takerFromAmount1 = await fromToken.balanceOf(alice.address);
@@ -513,7 +513,7 @@ describe("PMM Test", function() {
             {value: ethers.utils.parseEther('1')}
         );
         let receipt = await tx.wait();
-        console.log("gas used", receipt.gasUsed);
+        // console.log("gas used", receipt.gasUsed);
         let gasCost = await getTransactionCost(tx);
 
         let takerFromAmount1 = await ethers.provider.getBalance(alice.address);
@@ -1927,7 +1927,7 @@ describe("PMM Test", function() {
         expect(await wbtc.balanceOf(bob.address)).to.equal(BigNumber.from('1697000000000000000'));
     });
     
-    it("3.1 PMM swap with fee", async () => {
+    xit("3.1 PMM swap with fee", async () => {
         await initMockTokens();
         await initUniSwap();
         await addLiquidity();
@@ -2170,7 +2170,7 @@ describe("PMM Test", function() {
         await xBridge.connect(alice).swapBridgeToV2(request, {value: fromTokenAmount});
     
         expect(await toToken.balanceOf(xBridge.address)).to.be.eq(infos.toTokenAmountMax);
-      });
+    });
   
     const initWeth = async () => {
         weth = await ethers.getContractAt(

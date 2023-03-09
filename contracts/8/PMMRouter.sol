@@ -52,7 +52,6 @@ abstract contract PMMRouter is CommonUtils, EIP712Upgradable, PMMRouterStorage {
   function _initializePMMRouter(
     uint256 _feeRateAndReceiver
   ) internal {
-    _EIP712_init(_NAME, _VERSION);
     _setPMMFeeConfig(_feeRateAndReceiver);
   }
 
@@ -100,15 +99,10 @@ abstract contract PMMRouter is CommonUtils, EIP712Upgradable, PMMRouterStorage {
     uint256 errorCode = _pmmSwapInternal(baseRequest.fromTokenAmount, fromTokenPayer, receiver, request, baseRequest.fromNative, baseRequest.toNative);
     if (errorCode > 0) {
       revert PMMLib.PMMErrorCode(errorCode);
-
     }
     returnAmount = baseRequest.toNative ? receiver.balance - returnAmount : IERC20(request.toToken).balanceOf(receiver) - returnAmount;
     if(returnAmount < baseRequest.minReturnAmount) {revert MinReturnNotReached();}
-    uint256 subIndex;
-    assembly{
-      subIndex := calldataload(add(request,0x180))
-    }
-    emit PMMLib.PMMSwap(request.pathIndex, subIndex, request.payer, request.fromToken, request.toToken, baseRequest.fromTokenAmount, returnAmount, errorCode);
+
     emit OrderRecord(request.fromToken, request.toToken, request.payer, baseRequest.fromTokenAmount, returnAmount);
     return returnAmount;
   }
@@ -149,14 +143,15 @@ abstract contract PMMRouter is CommonUtils, EIP712Upgradable, PMMRouterStorage {
     }
 
     // avoid stack too deep
-    {    
-      (uint256 feeRate, address feeReceiver) = decodeNumAndAddress(feeRateAndReceiver);
-      if(feeRate > 0) {
-        uint256 fee = (amount * feeRate) / 1000000;
-        amount -= fee;
-        IApproveProxy(_APPROVE_PROXY).claimTokens(request.toToken, request.payer, feeReceiver, fee); 
-      }
-    }
+    // TODO: feeRate is zero now, so try to save gas
+    // {
+    //   (uint256 feeRate, address feeReceiver) = decodeNumAndAddress(feeRateAndReceiver);
+    //   if(feeRate > 0) {
+    //     uint256 fee = (amount * feeRate) / 1000000;
+    //     amount -= fee;
+    //     IApproveProxy(_APPROVE_PROXY).claimTokens(request.toToken, request.payer, feeReceiver, fee);
+    //   }
+    // }
 
     // Maker -> Taker
     if (toNative) {

@@ -520,7 +520,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     uint256 orderId,
     PMMLib.PMMBaseRequest calldata baseRequest,
     PMMLib.PMMSwapRequest calldata request
-  ) external payable nonReentrant returns (uint256 returnAmount) {
+  ) external payable returns (uint256 returnAmount) {
     emit SwapOrderId(orderId);
     return _PMMV2Swap(msg.sender, msg.sender, baseRequest, request);
   }

@@ -336,7 +336,7 @@ describe("PMM Test", function() {
             request
         );
         let receipt = await tx.wait();
-        console.log("gas used", receipt.gasUsed);
+        // console.log("gas used", receipt.gasUsed);
         let gasCost = await getTransactionCost(tx);
 
         let takerFromAmount1 = await fromToken.balanceOf(alice.address);
@@ -417,7 +417,7 @@ describe("PMM Test", function() {
             {value: ethers.utils.parseEther('1')}
         );
         let receipt = await tx.wait();
-        console.log("gas used", receipt.gasUsed);
+        // console.log("gas used", receipt.gasUsed);
         let gasCost = await getTransactionCost(tx);
 
         let takerFromAmount1 = await ethers.provider.getBalance(alice.address);
