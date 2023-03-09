@@ -137,6 +137,18 @@ const alUSD = {
   baseTokenAddress: "0xBC6DA0FE9aD5f3b0d58160288917AA56653660E9"
 }
 
+const GUSD = {
+  name: "GUSD",
+  decimals: 2,
+  baseTokenAddress: "0x056Fd409E1d7A124BD7017459dFEa2F387b6d5Cd"
+}
+
+const USDP = {
+  name: "USDP",
+  decimals: 18,
+  baseTokenAddress: "0x8E870D67F660D95d5be530380D0eC0bd388289E1"
+}
+
 module.exports = {
   BTCB,
   DOT,
@@ -161,5 +173,7 @@ module.exports = {
   BREED,
   BADGER,
   renBTC,
-  alUSD
+  alUSD,
+  GUSD,
+  USDP
 }
