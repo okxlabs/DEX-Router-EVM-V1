@@ -18,9 +18,11 @@ contract PSMAdapter is IAdapter {
     address public immutable USDP_ADDRESS;
     address public immutable DAI_ADDRESS;
 
-    uint256 constant SZABO = 10 ** 12;//to18ConversionFactor of USDC, demical of USDC is 6
+    uint256 constant WAD = 10 ** 18;
+
+    uint256 constant SZABO = 10 ** 12;     //to18ConversionFactor of USDC, demical of USDC is 6
     uint256 constant GUSDFACTOR = 10 ** 16;//to18ConversionFactor of GUSD, demical of GUSD is 2
-    uint256 constant USDPFACTOR = 1;//to18ConversionFactor of USDP, demical of USDP is 18
+    uint256 constant USDPFACTOR = 1;       //to18ConversionFactor of USDP, demical of USDP is 18
     address constant AUTHGEMJOIN_USDC_ADDRESS = 0x0A59649758aa4d66E25f08Dd01271e891fe52199;
     address constant AUTHGEMJOIN_GUSD_ADDRESS = 0x79A0FA989fb7ADf1F8e80C93ee605Ebb94F7c6A5;
     address constant AUTHGEMJOIN_USDP_ADDRESS = 0x7bbd8cA5e413bCa521C2c80D8d1908616894Cf21;
@@ -109,6 +111,9 @@ contract PSMAdapter is IAdapter {
         } else if (sourceToken == DAI_ADDRESS) {
             require(targetToken == USDC_ADDRESS || targetToken == GUSD_ADDRESS || targetToken == USDP_ADDRESS, "PSMAdapter: no support token");
             if (targetToken == USDC_ADDRESS) {
+                //calculate target amount and convert to target demicals
+                uint256 tout = dssPsm_USDC.tout();
+                uint256 buyAmount = buyGemAmount(tout, WAD, sellAmount, SZABO);
                 // approve dsspsm_usdc
                 SafeERC20.safeApprove(
                     IERC20(sourceToken),
@@ -116,7 +121,7 @@ contract PSMAdapter is IAdapter {
                     sellAmount
                 );
                 // dai - usdc decimal need to be 6
-                dssPsm_USDC.buyGem(address(this),sellAmount / SZABO);
+                dssPsm_USDC.buyGem(address(this),buyAmount);
                 // approve 0
                 SafeERC20.safeApprove(
                     IERC20(sourceToken),
@@ -124,6 +129,9 @@ contract PSMAdapter is IAdapter {
                     0
                 );
             }else if (targetToken == GUSD_ADDRESS) {
+                //calculate target amount and convert to target demicals
+                uint256 tout = dssPsm_GUSD.tout();
+                uint256 buyAmount = buyGemAmount(tout, WAD, sellAmount, GUSDFACTOR);
                 // approve dsspsm_gusd
                 SafeERC20.safeApprove(
                     IERC20(sourceToken),
@@ -131,7 +139,7 @@ contract PSMAdapter is IAdapter {
                     sellAmount
                 );
                 // dai - gusd decimal need to be 2
-                dssPsm_GUSD.buyGem(address(this),sellAmount / GUSDFACTOR);
+                dssPsm_GUSD.buyGem(address(this),buyAmount);
                 // approve 0
                 SafeERC20.safeApprove(
                     IERC20(sourceToken),
@@ -139,6 +147,9 @@ contract PSMAdapter is IAdapter {
                     0
                 );
             }else {
+                //calculate target amount and convert to target demicals
+                uint256 tout = dssPsm_USDP.tout();
+                uint256 buyAmount = buyGemAmount(tout, WAD, sellAmount, USDPFACTOR);
                 // approve dsspsm_usdp
                 SafeERC20.safeApprove(
                     IERC20(sourceToken),
@@ -146,7 +157,7 @@ contract PSMAdapter is IAdapter {
                     sellAmount
                 );
                 // dai - usdp decimal need to be 18
-                dssPsm_USDP.buyGem(address(this),sellAmount / USDPFACTOR);
+                dssPsm_USDP.buyGem(address(this),buyAmount);
                 // approve 0
                 SafeERC20.safeApprove(
                     IERC20(sourceToken),
@@ -166,15 +177,16 @@ contract PSMAdapter is IAdapter {
             );
         }
     }
-    /*
+
     // If tout is no longer 0，use this function ‘buyGemAmount(tout, wad, sellAmount)’  instead of sellAmount in buyGem
-    function buyGemAmount(uint256 tout, uint256 wad, uint256 daiAmt) internal pure returns (uint256){
-        uint256 a = mul(daiAmt,wad);
-        uint256 b = add(wad,tout);
-        uint256 buyGemAmt = div(a, b);
-        return buyGemAmt;
+    function buyGemAmount(uint256 tout, uint256 wad, uint256 daiAmt, uint256 to18Factor) internal pure returns (uint256){
+        uint256 a = SafeMath.mul(daiAmt,wad);
+        uint256 b = SafeMath.add(wad,tout);
+        uint256 buyGemAmt = SafeMath.div(a, b);
+        uint256 buyGemRealAmt = SafeMath.div(buyGemAmt, to18Factor);
+        return buyGemRealAmt;
     }
-    */
+
     function sellBase(
         address to,
         address pool,
