@@ -14,9 +14,14 @@ const NomiswapFactory = {
   address: '0xEfD2f571989619a942Dc3b5Af63866B57D1869ED',
 }
 
+const Curve3CRVPoolLPToken = {
+  address: "0x6c3f90f043a72fa612cbac8115ee7e52bde6e490"
+}
+
 module.exports = {
   BancorNetwork,
   BalancerVault,
   NomiswapStableFactory,
   NomiswapFactory,
+  Curve3CRVPoolLPToken
 }

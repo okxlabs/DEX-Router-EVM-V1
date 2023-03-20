@@ -1,8 +1,8 @@
 let { ethers } = require("hardhat");
-require("../../../tools");
-let { getConfig } = require("../../../config");
+require("../../tools");
+let { getConfig } = require("../../config");
 tokenConfig = getConfig("arbitrum");
-let { initDexRouter, direction, FOREVER } = require("../utils")
+let { initDexRouter, direction, FOREVER } = require("./utils")
 
 async function deployAdapter() {
     TraderJoeV2Adapter = await ethers.getContractFactory("TraderJoeV2Adapter");

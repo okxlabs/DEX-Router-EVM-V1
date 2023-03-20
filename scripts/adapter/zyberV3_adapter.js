@@ -1,20 +1,17 @@
 const { ethers } = require("hardhat");
 const { getConfig } = require("../config");
-tokenConfig = getConfig("eth");
+tokenConfig = getConfig("arbitrum");
 
-
-pool_lp_token = "0x6c3f90f043a72fa612cbac8115ee7e52bde6e490"
 async function deployAdapter() {
-    Curve3poolLPAdapter = await ethers.getContractFactory("Curve3poolLPAdapter");
-    Curve3poolLPAdapter = await Curve3poolLPAdapter.deploy(pool_lp_token);
-    await Curve3poolLPAdapter.deployed();
-    return Curve3poolLPAdapter
+    ZyberV3Adapter = await ethers.getContractFactory("ZyberV3Adapter");
+    zyberV3Adapter = await ZyberV3Adapter.deploy(tokenConfig.tokens.WETH.baseTokenAddress);
+    await zyberV3Adapter.deployed();
+    return zyberV3Adapter;
 }
 
-
 async function main() {
-    Curve3poolLPAdapter = await deployAdapter();
-    console.log(`Curve3poolLPAdapter deployed: ${Curve3poolLPAdapter.address}`);
+    zyberV3Adapter = await deployAdapter();
+    console.log(`ZyberV3Adapter deployed: ${zyberV3Adapter.address}`);
 }
 
 main()
