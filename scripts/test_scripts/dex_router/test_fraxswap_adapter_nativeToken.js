@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
-require("../../../tools");
-const { initDexRouter, direction, FOREVER } = require("../utils")
-const { getConfig } = require("../../../config");
+require("../../tools");
+const { initDexRouter, direction, FOREVER } = require("./utils")
+const { getConfig } = require("../../config");
 tokenConfig = getConfig("eth")
 
 async function deployContract() {

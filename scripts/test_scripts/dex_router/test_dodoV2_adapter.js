@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
-require("../../../tools");
-const { getConfig } = require("../../../config");
-const { initDexRouter, direction, FOREVER } = require("../utils")
+require("../../tools");
+const { getConfig } = require("../../config");
+const { initDexRouter, direction, FOREVER } = require("./utils")
 
 tokenConfig = getConfig("eth");
 

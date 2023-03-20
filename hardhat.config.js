@@ -203,7 +203,7 @@ module.exports = {
       },
     },
     op: {
-      url: "https://mainnet.optimism.io",
+      url: "https://optimism-mainnet.public.blastapi.io",
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {

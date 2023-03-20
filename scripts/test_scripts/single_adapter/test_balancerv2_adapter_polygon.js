@@ -1,7 +1,7 @@
 const { config } = require("dotenv");
 const { ethers } = require("hardhat");
-require("../../../tools");
-const { getConfig } = require("../../../config");
+require("../../tools");
+const { getConfig } = require("../../config");
 tokenConfig = getConfig("polygon");
 
 const VaultAddress = "0xBA12222222228d8Ba445958a75a0704d566BF2C8"

@@ -1,12 +1,12 @@
-const { ethers } = require("hardhat");
+const { ethers, network } = require("hardhat");
 const { getConfig } = require("../config");
 
 async function main() {
-    const tokenConfig = getConfig("eth");
+    const config = getConfig(network.name);
     const NomiswapAdapter = await ethers.getContractFactory("NomiswapAdapter");
     const nomiswapAdapter = await NomiswapAdapter.deploy(
-        tokenConfig.contracts.NomiswapFactory.address,
-        tokenConfig.contracts.NomiswapStableFactory.address
+        config.contracts.NomiswapFactory.address,
+        config.contracts.NomiswapStableFactory.address
     );
     await nomiswapAdapter.deployed();
 

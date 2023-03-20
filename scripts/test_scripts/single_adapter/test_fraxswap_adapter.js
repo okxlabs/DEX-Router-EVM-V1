@@ -1,5 +1,5 @@
 const { ethers } = require("hardhat");
-require("../../../tools");
+require("../../tools");
 
 async function deployContract() {
     FraxswapAdapter = await ethers.getContractFactory("FraxswapAdapter");

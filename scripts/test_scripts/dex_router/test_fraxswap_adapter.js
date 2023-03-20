@@ -1,6 +1,6 @@
 const { ethers } = require("hardhat");
-require("../../../tools");
-const { initDexRouter, direction, FOREVER } = require("../utils")
+require("../../tools");
+const { initDexRouter, direction, FOREVER } = require("./utils")
 
 async function deployContract() {
     FraxswapAdapter = await ethers.getContractFactory("FraxswapAdapter");

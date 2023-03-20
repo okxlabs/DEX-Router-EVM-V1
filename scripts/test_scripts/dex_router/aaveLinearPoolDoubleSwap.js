@@ -1,10 +1,10 @@
 const { ethers } = require("hardhat");
-require("../../../tools");
+require("../../tools");
 const axios = require("axios")
-const { getConfig } = require("../../../config");
+const { getConfig } = require("../../config");
 tokenConfig = getConfig("eth");
 require('dotenv').config();
-let { initDexRouter, direction, FOREVER } = require("../utils")
+let { initDexRouter, direction, FOREVER } = require("./utils")
 const balancerVault = "0xBA12222222228d8Ba445958a75a0704d566BF2C8";
 
 async function deployContract() {

@@ -49,7 +49,7 @@ const getConfig = function (network) {
   } else if (network == 'polygon') {
     return polygon
   } else {
-    throw error("network not config")
+    console.log("network not config!!!")
   }
 }
 
