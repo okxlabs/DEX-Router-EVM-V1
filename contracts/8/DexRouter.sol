@@ -18,7 +18,7 @@ import "./libraries/Permitable.sol";
 import "./libraries/PMMLib.sol";
 import "./libraries/EthReceiver.sol";
 
-import "./DexRouterStorage.sol";
+import "./storage/DexRouterStorage.sol";
 import "./PMMRouter.sol";
 
 /// @title DexRouterV1

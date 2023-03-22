@@ -568,7 +568,7 @@ describe("Test unxswapV3 path", function() {
 
     const initOneInchRouter = async () => {
         OneInchRouter = await ethers.getContractAt(
-            "DexRouterV2",
+            "DexRouter",
             "0x1111111254EEB25477B68fb85Ed929f73A960582"
         )
     }
