@@ -17,8 +17,22 @@ const TEL = {
     baseTokenAddress: '0xdF7837DE1F2Fa4631D716CF2502f8b230F1dcc32',
 }
 
+const WMATIC = {
+    name: "WMATIC",
+    decimals: 18,
+    baseTokenAddress: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
+}
+
+const MATIC = {
+    name: "MATIC",
+    decimals: 18,
+    baseTokenAddress: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+  }
+
 module.exports = {
     WETH,
     TEL,
-    USDC
+    USDC,
+    WMATIC,
+    MATIC
 }
