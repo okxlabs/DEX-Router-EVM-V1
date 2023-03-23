@@ -1295,7 +1295,7 @@ describe("Smart route path test", function() {
     let xBridge = await upgrades.deployProxy(XBridgeMock);
     await xBridge.deployed();
     await xBridge.setDexRouter(dexRouter.address);
-    await dexRouter.setXBridge(xBridge.address);
+    await dexRouter.setPriorityAddress(xBridge.address, true);
     await xBridge.connect(owner).setMpc([alice.address], [true]);
     await xBridge.setApproveProxy(tokenApproveProxy.address);
     return xBridge;

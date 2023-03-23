@@ -882,7 +882,7 @@ describe("Unxswap swap test", function() {
     await xBridge.connect(XBridgeOwner).setMpc([alice.address],[true]);
     await xBridge.connect(XBridgeOwner).setApproveProxy(tokenApproveProxy.address);
 
-    await dexRouter.setXBridge(xBridge.address);
+    await dexRouter.setPriorityAddress(xBridge.address, true);
   }
 
   const getTransactionCost = async (txResult) => {

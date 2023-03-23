@@ -20,7 +20,7 @@ async function main() {
 
     // set xBridge、SmartRouter
     await dexRouterV2.setSmartRouter(smartRouter.address);
-    await dexRouterV2.setXBridge(deployed.base.xbridge);
+    await dexRouterV2.setPriorityAddress(deployed.base.xbridge, true);
 
     // addProxy
     const tokenApproveProxy = await ethers.getContractAt("TokenApproveProxy", deployed.base.tokenApproveProxy)

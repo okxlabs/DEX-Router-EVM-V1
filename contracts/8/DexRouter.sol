@@ -62,7 +62,8 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
 
   event ApproveProxyChanged(address approveProxy);
   event WNativeRelayerChanged(address wNativeRelayer);
-  event XBridgeChanged(address newXBridge);
+  event PriorityAddressChanged(address priorityAddress, bool valid);
+  event AdminChanged(address newAdmin);
   event SwapOrderId(uint256 id);
 
   //-------------------------------
@@ -74,8 +75,8 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     _;
   }
 
-  modifier onlyXBridge() {
-    require(msg.sender == xBridge, "only XBridge");
+  modifier onlyPriorityAddress() {
+    require(priorityAddresses[msg.sender] == true, "only priority");
     _;
   }
 
@@ -349,9 +350,16 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     emit WNativeRelayerChanged(relayer);
   }
 
-  function setXBridge(address newXBridge) external onlyOwner {
-    xBridge = newXBridge;
-    emit XBridgeChanged(newXBridge);
+  function setPriorityAddress(address _priorityAddress, bool valid) external {
+    require(msg.sender == tmpAdmin || msg.sender == admin || msg.sender == owner(), "na");
+    priorityAddresses[_priorityAddress] = valid;
+    emit PriorityAddressChanged(_priorityAddress, valid);
+  }
+
+  function setProtocolAdmin(address _newAdmin) external {
+    require(msg.sender == tmpAdmin || msg.sender == admin || msg.sender == owner(), "na");
+    admin = _newAdmin;
+    emit AdminChanged(_newAdmin);
   }
 
   //-------------------------------
@@ -375,9 +383,9 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     uint256[] calldata batchesAmount,
     RouterPath[][] calldata batches,
     PMMLib.PMMSwapRequest[] calldata extraData
-  ) external payable isExpired(baseRequest.deadLine) nonReentrant onlyXBridge returns (uint256 returnAmount) {
+  ) external payable isExpired(baseRequest.deadLine) nonReentrant onlyPriorityAddress returns (uint256 returnAmount) {
     emit SwapOrderId(orderId);
-    (address payer, address receiver) = IXBridge(xBridge).payerReceiver();
+    (address payer, address receiver) = IXBridge(msg.sender).payerReceiver();
     returnAmount = _smartSwapInternal(baseRequest, batchesAmount, batches, extraData, payer, receiver);
   }
 
@@ -387,9 +395,9 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     uint256 minReturn,
     // solhint-disable-next-line no-unused-vars
     bytes32[] calldata pools
-  ) external payable onlyXBridge returns (uint256 returnAmount) {
+  ) external payable onlyPriorityAddress returns (uint256 returnAmount) {
     emit SwapOrderId((srcToken & _ORDER_ID_MASK) >> 160);
-    (address payer, address receiver) = IXBridge(xBridge).payerReceiver();
+    (address payer, address receiver) = IXBridge(msg.sender).payerReceiver();
     returnAmount = _unxswapInternal(IERC20(address(uint160(srcToken& _ADDRESS_MASK))), amount, minReturn, pools, payer, receiver);
   }
 
@@ -398,9 +406,9 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     uint256 amount,
     uint256 minReturn,
     uint256[] calldata pools
-  ) external payable onlyXBridge returns(uint256 returnAmount) {
+  ) external payable onlyPriorityAddress returns(uint256 returnAmount) {
     emit SwapOrderId((recipient & _ORDER_ID_MASK) >> 160);
-    (address payer, address receiver) = IXBridge(xBridge).payerReceiver();
+    (address payer, address receiver) = IXBridge(msg.sender).payerReceiver();
     return _uniswapV3Swap(payer, payable(receiver), amount, minReturn, pools);
   }
 
@@ -529,9 +537,9 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     uint256 orderId,
     PMMLib.PMMBaseRequest calldata baseRequest,
     PMMLib.PMMSwapRequest calldata request
-  ) external payable onlyXBridge nonReentrant returns (uint256 returnAmount) {
+  ) external payable onlyPriorityAddress nonReentrant returns (uint256 returnAmount) {
     emit SwapOrderId(orderId);
-    (address payer, address receiver) = IXBridge(xBridge).payerReceiver();
+    (address payer, address receiver) = IXBridge(msg.sender).payerReceiver();
     return _PMMV2Swap(payer, receiver, baseRequest, request);
   }
 
@@ -546,6 +554,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     }
     return _PMMV2Swap(address(this), receiver, baseRequest, request);
   }
+
   // function PMMV2SwapByInvest(
   //   address receiver,
   //   PMMLib.PMMBaseRequest calldata baseRequest,
@@ -565,11 +574,4 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
   //   });
   //   return _PMMV2Swap(address(this), receiver, newBaseRequest, request);
   // }
-
-
-
-
-
-
-
 }

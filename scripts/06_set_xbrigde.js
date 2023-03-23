@@ -9,7 +9,7 @@ async function main() {
     "DexRouter",
     deployed.base.dexRouter
   )
-  await dexRouter.setXBridge(deployed.base.xbridge);
+  await dexRouter.setPriorityAddress(deployed.base.xbridge, true);
 
   console.log("set XBridge finish");
 }
