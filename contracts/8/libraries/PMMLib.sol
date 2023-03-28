@@ -44,11 +44,6 @@ library PMMLib {
   event PMMSwap(
     uint256 pathIndex,
     uint256 subIndex,
-    address payer,
-    address fromToken,
-    address toToken,
-    uint256 fromAmount,
-    uint256 toAmount,
     uint256 errorCode
   );
 

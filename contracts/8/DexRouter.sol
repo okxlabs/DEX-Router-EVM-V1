@@ -217,11 +217,6 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     emit PMMLib.PMMSwap (
       pmmRequest.pathIndex,
       subIndex,
-      pmmRequest.payer,
-      fromToken,
-      pmmRequest.toToken,
-      actualRequest,
-      toTokenAmount,
       errorCode
     );
     return errorCode;

@@ -103,6 +103,12 @@ abstract contract PMMRouter is CommonUtils, EIP712Upgradable, PMMRouterStorage {
     returnAmount = baseRequest.toNative ? receiver.balance - returnAmount : IERC20(request.toToken).balanceOf(receiver) - returnAmount;
     if(returnAmount < baseRequest.minReturnAmount) {revert MinReturnNotReached();}
 
+    // events
+    uint256 subIndex;
+    assembly{
+      subIndex := calldataload(add(request,0x180))
+    }
+    emit PMMLib.PMMSwap(request.pathIndex, subIndex, errorCode);
     emit OrderRecord(request.fromToken, request.toToken, request.payer, baseRequest.fromTokenAmount, returnAmount);
     return returnAmount;
   }

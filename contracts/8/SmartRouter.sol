@@ -214,11 +214,6 @@ contract SmartRouter is ReentrancyGuardUpgradeable, CommonUtils, Permitable, Eth
     emit PMMLib.PMMSwap (
       pmmRequest.pathIndex,
       subIndex,
-      pmmRequest.payer,
-      fromToken,
-      pmmRequest.toToken,
-      actualRequest,
-      toTokenAmount,
       errorCode
     );
     return errorCode;
