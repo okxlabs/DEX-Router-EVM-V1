@@ -18,10 +18,15 @@ const Curve3CRVPoolLPToken = {
   address: "0x6c3f90f043a72fa612cbac8115ee7e52bde6e490"
 }
 
+const _DODO_SELL_HELPER_ = {
+  address: "0x533dA777aeDCE766CEAe696bf90f8541A4bA80Eb"
+}
+
 module.exports = {
   BancorNetwork,
   BalancerVault,
   NomiswapStableFactory,
   NomiswapFactory,
-  Curve3CRVPoolLPToken
+  Curve3CRVPoolLPToken,
+  _DODO_SELL_HELPER_
 }
