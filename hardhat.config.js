@@ -231,6 +231,16 @@ module.exports = {
           runs: 200
         },
       },
+    },
+    conflux_epsace_testnet: {
+      url: "https://evmtestnet.confluxrpc.com",
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
     }
   },
   paths: {
