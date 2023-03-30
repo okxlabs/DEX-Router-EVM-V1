@@ -232,7 +232,7 @@ module.exports = {
         },
       },
     },
-    conflux_epsace: {
+    conflux: {
       url: "https://evm.confluxrpc.com",
       accounts: [`${PRIVATE_KEY}`],
       settings: {
