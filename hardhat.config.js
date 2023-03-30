@@ -232,8 +232,8 @@ module.exports = {
         },
       },
     },
-    conflux_epsace_testnet: {
-      url: "https://evmtestnet.confluxrpc.com",
+    conflux_epsace: {
+      url: "https://evm.confluxrpc.com",
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
