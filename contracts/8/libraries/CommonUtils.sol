@@ -6,7 +6,7 @@ abstract contract CommonUtils {
 
   address constant _ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-  uint256 public constant _ADDRESS_MASK =  0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff;
+  uint256 public constant _ADDRESS_MASK = 0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff;
   uint256 public constant _REVERSE_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;
 
   /// @dev WETH address is network-specific and needs to be changed before deployment.
@@ -59,4 +59,5 @@ abstract contract CommonUtils {
   // address public constant _WNATIVE_RELAY = 0x6A47346e722937B60Df7a1149168c0E76DD6520f;   // hardhat2
 
   event OrderRecord(address fromToken, address toToken, address sender, uint256 fromAmount, uint256 returnAmount);
+  event SwapOrderId(uint256 id);
 }
