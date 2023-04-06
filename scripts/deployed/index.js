@@ -10,6 +10,7 @@ const arb = require('./arb')
 const op = require('./op')
 const cro = require('./cro')
 const ethw = require('./ethw')
+const cfx = require('./conflux')
 
 let config
 
@@ -35,6 +36,8 @@ if (network.name === 'okc') {
     config = cro
 } else if (network.name === 'ethw') {
     config = ethw
+} else if (network.name === 'conflux') {
+    config = cfx
 }
 
 module.exports = config

@@ -1,8 +1,8 @@
 module.exports = {
     wNativeToken: "0x14b2d3bc65e74dae1030eafd8ac30c533c976a9b",
-    wNativeRelayer: "0x8CDDE82cFB4555D6ca21B5b28F97630265DA94c4",
-    tokenApprove: "0x75cDBdD09B5c9e1D785e66A785918Cf0725F9b56",
-    tokenApproveProxy: "0x16f37072FFcE9A563C59E13759d2fAE47AE52E5a",
-    dexRouter: "0xd37EaF7d751087cAF2f7e61CEB7620e748429168",
+    wNativeRelayer: "0x40aA958dd87FC8305b97f2BA922CDdCa374bcD7f",
+    tokenApprove: "0x68D6B739D2020067D1e2F713b999dA97E4d54812",
+    tokenApproveProxy: "0x100F3f74125C8c724C7C0eE81E4dd5626830dD9a",
+    dexRouter: "0xf332761c673b59B21fF6dfa8adA44d78c12dEF09",
     xbridge: ""
 }
