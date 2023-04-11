@@ -27,7 +27,7 @@ const MATIC = {
     name: "MATIC",
     decimals: 18,
     baseTokenAddress: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-  }
+}
 
 module.exports = {
     WETH,

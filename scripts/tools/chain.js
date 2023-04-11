@@ -20,6 +20,8 @@ function getNetworkURL(net) {
         // return `https://rpc.ankr.com/avalanche`
     } else if (net == 'artibrum') {
         return ALCHEMY_KEY == '' ? `https://rpc.ankr.com/arbitrum` : `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
+    }else if (net == 'fantom') {
+        return `https://rpc.ankr.com/fantom`
     } else {
         return 'http://127.0.0.1:8545'
     }

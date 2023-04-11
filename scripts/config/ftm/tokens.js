@@ -21,11 +21,25 @@ const FUSDT  = {
   name: "FUSDT",
   decimals: 6,
   baseTokenAddress: '0x049d68029688eAbF473097a2fC38ef61633A3C7A',
-  }
+}
+
+const WFTM  = {
+  name: "WFTM",
+  decimals: 18,
+  baseTokenAddress: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
+}
+
+const FTM = {
+  name: "FTM",
+  decimals: 18,
+  baseTokenAddress: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+}
 
 module.exports = {
   USDC,
   DAI,
   WETH,
-  FUSDT
+  FUSDT,
+  WFTM,
+  FTM
 }
