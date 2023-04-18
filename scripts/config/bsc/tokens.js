@@ -23,7 +23,7 @@ const USDC = {
 
 const USDT = {
   name: "USDT",
-  decimals: 6,
+  decimals: 18,
   baseTokenAddress: '0x55d398326f99059ff775485246999027b3197955',
 }
 const WBNB  = {

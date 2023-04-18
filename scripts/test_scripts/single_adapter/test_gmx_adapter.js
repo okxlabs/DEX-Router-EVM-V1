@@ -102,7 +102,7 @@ async function execute(GmxAdapter) {
 }
 
 async function main() {
-  setForkNetWorkAndBlockNumber("artibrum", 22118637);
+  setForkNetWorkAndBlockNumber("arbitrum", 22118637);
   GmxAdapter = await deployContract();
   console.log("===== GmxAdapter =====");
   await execute(GmxAdapter);

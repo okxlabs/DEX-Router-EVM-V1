@@ -191,7 +191,7 @@ const getTransactionCost = async (txResult) => {
 };
 
 async function main() {
-  setForkNetWorkAndBlockNumber("artibrum", 22118637);
+  setForkNetWorkAndBlockNumber("arbitrum", 22118637);
   GmxAdapter = await deployContract();
   console.log("\n===== executeSellQuote =====");
   await executeSellQuote(GmxAdapter);
