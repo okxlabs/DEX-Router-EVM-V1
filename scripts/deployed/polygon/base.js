@@ -8,5 +8,5 @@ module.exports = {
     nftmarket: "0x6236f99fc0a37D7063a9892ee432aEcC320f5d9A",
     investEntrance: "0x7251FEbEABB01eC9dE53ECe7a96f1C951F886Dd2",
     limitOrder: "0xA6dA84219B1d5F419Ef959F1f2A7ec7E32f45CA6",
-    protocolAdmin: "0xc82Ea2afE1Fd1D61C4A12f5CeB3D7000f564F5C6",
+    protocolAdmin: "0x06C95a3934d94d5ae5bf54731bD2840ceFee6F87",
 }

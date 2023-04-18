@@ -12,5 +12,5 @@ module.exports = {
     marketMakerProxyAdmin: "0x7d2bb2afb69fca0e5b665f8ae8aed61c5019bec1",
     dexRouterProxyAdmin: "0x3B86917369B83a6892f553609F3c2F439C184e31",
     limitOrder: "0xF33a9616C207E91678337627460f8AF6838a57b8",
-    protocolAdmin: "0xc82Ea2afE1Fd1D61C4A12f5CeB3D7000f564F5C6",
+    protocolAdmin: "0x06C95a3934d94d5ae5bf54731bD2840ceFee6F87",
 }
