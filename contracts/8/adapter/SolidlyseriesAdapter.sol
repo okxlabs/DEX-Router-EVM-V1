@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 import "../interfaces/IAdapter.sol";
-import "../interfaces/ISpiritswapV2.sol";
+import "../interfaces/ISolidlyseries.sol";
 import "../interfaces/IERC20.sol";
 
-contract SpiritswapV2Adapter is IAdapter {
+contract SolidlyseriesAdapter is IAdapter {
 
+    // this adapter is for spiritswapv2（ftm）、cone（bsc）、Dystopia（poly）、Velodrome（op）、Rames Exchanges（arb）、solidlizard（arb）
     // fromToken == token0
     function sellBase(
         address to,
@@ -16,7 +17,7 @@ contract SpiritswapV2Adapter is IAdapter {
         (uint256 _reserve0, uint256 _reserve1,) = IPair(pool).getReserves();
         require(
             _reserve0 > 0 && _reserve1 > 0,
-            "SpiritV2: INSUFFICIENT_LIQUIDITY"
+            "Solidlyseries: INSUFFICIENT_LIQUIDITY"
         );
 
         uint256 balance0 = IERC20(baseToken).balanceOf(pool);
@@ -36,7 +37,7 @@ contract SpiritswapV2Adapter is IAdapter {
         (uint256 _reserve0, uint256 _reserve1,) = IPair(pool).getReserves();
         require(
             _reserve0 > 0 && _reserve1 > 0,
-            "SpiritV2: INSUFFICIENT_LIQUIDITY"
+            "Solidlyseries: INSUFFICIENT_LIQUIDITY"
         );
 
         uint256 balance1 = IERC20(quoteToken).balanceOf(pool);
