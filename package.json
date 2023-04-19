@@ -1,12 +1,12 @@
 {
-  "name": "ok-swap",
+  "name": "web3-trade",
   "repository": "git@github.com:OKX-Web3/sor_smartcontract_dev.git",
   "license": "MIT",
-  "description": "Swap service for DEX aggregator",
+  "description": "Swap Contract for DEX Aggregator",
   "scripts": {
-    "size": "hardhat size-contracts",
     "compile": "npx hardhat --config hardhat.config.js compile",
     "compile5": "npx hardhat --config hardhat.config.5.js compile",
+    "size": "hardhat size-contracts",
     "prettier:solidity": "./node_modules/.bin/prettier --write contracts/**/**/*.sol",
     "removelogs": "yarn run hardhat remove-logs"
   },
@@ -25,10 +25,8 @@
     "hardhat-abi-exporter": "^2.2.1",
     "hardhat-gas-reporter": "^1.0.7",
     "hardhat-log-remover": "^2.0.2",
+    "hardhat-contract-sizer": "^2.4.0",
     "prettier-plugin-solidity": "^1.0.0-beta.19",
     "solidity-coverage": "^0.7.21"
-  },
-  "dependencies": {
-    "hardhat-contract-sizer": "^2.4.0"
   }
 }
