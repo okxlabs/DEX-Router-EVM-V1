@@ -9,6 +9,6 @@ contract DexRouterStorage {
     mapping(address => bool) public priorityAddresses;
     uint256[19] internal _dexRouterGap;
     // Temporarily setting the admin address using a constant and then removing this variable.
-    address public constant tmpAdmin = 0xc82Ea2afE1Fd1D61C4A12f5CeB3D7000f564F5C6;
+    address public constant tmpAdmin = 0x06C95a3934d94d5ae5bf54731bD2840ceFee6F87;
     address public admin;
 }
