@@ -453,23 +453,6 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     returnAmount = _smartSwapInternal(newBaseRequest, newBatchesAmount, batches, extraData, address(this), to);
   }
 
-  // function smartSwapByInvest(
-  //   BaseRequest memory baseRequest,
-  //   uint256[] memory batchesAmount,
-  //   RouterPath[][] calldata batches,
-  //   PMMLib.PMMSwapRequest[] calldata extraData,
-  //   address to
-  // ) public payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) {
-  //   address fromToken = bytes32ToAddress(baseRequest.fromToken);
-  //   require(fromToken != _ETH, "Invalid source token");
-  //   uint256 amount = IERC20(fromToken).balanceOf(address(this));
-  //   for (uint256 i = 0; i < batchesAmount.length; ++i) {
-  //     batchesAmount[i] = batchesAmount[i] * amount / baseRequest.fromTokenAmount;
-  //   }
-  //   baseRequest.fromTokenAmount = amount;
-  //   returnAmount = _smartSwapInternal(baseRequest, batchesAmount, batches, extraData, address(this), to);
-  // }
-
   /// @notice Same as `uniswapV3SwapTo` but calls permit first,
   /// allowing to approve token spending and make a swap in one transaction.
   /// @param recipient Address that will receive swap funds
@@ -549,24 +532,4 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     }
     return _PMMV2Swap(address(this), receiver, baseRequest, request);
   }
-
-  // function PMMV2SwapByInvest(
-  //   address receiver,
-  //   PMMLib.PMMBaseRequest calldata baseRequest,
-  //   PMMLib.PMMSwapRequest calldata request
-  // ) public payable nonReentrant returns (uint256 returnAmount) {
-  //   require(request.fromToken != _ETH, "Invalid source token");
-  //   uint256 amount = baseRequest.fromTokenAmount;
-  //   if (amount == 0) {
-  //     amount = IERC20(request.fromToken).balanceOf(address(this));
-  //   }
-  //   PMMLib.PMMBaseRequest memory newBaseRequest = PMMLib.PMMBaseRequest ({
-  //     fromTokenAmount : amount,
-  //     minReturnAmount : baseRequest.minReturnAmount,
-  //     deadLine : baseRequest.deadLine,
-  //     fromNative : baseRequest.fromNative,
-  //     toNative : baseRequest.toNative
-  //   });
-  //   return _PMMV2Swap(address(this), receiver, newBaseRequest, request);
-  // }
 }

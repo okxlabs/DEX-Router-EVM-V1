@@ -1,5 +1,4 @@
-const { ethers, upgrades, network} = require("hardhat");
-const hre = require("hardhat");
+const { ethers, upgrades } = require("hardhat");
 const { BigNumber } = require('ethers')
 const { expect } = require("chai");
 const ethDeployed = require("../scripts/deployed/eth");
@@ -7,7 +6,6 @@ const pmm_params = require("./pmm/pmm_params");
 const { getDaiLikePermitDigest, sign } = require('./signatures')
 
 require ('../scripts/tools');
-
 
 describe("Test unxswapV3 path", function() {
     this.timeout(300000);
