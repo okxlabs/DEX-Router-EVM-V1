@@ -57,10 +57,7 @@ contract SaddleAdapter is IAdapter {
         _saddleSwap(to, pool, moreInfo);
     }
 
-    event Received(address, uint256);
-
     receive() external payable {
         require(msg.value > 0, "receive error");
-        emit Received(msg.sender, msg.value);
     }
 }
