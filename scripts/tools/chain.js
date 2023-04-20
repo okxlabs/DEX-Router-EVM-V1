@@ -18,9 +18,13 @@ function getNetworkURL(net) {
         //  return `https://speedy-nodes-nyc.moralis.io/e88a69edd7e8b87e8c86975b/avalanche/mainnet/archive`
         return `https://avalancheapi.terminet.io/ext/bc/C/rpc`
         // return `https://rpc.ankr.com/avalanche`
-    } else if (net == 'artibrum') {
+    } else if (net == 'arbitrum') {
         return ALCHEMY_KEY == '' ? `https://rpc.ankr.com/arbitrum` : `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
-    } else {
+    } else if (net == 'fantom') {
+        return `https://rpc.ankr.com/fantom`
+    } else if (net == 'op') {
+        return ALCHEMY_KEY == '' ? `https://rpc.ankr.com/optimism` : `https://opt-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
+    }else {
         return 'http://127.0.0.1:8545'
     }
 }

@@ -4,5 +4,7 @@ module.exports = {
     tokenApprove: "0x70cBb871E8f30Fc8Ce23609E9E0Ea87B6b222F58",
     tokenApproveProxy: "0xE9BBD6eC0c9Ca71d3DcCD1282EE9de4F811E50aF",
     dexRouter: "0xf332761c673b59B21fF6dfa8adA44d78c12dEF09",
-    xbridge: "0xf956D9FA19656D8e5219fd6fa8bA6cb198094138"
+    xbridge: "0xf956D9FA19656D8e5219fd6fa8bA6cb198094138",
+    limitOrder: "0xA6dA84219B1d5F419Ef959F1f2A7ec7E32f45CA6",
+    protocolAdmin: "0x06C95a3934d94d5ae5bf54731bD2840ceFee6F87",
 }

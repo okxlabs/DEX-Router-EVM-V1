@@ -27,12 +27,19 @@ const MATIC = {
     name: "MATIC",
     decimals: 18,
     baseTokenAddress: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-  }
+}
+
+const USDT = {
+    name: "USDT",
+    decimals: 6,
+    baseTokenAddress: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
+}
 
 module.exports = {
     WETH,
     TEL,
     USDC,
     WMATIC,
-    MATIC
+    MATIC,
+    USDT
 }

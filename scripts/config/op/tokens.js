@@ -13,12 +13,19 @@ const OP = {
 
 const USDC = {
     name: "USDC",
-    decimals: 18,
+    decimals: 6,
     baseTokenAddress: "0x7F5c764cBc14f9669B88837ca1490cCa17c31607"
+}
+
+const USDT = {
+    name: "USDT",
+    decimals: 6,
+    baseTokenAddress: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58"
 }
 
 module.exports = {
     WETH,
     OP,
-    USDC
+    USDC,
+    USDT
 }

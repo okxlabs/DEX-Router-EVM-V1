@@ -17,6 +17,7 @@ import "./interfaces/IXBridge.sol";
 import "./libraries/Permitable.sol";
 import "./libraries/PMMLib.sol";
 import "./libraries/EthReceiver.sol";
+import "./libraries/WrapETHSwap.sol";
 
 import "./storage/DexRouterStorage.sol";
 import "./PMMRouter.sol";
@@ -24,7 +25,7 @@ import "./PMMRouter.sol";
 /// @title DexRouterV1
 /// @notice Entrance of Split trading in Dex platform
 /// @dev Entrance of Split trading in Dex platform
-contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable, EthReceiver, UnxswapRouter, UnxswapV3Router, DexRouterStorage, PMMRouter {
+contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable, EthReceiver, UnxswapRouter, UnxswapV3Router, DexRouterStorage, PMMRouter, WrapETHSwap {
   using UniversalERC20 for IERC20;
 
   bytes32 private constant _PMM_FLAG8_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;
@@ -64,7 +65,6 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
   event WNativeRelayerChanged(address wNativeRelayer);
   event PriorityAddressChanged(address priorityAddress, bool valid);
   event AdminChanged(address newAdmin);
-  event SwapOrderId(uint256 id);
 
   //-------------------------------
   //------- Modifier --------------
