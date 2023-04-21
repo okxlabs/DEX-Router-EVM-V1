@@ -22,6 +22,7 @@ abstract contract CommonUtils {
   // ARB:     82aF49447D8a07e3bd95BD0d56f35241523fBab1
   // OP:      4200000000000000000000000000000000000006
   // CRO:     5C7F8A570d578ED84E63fdFA7b1eE72dEae1AE23
+  // CFX:     14b2D3bC65e74DAE1030EAFd8ac30c533c976A9b
   address public constant _WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
   // address public constant _WETH = 0x5FbDB2315678afecb367f032d93F642f64180aa3;    // hardhat1
   // address public constant _WETH = 0x707531c9999AaeF9232C8FEfBA31FBa4cB78d84a;    // hardhat2
@@ -39,6 +40,7 @@ abstract contract CommonUtils {
   // ARB:     E9BBD6eC0c9Ca71d3DcCD1282EE9de4F811E50aF
   // OP:      100F3f74125C8c724C7C0eE81E4dd5626830dD9a
   // CRO:     E9BBD6eC0c9Ca71d3DcCD1282EE9de4F811E50aF
+  // CFX:     100F3f74125C8c724C7C0eE81E4dd5626830dD9a
   address public constant _APPROVE_PROXY = 0x70cBb871E8f30Fc8Ce23609E9E0Ea87B6b222F58;
   // address public constant _APPROVE_PROXY = 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512;    // hardhat1
   // address public constant _APPROVE_PROXY = 0x2538a10b7fFb1B78c890c870FC152b10be121f04;    // hardhat2
@@ -54,6 +56,7 @@ abstract contract CommonUtils {
   // ARB:     d99cAE3FAC551f6b6Ba7B9f19bDD316951eeEE98
   // OP:      40aA958dd87FC8305b97f2BA922CDdCa374bcD7f
   // CRO:     40aA958dd87FC8305b97f2BA922CDdCa374bcD7f
+  // CFX:     40aA958dd87FC8305b97f2BA922CDdCa374bcD7f
   address public constant _WNATIVE_RELAY = 0x5703B683c7F928b721CA95Da988d73a3299d4757;
   // address public constant _WNATIVE_RELAY = 0x0B306BF915C4d645ff596e518fAf3F9669b97016;   // hardhat1
   // address public constant _WNATIVE_RELAY = 0x6A47346e722937B60Df7a1149168c0E76DD6520f;   // hardhat2

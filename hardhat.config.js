@@ -222,6 +222,16 @@ module.exports = {
           runs: 200
         },
       },
+    },
+    conflux: {
+      url: "https://evm.confluxrpc.com",
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
     }
   },
   paths: {
