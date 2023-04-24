@@ -4,6 +4,7 @@ const deployed = require('../deployed');
 const UNXSWAP_ROUTER_PATH = "./contracts/8/libraries/CommonUtils.sol";
 const PMMROUTER_PATH = "./contracts/8/PMMRouter.sol";
 const EIP712_PATH = "./contracts/8/libraries/draft-EIP712Upgradable.sol";
+const UNIV3_PATH = "./contracts/8/UnxswapV3Router.sol";
 
 // Replaces the contract address in the constant part of the UnxswapRouter file
 // _WETH, _APPROVE_PROXY_32, _WNATIVE_RELAY_32 Three constant addresses
@@ -84,6 +85,34 @@ function replace_pmm_eip712_contant(EIP712_PATH) {
   });
 }
 
+function replace_univ3_contant(UnxswapRouterPath) {
+  console.log(deployed.base);
+
+  if (deployed.base._FF_FACTORY == null) {
+    console.log("warning: _FF_FACTORY is null!!!!");
+    return
+  }
+  // Reading the file
+  fs.readFile(UnxswapRouterPath, function (err, data) {
+    if (err) {
+      return console.error(err);
+    }
+    
+    let context = data.toString();
+    // address public constant
+    context = context.replace(/_FF_FACTORY\s=\s\w*/, "_FF_FACTORY = " + deployed.base._FF_FACTORY);
+
+    fs.writeFile(UnxswapRouterPath, context, (err) => {
+      if (err) {
+        console.log(err);
+      }
+    });
+
+    console.log("replace finish !")
+  });
+}
+
 replace_contant(UNXSWAP_ROUTER_PATH);
 replace_pmm_contant(PMMROUTER_PATH);
 replace_pmm_eip712_contant(EIP712_PATH);
+replace_univ3_contant(UNIV3_PATH);
