@@ -309,6 +309,8 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     }
 
     // 4. execute batch
+    // check length, fix DRW-02: LACK OF LENGTH CHECK ON BATATCHES
+    require(batchesAmount.length == batches.length, "length mismatch");
     for (uint256 i = 0; i < batches.length; ) {
       // execute hop, if the whole swap replacing by pmm fails, the funds will return to dexRouter	
       _exeHop(payer, batchesAmount[i], batches[i], extraData);
