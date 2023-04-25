@@ -527,9 +527,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     PMMLib.PMMSwapRequest calldata request
   ) external payable nonReentrant returns (uint256 returnAmount) {
     require(request.fromToken != _ETH, "Invalid source token");
-    if (baseRequest.fromTokenAmount == 0) {
-      baseRequest.fromTokenAmount = IERC20(request.fromToken).balanceOf(address(this));
-    }
+    baseRequest.fromTokenAmount = IERC20(request.fromToken).balanceOf(address(this));
     return _PMMV2Swap(address(this), receiver, baseRequest, request);
   }
 }
