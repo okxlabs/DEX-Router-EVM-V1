@@ -86,7 +86,8 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
 
   function _exeForks(address payer, uint256 batchAmount, RouterPath calldata path) private {
     address fromToken = bytes32ToAddress(path.fromToken);
-
+    // fix post audit DRW-01: lack of check on Weights
+    uint totalWeight;
     // execute multiple Adapters for a transaction pair
     uint256 pathLength = path.mixAdapters.length;
     for (uint256 i = 0; i < pathLength; ) {
@@ -100,6 +101,10 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
         weight := shr(160, and(rawData, _WEIGHT_MASK))
       }
       require(weight >= 0 && weight <= 10000, "weight out of range");
+      totalWeight += weight;
+      if (i == pathLength - 1) {
+        require(totalWeight <= 10000, "totalWeight can not exceed 10000 limit");
+      }
       uint256 _fromTokenAmount = (batchAmount * weight) / 10000;
 
       _transferInternal(payer, path.assetTo[i], fromToken, _fromTokenAmount);
