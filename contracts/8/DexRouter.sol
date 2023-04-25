@@ -201,7 +201,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
       fromToken = _WETH;
     }
     assembly{
-      subIndex := mload(add(extension, 0x0))
+      subIndex := mload(add(extension, 0x20))
     }
     // check from token
     if (pmmRequest.fromToken != fromToken) {revert PMMLib.PMMErrorCode(uint256(PMMLib.PMM_ERROR.WRONG_FROM_TOKEN));}
