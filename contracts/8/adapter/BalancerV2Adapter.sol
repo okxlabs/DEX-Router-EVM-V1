@@ -67,20 +67,7 @@ contract BalancerV2Adapter is IAdapter {
             0,
             block.timestamp
         );
-        // approve 0
-        SafeERC20.safeApprove(
-            IERC20(sourceToken == ETH_ADDRESS ? WETH_ADDRESS : sourceToken),
-            VAULT_ADDRESS,
-            0
-        );
-        if (to != address(this)) {
-            if (targetToken == ETH_ADDRESS) targetToken = WETH_ADDRESS;
-            SafeERC20.safeTransfer(
-                IERC20(targetToken),
-                to,
-                IERC20(targetToken).balanceOf(address(this))
-            );
-        }
+        
     }
 
     function sellBase(
