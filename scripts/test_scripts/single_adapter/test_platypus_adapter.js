@@ -1,193 +1,262 @@
 const { ethers } = require("hardhat");
-const {BigNumber,BigNumberish} =require("ethers");
-require("../../../tools");
-const { getConfig } = require("../../../config");
-const { USDC } = require("../../../config/okc/tokens");
-
-tokenConfig = getConfig("avax");
+require("../../tools");
+const { getConfig } = require("../../config");
+const { setForkNetWorkAndBlockNumber, startMockAccount, setBalance } = require("../../tools/chain");
+// 2050-07-19 17:52:02
+const DDL = 2541837122
 
 async function deployContract() {
-    const PlatypusAdapter = await ethers.getContractFactory("PlatypusAdapter");
-    const platypusAdapter = await PlatypusAdapter.deploy(tokenConfig.tokens.WAVAX.baseTokenAddress);
-    await platypusAdapter.deployed();
-
-    return platypusAdapter
+    const WAVAX = "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"
+    PlatypusAdapter = await ethers.getContractFactory("PlatypusAdapter");
+    PlatypusAdapter = await PlatypusAdapter.deploy(WAVAX);
+    await PlatypusAdapter.deployed();
+    return PlatypusAdapter
 }
 
-// swap usdc to usdt in main pool
-async function execute1() {
-    // fork network
-    // await setForkNetWork("avax", 17351078)
-    // deploy adapter
-    const platypusAdapter = await deployContract()
-    console.log(platypusAdapter.address)
-    // mock account
-    // const userAddress = "0x1df3cc53e85481d503eada1c7593a1999d7cc786"
-    // await startMockAccount([userAddress])
-    // const userSigner = await ethers.getSigner(userAddress)
 
-    // const pool = "0x66357dCaCe80431aee0A7507e2E361B7e2402370"  // main pool
-    
-    // const usdc = await ethers.getContractAt(
-    //     "MockERC20",
-    //     tokenConfig.tokens.USDC.baseTokenAddress
-    // )
-    // const usdt = await ethers.getContractAt(
-    //     "MockERC20",
-    //     tokenConfig.tokens.USDT.baseTokenAddress
-    // )
 
-    // // transfer token
-    // await usdc.connect(userSigner).transfer(platypusAdapter.address,40000000000)
-    // // start status
-    // usdcAmountBefore = await usdc.balanceOf(platypusAdapter.address)
-    // usdtAmountBefore = await usdt.balanceOf(platypusAdapter.address)
-    // console.log("USDC before balance: ", usdcAmountBefore.toString())
-    // console.log("USDT before balance: ", usdtAmountBefore.toString())
+// compare tx: 0xcaedbccc7c79aadb67bc25855234760699db144a64478b46bcb58dc883ed1603
+// network avax
 
-    // // swap
-    // const moreInfo=await ethers.utils.defaultAbiCoder.encode(
-    //     ['address','address'],
-    //     [
-    //         tokenConfig.tokens.USDC.baseTokenAddress,
-    //         tokenConfig.tokens.USDT.baseTokenAddress
-    //     ]
-    // )
-    // await platypusAdapter.sellBase(
-    //     platypusAdapter.address,
-    //     pool,
-    //     moreInfo
-    // )
-    // // end status
-    // usdcAmountBefore = await usdc.balanceOf(platypusAdapter.address)
-    // usdtAmountBefore = await usdt.balanceOf(platypusAdapter.address)
-    // console.log("USDC after balance: ", usdcAmountBefore.toString())
-    // console.log("USDT after balance: ", usdtAmountBefore.toString())
-}
+async function executeERC20ToERC20() {
+    let tokenConfig = getConfig("avax")
 
-// swap avax to savax in alt pool (swapFromETH)
-async function execute2() {
-    // tx = "0xb3536c11c73dab89e0a6f7d4ef6d6ea2d073de35e688cde3b1b9c81e92bd1032"
-    // fork network
-    // await setForkNetWork( "avax", 17317563)
-    // deploy adapter
-    const platypusAdapter = await deployContract()
-    console.log(platypusAdapter.address)
-    // mock account
-    const userAddress = "0x04e45ee310048f79d0eb1d7efedaa45c1973dcc1"
-    await startMockAccount([userAddress])
-    const userSigner = await ethers.getSigner(userAddress)
+    await setForkNetWorkAndBlockNumber("avax", 28659294 - 1);
 
-    const pool = "0x4658EA7e9960D6158a261104aAA160cC953bb6ba"  // savax pool
-    
-    // const usdc = await ethers.getContractAt(
-    //     "MockERC20",
-    //     tokenConfig.tokens.USDC.baseTokenAddress
-    // )
-    const savax = await ethers.getContractAt(
+    const PlatypusAdapter = await deployContract();
+
+    const accountSource = "0xD94fb9394DBF776A292631a537CD2D80b7Be9481"
+    const accountAddr = "0x1000000000000000000000000000000000000000"
+    const poolAddr = "0x91BB10D68C72d64a7cE10482b453153eEa03322C"
+
+    const tsd = "0x4fbf0429599460D327BD5F55625E30E4fC066095"
+
+
+    const TSD = await ethers.getContractAt(
         "MockERC20",
-        tokenConfig.tokens.SAVAX.baseTokenAddress
-    )
+        tsd
+    );
 
-    // transfer native token
-    const amountAvax=await ethers.utils.parseEther('2.6')
-    const tx = await userSigner.sendTransaction({
-        to:platypusAdapter.address,
-        value:amountAvax
-    })
-    await tx.wait()
-    // start status
-    const avaxAmountBefore = await ethers.provider.getBalance(platypusAdapter.address)
-    const savaxAmountBefore = await savax.balanceOf(platypusAdapter.address)
-    console.log("avax before balance: ", avaxAmountBefore.toString())
-    console.log("savax before balance: ", savaxAmountBefore.toString())
-
-    // swap
-    const moreInfo=await ethers.utils.defaultAbiCoder.encode(
-        ['address','address'],
-        [
-            '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-            tokenConfig.tokens.SAVAX.baseTokenAddress
-        ]
-    )
-    await platypusAdapter.sellBase(
-        platypusAdapter.address,
-        pool,
-        moreInfo
-    )
-    // end status
-    const avaxAmountAfter = await ethers.provider.getBalance(platypusAdapter.address)
-    const savaxAmountAfter = await savax.balanceOf(platypusAdapter.address)
-    console.log("avax after balance: ", avaxAmountAfter.toString())
-    console.log("savax after balance: ", savaxAmountAfter.toString())
-}
-
-// swap savax to avax in alt pool (swapToETH)
-async function execute3() {
-    // tx = "0xb6b42ea522e0c20cc841e131429b5dffc32ea2e2df0a7aefba0047e1169dca11"
-    // fork network
-    // await setForkNetWork( "avax", 17351168)
-    // deploy adapter
-    const platypusAdapter = await deployContract()
-    console.log(platypusAdapter.address)
-    // mock account
-    const userAddress = "0x5472ae1401fc0b4f16ddbbbcc6dd637fc2ee69b8"
-    await startMockAccount([userAddress])
-    const userSigner = await ethers.getSigner(userAddress)
-
-    const pool = "0x4658EA7e9960D6158a261104aAA160cC953bb6ba"  // savax pool
-    
-    // const usdc = await ethers.getContractAt(
-    //     "MockERC20",
-    //     tokenConfig.tokens.USDC.baseTokenAddress
-    // )
-    const savax = await ethers.getContractAt(
+    const USDC = await ethers.getContractAt(
         "MockERC20",
-        tokenConfig.tokens.SAVAX.baseTokenAddress
-    )
+        tokenConfig.tokens.USDC.baseTokenAddress
+    );
+    await startMockAccount([accountSource])
+    const accountS = await ethers.getSigner(accountSource)
+    await setBalance(accountSource, ethers.utils.parseEther('10'));
 
-    // transfer savax token
-    await savax.connect(userSigner).transfer(platypusAdapter.address,11977315399197257153n)
-    // start status
-    avaxAmountBefore = await ethers.provider.getBalance(platypusAdapter.address)
-    savaxAmountBefore = await savax.balanceOf(platypusAdapter.address)
-    console.log("avax before balance: ", avaxAmountBefore.toString())
-    console.log("savax before balance: ", savaxAmountBefore.toString())
 
-    // swap
-    const moreInfo=await ethers.utils.defaultAbiCoder.encode(
-        ['address','address'],
+    await startMockAccount([accountAddr])
+    const account = await ethers.getSigner(accountAddr)
+    await setBalance(accountAddr, ethers.utils.parseEther('10'));
+
+    await USDC.connect(accountS).transfer(
+        account.address,
+        ethers.BigNumber.from("10000000")
+    );
+
+    console.log(
+        "before USDC balance: " + (await USDC.balanceOf(account.address))
+    );
+    console.log(
+        "before TSD balance: " + (await TSD.balanceOf(account.address))
+    );
+
+    await USDC.connect(account).transfer(
+        PlatypusAdapter.address,
+        ethers.BigNumber.from("10000000")
+    );
+
+    let moreInfo = ethers.utils.defaultAbiCoder.encode(
+        ["address", "address", "uint256"],
         [
-            tokenConfig.tokens.SAVAX.baseTokenAddress,
-            '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
-            
+            USDC.address,
+            TSD.address,
+            DDL
         ]
-    )
-    await platypusAdapter.sellBase(
-        platypusAdapter.address,
-        pool,
+    );
+    await PlatypusAdapter.sellQuote(
+        account.address,
+        poolAddr,
         moreInfo
-    )
-    // end status
-    avaxAmountBefore = await ethers.provider.getBalance(platypusAdapter.address)
-    savaxAmountBefore = await savax.balanceOf(platypusAdapter.address)
-    console.log("avax after balance: ", avaxAmountBefore.toString())
-    console.log("savax after balance: ", savaxAmountBefore.toString())
+    );
+
+    console.log(
+        "after USDC balance: " + (await USDC.balanceOf(account.address))
+    );
+    console.log(
+        "after TSD balance: " + (await TSD.balanceOf(account.address))
+    );
 }
 
+// tx: 0x2229b961e7835f3d9e5a20b80eeb9700f9ff5a868296784d057eec0868e0d852
+// avax
+async function executeETHToERC20() {
+    let tokenConfig = getConfig("avax")
 
+    await setForkNetWorkAndBlockNumber("avax", 29237484 - 1);
+
+    const PlatypusAdapter = await deployContract();
+
+    const accountSource = "0xD94fb9394DBF776A292631a537CD2D80b7Be9481"
+    const accountAddr = "0x1000000000000000000000000000000000000000"
+    const poolAddr = "0xDeD29DF6b2193B885F45B5F5027ed405291A96C1"
+
+
+    const ankrAvax = "0xc3344870d52688874b06d844E0C36cc39FC727F6";
+    const ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+
+
+    const WAVAX = await ethers.getContractAt(
+        "WETH9",
+        tokenConfig.tokens.WAVAX.baseTokenAddress
+    );
+
+    const ANKRAVAX = await ethers.getContractAt(
+        "MockERC20",
+        ankrAvax
+    );
+    await startMockAccount([accountSource])
+    const accountS = await ethers.getSigner(accountSource)
+    await setBalance(accountSource, ethers.utils.parseEther('10'));
+
+
+    await startMockAccount([accountAddr])
+    const account = await ethers.getSigner(accountAddr)
+    await setBalance(accountAddr, ethers.utils.parseEther('10'));
+
+    await WAVAX.connect(account).deposit({
+        value: ethers.utils.parseEther("0.0001")
+    });
+
+    console.log(
+        "before ANKRAVAX balance: " + (await ANKRAVAX.balanceOf(account.address))
+    );
+    console.log(
+        "before WAVAX balance: " + (await WAVAX.balanceOf(account.address))
+    );
+
+    await WAVAX.connect(account).transfer(
+        PlatypusAdapter.address,
+        ethers.utils.parseEther("0.0001")
+    );
+
+    let moreInfo = ethers.utils.defaultAbiCoder.encode(
+        ["address", "address", "uint256"],
+        [
+            ETH_ADDRESS,
+            ankrAvax,
+            DDL
+        ]
+    );
+    await PlatypusAdapter.sellQuote(
+        account.address,
+        poolAddr,
+        moreInfo
+    );
+
+    console.log(
+        "before ANKRAVAX balance: " + (await ANKRAVAX.balanceOf(account.address))
+    );
+    console.log(
+        "before WAVAX balance: " + (await WAVAX.balanceOf(account.address))
+    );
+}
+
+// tx: 0xd761a1ea453389c212c1d3347db908f24f91b138434331bb26b56d50034bee07
+// avax
+async function executeERC20ToETH() {
+    let tokenConfig = getConfig("avax")
+
+    await setForkNetWorkAndBlockNumber("avax", 29238137 - 1);
+
+    const PlatypusAdapter = await deployContract();
+
+    const accountSource = "0x358506b4C5c441873AdE429c5A2BE777578E2C6f"
+    const accountAddr = "0x1000000000000000000000000000000000000000"
+    const poolAddr = "0xDeD29DF6b2193B885F45B5F5027ed405291A96C1"
+
+
+    const ankrAvax = "0xc3344870d52688874b06d844E0C36cc39FC727F6";
+    const ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+
+
+    const WAVAX = await ethers.getContractAt(
+        "WETH9",
+        tokenConfig.tokens.WAVAX.baseTokenAddress
+    );
+
+    const ANKRAVAX = await ethers.getContractAt(
+        "MockERC20",
+        ankrAvax
+    );
+    await startMockAccount([accountSource])
+    const accountS = await ethers.getSigner(accountSource)
+    await setBalance(accountSource, ethers.utils.parseEther('10'));
+
+
+    await startMockAccount([accountAddr])
+    const account = await ethers.getSigner(accountAddr)
+    await setBalance(accountAddr, ethers.utils.parseEther('10'));
+
+
+
+    await ANKRAVAX.connect(accountS).transfer(
+        account.address,
+        ethers.BigNumber.from("10000000000000")
+    );
+
+    console.log(
+        "before ANKRAVAX balance: " + (await ANKRAVAX.balanceOf(account.address))
+    );
+    console.log(
+        "before WAVAX balance: " + (await WAVAX.balanceOf(account.address))
+    );
+
+    await ANKRAVAX.connect(account).transfer(
+        PlatypusAdapter.address,
+        ethers.BigNumber.from("10000000000000")
+    );
+
+    let moreInfo = ethers.utils.defaultAbiCoder.encode(
+        ["address", "address", "uint256"],
+        [
+            ANKRAVAX.address,
+            ETH_ADDRESS,
+            DDL
+        ]
+    );
+    await PlatypusAdapter.sellBase(
+        account.address,
+        poolAddr,
+        moreInfo
+    );
+
+    console.log(
+        "before ANKRAVAX balance: " + (await ANKRAVAX.balanceOf(account.address))
+    );
+    console.log(
+        "before WAVAX balance: " + (await WAVAX.balanceOf(account.address))
+    );
+}
 async function main() {
-    console.log("==== swap usdc to usdt in main pool ====== ")
-    await execute1()
-    // console.log("==== swap avax to savax alt pool ====== ")
-    // await execute2()
-    // console.log("==== swap savax to avax alt pool ====== ")
-    // await execute3()
+
+    console.log("==== checking ERC20 to ERC20 ====== ")
+    await executeERC20ToERC20();
+    console.log("==== checking ETH to ERC20 ====== ")
+    await executeETHToERC20();
+    console.log("==== checking ERC20 to ETH ====== ")
+    await executeERC20ToETH();
+
+
+
+
+
 }
+
 main()
     .then(() => process.exit(0))
     .catch(error => {
         console.error(error);
         process.exit(1);
     });
-
