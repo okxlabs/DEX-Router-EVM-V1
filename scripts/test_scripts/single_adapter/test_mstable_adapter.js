@@ -1,10 +1,12 @@
-
 const { ethers } = require("hardhat");
-require("../../../tools");
-const { getConfig } = require("../../../config");
-tokenConfig = getConfig("eth");
+require("../../tools");
+const { getConfig } = require("../../config");
+const { setForkNetWorkAndBlockNumber, startMockAccount, setBalance } = require("../../tools/chain");
+// 2050-07-19 17:52:02
+const DDL = 2541837122
 
 async function deployContract() {
+
     MstableAdapter = await ethers.getContractFactory("MstableAdapter");
     MstableAdapter = await MstableAdapter.deploy();
     await MstableAdapter.deployed();
@@ -12,151 +14,311 @@ async function deployContract() {
 }
 
 
-// https://etherscan.io/tx/0x3f8fd7bf4101732cf06feebdd2de44cbd7020529cffa3bac0cea934507cb1d2a
-// pool: 0xe2f2a5c287993345a840db3b0845fbc70f5935a5
 
-// 0	_input	address	0xdAC17F958D2ee523a2206206994597C13D831ec7
-// 1	_output	address	0x6B175474E89094C44Da98b954EedeAC495271d0F
-// 2	_inputQuantity	uint256	29390857
-// 3	_minOutputQuantity	uint256	29358634975080448726
-// 4	_recipient	address	0x865625078FBf045Ba7037ef8781456a9eC0d042a
+// https://etherscan.io/tx/0x5f822b50ab97a3b4c3df40d6fa38967d45d2740f14493b86d603585897ff1045
 
-async function executeMainPool(MstableAdapter) {
-    userAddress = "0xed55D1B71b6bfA952ddBC4f24375C91652878560"
-    poolAddress = "0xe2f2a5c287993345a840db3b0845fbc70f5935a5"
+async function executeERC20ToERC20() {
+    let tokenConfig = getConfig("eth")
 
-    startMockAccount([userAddress]);
+    await setForkNetWorkAndBlockNumber("eth", 16544568 - 1);
 
-    signer = await ethers.getSigner(userAddress);
+    const MstableAdapter = await deployContract();
 
-    // USDT
-    USDTContract = await ethers.getContractAt(
-      "MockERC20",
-      tokenConfig.tokens.USDT.baseTokenAddress
-    )
+    const accountSource = "0x0b20ba9cb451b3f5bc528762370884ed75e09c1b"
+    const accountAddr = "0x1000000000000000000000000000000010000000"
+    const poolAddr = "0xe2f2a5c287993345a840db3b0845fbc70f5935a5"
 
-    // DAI
-    DaiContract = await ethers.getContractAt(
-      "MockERC20",
-      tokenConfig.tokens.DAI.baseTokenAddress
-    )
 
-    // check user token
-    beforeBalance = await USDTContract.balanceOf(userAddress);
-    console.log("user balance: ", beforeBalance.toString());
-
-    // transfer token
-    await USDTContract.connect(signer).transfer(MstableAdapter.address, ethers.utils.parseUnits("500", tokenConfig.tokens.USDT.decimals));
-    afterBalance = await USDTContract.balanceOf(MstableAdapter.address);
-
-    console.log("USDT beforeBalance: ", afterBalance.toString());
-
-    // swap
-    beforeBalance = await DaiContract.balanceOf(MstableAdapter.address);
-    console.log("DAI beforeBalance: ", beforeBalance.toString());
-
-    const DDL = 2541837122
-    moreinfo =  ethers.utils.defaultAbiCoder.encode(
-      ["address", "address", "uint256"],
-      [
-          USDTContract.address,
-          DaiContract.address,
-          DDL
-      ]
-    )
-    rxResult = await MstableAdapter.sellQuote(
-        MstableAdapter.address,
-        poolAddress,
-        moreinfo
+    const USDC = await ethers.getContractAt(
+        "MockERC20",
+        tokenConfig.tokens.USDC.baseTokenAddress
     );
 
-    // console.log(rxResult)
+    const USDT = await ethers.getContractAt(
+        "MockERC20",
+        tokenConfig.tokens.USDT.baseTokenAddress
+    );
+    await startMockAccount([accountSource])
+    const accountS = await ethers.getSigner(accountSource)
+    await setBalance(accountSource, ethers.utils.parseEther('10'));
 
-    afterBalance = await DaiContract.balanceOf(MstableAdapter.address);
-    usdtBalance = await USDTContract.balanceOf(MstableAdapter.address);
-    console.log("USDT afterBalance: ", usdtBalance.toString());
-    console.log("DAI afterBalance: ", afterBalance.toString());
-}
-
-// 0x4eaa01974b6594c0ee62ffd7fee56cf11e6af936
-async function executeFeederPool(MstableAdapter) {
-    userAddress = "0xed55D1B71b6bfA952ddBC4f24375C91652878560"
-    poolAddress = "0x4eaa01974b6594c0ee62ffd7fee56cf11e6af936"
-
-    startMockAccount([userAddress]);
-
-    signer = await ethers.getSigner(userAddress);
-
-    // USDT
-    USDTContract = await ethers.getContractAt(
-      "MockERC20",
-      tokenConfig.tokens.USDT.baseTokenAddress
-    )
-
-    // alUSD
-    alUSD = await ethers.getContractAt(
-      "MockERC20",
-      tokenConfig.tokens.alUSD.baseTokenAddress
-    )
-
-    // check user token
-    beforeBalance = await USDTContract.balanceOf(userAddress);
-    console.log("user balance: ", beforeBalance.toString());
-
-    // transfer token
-    await USDTContract.connect(signer).transfer(MstableAdapter.address, ethers.utils.parseUnits("500", tokenConfig.tokens.USDT.decimals));
-    afterBalance = await USDTContract.balanceOf(MstableAdapter.address);
-
-    console.log("USDT beforeBalance: ", afterBalance.toString());
-
-    // swap
-    beforeBalance = await alUSD.balanceOf(MstableAdapter.address);
-    console.log("alUSD beforeBalance: ", beforeBalance.toString());
-
-    const DDL = 2541837122
-    moreinfo =  ethers.utils.defaultAbiCoder.encode(
-      ["address", "address", "uint256"],
-      [
-          USDTContract.address,
-          alUSD.address,
-          DDL
-      ]
-    )
-    rxResult = await MstableAdapter.sellQuote(
-        MstableAdapter.address,
-        poolAddress,
-         moreinfo
+    await USDC.connect(accountS).transfer(
+        accountAddr,
+        ethers.BigNumber.from("45000000")
     );
 
-    // console.log(rxResult)
+    await startMockAccount([accountAddr])
+    const account = await ethers.getSigner(accountAddr)
+    await setBalance(accountAddr, ethers.utils.parseEther('10'));
 
-    afterBalance = await DaiContract.balanceOf(MstableAdapter.address);
-    alUSDBalance = await alUSD.balanceOf(MstableAdapter.address);
-    console.log("USDT afterBalance: ", usdtBalance.toString());
-    console.log("alUSD afterBalance: ", alUSDBalance.toString());
+
+
+    console.log(
+        "before USDT balance: " + (await USDT.balanceOf(account.address))
+    );
+    console.log(
+        "before USDC balance: " + (await USDC.balanceOf(account.address))
+    );
+
+    await USDC.connect(account).transfer(
+        MstableAdapter.address,
+        ethers.BigNumber.from("45000000")
+    );
+
+    let moreInfo = ethers.utils.defaultAbiCoder.encode(
+        ["address", "address"],
+        [
+            USDC.address,
+            USDT.address
+        ]
+    );
+    await MstableAdapter.sellQuote(
+        account.address,
+        poolAddr,
+        moreInfo
+    );
+
+    console.log(
+        "after USDT balance: " + (await USDT.balanceOf(account.address))
+    );
+    console.log(
+        "after USDC balance: " + (await USDC.balanceOf(account.address))
+    );
 }
 
+// https://openchain.xyz/trace/ethereum/0x3a99152421ded9ce7871ab753b235950d0253e04e12abd572a6bfdaa33e8a712
+async function executeERC20ToMUSD() {
+    let tokenConfig = getConfig("eth")
 
+    await setForkNetWorkAndBlockNumber("eth", 16653983 - 1);
+
+    const MstableAdapter = await deployContract();
+
+    const accountSource = "0x1C832dD1B92C9385Dd0bdc50a7FB29b433dc495D"
+    const accountAddr = "0x1000000000000000000000000000000010000000"
+    const poolAddr = "0xe2f2a5c287993345a840db3b0845fbc70f5935a5"
+
+
+    const DAI = await ethers.getContractAt(
+        "MockERC20",
+        tokenConfig.tokens.DAI.baseTokenAddress
+    );
+
+    const mUSD = await ethers.getContractAt(
+        "MockERC20",
+        poolAddr
+    );
+    await startMockAccount([accountSource])
+    const accountS = await ethers.getSigner(accountSource)
+    await setBalance(accountSource, ethers.utils.parseEther('10'));
+
+    await DAI.connect(accountS).transfer(
+        accountAddr,
+        ethers.BigNumber.from("50794890221890360922")
+    );
+
+    await startMockAccount([accountAddr])
+    const account = await ethers.getSigner(accountAddr)
+    await setBalance(accountAddr, ethers.utils.parseEther('10'));
+
+
+
+    console.log(
+        "before mUSD balance: " + (await mUSD.balanceOf(account.address))
+    );
+    console.log(
+        "before DAI balance: " + (await DAI.balanceOf(account.address))
+    );
+
+    await DAI.connect(account).transfer(
+        MstableAdapter.address,
+        ethers.BigNumber.from("50794890221890360922")
+    );
+
+    let moreInfo = ethers.utils.defaultAbiCoder.encode(
+        ["address", "address"],
+        [
+            DAI.address,
+            mUSD.address
+        ]
+    );
+    await MstableAdapter.sellQuote(
+        account.address,
+        poolAddr,
+        moreInfo
+    );
+
+    console.log(
+        "after mUSD balance: " + (await mUSD.balanceOf(account.address))
+    );
+    console.log(
+        "after DAI balance: " + (await DAI.balanceOf(account.address))
+    );
+}
+
+// https://openchain.xyz/trace/ethereum/0x65dea8191b8ecce29d9bbeb31a7d78841d8cdc351f62a4a849f2134ce9485b37
+async function executeMUSDToERC20() {
+    let tokenConfig = getConfig("eth")
+
+    await setForkNetWorkAndBlockNumber("eth", 16723877 - 1);
+
+    const MstableAdapter = await deployContract();
+
+    const accountSource = "0xe18B7E20c0b9A8FA16C20911B706Be8DC69d3485"
+    const accountAddr = "0x1000000000000000000000000000000010000000"
+    const poolAddr = "0xe2f2a5c287993345a840db3b0845fbc70f5935a5"
+
+
+    const mUSD = await ethers.getContractAt(
+        "MockERC20",
+        poolAddr
+    );
+
+    const USDC = await ethers.getContractAt(
+        "MockERC20",
+        tokenConfig.tokens.USDC.baseTokenAddress
+    );
+    await startMockAccount([accountSource])
+    const accountS = await ethers.getSigner(accountSource)
+    await setBalance(accountSource, ethers.utils.parseEther('10'));
+
+    await mUSD.connect(accountS).transfer(
+        accountAddr,
+        ethers.BigNumber.from("3000000000000000000000")
+    );
+
+    await startMockAccount([accountAddr])
+    const account = await ethers.getSigner(accountAddr)
+    await setBalance(accountAddr, ethers.utils.parseEther('10'));
+
+
+
+    console.log(
+        "before USDC balance: " + (await USDC.balanceOf(account.address))
+    );
+    console.log(
+        "before mUSD balance: " + (await mUSD.balanceOf(account.address))
+    );
+
+    await mUSD.connect(account).transfer(
+        MstableAdapter.address,
+        ethers.BigNumber.from("3000000000000000000000")
+    );
+
+    let moreInfo = ethers.utils.defaultAbiCoder.encode(
+        ["address", "address"],
+        [
+            mUSD.address,
+            USDC.address
+        ]
+    );
+    await MstableAdapter.sellQuote(
+        account.address,
+        poolAddr,
+        moreInfo
+    );
+
+    console.log(
+        "after USDC balance: " + (await USDC.balanceOf(account.address))
+    );
+    console.log(
+        "after mUSD balance: " + (await mUSD.balanceOf(account.address))
+    );
+}
+
+// https://openchain.xyz/trace/ethereum/0x05167e677a779060a5eb65bf7cadd75a35166996feed23a6c31d5ef9823f55e5
+
+async function executeFeeder() {
+    let tokenConfig = getConfig("eth")
+
+    await setForkNetWorkAndBlockNumber("eth", 16292442 - 1);
+
+    const MstableAdapter = await deployContract();
+
+    const accountSource = "0xeb1520Bb8829386d5AA2C3Aa99929B6aDfAEb175"
+    const accountAddr = "0x1000000000000000000000000000000010000000"
+    const poolAddr = "0x4eaa01974B6594C0Ee62fFd7FEE56CF11E6af936"
+
+    const alUSDAddr = "0xBC6DA0FE9aD5f3b0d58160288917AA56653660E9";
+
+
+    const alUSD = await ethers.getContractAt(
+        "MockERC20",
+        alUSDAddr
+    );
+
+    const USDC = await ethers.getContractAt(
+        "MockERC20",
+        tokenConfig.tokens.USDC.baseTokenAddress
+    );
+    await startMockAccount([accountSource])
+    const accountS = await ethers.getSigner(accountSource)
+    await setBalance(accountSource, ethers.utils.parseEther('10'));
+
+    await alUSD.connect(accountS).transfer(
+        accountAddr,
+        ethers.BigNumber.from("552618452371711657475")
+    );
+
+    await startMockAccount([accountAddr])
+    const account = await ethers.getSigner(accountAddr)
+    await setBalance(accountAddr, ethers.utils.parseEther('10'));
+
+
+
+    console.log(
+        "before USDC balance: " + (await USDC.balanceOf(account.address))
+    );
+    console.log(
+        "before alUSD balance: " + (await alUSD.balanceOf(account.address))
+    );
+
+    await alUSD.connect(account).transfer(
+        MstableAdapter.address,
+        ethers.BigNumber.from("552618452371711657475")
+    );
+
+    let moreInfo = ethers.utils.defaultAbiCoder.encode(
+        ["address", "address"],
+        [
+            alUSD.address,
+            USDC.address
+        ]
+    );
+    await MstableAdapter.sellQuote(
+        account.address,
+        poolAddr,
+        moreInfo
+    );
+
+    console.log(
+        "after USDC balance: " + (await USDC.balanceOf(account.address))
+    );
+    console.log(
+        "after alUSD balance: " + (await alUSD.balanceOf(account.address))
+    );
+}
 
 async function main() {
-    MstableAdapter = await deployContract()
-    console.log("===== check Main Pool =====")
-    await executeMainPool(MstableAdapter);
-    console.log("===== check Feeder Pool =====")
-    await executeFeederPool(MstableAdapter);
+
+    console.log("==== checking ERC20 to ERC20 ====== ")
+    await executeERC20ToERC20();
+    console.log("==== checking mUSD to ERC20 ====== ")
+    await executeMUSDToERC20();
+    console.log("==== checking ERC20 to mUSD ====== ")
+    await executeERC20ToMUSD();
+
+    console.log("==== checking Feeder ====== ")
+    await executeFeeder();
+
+
 
 
 }
 
 main()
-  .then(() => process.exit(0))
-  .catch(error => {
-    console.error(error);
-    process.exit(1);
-  });
-
-
-
-
-
-
+    .then(() => process.exit(0))
+    .catch(error => {
+        console.error(error);
+        process.exit(1);
+    });
