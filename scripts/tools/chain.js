@@ -24,6 +24,8 @@ function getNetworkURL(net) {
         return `https://rpc.ankr.com/fantom`
     } else if (net == 'op') {
         return ALCHEMY_KEY == '' ? `https://rpc.ankr.com/optimism` : `https://opt-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
+    } else if (net == 'zksync') {
+        return "https://mainnet.era.zksync.io"
     } else {
         return 'http://127.0.0.1:8545'
     }
