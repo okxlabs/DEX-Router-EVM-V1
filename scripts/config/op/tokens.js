@@ -35,11 +35,18 @@ const WETH_SYNAPSE = {
     baseTokenAddress: "0x121ab82b49B2BC4c7901CA46B8277962b4350204"
 }
 
+const rETH = {
+    name: "rETH",
+    decimals: 18,
+    baseTokenAddress: "0x9Bcef72be871e61ED4fBbc7630889beE758eb81D"
+}
+
 module.exports = {
     WETH,
     OP,
     USDC,
     USDT,
     nETH,
-    WETH_SYNAPSE
+    WETH_SYNAPSE,
+    rETH
 }
