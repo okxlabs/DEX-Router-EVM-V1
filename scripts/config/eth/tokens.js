@@ -18,7 +18,7 @@ const USDT = {
   decimals: 6,
   baseTokenAddress: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
 }
-const WBNB  = {
+const WBNB = {
   name: "WBNB",
   decimals: 18,
   baseTokenAddress: '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c',
@@ -149,6 +149,12 @@ const USDP = {
   baseTokenAddress: "0x8E870D67F660D95d5be530380D0eC0bd388289E1"
 }
 
+const INCH = {
+  name: "INCH",
+  decimals: 18,
+  baseTokenAddress: "0x111111111117dC0aa78b770fA6A738034120C302"
+}
+
 module.exports = {
   BTCB,
   DOT,
@@ -175,5 +181,6 @@ module.exports = {
   renBTC,
   alUSD,
   GUSD,
-  USDP
+  USDP,
+  INCH
 }
