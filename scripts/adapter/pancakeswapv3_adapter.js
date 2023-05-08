@@ -2,7 +2,7 @@ const { ethers } = require("hardhat");
 const deployed = require("../deployed");
 
 async function main() {
-    PancakeV3Adapter = await ethers.getContractFactory("PancakeV3Adapter");
+    PancakeV3Adapter = await ethers.getContractFactory("PancakeswapV3Adapter");
     pancakeV3Adapter = await PancakeV3Adapter.deploy(deployed.base.wNativeToken, deployed.base._PANCAKESWAPV3_FACTROY);
     await pancakeV3Adapter.deployed();
 
