@@ -149,6 +149,11 @@ const USDP = {
   baseTokenAddress: "0x8E870D67F660D95d5be530380D0eC0bd388289E1"
 }
 
+const aUSDT = {
+  name: "aUSDT",
+  decimals: 6,
+  baseTokenAddress: '0x3Ed3B47Dd13EC9a98b44e6204A523E766B225811',
+
 const INCH = {
   name: "INCH",
   decimals: 18,
@@ -182,5 +187,6 @@ module.exports = {
   alUSD,
   GUSD,
   USDP,
+  aUSDT,
   INCH
 }

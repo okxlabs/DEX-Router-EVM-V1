@@ -35,11 +35,17 @@ const USDT = {
     baseTokenAddress: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
 }
 
+const amUSDT = {
+    name: "amUSDT",
+    decimals: 6,
+    baseTokenAddress: '0x60D55F02A771d515e077c9C2403a1ef324885CeC',
+}
 module.exports = {
     WETH,
     TEL,
     USDC,
     WMATIC,
     MATIC,
-    USDT
+    USDT,
+    amUSDT
 }
