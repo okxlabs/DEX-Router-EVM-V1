@@ -153,6 +153,7 @@ const aUSDT = {
   name: "aUSDT",
   decimals: 6,
   baseTokenAddress: '0x3Ed3B47Dd13EC9a98b44e6204A523E766B225811',
+}
 
 const INCH = {
   name: "INCH",
