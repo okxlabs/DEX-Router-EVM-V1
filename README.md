@@ -70,3 +70,31 @@ npx hardhat run scripts/tools/ureplace.js --network eth/okc/polygon...
   // address public constant _WNATIVE_RELAY = 0x0B306BF915C4d645ff596e518fAf3F9669b97016;   // hardhat1
   // address public constant _WNATIVE_RELAY = 0x6A47346e722937B60Df7a1149168c0E76DD6520f;   // hardhat2
 ```
+
+# Foundry 
+i add foundry toolchain to our dex project, which is a hardhat project. 
+## how to install foundry
+```bash
+curl -L https://foundry.paradigm.xyz | bash
+```
+
+## how to install dependency
+```bash
+forge install
+```
+
+## how to run deploy scripts
+```bash
+# for dry-run: test only
+forge script contracts/8/foundry/deploy/OneinchV1Adapter.s.sol:Deploy -vvvv 
+# for on-chain: real deploy
+forge script contracts/8/foundry/deploy/OneinchV1Adapter.s.sol:Deploy -vvvv --broadcast
+```
+
+## how to run test file
+```bash
+forge test -vvvv
+```
+
+## foundry docs
+for more information, you may refer to the [foundry docs](https://book.getfoundry.sh/getting-started/installation)
