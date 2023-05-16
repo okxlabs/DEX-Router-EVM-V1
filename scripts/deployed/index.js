@@ -11,6 +11,7 @@ const op = require('./op')
 const cro = require('./cro')
 const ethw = require('./ethw')
 const cfx = require('./conflux')
+const polyzkevm = require('./polyzkevm')
 
 let config
 
@@ -38,6 +39,8 @@ if (network.name === 'okc') {
     config = ethw
 } else if (network.name === 'conflux') {
     config = cfx
+} else if (network.name == 'polyzkevm') {
+    config = polyzkevm
 }
 
 module.exports = config

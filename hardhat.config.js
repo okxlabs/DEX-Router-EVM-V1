@@ -232,6 +232,16 @@ module.exports = {
           runs: 200
         },
       }
+    },
+    polyzkevm: {
+      url: "https://zkevm-rpc.com",
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
     }
   },
   paths: {
