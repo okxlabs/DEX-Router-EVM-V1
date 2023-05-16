@@ -20,7 +20,7 @@ if (network == "okc") {
   config = eth
 } else if (network == 'avax') {
   config = avax
-} else if (network == 'arbitrum') {
+} else if (network == 'arb') {
   config = arbitrum
 } else if (network == 'op') {
   config = op
@@ -43,7 +43,7 @@ const getConfig = function (network) {
     return eth
   } else if (network == 'avax') {
     return avax
-  } else if (network == 'arbitrum') {
+  } else if (network == 'arb') {
     return arbitrum
   } else if (network == 'op') {
     return op

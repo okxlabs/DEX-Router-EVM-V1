@@ -1,11 +1,14 @@
 const { ethers } = require("hardhat");
 const { getConfig } = require("../config");
-tokenConfig = getConfig("eth");
 
 async function main() {
-
+    const config = getConfig(network.name)
+    console.log(config)
     ClipperAdapter = await ethers.getContractFactory("ClipperAdapter");
-    clipperAdapter = await ClipperAdapter.deploy(tokenConfig.tokens.WETH.baseTokenAddress,"0xE7b0CE0526fbE3969035a145C9e9691d4d9D216c");
+    clipperAdapter = await ClipperAdapter.deploy(
+        config.tokens.WETH.baseTokenAddress, 
+        config.contracts.ClipperVerifiedExchange.address
+    );
     await clipperAdapter.deployed();
 
     console.log(`clipperAdapter deployed: ${clipperAdapter.address}`);

@@ -22,11 +22,16 @@ const _DODO_SELL_HELPER_ = {
   address: "0x533dA777aeDCE766CEAe696bf90f8541A4bA80Eb"
 }
 
+const ClipperVerifiedExchange = {
+  address: "0xE7b0CE0526fbE3969035a145C9e9691d4d9D216c"
+}
+
 module.exports = {
   BancorNetwork,
   BalancerVault,
   NomiswapStableFactory,
   NomiswapFactory,
   Curve3CRVPoolLPToken,
-  _DODO_SELL_HELPER_
+  _DODO_SELL_HELPER_,
+  ClipperVerifiedExchange
 }
