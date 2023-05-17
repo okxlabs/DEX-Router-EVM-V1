@@ -7,7 +7,7 @@ import "forge-std/console2.sol";
 import "@dex/adapter/OneinchV1Adapter.sol";
 
 contract Deploy is Test {
-    address deployer = vm.rememberKey(vm.envUint("DEPLOYER_RPIVATE_KEY"));
+    address deployer = vm.rememberKey(vm.envUint("PRIVATE_KEY"));
 
     function run() public {
         require(deployer == 0x358506b4C5c441873AdE429c5A2BE777578E2C6f, "wrong deployer! change the private key");

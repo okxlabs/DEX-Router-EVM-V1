@@ -1,5 +1,5 @@
 [profile.default]
-src = "foundry"
+src = "src"
 out = "artifacts"
 libs = ["node_modules", "lib"]
 remappings = [

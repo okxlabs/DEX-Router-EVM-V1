@@ -86,9 +86,9 @@ forge install
 ## how to run deploy scripts
 ```bash
 # for dry-run: test only
-forge script contracts/8/foundry/deploy/OneinchV1Adapter.s.sol:Deploy -vvvv 
+forge script src/deploy/OneinchV1Adapter.s.sol:Deploy -vvvv 
 # for on-chain: real deploy
-forge script contracts/8/foundry/deploy/OneinchV1Adapter.s.sol:Deploy -vvvv --broadcast
+forge script src/deploy/OneinchV1Adapter.s.sol:Deploy -vvvv --broadcast
 ```
 
 ## how to run test file
@@ -98,3 +98,18 @@ forge test -vvvv
 
 ## foundry docs
 for more information, you may refer to the [foundry docs](https://book.getfoundry.sh/getting-started/installation)
+
+## tips
+```bash
+vm.rememberKey(uint pk); # load the private key into memory, which can be used as signer
+vm.envUint("DEPLOYER_RPIVATE_KEY"); # load the .env file, and find the "DEPLOYER_RPIVATE_KEY" as uint256
+vm.createSelectFork(); #  Creates _and_ also selects a new fork with the given endpoint and the latest block and returns the identifier of the fork
+vm.startBroadcast(); # Has all subsequent calls (at this call depth only) create transactions with the address provided that can later be signed and sent onchain
+```
+please fill in the .env file with at least these two items:
+```bash
+RPIVATE_KEY=12112121212121212
+ETH_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/7Brn0mxZnlMWbHf0yqAEicmsgKdLJGmA
+```
+
+before submit the PR, please delete the dry-run folder under the broadcast folder.
