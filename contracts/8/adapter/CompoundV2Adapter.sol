@@ -16,32 +16,28 @@ contract CompoundAdapter is IAdapter {
         WETH = _weth;
     }
 
-    function _compound(address to, address pool, bytes memory moreInfo) internal {
-        (address fromToken, address toToken, bool isMint) =
-            abi.decode(moreInfo, (address, address, bool));
+    function _compound(address to, address, bytes memory moreInfo) internal {
+        (address fromToken, address toToken, bool isMint) = abi.decode(moreInfo, (address, address, bool));
 
         if (isMint) {
             require(ICToken(toToken).isCToken(), "mint toToken must be cToken");
-            _handleMint(to, pool, fromToken, toToken);
-
+            _handleMint(to, fromToken, toToken);
             return;
         } else {
             require(ICToken(fromToken).isCToken(), "redeem fromToken must be cToken");
-            _handleRedeem(to, pool, fromToken, toToken);
+            _handleRedeem(to, fromToken, toToken);
             return;
         }
     }
 
-    function _handleMint(address to, address pool, address fromToken, address toToken)
-        internal
-    {
+    function _handleMint(address to, address fromToken, address toToken) internal {
         if (fromToken == ETH_ADDRESS) {
             uint256 amount = IERC20(WETH).balanceOf(address(this));
             IWETH(WETH).withdraw(amount);
             ICToken(toToken).mint{value: address(this).balance}();
         } else {
             uint256 amount = IERC20(fromToken).balanceOf(address(this));
-            IERC20(fromToken).approve(toToken, amount);
+            SafeERC20.safeApprove(IERC20(fromToken), toToken, amount);
             uint256 resMint = ICToken(toToken).mint(amount);
             require(resMint == 0, "mint failed");
         }
@@ -51,9 +47,7 @@ contract CompoundAdapter is IAdapter {
         }
     }
 
-    function _handleRedeem(address to, address pool, address fromToken, address toToken)
-        internal
-    {
+    function _handleRedeem(address to, address fromToken, address toToken) internal {
         uint256 amount = IERC20(fromToken).balanceOf(address(this));
         uint256 resRedeem = ICToken(fromToken).redeem(amount);
         require(resRedeem == 0, "redeem failed");
@@ -67,17 +61,11 @@ contract CompoundAdapter is IAdapter {
         }
     }
 
-    function sellBase(address to, address pool, bytes memory moreInfo)
-        external
-        override
-    {
+    function sellBase(address to, address pool, bytes memory moreInfo) external override {
         _compound(to, pool, moreInfo);
     }
 
-    function sellQuote(address to, address pool, bytes memory moreInfo)
-        external
-        override
-    {
+    function sellQuote(address to, address pool, bytes memory moreInfo) external override {
         _compound(to, pool, moreInfo);
     }
 
