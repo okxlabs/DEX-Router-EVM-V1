@@ -34,10 +34,6 @@ async function execute() {
     await usdt.mint(taker.address, '1000000');
 
     await weth.connect(maker).approve(pmmProtocolAddr, '1');
-    await usdt.connect(taker).approve(pmmProtocolAddr, '1900');
-
-    await weth.connect(maker).approve(pmmRFQAdapter.address, '1');
-    await usdt.connect(taker).approve(pmmRFQAdapter.address, '1900');
 
     const order = buildOrderRFQ(
         '0xFF000000000000000000000001',
@@ -53,7 +49,7 @@ async function execute() {
     //await pmmProtocol.connect(taker).fillOrderRFQ(order, signature, unwrapWeth(makingAmount(1)));
 
     moreinfo = ethers.utils.defaultAbiCoder.encode(
-        ["tuple(uint256, address, address, address, address, uint256, uint256)", "bytes", "uint256"],
+        ["tuple(uint256, address, address, address, address, uint256, uint256, address)", "bytes", "uint256"],
         [
             [
                 "0xFF000000000000000000000001",
@@ -63,6 +59,7 @@ async function execute() {
                 "0x0000000000000000000000000000000000000000",
                 "1",
                 "1900",
+                "0x0000000000000000000000000000000000000000",
             ],
             signature,
             unwrapWeth(takingAmount(1900))

@@ -10,6 +10,7 @@ struct OrderRFQ {
     address allowedSender; // equals to Zero address on public orders
     uint256 makingAmount;
     uint256 takingAmount;
+    address settler;
 }
 
 interface IPmmRFQ {
@@ -25,18 +26,5 @@ interface IPmmRFQ {
             uint256 filledMakingAmount,
             uint256 filledTakingAmount,
             bytes32 orderHash
-        );
-
-    function fillOrderRFQ(
-        OrderRFQ memory order,
-        bytes calldata signature,
-        uint256 flagsAndAmount
-    )
-        external
-        payable
-        returns (
-            uint256 /* filledMakingAmount */,
-            uint256 /* filledTakingAmount */,
-            bytes32 /* orderHash */
         );
 }

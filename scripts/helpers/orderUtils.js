@@ -9,6 +9,7 @@ const OrderRFQ = [
     { name: 'allowedSender', type: 'address' },
     { name: 'makingAmount', type: 'uint256' },
     { name: 'takingAmount', type: 'uint256' },
+    { name: 'settler', type: 'address' },
 ];
 
 const ABIOrderRFQ = {
@@ -17,10 +18,10 @@ const ABIOrderRFQ = {
     components: OrderRFQ,
 };
 
-// const name = 'OKX PMM Protocol';
-// const version = '1.0';
-const name = '1inch Aggregation Router';
-const version = '5';
+// const name = '1inch Aggregation Router';
+// const version = '5';
+const name = 'KRONOS PMM Protocol';
+const version = '1.0';
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 function buildOrderRFQ(
@@ -31,6 +32,7 @@ function buildOrderRFQ(
     makingAmount,
     takingAmount,
     allowedSender = ZERO_ADDRESS,
+    settler = ZERO_ADDRESS,
 ) {
     return {
         info,
@@ -40,6 +42,7 @@ function buildOrderRFQ(
         allowedSender,
         makingAmount,
         takingAmount,
+        settler
     };
 }
 

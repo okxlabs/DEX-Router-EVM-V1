@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-import "hardhat/console.sol";
 
 pragma solidity 0.8.17;
 
@@ -752,299 +751,6 @@ abstract contract ReentrancyGuardUpgradeable is Initializable {
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
      */
     uint256[49] private __gap;
-}
-
-// OpenZeppelin Contracts (last updated v4.8.0) (token/ERC20/utils/SafeERC20.sol)
-
-// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/IERC20.sol)
-
-/**
- * @dev Interface of the ERC20 standard as defined in the EIP.
- */
-interface IERC20Upgradeable {
-    /**
-     * @dev Emitted when `value` tokens are moved from one account (`from`) to
-     * another (`to`).
-     *
-     * Note that `value` may be zero.
-     */
-    event Transfer(address indexed from, address indexed to, uint256 value);
-
-    /**
-     * @dev Emitted when the allowance of a `spender` for an `owner` is set by
-     * a call to {approve}. `value` is the new allowance.
-     */
-    event Approval(
-        address indexed owner,
-        address indexed spender,
-        uint256 value
-    );
-
-    /**
-     * @dev Returns the amount of tokens in existence.
-     */
-    function totalSupply() external view returns (uint256);
-
-    /**
-     * @dev Returns the amount of tokens owned by `account`.
-     */
-    function balanceOf(address account) external view returns (uint256);
-
-    /**
-     * @dev Moves `amount` tokens from the caller's account to `to`.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
-     *
-     * Emits a {Transfer} event.
-     */
-    function transfer(address to, uint256 amount) external returns (bool);
-
-    /**
-     * @dev Returns the remaining number of tokens that `spender` will be
-     * allowed to spend on behalf of `owner` through {transferFrom}. This is
-     * zero by default.
-     *
-     * This value changes when {approve} or {transferFrom} are called.
-     */
-    function allowance(
-        address owner,
-        address spender
-    ) external view returns (uint256);
-
-    /**
-     * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
-     *
-     * IMPORTANT: Beware that changing an allowance with this method brings the risk
-     * that someone may use both the old and the new allowance by unfortunate
-     * transaction ordering. One possible solution to mitigate this race
-     * condition is to first reduce the spender's allowance to 0 and set the
-     * desired value afterwards:
-     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-     *
-     * Emits an {Approval} event.
-     */
-    function approve(address spender, uint256 amount) external returns (bool);
-
-    /**
-     * @dev Moves `amount` tokens from `from` to `to` using the
-     * allowance mechanism. `amount` is then deducted from the caller's
-     * allowance.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
-     *
-     * Emits a {Transfer} event.
-     */
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    ) external returns (bool);
-}
-
-// OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/draft-IERC20Permit.sol)
-
-/**
- * @dev Interface of the ERC20 Permit extension allowing approvals to be made via signatures, as defined in
- * https://eips.ethereum.org/EIPS/eip-2612[EIP-2612].
- *
- * Adds the {permit} method, which can be used to change an account's ERC20 allowance (see {IERC20-allowance}) by
- * presenting a message signed by the account. By not relying on {IERC20-approve}, the token holder account doesn't
- * need to send a transaction, and thus is not required to hold Ether at all.
- */
-interface IERC20PermitUpgradeable {
-    /**
-     * @dev Sets `value` as the allowance of `spender` over ``owner``'s tokens,
-     * given ``owner``'s signed approval.
-     *
-     * IMPORTANT: The same issues {IERC20-approve} has related to transaction
-     * ordering also apply here.
-     *
-     * Emits an {Approval} event.
-     *
-     * Requirements:
-     *
-     * - `spender` cannot be the zero address.
-     * - `deadline` must be a timestamp in the future.
-     * - `v`, `r` and `s` must be a valid `secp256k1` signature from `owner`
-     * over the EIP712-formatted function arguments.
-     * - the signature must use ``owner``'s current nonce (see {nonces}).
-     *
-     * For more information on the signature format, see the
-     * https://eips.ethereum.org/EIPS/eip-2612#specification[relevant EIP
-     * section].
-     */
-    function permit(
-        address owner,
-        address spender,
-        uint256 value,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external;
-
-    /**
-     * @dev Returns the current nonce for `owner`. This value must be
-     * included whenever a signature is generated for {permit}.
-     *
-     * Every successful call to {permit} increases ``owner``'s nonce by one. This
-     * prevents a signature from being used multiple times.
-     */
-    function nonces(address owner) external view returns (uint256);
-
-    /**
-     * @dev Returns the domain separator used in the encoding of the signature for {permit}, as defined by {EIP712}.
-     */
-    // solhint-disable-next-line func-name-mixedcase
-    function DOMAIN_SEPARATOR() external view returns (bytes32);
-}
-
-/**
- * @title SafeERC20
- * @dev Wrappers around ERC20 operations that throw on failure (when the token
- * contract returns false). Tokens that return no value (and instead revert or
- * throw on failure) are also supported, non-reverting calls are assumed to be
- * successful.
- * To use this library you can add a `using SafeERC20 for IERC20;` statement to your contract,
- * which allows you to call the safe operations as `token.safeTransfer(...)`, etc.
- */
-library SafeERC20Upgradeable {
-    using AddressUpgradeable for address;
-
-    function safeTransfer(
-        IERC20Upgradeable token,
-        address to,
-        uint256 value
-    ) internal {
-        _callOptionalReturn(
-            token,
-            abi.encodeWithSelector(token.transfer.selector, to, value)
-        );
-    }
-
-    function safeTransferFrom(
-        IERC20Upgradeable token,
-        address from,
-        address to,
-        uint256 value
-    ) internal {
-        _callOptionalReturn(
-            token,
-            abi.encodeWithSelector(token.transferFrom.selector, from, to, value)
-        );
-    }
-
-    /**
-     * @dev Deprecated. This function has issues similar to the ones found in
-     * {IERC20-approve}, and its usage is discouraged.
-     *
-     * Whenever possible, use {safeIncreaseAllowance} and
-     * {safeDecreaseAllowance} instead.
-     */
-    function safeApprove(
-        IERC20Upgradeable token,
-        address spender,
-        uint256 value
-    ) internal {
-        // safeApprove should only be called when setting an initial allowance,
-        // or when resetting it to zero. To increase and decrease it, use
-        // 'safeIncreaseAllowance' and 'safeDecreaseAllowance'
-        require(
-            (value == 0) || (token.allowance(address(this), spender) == 0),
-            "SafeERC20: approve from non-zero to non-zero allowance"
-        );
-        _callOptionalReturn(
-            token,
-            abi.encodeWithSelector(token.approve.selector, spender, value)
-        );
-    }
-
-    function safeIncreaseAllowance(
-        IERC20Upgradeable token,
-        address spender,
-        uint256 value
-    ) internal {
-        uint256 newAllowance = token.allowance(address(this), spender) + value;
-        _callOptionalReturn(
-            token,
-            abi.encodeWithSelector(
-                token.approve.selector,
-                spender,
-                newAllowance
-            )
-        );
-    }
-
-    function safeDecreaseAllowance(
-        IERC20Upgradeable token,
-        address spender,
-        uint256 value
-    ) internal {
-        unchecked {
-            uint256 oldAllowance = token.allowance(address(this), spender);
-            require(
-                oldAllowance >= value,
-                "SafeERC20: decreased allowance below zero"
-            );
-            uint256 newAllowance = oldAllowance - value;
-            _callOptionalReturn(
-                token,
-                abi.encodeWithSelector(
-                    token.approve.selector,
-                    spender,
-                    newAllowance
-                )
-            );
-        }
-    }
-
-    function safePermit(
-        IERC20PermitUpgradeable token,
-        address owner,
-        address spender,
-        uint256 value,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) internal {
-        uint256 nonceBefore = token.nonces(owner);
-        token.permit(owner, spender, value, deadline, v, r, s);
-        uint256 nonceAfter = token.nonces(owner);
-        require(
-            nonceAfter == nonceBefore + 1,
-            "SafeERC20: permit did not succeed"
-        );
-    }
-
-    /**
-     * @dev Imitates a Solidity high-level call (i.e. a regular function call to a contract), relaxing the requirement
-     * on the return value: the return value is optional (but if data is returned, it must not be false).
-     * @param token The token targeted by the call.
-     * @param data The call data (encoded using abi.encode or one of its variants).
-     */
-    function _callOptionalReturn(
-        IERC20Upgradeable token,
-        bytes memory data
-    ) private {
-        // We need to perform a low level call here, to bypass Solidity's return data size checking mechanism, since
-        // we're implementing it ourselves. We use {Address-functionCall} to perform this call, which verifies that
-        // the target address contains contract code and also asserts for success in the low-level call.
-
-        bytes memory returndata = address(token).functionCall(
-            data,
-            "SafeERC20: low-level call failed"
-        );
-        if (returndata.length > 0) {
-            // Return data is optional
-            require(
-                abi.decode(returndata, (bool)),
-                "SafeERC20: ERC20 operation did not succeed"
-            );
-        }
-    }
 }
 
 // OpenZeppelin Contracts (last updated v4.8.0) (utils/cryptography/draft-EIP712.sol)
@@ -1978,6 +1684,22 @@ library AmountCalculator {
     }
 }
 
+interface IPMMSettler {
+    /**
+     * @notice Interface for interactor which acts for `maker -> taker` transfers.
+     * @param taker Taker address
+     * @param token Settle token address
+     * @param amount Settle token amount
+     * @param isUnwrap Whether unwrap WETH
+     */
+    function settleToTaker(
+        address taker,
+        address token,
+        uint256 amount,
+        bool isUnwrap
+    ) external;
+}
+
 interface IWETH is IERC20 {
     function deposit() external payable;
 
@@ -2589,6 +2311,7 @@ library OrderRFQLib {
         address allowedSender; // equals to Zero address on public orders
         uint256 makingAmount;
         uint256 takingAmount;
+        address settler;
     }
 
     bytes32 internal constant _LIMIT_ORDER_RFQ_TYPEHASH =
@@ -2600,7 +2323,8 @@ library OrderRFQLib {
             "address maker,"
             "address allowedSender,"
             "uint256 makingAmount,"
-            "uint256 takingAmount"
+            "uint256 takingAmount,"
+            "address settler"
             ")"
         );
 
@@ -2618,7 +2342,7 @@ library OrderRFQLib {
             // keccak256(abi.encode(_LIMIT_ORDER_RFQ_TYPEHASH, order));
             let tmp := mload(ptr)
             mstore(ptr, typehash)
-            orderHash := keccak256(ptr, 0x100)
+            orderHash := keccak256(ptr, 0x120)
             mstore(ptr, tmp)
         }
         return ECDSA.toTypedDataHash(domainSeparator, orderHash);
@@ -2642,6 +2366,7 @@ contract PMMProtocol is
     error TakingAmountExceeded();
     error RFQSwapWithZeroAmount();
     error InvalidatedOrder();
+    error SettleFaild();
 
     /**
      * @notice Emitted when RFQ gets filled
@@ -2650,19 +2375,21 @@ contract PMMProtocol is
      */
     event OrderFilledRFQ(bytes32 orderHash, uint256 makingAmount);
 
-    string private constant _NAME = "1inch Aggregation Router";
-    string private constant _VERSION = "5";
+    string private constant _NAME = "KRONOS PMM Protocol";
+    string private constant _VERSION = "1.0";
 
     uint256 private constant _RAW_CALL_GAS_LIMIT = 5000;
     uint256 private constant _MAKER_AMOUNT_FLAG = 1 << 255;
     uint256 private constant _SIGNER_SMART_CONTRACT_HINT = 1 << 254;
     uint256 private constant _IS_VALID_SIGNATURE_65_BYTES = 1 << 253;
     uint256 private constant _UNWRAP_WETH_FLAG = 1 << 252;
+    uint256 private constant _SETTLE_FLAG = 1 << 251;
     uint256 private constant _AMOUNT_MASK =
         ~(_MAKER_AMOUNT_FLAG |
             _SIGNER_SMART_CONTRACT_HINT |
             _IS_VALID_SIGNATURE_65_BYTES |
-            _UNWRAP_WETH_FLAG);
+            _UNWRAP_WETH_FLAG |
+            _SETTLE_FLAG);
 
     IWETH private _WETH;
     mapping(address => mapping(uint256 => uint256)) private _invalidator;
@@ -2837,7 +2564,6 @@ contract PMMProtocol is
             uint256 orderMakingAmount = order.makingAmount;
             uint256 orderTakingAmount = order.takingAmount;
             uint256 amount = flagsAndAmount & _AMOUNT_MASK;
-
             // Compute partial fill if needed
             if (amount == 0) {
                 // zero amount means whole order
@@ -2866,24 +2592,48 @@ contract PMMProtocol is
             revert RFQSwapWithZeroAmount();
 
         // Maker => Taker
-        if (
-            order.makerAsset == address(_WETH) &&
-            flagsAndAmount & _UNWRAP_WETH_FLAG != 0
-        ) {
-            _WETH.transferFrom(maker, address(this), makingAmount);
-            _WETH.withdraw(makingAmount);
-            // solhint-disable-next-line avoid-low-level-calls
-            (bool success, ) = target.call{
-                value: makingAmount,
-                gas: _RAW_CALL_GAS_LIMIT
-            }("");
-            if (!success) revert Errors.ETHTransferFailed();
-        } else {
-            IERC20(order.makerAsset).safeTransferFrom(
-                maker,
+        bool isUnwrap = order.makerAsset == address(_WETH) &&
+            flagsAndAmount & _UNWRAP_WETH_FLAG != 0;
+        if (flagsAndAmount & _SETTLE_FLAG != 0) {
+            uint256 beforeBalance;
+            if (isUnwrap) {
+                beforeBalance = target.balance;
+            } else {
+                beforeBalance = IERC20(order.makerAsset).balanceOf(target);
+            }
+            IPMMSettler(order.settler).settleToTaker(
                 target,
-                makingAmount
+                order.makerAsset,
+                makingAmount,
+                isUnwrap
             );
+
+            uint256 afterBalance;
+            if (isUnwrap) {
+                afterBalance = target.balance;
+            } else {
+                afterBalance = IERC20(order.makerAsset).balanceOf(target);
+            }
+            if (afterBalance - beforeBalance < makingAmount) {
+                revert SettleFaild();
+            }
+        } else {
+            if (isUnwrap) {
+                _WETH.transferFrom(maker, address(this), makingAmount);
+                _WETH.withdraw(makingAmount);
+                // solhint-disable-next-line avoid-low-level-calls
+                (bool success, ) = target.call{
+                    value: makingAmount,
+                    gas: _RAW_CALL_GAS_LIMIT
+                }("");
+                if (!success) revert Errors.ETHTransferFailed();
+            } else {
+                IERC20(order.makerAsset).safeTransferFrom(
+                    maker,
+                    target,
+                    makingAmount
+                );
+            }
         }
 
         // Taker => Maker

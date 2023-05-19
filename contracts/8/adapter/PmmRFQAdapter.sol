@@ -13,6 +13,7 @@ contract PmmRFQAdapter is IAdapter {
     uint256 private constant _SIGNER_SMART_CONTRACT_HINT = 1 << 254;
     uint256 private constant _IS_VALID_SIGNATURE_65_BYTES = 1 << 253;
     uint256 private constant _UNWRAP_WETH_FLAG = 1 << 252;
+    uint256 private constant _SETTLE_FLAG = 1 << 251;
     address public immutable PMMRFQ_ADDRESS;
 
     constructor(address _pmmRFQ) {
@@ -38,6 +39,9 @@ contract PmmRFQAdapter is IAdapter {
         }
         if (flagsAndAmount & _UNWRAP_WETH_FLAG != 0) {
             fromAmount = _UNWRAP_WETH_FLAG | fromAmount;
+        }
+        if (flagsAndAmount & _SETTLE_FLAG != 0) {
+            fromAmount = _SETTLE_FLAG | fromAmount;
         }
         IPmmRFQ(PMMRFQ_ADDRESS).fillOrderRFQTo(
             order,
