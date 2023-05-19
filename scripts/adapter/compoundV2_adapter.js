@@ -12,16 +12,16 @@ async function main() {
     console.log(`ethereum CompoundAdapter deployed: ${CompoundAdapter.address}`);
 }
 
-async function main_polygon() {
-    // ethereum
-    console.log("deploy polygon compoundV2 adapter")
-    const WMATIC = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"
-    CompoundAdapter = await ethers.getContractFactory("CompoundAdapter");
-    CompoundAdapter = await CompoundAdapter.deploy(WETH);
-    await CompoundAdapter.deployed();
+// async function main() {
+//     // ethereum
+//     console.log("deploy polygon compoundV2 adapter")
+//     const WMATIC = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"
+//     CompoundAdapter = await ethers.getContractFactory("CompoundAdapter");
+//     CompoundAdapter = await CompoundAdapter.deploy(WMATIC);
+//     await CompoundAdapter.deployed();
 
-    console.log(`ethereum CompoundAdapter deployed: ${CompoundAdapter.address}`);
-}
+//     console.log(`polygon CompoundAdapter deployed: ${CompoundAdapter.address}`);
+// }
 
 main()
     .then(() => process.exit(0))
