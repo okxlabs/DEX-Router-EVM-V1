@@ -57,7 +57,7 @@ contract UnxswapV3Router is IUniswapV3SwapCallback, CommonUtils {
                 returnAmount = _makeSwap(unwrapWeth ? address(this) : recipient, wrapWeth ? address(this) : payer, pools[0], returnAmount);
             }
 
-            if (returnAmount < minReturn) revert RouterErrors.ReturnAmountIsNotEnough();
+            require(returnAmount >= minReturn, "Min return not reached");
 
             if (unwrapWeth) {
                 // IWETH(_WETH).withdraw(returnAmount);
