@@ -30,8 +30,8 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
 
   bytes32 private constant _PMM_FLAG8_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;
   bytes32 private constant _PMM_FLAG4_MASK = 0x4000000000000000000000000000000000000000000000000000000000000000;
-  bytes32 private constant _PMM_INDEX_I_MASK = 0x00ff000000000000000000000000000000000000000000000000000000000000;
-  bytes32 private constant _PMM_INDEX_J_MASK = 0x0000ff0000000000000000000000000000000000000000000000000000000000;
+  // bytes32 private constant _PMM_INDEX_I_MASK = 0x00ff000000000000000000000000000000000000000000000000000000000000;
+  // bytes32 private constant _PMM_INDEX_J_MASK = 0x0000ff0000000000000000000000000000000000000000000000000000000000;
   uint256 private constant _ORDER_ID_MASK = 0xffffffffffffffffffffffff0000000000000000000000000000000000000000;
   uint256 private constant _WEIGHT_MASK = 0x00000000000000000000ffff0000000000000000000000000000000000000000;
   uint256 private constant _CALL_GAS_LIMIT = 5000;
@@ -124,18 +124,18 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     address payer,
     uint256 batchAmount,
     RouterPath[] calldata hops,
-    PMMLib.PMMSwapRequest[] calldata extraData
+    PMMLib.PMMSwapRequest[] calldata /*extraData*/
   ) private {
-    uint8 pmmIndex;
+    // uint8 pmmIndex;
     address fromToken = bytes32ToAddress(hops[0].fromToken);
 
     // try to replace this batch by pmm
-    if (isReplace(hops[0].fromToken)) {
-      pmmIndex = getPmmIIndex(hops[0].fromToken);
-      if (_tryPmmSwap(payer, fromToken, batchAmount, extraData[pmmIndex]) == 0) {
-        return;
-      }
-    }
+    // if (isReplace(hops[0].fromToken)) {
+    //   pmmIndex = getPmmIIndex(hops[0].fromToken);
+    //   if (_tryPmmSwap(payer, fromToken, batchAmount, extraData[pmmIndex]) == 0) {
+    //     return;
+    //   }
+    // }
 
     // excute hop
     // hop and fork are the same flag bit
@@ -148,12 +148,12 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
       }
 
       // 3.1 try to replace this hop by pmm
-      if (isHopReplace(hops[i].fromToken)) {
-        pmmIndex = getPmmJIndex(hops[i].fromToken);
-        if (_tryPmmSwap(payer, fromToken, batchAmount, extraData[pmmIndex]) == 0) {
-          continue;
-        }
-      }
+      // if (isHopReplace(hops[i].fromToken)) {
+      //   pmmIndex = getPmmJIndex(hops[i].fromToken);
+      //   if (_tryPmmSwap(payer, fromToken, batchAmount, extraData[pmmIndex]) == 0) {
+      //     continue;
+      //   }
+      // }
 
       // 3.2 execute forks
       _exeForks(payer, batchAmount, hops[i]);
@@ -233,29 +233,29 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     }
   }
 
-  function isReplace(uint256 token) private pure returns (bool result) {
-    assembly {
-      result := and(token, _PMM_FLAG8_MASK)
-    }
-  }
+  // function isReplace(uint256 token) private pure returns (bool result) {
+  //   assembly {
+  //     result := and(token, _PMM_FLAG8_MASK)
+  //   }
+  // }
 
-  function isHopReplace(uint256 token) private pure returns (bool result) {
-    assembly {
-      result := and(token, _PMM_FLAG4_MASK)
-    }
-  }
+  // function isHopReplace(uint256 token) private pure returns (bool result) {
+  //   assembly {
+  //     result := and(token, _PMM_FLAG4_MASK)
+  //   }
+  // }
 
-  function getPmmIIndex(uint256 token) private pure returns (uint8 result) {
-    assembly {
-      result := shr(240, and(token, _PMM_INDEX_I_MASK))
-    }
-  }
+  // function getPmmIIndex(uint256 token) private pure returns (uint8 result) {
+  //   assembly {
+  //     result := shr(240, and(token, _PMM_INDEX_I_MASK))
+  //   }
+  // }
 
-  function getPmmJIndex(uint256 token) private pure returns (uint8 result) {
-    assembly {
-      result := shr(232, and(token, _PMM_INDEX_J_MASK))
-    }
-  }
+  // function getPmmJIndex(uint256 token) private pure returns (uint8 result) {
+  //   assembly {
+  //     result := shr(232, and(token, _PMM_INDEX_J_MASK))
+  //   }
+  // }
 
   function _smartSwapInternal(
     BaseRequest memory baseRequest,
@@ -296,22 +296,22 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     }
 
     // 3. try to replace the whole swap by pmm
-    uint256 errorCode;
-    if (isReplace(_baseRequest.fromToken)) {
-      uint8 pmmIndex = getPmmIIndex(_baseRequest.fromToken);
-      errorCode = _tryPmmSwap(payer, fromToken, _baseRequest.fromTokenAmount, extraData[pmmIndex]);
-      if ( errorCode == 0) {
-        _transferTokenToUser(_baseRequest.toToken, receiver);
-        returnAmount = IERC20(_baseRequest.toToken).universalBalanceOf(receiver) - returnAmount;
-        require(returnAmount >= _baseRequest.minReturnAmount, "Route: Return amount is not enough");
-        emit OrderRecord(fromToken, _baseRequest.toToken, tx.origin, _baseRequest.fromTokenAmount, returnAmount);
-        return returnAmount;
-      }
-    }
+    // uint256 errorCode;
+    // if (isReplace(_baseRequest.fromToken)) {
+    //   uint8 pmmIndex = getPmmIIndex(_baseRequest.fromToken);
+    //   errorCode = _tryPmmSwap(payer, fromToken, _baseRequest.fromTokenAmount, extraData[pmmIndex]);
+    //   if ( errorCode == 0) {
+    //     _transferTokenToUser(_baseRequest.toToken, receiver);
+    //     returnAmount = IERC20(_baseRequest.toToken).universalBalanceOf(receiver) - returnAmount;
+    //     require(returnAmount >= _baseRequest.minReturnAmount, "Route: Return amount is not enough");
+    //     emit OrderRecord(fromToken, _baseRequest.toToken, tx.origin, _baseRequest.fromTokenAmount, returnAmount);
+    //     return returnAmount;
+    //   }
+    // }
 
-    if (batches.length == 0 || batches[0].length == 0) {
-      revert PMMLib.PMMErrorCode(errorCode);
-    }
+    // if (batches.length == 0 || batches[0].length == 0) {
+    //   revert PMMLib.PMMErrorCode(errorCode);
+    // }
 
     // 4. execute batch
     // check length, fix DRW-02: LACK OF LENGTH CHECK ON BATATCHES

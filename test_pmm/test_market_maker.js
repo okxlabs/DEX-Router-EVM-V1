@@ -722,7 +722,7 @@ describe("PMM Test", function() {
         
     });
 
-    it("2.1 ERC20 Exchange By FixRate by smart swap", async () => {
+    xit("2.1 ERC20 Exchange By FixRate by smart swap", async () => {
         await initMockTokens();
         await initUniSwap();
         await addLiquidity();
@@ -809,7 +809,7 @@ describe("PMM Test", function() {
     });
 
 
-    it("2.2 ERC20 -> Native Exchange By smart swap", async () => {
+    xit("2.2 ERC20 -> Native Exchange By smart swap", async () => {
         await initMockTokens();
         await initUniSwap();
         await addLiquidity();
@@ -894,7 +894,7 @@ describe("PMM Test", function() {
         
     });
 
-    it("2.3 Native -> ERC20 Exchange By smart swap", async () => {
+    xit("2.3 Native -> ERC20 Exchange By smart swap", async () => {
         await initMockTokens();
         await initUniSwap();
         await addLiquidity();
@@ -1058,7 +1058,7 @@ describe("PMM Test", function() {
         
     });
 
-    it("2.5 Try to replace the whole swap with pmm and success", async () => {
+    xit("2.5 Try to replace the whole swap with pmm and success", async () => {
         await initMockTokens();
         await initUniSwap();
         await addLiquidity();
@@ -1137,7 +1137,7 @@ describe("PMM Test", function() {
         
     });
 
-    it("2.6 Try to replace the first batch with pmm but failed, turned to dex", async () => {
+    xit("2.6 Try to replace the first batch with pmm but failed, turned to dex", async () => {
         await initMockTokens();
         await initUniSwap();
         await addLiquidity();
@@ -1215,7 +1215,7 @@ describe("PMM Test", function() {
         
     });
 
-    it("2.7 Try to replace the first batch with pmm and success", async () => {
+    xit("2.7 Try to replace the first batch with pmm and success", async () => {
         await initMockTokens();
         await initUniSwap();
         await addLiquidity();
@@ -1293,7 +1293,7 @@ describe("PMM Test", function() {
         
     });
 
-    it("2.8 Try to replace the two hops of the first batch separately with pmm and success", async () => {
+    xit("2.8 Try to replace the two hops of the first batch separately with pmm and success", async () => {
         await initMockTokens();
         await initUniSwap();
         await addLiquidity();
@@ -1408,7 +1408,7 @@ describe("PMM Test", function() {
         
     });
 
-    it("2.9 Try to replace the two hops of the first batch separately with pmm and success", async () => {
+    xit("2.9 Try to replace the two hops of the first batch separately with pmm and success", async () => {
         await initMockTokens();
         await initUniSwap();
         await addLiquidity();
@@ -1523,7 +1523,7 @@ describe("PMM Test", function() {
         
     });
 
-    it("2.10 ERC20 Exchange By Invest whole replaced by pmm", async () => {
+    xit("2.10 ERC20 Exchange By Invest whole replaced by pmm", async () => {
         await initMockTokens();
         await initUniSwap();
         await addLiquidity();
@@ -1849,7 +1849,7 @@ describe("PMM Test", function() {
         
     });
 
-    it("2.14 In case of incorrect price source", async () => {
+    xit("2.14 In case of incorrect price source", async () => {
         await initMockTokens();
         await initUniSwap();
         await addLiquidity();
