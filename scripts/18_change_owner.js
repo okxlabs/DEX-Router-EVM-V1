@@ -8,12 +8,13 @@ async function main() {
   const newOwner = "0xE1C7Db7575BABF0d3369835678ec9b7F15c0886B"; //资管账号
   //const oldAdmin = "0xc82Ea2afE1Fd1D61C4A12f5CeB3D7000f564F5C6"; //旧admin
   const newAdmin = "0x06C95a3934d94d5ae5bf54731bD2840ceFee6F87"; //新admin
-  const newLogicContract = "0x1b5d39419C268b76Db06DE49e38B010fbFB5e226";
+  const newLogicContract = "0xb5eA4cD719D4C73e062D6195b17f703792543904"; //flare new logic
 
   // ProxyAdmin
   //ETHW: 0x91597356448f771363Ae3C3d7B87C8D6f2f63B25
   //Fantom: 0x5703B683c7F928b721CA95Da988d73a3299d4757
   //Cronos: 0x5703B683c7F928b721CA95Da988d73a3299d4757
+  //Flare: 0x2c34A2Fb1d0b4f55de51E1d0bDEfaDDce6b7cDD6
 
   const dexRouter = await ethers.getContractAt(
     "DexRouter",

@@ -1,6 +1,6 @@
 const { network } = require('hardhat');
 
-const oec  = require('./okc')
+const oec = require('./okc')
 const bsc = require('./bsc')
 const eth = require('./eth')
 const polygon = require('./polygon')
@@ -12,6 +12,7 @@ const cro = require('./cro')
 const ethw = require('./ethw')
 const cfx = require('./conflux')
 const polyzkevm = require('./polyzkevm')
+const flare = require('./flare')
 
 let config
 
@@ -41,6 +42,8 @@ if (network.name === 'okc') {
     config = cfx
 } else if (network.name == 'polyzkevm') {
     config = polyzkevm
+} else if (network.name == 'flare') {
+    config = flare
 }
 
 module.exports = config

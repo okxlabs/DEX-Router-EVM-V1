@@ -21,15 +21,15 @@ module.exports = {
   solidity: {
     compilers: [
       {
-				version: '0.8.17',
+        version: '0.8.17',
         settings: {
           optimizer: {
             enabled: true,
             runs: 200
           }
         }
-			},
-		]
+      },
+    ]
   },
   networks: {
     hardhat: {
@@ -57,6 +57,16 @@ module.exports = {
     okc_test: {
       url: "https://exchaintestrpc.okex.org",
       chainId: 65,
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      },
+    },
+    flare: {
+      url: "https://flare-api.flare.network/ext/C/rpc",
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
