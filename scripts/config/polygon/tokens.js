@@ -36,10 +36,23 @@ const USDT = {
 }
 
 const amUSDT = {
-    name: "amUSDT",
+    name: "amUSDT",//aave matic USDT （aaveV2 atoken on polygon）
     decimals: 6,
     baseTokenAddress: '0x60D55F02A771d515e077c9C2403a1ef324885CeC',
 }
+
+const aPolUSDC = {
+    name: "aPolUSDC",//aave polygon USDC （aaveV3 atoken on polygon）
+    decimals: 6,
+    baseTokenAddress: '0x625E7708f30cA75bfd92586e17077590C60eb4cD',
+}
+
+const aEthUSDC = {
+    name: "aEthUSDC",//aave Ethereum USDC （aaveV3 atoken on eth）
+    decimals: 6,
+    baseTokenAddress: '0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c',
+}
+
 module.exports = {
     WETH,
     TEL,
@@ -47,5 +60,7 @@ module.exports = {
     WMATIC,
     MATIC,
     USDT,
-    amUSDT
+    amUSDT,
+    aPolUSDC,
+    aEthUSDC
 }
