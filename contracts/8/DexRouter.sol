@@ -193,39 +193,39 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     }
   }
 
-  function _tryPmmSwap(
-    address payer,
-    address fromToken,
-    uint256 actualRequest,
-    PMMLib.PMMSwapRequest calldata pmmRequest
-  ) private returns (uint256 errorCode) {
-    uint256 subIndex;
-    bytes memory extension = pmmRequest.extension;
-    if (UniversalERC20.isETH(IERC20(fromToken))) {
-      // market makers will get WETH
-      fromToken = _WETH;
-    }
-    assembly{
-      subIndex := mload(add(extension, 0x20))
-    }
-    // check from token
-    if (pmmRequest.fromToken != fromToken) {revert PMMLib.PMMErrorCode(uint256(PMMLib.PMM_ERROR.WRONG_FROM_TOKEN));}
+  // function _tryPmmSwap(
+  //   address payer,
+  //   address fromToken,
+  //   uint256 actualRequest,
+  //   PMMLib.PMMSwapRequest calldata pmmRequest
+  // ) private returns (uint256 errorCode) {
+  //   uint256 subIndex;
+  //   bytes memory extension = pmmRequest.extension;
+  //   if (UniversalERC20.isETH(IERC20(fromToken))) {
+  //     // market makers will get WETH
+  //     fromToken = _WETH;
+  //   }
+  //   assembly{
+  //     subIndex := mload(add(extension, 0x20))
+  //   }
+  //   // check from token
+  //   if (pmmRequest.fromToken != fromToken) {revert PMMLib.PMMErrorCode(uint256(PMMLib.PMM_ERROR.WRONG_FROM_TOKEN));}
 
-    // settle funds in MarketMaker, send funds to pmmAdapter
-    uint256 toTokenAmount = IERC20(pmmRequest.toToken).balanceOf(address(this));
-    address tokenApprove = IApproveProxy(approveProxy).tokenApprove();
-    SafeERC20.safeApprove(IERC20(pmmRequest.fromToken), tokenApprove, actualRequest);
-    errorCode = _pmmSwapInternal(actualRequest, payer, address(this), pmmRequest, false, false);
-    SafeERC20.safeApprove(IERC20(pmmRequest.fromToken), tokenApprove, 0);
-    toTokenAmount = IERC20(pmmRequest.toToken).balanceOf(address(this)) - toTokenAmount;
+  //   // settle funds in MarketMaker, send funds to pmmAdapter
+  //   uint256 toTokenAmount = IERC20(pmmRequest.toToken).balanceOf(address(this));
+  //   address tokenApprove = IApproveProxy(approveProxy).tokenApprove();
+  //   SafeERC20.safeApprove(IERC20(pmmRequest.fromToken), tokenApprove, actualRequest);
+  //   errorCode = _pmmSwapInternal(actualRequest, payer, address(this), pmmRequest, false, false);
+  //   SafeERC20.safeApprove(IERC20(pmmRequest.fromToken), tokenApprove, 0);
+  //   toTokenAmount = IERC20(pmmRequest.toToken).balanceOf(address(this)) - toTokenAmount;
 
-    emit PMMLib.PMMSwap (
-      pmmRequest.pathIndex,
-      subIndex,
-      errorCode
-    );
-    return errorCode;
-  }
+  //   emit PMMLib.PMMSwap (
+  //     pmmRequest.pathIndex,
+  //     subIndex,
+  //     errorCode
+  //   );
+  //   return errorCode;
+  // }
 
   function bytes32ToAddress(uint256 param) private pure returns (address result) {
     assembly {
@@ -295,6 +295,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
       );
     }
 
+    require(extraData.length == 0, "the parameter is deprecated");
     // 3. try to replace the whole swap by pmm
     // uint256 errorCode;
     // if (isReplace(_baseRequest.fromToken)) {

@@ -979,7 +979,7 @@ describe("PMM Test", function() {
         
     });
 
-    it("2.4 Try to replace the whole swap with pmm but failed, turned to dex", async () => {
+    xit("2.4 Try to replace the whole swap with pmm but failed, turned to dex", async () => {
         await initMockTokens();
         await initUniSwap();
         await addLiquidity();
@@ -1611,7 +1611,7 @@ describe("PMM Test", function() {
         
     });
 
-    it("2.11 In case of quote expired", async () => {
+    xit("2.11 In case of quote expired", async () => {
         await initMockTokens();
         await initUniSwap();
         await addLiquidity();
@@ -1689,7 +1689,7 @@ describe("PMM Test", function() {
         
     });
 
-    it("2.12 In case of order cancelled", async () => {
+    xit("2.12 In case of order cancelled", async () => {
         await initMockTokens();
         await initUniSwap();
         await addLiquidity();
@@ -1771,7 +1771,7 @@ describe("PMM Test", function() {
         
     });
 
-    it("2.13 In case of order remaining is not enough", async () => {
+    xit("2.13 In case of order remaining is not enough", async () => {
         await initMockTokens();
         await initUniSwap();
         await addLiquidity();
