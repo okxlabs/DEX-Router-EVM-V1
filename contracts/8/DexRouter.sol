@@ -123,8 +123,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
   function _exeHop(
     address payer,
     uint256 batchAmount,
-    RouterPath[] calldata hops,
-    PMMLib.PMMSwapRequest[] calldata /*extraData*/
+    RouterPath[] calldata hops
   ) private {
     // uint8 pmmIndex;
     address fromToken = bytes32ToAddress(hops[0].fromToken);
@@ -319,7 +318,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     require(batchesAmount.length == batches.length, "length mismatch");
     for (uint256 i = 0; i < batches.length; ) {
       // execute hop, if the whole swap replacing by pmm fails, the funds will return to dexRouter	
-      _exeHop(payer, batchesAmount[i], batches[i], extraData);
+      _exeHop(payer, batchesAmount[i], batches[i]);
       unchecked {
         ++i;
       }
