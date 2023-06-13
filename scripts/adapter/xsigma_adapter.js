@@ -8,7 +8,7 @@ async function main() {
   let XSigmaAdapter = await xSigmaAdapter.deploy();
   await XSigmaAdapter.deployed();
 
-  console.log(`CurveAdapter deployed: ${XSigmaAdapter.address}`);
+  console.log(`XSigmaAdapter deployed: ${XSigmaAdapter.address}`);
 }
 
 main()
