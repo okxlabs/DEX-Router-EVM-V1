@@ -61,8 +61,8 @@ async function executeBase2Quote() {
     //moreInfo
     //const gasLimit = 500000;
     const moreInfo1 = ethers.utils.defaultAbiCoder.encode(
-        ["address", "address", "uint256", "uint256", "uint32"],
-        [Base.address, Quote.address, fromTokenAmount, minReturnAmount, deadLine]
+        ["address", "address", "uint256", "uint32"],
+        [Base.address, Quote.address, minReturnAmount, deadLine]
     )
     const extraData1 = [moreInfo1];
     const router1 = [mixAdapter1, assetTo1, rawData1, extraData1, Base.address];

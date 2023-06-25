@@ -65,8 +65,8 @@ async function execute() {
         account.address,                                // receive token address
         poolAddr,                                       // Pool
         ethers.utils.defaultAbiCoder.encode(
-          ["address", "address", "uint256", "uint256", "uint32"],
-          [Base.address, Quote.address, amountIn, amountOutMin, submitDeadline]
+          ["address", "address", "uint256", "uint32"],
+          [Base.address, Quote.address, amountOutMin, submitDeadline]
         )
     );
   
@@ -87,8 +87,8 @@ async function execute() {
       account.address,                                // receive token address
       poolAddr,                                       // Pool
       ethers.utils.defaultAbiCoder.encode(
-        ["address", "address", "uint256", "uint256", "uint32"],
-        [Quote.address, Base.address, amountIn2, amountOutMin, submitDeadline]
+        ["address", "address", "uint256", "uint32"],
+        [Quote.address, Base.address, amountOutMin, submitDeadline]
       )
   );
     

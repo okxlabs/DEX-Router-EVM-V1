@@ -17,8 +17,9 @@ contract IntegralAdapter is IAdapter {
         address ,
         bytes memory moreInfo
     ) internal{
-        (address _tokenIn, address _tokenOut, uint256 _amountIn, uint256 _amountOutMin, uint32 _submitDeadline) = abi.decode(
-            moreInfo, (address, address, uint256, uint256, uint32));
+        (address _tokenIn, address _tokenOut, uint256 _amountOutMin, uint32 _submitDeadline) = abi.decode(
+            moreInfo, (address, address, uint256, uint32));
+        uint256 _amountIn = IERC20(_tokenIn).balanceOf(address(this));
         SafeERC20.safeApprove(
             IERC20(_tokenIn),
             TWAPRELAY_ADDRESS,
