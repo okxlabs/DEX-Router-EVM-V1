@@ -8,6 +8,8 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '16'
+      - run: npm config set registry https://registry.npmjs.org/
+      - run: npm cache clean --force
       - run: npm install
       - run: npx hardhat --config hardhat.config.js compile
       - run: npx hardhat --config hardhat.config.5.js compile

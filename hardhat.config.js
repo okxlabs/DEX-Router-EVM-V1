@@ -7,7 +7,6 @@ require('hardhat-contract-sizer');
 require('hardhat-log-remover');
 require("@openzeppelin/hardhat-upgrades");
 require('dotenv').config();
-require("solidity-coverage");
 
 // Note: If no private key is configured in the project, the first test account of Hardhat is used by default
 const PRIVATE_KEY = process.env.PRIVATE_KEY || 'ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
