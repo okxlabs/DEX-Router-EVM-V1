@@ -15,7 +15,6 @@ import "../interfaces/IWETH.sol";
 /// @notice Explain to an end user what this does
 /// @dev Explain to a developer any extra details
 contract MaverickAdapter is IAdapter {
-    address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     uint256 private constant ADDR_SIZE = 20;
     IWETH public immutable WETH;
     IFactory public immutable factory;
@@ -31,15 +30,15 @@ contract MaverickAdapter is IAdapter {
         WETH = IWETH(_WETH);
     }
 
-    function _maverickSwap(address to, address, bytes memory _data) internal {
-        SwapCallbackData memory data = abi.decode(_data, (SwapCallbackData));
-        (IERC20 fromToken, IERC20 toToken, IPool pool) = decodeFirstPool(data.path);
+    function _maverickSwap(address to, address pool, bytes memory data) internal {
+        (address fromToken, address toToken) = abi.decode(data, (address, address));
 
-        if (address(fromToken) == ETH_ADDRESS) {
-            fromToken = IERC20(address(WETH));
-        }
-
-        uint256 sellAmount = fromToken.balanceOf(address(this));
+        SwapCallbackData memory callbackData = SwapCallbackData({
+            path: abi.encodePacked(fromToken, pool, toToken),
+            payer: address(this),
+            exactOutput: false
+        });
+        uint256 sellAmount = IERC20(fromToken).balanceOf(address(this));
         bool zeroForOne = fromToken < toToken;
         // @param sqrtPriceLimit limiting sqrt price of the swap.  A value of 0
         //indicates no limit.  Limit is only engaged for exactOutput=false.  If the
@@ -49,7 +48,7 @@ contract MaverickAdapter is IAdapter {
         //tokenAIn bool indicating whether tokenA is the input => equals zeroForOne
         // zeroForOne is true, then fromToken < toToken, fromToken is TokenA, tokenAIn is true
         // zeroForOne is fale, then fromToken > toToken, fromToken is not TokenA, tokenAIn is false
-        pool.swap(to, sellAmount, zeroForOne, false, 0, _data);
+        IPool(pool).swap(to, sellAmount, zeroForOne, false, 0, abi.encode(callbackData));
     }
 
     function sellBase(address to, address pool, bytes memory moreInfo) external override {
@@ -70,11 +69,7 @@ contract MaverickAdapter is IAdapter {
 
         require(msg.sender == address(pool), "msgSender doesnt match address pool");
 
-        if (address(fromToken) == ETH_ADDRESS) {
-            fromToken = IERC20(address(WETH));
-        }
-
-        pay(fromToken, data.payer, msg.sender, amountToPay);
+        pay(fromToken, address(this), msg.sender, amountToPay);
     }
 
     function decodeFirstPool(bytes memory path) internal pure returns (IERC20 fromToken, IERC20 toToken, IPool pool) {
@@ -87,14 +82,12 @@ contract MaverickAdapter is IAdapter {
         }
     }
 
-    function pay(IERC20 token, address payer, address recipient, uint256 value) internal {
+    function pay(IERC20 token, address, address recipient, uint256 value) internal {
         if (IWETH(address(token)) == WETH && address(this).balance >= value) {
             WETH.deposit{value: value}();
             WETH.transfer(recipient, value);
-        } else if (payer == address(this)) {
-            SafeERC20.safeTransfer(token, recipient, value);
         } else {
-            SafeERC20.safeTransferFrom(token, payer, recipient, value);
+            SafeERC20.safeTransfer(token, recipient, value);
         }
     }
 }
