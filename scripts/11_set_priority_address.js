@@ -16,6 +16,10 @@ async function main() {
     deployed.base.limitOrder,
     true
   );
+  await dexRouter.setPriorityAddress(
+    deployed.base.commisson,
+    true
+  );
   console.log("set priority address finish");
 
   await dexRouter.setProtocolAdmin(deployed.base.protocolAdmin);
