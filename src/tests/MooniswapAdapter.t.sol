@@ -1,4 +1,4 @@
-pragma solidity 0.8.12;
+pragma solidity 0.8.17;
 
 import "forge-std/test.sol";
 import "forge-std/console2.sol";
