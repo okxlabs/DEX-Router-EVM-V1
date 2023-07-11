@@ -4,10 +4,13 @@ pragma solidity ^0.8.0;
 /// @title Base contract with common permit handling logics
 abstract contract CommonUtils {
 
-  address constant _ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+  address internal constant _ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-  uint256 public constant _ADDRESS_MASK = 0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff;
-  uint256 public constant _REVERSE_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;
+  uint256 internal constant _ADDRESS_MASK = 0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff;
+  uint256 internal constant _REVERSE_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;
+  uint256 internal constant _ORDER_ID_MASK = 0xffffffffffffffffffffffff0000000000000000000000000000000000000000;
+  uint256 internal constant _WEIGHT_MASK = 0x00000000000000000000ffff0000000000000000000000000000000000000000;
+  uint256 internal constant _CALL_GAS_LIMIT = 5000;
 
   /// @dev WETH address is network-specific and needs to be changed before deployment.
   /// It can not be moved to immutable as immutables are not supported in assembly

@@ -188,7 +188,6 @@ describe("Smart route path test", function() {
         []
     );
     let receipt = await tx.wait();
-    console.log("gasUsed", receipt.gasUsed);
 
     expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
@@ -1054,7 +1053,6 @@ describe("Smart route path test", function() {
         alice.address
     );
     let receipt = await tx.wait();
-    console.log("gasUsed", receipt.gasUsed);
     
     let balAfter = await toToken.balanceOf(alice.address);
     // console.log("balAfter - balBefore", balAfter - balBefore);

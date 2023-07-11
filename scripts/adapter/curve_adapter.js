@@ -1,11 +1,9 @@
 const { ethers } = require("hardhat");
-const { getConfig } = require("../config");
-tokenConfig = getConfig("eth");
+const deployed = require("../deployed");
 
 async function main() {
-
     CurveAdapter = await ethers.getContractFactory("CurveAdapter");
-    CurveAdapter = await CurveAdapter.deploy(tokenConfig.tokens.WETH.baseTokenAddress);
+    CurveAdapter = await CurveAdapter.deploy(deployed.base.wNativeToken);
     await CurveAdapter.deployed();
 
     console.log(`CurveAdapter deployed: ${CurveAdapter.address}`);
