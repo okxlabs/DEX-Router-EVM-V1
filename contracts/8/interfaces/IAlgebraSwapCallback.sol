@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-/// @title Callback for IAlgebraPoolActions (quickswap v3)#swap 
+/// @title Callback for IAlgebraPoolActions (IAlgebraPoolActions & quickswap v3)#swap
 /// @notice Any contract that calls IAlgebraPoolActions#swap must implement this interface
 interface IAlgebraSwapCallback {
     /// @notice Called to `msg.sender` after executing a swap via IAlgebraPool#swap.
