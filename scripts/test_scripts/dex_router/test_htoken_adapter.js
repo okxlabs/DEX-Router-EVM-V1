@@ -32,6 +32,7 @@ async function executehUSDT2USDT() {
 
     const fromTokenAmount = ethers.utils.parseUnits("1", tokenConfig.tokens.USDT.decimals);
     const minReturnAmount = 0;
+
     const poolAddr = "0x18f7402B673Ba6Fb5EA4B95768aABb8aaD7ef18a";
     console.log("before hUSDT Balance: " + await hUSDT.balanceOf(account.address));
     console.log("before USDT Balance: " + await USDT.balanceOf(account.address));
@@ -55,6 +56,7 @@ async function executehUSDT2USDT() {
         weight1 +
         poolAddr.replace("0x", "")
     ];
+
     const moreInfo = ethers.utils.defaultAbiCoder.encode(["address", "address"],["0x12e59C59D282D2C00f3166915BED6DC2F5e2B5C7", tokenConfig.tokens.USDT.baseTokenAddress]);
     const extraData1 = [moreInfo];
     const router1 = [mixAdapter1, assertTo1, rawData1, extraData1, hUSDT.address];
@@ -71,7 +73,8 @@ async function executehUSDT2USDT() {
         deadLine,
     ]
     await hUSDT.connect(account).approve(tokenApprove.address, fromTokenAmount);
-    await dexRouter.connect(account).smartSwap(
+    await dexRouter.connect(account).smartSwapByOrderId(
+        0,
         baseRequest,
         [fromTokenAmount],
         [layer1],
