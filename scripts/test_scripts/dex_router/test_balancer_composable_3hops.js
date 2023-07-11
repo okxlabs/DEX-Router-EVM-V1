@@ -9,30 +9,37 @@ const balancerVault = "0xBA12222222228d8Ba445958a75a0704d566BF2C8";
 
 async function deployContract() {
     BalancerV2ComposableAdapter = await ethers.getContractFactory("BalancerV2ComposableAdapter");
-    BalancerV2ComposableAdapter = await BalancerV2ComposableAdapter.deploy(balancerVault ,tokenConfig.tokens.WETH.baseTokenAddress);
+    BalancerV2ComposableAdapter = await BalancerV2ComposableAdapter.deploy(balancerVault);
     await BalancerV2ComposableAdapter.deployed();
     return BalancerV2ComposableAdapter
 }
 
 // 这里每次修改路径，都要修改moreInfo
 async function getMoreInfo() {
-    const hipNumber = 2
+    const hipNumber = 3
 
     hipDetails =  ethers.utils.defaultAbiCoder.encode(
-        [ "tuple(bytes32, address, address)", "tuple(bytes32, address, address)"]  ,
+        [ "tuple(bytes32, address, address)", "tuple(bytes32, address, address)", "tuple(bytes32, address, address)" ]  ,
         [
             [
                 "0x2f4eb100552ef93840d5adc30560e5513dfffacb000000000000000000000334", // Balancer Aave Boosted Pool (USDT) (bb-a-USDT)
                 "0xdAC17F958D2ee523a2206206994597C13D831ec7", // USDT
-                "0x2F4eb100552ef93840d5aDC30560E5513DFfFACb"  // bb-a-usdt
+                "0x2F4eb100552ef93840d5aDC30560E5513DFfFACb"
             ],
             [
                 "0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d", // Balancer Aave Boosted StablePool (bb-a-USD)
                 "0x2F4eb100552ef93840d5aDC30560E5513DFfFACb", // bb-a-usdt
-                "0x82698aeCc9E28e9Bb27608Bd52cF57f704BD1B83"  // bb-a-usdc
-            ]
+                "0x82698aeCc9E28e9Bb27608Bd52cF57f704BD1B83"
+            ],
+            [
+                "0x82698aecc9e28e9bb27608bd52cf57f704bd1b83000000000000000000000336", // Balancer Aave Boosted Pool (USDC) (bb-a-USDC)
+                "0x82698aeCc9E28e9Bb27608Bd52cF57f704BD1B83", // bb-a-usdc
+                "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"  // usdc
+            ],
+            
         ]
       )
+
 
     moreInfo =  ethers.utils.defaultAbiCoder.encode(
         ["uint8",  "bytes" ], 
@@ -61,7 +68,7 @@ async function aaveLinearPool(BalancerV2ComposableAdapter) {
     )
     toToken = await ethers.getContractAt(
         "MockERC20",
-        "0x82698aeCc9E28e9Bb27608Bd52cF57f704BD1B83"
+        tokenConfig.tokens.USDC.baseTokenAddress
     )
 
     const fromTokenAmount = ethers.utils.parseUnits("10000", 6);
@@ -93,7 +100,6 @@ async function aaveLinearPool(BalancerV2ComposableAdapter) {
         balancerV2PoolAddr.replace("0x", "") 
     ];
     const moreInfo = await getMoreInfo()
-
     const extraData1 = [moreInfo];
     const router1 = [mixAdapter1, assertTo1, rawData1, extraData1, fromToken.address];
 
@@ -109,7 +115,8 @@ async function aaveLinearPool(BalancerV2ComposableAdapter) {
         deadLine,
     ]
     await fromToken.connect(account).approve(tokenApprove.address, fromTokenAmount);
-    await dexRouter.connect(account).smartSwap(
+    await dexRouter.connect(account).smartSwapByOrderId(
+        0,
         baseRequest,
         [fromTokenAmount],
         [layer1],
