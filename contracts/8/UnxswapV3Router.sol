@@ -22,10 +22,15 @@ contract UnxswapV3Router is IUniswapV3SwapCallback, CommonUtils {
     bytes32 private constant _FF_FACTORY = 0xff1F98431c8aD98523631AE4a59f267346ea31F9840000000000000000000000;
     // concatenation of token0(), token1() fee(), transfer() and claimTokens() selectors
     bytes32 private constant _SELECTORS = 0x0dfe1681d21220a7ddca3f43a9059cbb0a5ea466000000000000000000000000;
+    // concatenation of withdraw(uint),transfer()
+    bytes32 private constant _SELECTORS2 = 0x2e1a7d4da9059cbb000000000000000000000000000000000000000000000000;
     /// @dev The minimum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MIN_TICK)
     uint160 private constant _MIN_SQRT_RATIO = 4295128739 + 1;
     /// @dev The maximum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MAX_TICK)
     uint160 private constant _MAX_SQRT_RATIO = 1461446703485210103287273052203988822378723970342 - 1;
+    bytes32 private constant _SWAP_SELECTOR = 0x128acb0800000000000000000000000000000000000000000000000000000000;
+    uint256 private constant _INT256_MAX = 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+    uint256 private constant _INT256_MIN = 0x8000000000000000000000000000000000000000000000000000000000000000;
 
     function _uniswapV3Swap(
         address payer,
@@ -33,120 +38,236 @@ contract UnxswapV3Router is IUniswapV3SwapCallback, CommonUtils {
         uint256 amount,
         uint256 minReturn,
         uint256[] calldata pools
-    ) internal returns(uint256 returnAmount) {
-        unchecked {
-            uint256 len = pools.length;
-            if (len == 0) revert RouterErrors.EmptyPools();
-            uint256 lastIndex = len - 1;
-            returnAmount = amount;
-            bool wrapWeth = msg.value > 0;
-            bool unwrapWeth = pools[lastIndex] & _WETH_UNWRAP_MASK > 0;
-            if (wrapWeth) {
-                if (msg.value != amount) revert RouterErrors.InvalidMsgValue();
-                IWETH(_WETH).deposit{value: amount}();
+    ) internal returns (uint256 returnAmount) {
+        assembly {
+            function _revertWithReason(m, len) {
+                mstore(0, 0x08c379a000000000000000000000000000000000000000000000000000000000)
+                mstore(0x20, 0x0000002000000000000000000000000000000000000000000000000000000000)
+                mstore(0x40, m)
+                revert(0, len)
             }
-
-            if (len > 1) {
-                returnAmount = _makeSwap(address(this), wrapWeth ? address(this) : payer, pools[0], returnAmount);
-
-                for (uint256 i = 1; i < lastIndex; i++) {
-                    returnAmount = _makeSwap(address(this), address(this), pools[i], returnAmount);
+            function _makeSwap(_recipient, _payer, _pool, _amount) -> _returnAmount {
+                if lt(_INT256_MAX, _amount) {
+                    mstore(0, 0xb3f79fd000000000000000000000000000000000000000000000000000000000) //SafeCastToInt256Failed()
+                    revert(0, 4)
                 }
-                returnAmount = _makeSwap(unwrapWeth ? address(this) : recipient, address(this), pools[lastIndex], returnAmount);
-            } else {
-                returnAmount = _makeSwap(unwrapWeth ? address(this) : recipient, wrapWeth ? address(this) : payer, pools[0], returnAmount);
+                let freePtr := mload(0x40)
+                let zeroForOne := eq(and(_pool, _ONE_FOR_ZERO_MASK), 0)
+
+                let poolAddr := and(_pool, _ADDRESS_MASK)
+                switch zeroForOne
+                case 1 {
+                    mstore(freePtr, _SWAP_SELECTOR)
+                    let paramPtr := add(freePtr, 4)
+                    mstore(paramPtr, _recipient)
+                    mstore(add(paramPtr, 0x20), true)
+                    mstore(add(paramPtr, 0x40), _amount)
+                    mstore(add(paramPtr, 0x60), _MIN_SQRT_RATIO)
+                    mstore(add(paramPtr, 0x80), 0xa0)
+                    mstore(add(paramPtr, 0xa0), 32)
+                    mstore(add(paramPtr, 0xc0), _payer)
+                    let success := call(gas(), poolAddr, 0, freePtr, 0xe4, 0, 0)
+                    if iszero(success) { revert(0, 32) }
+                    returndatacopy(0, 32, 32) // only copy _amount1   MEM[0:] <= RETURNDATA[32:32+32]
+                }
+                default {
+                    mstore(freePtr, _SWAP_SELECTOR)
+                    let paramPtr := add(freePtr, 4)
+                    mstore(paramPtr, _recipient)
+                    mstore(add(paramPtr, 0x20), false)
+                    mstore(add(paramPtr, 0x40), _amount)
+                    mstore(add(paramPtr, 0x60), _MAX_SQRT_RATIO)
+                    mstore(add(paramPtr, 0x80), 0xa0)
+                    mstore(add(paramPtr, 0xa0), 32)
+                    mstore(add(paramPtr, 0xc0), _payer)
+                    let success := call(gas(), poolAddr, 0, freePtr, 0xe4, 0, 0)
+                    if iszero(success) { revert(0, 32) }
+                    returndatacopy(0, 0, 32) // only copy _amount0   MEM[0:] <= RETURNDATA[0:0+32]
+                }
+                _returnAmount := mload(0)
+                if lt(_returnAmount, _INT256_MIN) {
+                    mstore(0, 0x88c8ee9c00000000000000000000000000000000000000000000000000000000) //SafeCastToUint256Failed()
+                    revert(0, 4)
+                }
+                _returnAmount := add(1, not(_returnAmount)) // -a = ~a + 1
+            }
+            function _wrapWeth(_amount) {
+                if eq(eq(callvalue(), _amount), 0) {
+                    mstore(0, 0x1841b4e100000000000000000000000000000000000000000000000000000000) // InvalidMsgValue()
+                    revert(0, 4)
+                }
+                let success := call(gas(), _WETH, callvalue(), 0, 0, 0, 0) //进入fallback逻辑
+                if iszero(success) {
+                    _revertWithReason(0x0000001357455448206465706f736974206661696c6564000000000000000000, 87) //WETH deposit failed
+                }
+            }
+            function _unWrapWeth(_recipient, _amount) {
+                let freePtr := mload(0x40)
+                let transferPtr := add(freePtr, 4)
+
+                mstore(freePtr, _SELECTORS2) // withdraw amountWith to amount
+                // transfer
+                mstore(add(transferPtr, 4), _WNATIVE_RELAY)
+                mstore(add(transferPtr, 36), _amount)
+                let success := call(gas(), _WETH, 0, transferPtr, 68, 0, 0)
+                if iszero(success) {
+                    _revertWithReason(0x000000147472616e736665722077657468206661696c65640000000000000000, 88) // transfer weth failed
+                }
+                // withdraw
+                mstore(add(freePtr, 4), _amount)
+                success := call(gas(), _WNATIVE_RELAY, 0, freePtr, 36, 0, 0)
+                if iszero(success) {
+                    _revertWithReason(0x0000001477697468647261772077657468206661696c65640000000000000000, 88) // withdraw weth failed
+                }
+                // msg.value transfer
+                success := call(gas(), _recipient, _amount, 0, 0, 0, 0)
+                if iszero(success) {
+                    _revertWithReason(0x0000001173656e64206574686572206661696c65640000000000000000000000, 85) // send ether failed
+                }
+            }
+            function _token0(_pool) -> token0 {
+                let freePtr := mload(0x40)
+                mstore(freePtr, _SELECTORS)
+                let success := staticcall(gas(), _pool, freePtr, 0x4, 0, 0)
+                if iszero(success) {
+                    _revertWithReason(0x0000001167657420746f6b656e30206661696c65640000000000000000000000, 85) // get token0 failed
+                }
+                returndatacopy(0, 0, 32)
+                token0 := mload(0)
+            }
+            function _token1(_pool) -> token1 {
+                let freePtr := mload(0x40)
+                mstore(freePtr, _SELECTORS)
+                let success := staticcall(gas(), _pool, add(freePtr, 4), 0x4, 0, 0)
+                if iszero(success) {
+                    _revertWithReason(0x0000001167657420746f6b656e31206661696c65640000000000000000000000, 84) // get token1 failed
+                }
+                returndatacopy(0, 0, 32)
+                token1 := mload(0)
+            }
+            function _emitEventAndReturn(_firstPoolStart, _lastPoolStart, _returnAmount, wrapWeth, unwrapWeth) {
+                let srcToken := _ETH
+                let toToken := _ETH
+                if eq(wrapWeth, false) {
+                    let firstPool := calldataload(_firstPoolStart)
+                    switch eq(0, and(firstPool, _ONE_FOR_ZERO_MASK))
+                    case true { srcToken := _token0(firstPool) }
+                    default { srcToken := _token1(firstPool) }
+                }
+                if eq(unwrapWeth, false) {
+                    let lastPool := calldataload(_lastPoolStart)
+                    switch eq(0, and(lastPool, _ONE_FOR_ZERO_MASK))
+                    case true { toToken := _token1(lastPool) }
+                    default { toToken := _token0(lastPool) }
+                }
+                mstore(0, srcToken)
+                mstore(32, toToken)
+                mstore(64, origin())
+                // mstore(96, _initAmount) //avoid stack too deep, since i mstore the initAmount to 96, so no need to re-mstore it
+                mstore(128, _returnAmount)
+                log1(0, 160, 0x1bb43f2da90e35f7b0cf38521ca95a49e68eb42fac49924930a5bd73cdf7576c)
+                return(128, 32)
             }
 
-            require(returnAmount >= minReturn, "Min return not reached");
+            let len := pools.length
+            let firstPoolStart := pools.offset //
+            let lastPoolStart := sub(add(firstPoolStart, mul(len, 32)), 32)
 
-            if (unwrapWeth) {
-                // IWETH(_WETH).withdraw(returnAmount);
-                IWETH(_WETH).transfer(_WNATIVE_RELAY, returnAmount);
-                IWNativeRelayer(_WNATIVE_RELAY).withdraw(returnAmount);
-                recipient.sendValue(returnAmount);
+            if eq(len, 0) {
+                mstore(0, 0x67e7c0f600000000000000000000000000000000000000000000000000000000) // EmptyPools()
+                revert(0, 4)
             }
+            let wrapWeth := gt(callvalue(), 0)
+            let unwrapWeth := gt(and(calldataload(lastPoolStart), _WETH_UNWRAP_MASK), 0) // pools[lastIndex] & _WETH_UNWRAP_MASK > 0
+            if wrapWeth { _wrapWeth(amount) }
 
-            address srcToken = wrapWeth ? _ETH : 
-                pools[0] & _ONE_FOR_ZERO_MASK == 0 ? IUniV3(address(uint160(pools[0]))).token0() : IUniV3(address(uint160(pools[0]))).token1();
-            address toToken = unwrapWeth ? _ETH : 
-                pools[lastIndex] & _ONE_FOR_ZERO_MASK == 0 ? IUniV3(address(uint160(pools[lastIndex]))).token1() : IUniV3(address(uint160(pools[lastIndex]))).token0();
-         
-            emit OrderRecord(srcToken, toToken, tx.origin, amount, returnAmount);
-            return returnAmount;
+            let _payer := payer
+            if wrapWeth { _payer := address() }
+            mstore(96, amount) // 96 is not override by _makeSwap, since it only use freePtr memory, and it is not override by unWrapWeth ethier
+            for { let i := firstPoolStart } lt(i, lastPoolStart) { i := add(i, 32) } {
+                amount := _makeSwap(address(), _payer, calldataload(i), amount)
+                _payer := address()
+            }
+            // last one or only one
+            switch unwrapWeth
+            case 1 {
+                returnAmount := _makeSwap(address(), _payer, calldataload(lastPoolStart), amount)
+                _unWrapWeth(recipient, returnAmount)
+            }
+            case 0 { returnAmount := _makeSwap(recipient, _payer, calldataload(lastPoolStart), amount) }
+            if lt(returnAmount, minReturn) {
+                _revertWithReason(0x000000164d696e2072657475726e206e6f742072656163686564000000000000, 90) // Min return not reached
+            }
+            _emitEventAndReturn(firstPoolStart, lastPoolStart, returnAmount, wrapWeth, unwrapWeth)
         }
     }
 
     /// @inheritdoc IUniswapV3SwapCallback
-    function uniswapV3SwapCallback(
-        int256 amount0Delta,
-        int256 amount1Delta,
-        bytes calldata /* data */
-    ) external override {
-        assembly {  // solhint-disable-line no-inline-assembly
+    function uniswapV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata /*data*/ )
+        external
+        override
+    {
+        assembly {
+            // solhint-disable-line no-inline-assembly
             function reRevert() {
                 returndatacopy(0, 0, returndatasize())
                 revert(0, returndatasize())
             }
 
             function validateERC20Transfer(status) {
-                if iszero(status) {
-                    reRevert()
-                }
-                let success := or(
-                    iszero(returndatasize()),                       // empty return data
-                    and(gt(returndatasize(), 31), eq(mload(0), 1))  // true in return data
-                )
+                if iszero(status) { reRevert() }
+                let success :=
+                    or(
+                        iszero(returndatasize()), // empty return data
+                        and(gt(returndatasize(), 31), eq(mload(0), 1)) // true in return data
+                    )
                 if iszero(success) {
-                    mstore(0, 0xf27f64e400000000000000000000000000000000000000000000000000000000)  // ERC20TransferFailed()
+                    mstore(0, 0xf27f64e400000000000000000000000000000000000000000000000000000000) // ERC20TransferFailed()
                     revert(0, 4)
                 }
             }
 
             let emptyPtr := mload(0x40)
-            let resultPtr := add(emptyPtr, 0x15)  // 0x15 = _FF_FACTORY size
+            let resultPtr := add(emptyPtr, 21) // 0x15 = _FF_FACTORY size
 
             mstore(emptyPtr, _SELECTORS)
-            if iszero(staticcall(gas(), caller(), emptyPtr, 0x4, resultPtr, 0x20)) {
-                reRevert()
-            }
-            if iszero(staticcall(gas(), caller(), add(emptyPtr, 0x4), 0x4, add(resultPtr, 0x20), 0x20)) {
-                reRevert()
-            }
-            if iszero(staticcall(gas(), caller(), add(emptyPtr, 0x8), 0x4, add(resultPtr, 0x40), 0x20)) {
-                reRevert()
-            }
+            // token0
+            if iszero(staticcall(gas(), caller(), emptyPtr, 4, 0, 32)) { reRevert() }
+            //token1
+            if iszero(staticcall(gas(), caller(), add(emptyPtr, 4), 4, 32, 32)) { reRevert() }
+            // fee
+            if iszero(staticcall(gas(), caller(), add(emptyPtr, 8), 4, 64, 32)) { reRevert() }
 
             let token
             let amount
             switch sgt(amount0Delta, 0)
             case 1 {
-                token := mload(resultPtr)
+                token := mload(0)
                 amount := amount0Delta
             }
             default {
-                token := mload(add(resultPtr, 0x20))
+                token := mload(32)
                 amount := amount1Delta
             }
-
+            // let salt := keccak256(0, 96)
             mstore(emptyPtr, _FF_FACTORY)
-            mstore(resultPtr, keccak256(resultPtr, 0x60)) // Compute the inner hash in-place
-            mstore(add(resultPtr, 0x20), _POOL_INIT_CODE_HASH)
-            let pool := and(keccak256(emptyPtr, 0x55), _ADDRESS_MASK)
-            if xor(pool, caller()) {
-                mstore(0, 0xb2c0272200000000000000000000000000000000000000000000000000000000)  // BadPool()
+            mstore(resultPtr, keccak256(0, 96)) // Compute the inner hash in-place
+            mstore(add(resultPtr, 32), _POOL_INIT_CODE_HASH)
+            let pool := and(keccak256(emptyPtr, 85), _ADDRESS_MASK)
+            if iszero(eq(pool, caller())) {
+                // if xor(pool, caller()) {
+                mstore(0, 0xb2c0272200000000000000000000000000000000000000000000000000000000) // BadPool()
                 revert(0, 4)
             }
 
-            let payer := calldataload(0x84)
+            let payer := calldataload(132) // 4+32+32+32+32 = 132
             mstore(emptyPtr, _SELECTORS)
             switch eq(payer, address())
             case 1 {
                 // token.safeTransfer(msg.sender,amount)
                 mstore(add(emptyPtr, 0x10), caller())
                 mstore(add(emptyPtr, 0x30), amount)
-                validateERC20Transfer(
-                    call(gas(), token, 0, add(emptyPtr, 0x0c), 0x44, 0, 0x20)
-                )
+                validateERC20Transfer(call(gas(), token, 0, add(emptyPtr, 0x0c), 0x44, 0, 0x20))
             }
             default {
                 // approveProxy.claimTokens(token, payer, msg.sender, amount);
@@ -154,34 +275,8 @@ contract UnxswapV3Router is IUniswapV3SwapCallback, CommonUtils {
                 mstore(add(emptyPtr, 0x34), payer)
                 mstore(add(emptyPtr, 0x54), caller())
                 mstore(add(emptyPtr, 0x74), amount)
-                validateERC20Transfer(
-                    call(gas(), _APPROVE_PROXY, 0, add(emptyPtr, 0x10), 0x84, 0, 0x20)
-                )
+                validateERC20Transfer(call(gas(), _APPROVE_PROXY, 0, add(emptyPtr, 0x10), 0x84, 0, 0x20))
             }
         }
     }
-
-    function _makeSwap(address recipient, address payer, uint256 pool, uint256 amount) private returns (uint256) {
-        bool zeroForOne = pool & _ONE_FOR_ZERO_MASK == 0;
-        if (zeroForOne) {
-            (, int256 amount1) = IUniV3(address(uint160(pool))).swap(
-                recipient,
-                zeroForOne,
-                SafeCast.toInt256(amount),
-                _MIN_SQRT_RATIO,
-                abi.encode(payer)
-            );
-            return SafeCast.toUint256(-amount1);
-        } else {
-            (int256 amount0,) = IUniV3(address(uint160(pool))).swap(
-                recipient,
-                zeroForOne,
-                SafeCast.toInt256(amount),
-                _MAX_SQRT_RATIO,
-                abi.encode(payer)
-            );
-            return SafeCast.toUint256(-amount0);
-        }
-    }
 }
-

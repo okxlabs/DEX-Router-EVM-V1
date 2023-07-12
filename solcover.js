@@ -1,5 +1,6 @@
 module.exports = {
-    skipFiles: ['5/'],
+    skipFiles: ['5/', 'UnxswapV3Router'],
     istanbulFolder: "./coverage",
-    istanbulReporter: ['html']
+    istanbulReporter: ['html'],
+    configureYulOptimizer: true,
 };
