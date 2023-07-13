@@ -76,7 +76,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
   //------- Internal Functions ----
   //-------------------------------
 
-  function _exeForks(address payer, address receiver, uint256 batchAmount, RouterPath calldata path, bool lastHop, bool isToNative) private {
+  function _exeForks(address payer, address to, uint256 batchAmount, RouterPath calldata path, bool noTransfer) private {
     address fromToken = _bytes32ToAddress(path.fromToken);
     // fix post audit DRW-01: lack of check on Weights
     uint totalWeight;
@@ -97,14 +97,16 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
       if (i == pathLength - 1) {
         require(totalWeight <= 10000, "totalWeight can not exceed 10000 limit");
       }
-      uint256 _fromTokenAmount = weight == 10000 ? batchAmount : (batchAmount * weight) / 10000;
-
-      _transferInternal(payer, path.assetTo[i], fromToken, _fromTokenAmount);
+      
+      if (!noTransfer) {
+        uint256 _fromTokenAmount = weight == 10000 ? batchAmount : (batchAmount * weight) / 10000;
+        _transferInternal(payer, path.assetTo[i], fromToken, _fromTokenAmount);
+      }
 
       if (reserves) {
-        IAdapter(path.mixAdapters[i]).sellQuote(lastHop && !isToNative ? receiver : address(this), poolAddress, path.extraData[i]);
+        IAdapter(path.mixAdapters[i]).sellQuote(to, poolAddress, path.extraData[i]);
       } else {
-        IAdapter(path.mixAdapters[i]).sellBase(lastHop && !isToNative ? receiver : address(this), poolAddress, path.extraData[i]);
+        IAdapter(path.mixAdapters[i]).sellBase(to, poolAddress, path.extraData[i]);
       }
       unchecked {
         ++i;
@@ -119,11 +121,11 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     uint256 batchAmount,
     RouterPath[] calldata hops
   ) private {
-    // uint8 pmmIndex;
     address fromToken = _bytes32ToAddress(hops[0].fromToken);
+    bool toNext;
+    bool noTransfer; 
 
     // excute hop
-    // hop and fork are the same flag bit
     uint256 hopLength = hops.length;
     for (uint256 i = 0; i < hopLength; ) {
       if (i > 0) {
@@ -132,8 +134,20 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
         payer = address(this);
       }
 
+      address to = address(this);
+      if (i == hopLength - 1 && !isToNative) {
+        to = receiver;
+      } else if (i < hopLength - 1 && hops[i + 1].assetTo.length == 1) {
+        to = hops[i + 1].assetTo[0];
+        toNext = true;
+      } else {
+        toNext = false;
+      }
+
       // 3.2 execute forks
-      _exeForks(payer, receiver, batchAmount, hops[i], i == hopLength - 1, isToNative);
+      _exeForks(payer, to, batchAmount, hops[i], noTransfer);
+      noTransfer = toNext;
+
       unchecked {
         ++i;
       }
@@ -292,6 +306,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
   ) external payable isExpired(baseRequest.deadLine) nonReentrant onlyPriorityAddress returns (uint256 returnAmount) {
     emit SwapOrderId(orderId);
     (address payer, address receiver) = IXBridge(msg.sender).payerReceiver();
+    require(payer != address(0) && receiver != address(0), "not address(0)");
     returnAmount = _smartSwapInternal(baseRequest, batchesAmount, batches, extraData, payer, receiver);
   }
 
@@ -304,6 +319,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
   ) external payable onlyPriorityAddress returns (uint256 returnAmount) {
     emit SwapOrderId((srcToken & _ORDER_ID_MASK) >> 160);
     (address payer, address receiver) = IXBridge(msg.sender).payerReceiver();
+    require(payer != address(0) && receiver != address(0), "not address(0)");
     returnAmount = _unxswapInternal(IERC20(address(uint160(srcToken& _ADDRESS_MASK))), amount, minReturn, pools, payer, receiver);
   }
 
@@ -315,6 +331,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
   ) external payable onlyPriorityAddress returns(uint256 returnAmount) {
     emit SwapOrderId((recipient & _ORDER_ID_MASK) >> 160);
     (address payer, address receiver) = IXBridge(msg.sender).payerReceiver();
+    require(payer != address(0) && receiver != address(0), "not address(0)");
     return _uniswapV3Swap(payer, payable(receiver), amount, minReturn, pools);
   }
 
