@@ -13,6 +13,7 @@ const ethw = require('./ethw')
 const cfx = require('./conflux')
 const polyzkevm = require('./polyzkevm')
 const flare = require('./flare')
+const linea = require('./linea')
 
 let config
 
@@ -44,6 +45,8 @@ if (network.name === 'okc') {
     config = polyzkevm
 } else if (network.name == 'flare') {
     config = flare
+} else if (network.name = 'linea') {
+    config = linea
 }
 
 module.exports = config

@@ -9,6 +9,7 @@ const op = require('./op')
 const ftm = require('./ftm')
 const polygon = require('./polygon')
 const zksync = require('./zksync')
+const linea = require('./linea')
 
 let config
 
@@ -30,6 +31,8 @@ if (network == "okc") {
   config = polygon
 } else if (network == 'zksync') {
   config = zksync
+} else if (network == 'linea') {
+  config = linea
 } else {
   // throw error("network not config")
 }
@@ -53,6 +56,8 @@ const getConfig = function (network) {
     return polygon
   } else if (network == 'zksync') {
     return zksync
+  } else if (network == 'linea') {
+    config = linea
   } else {
     console.log("network not config!!!")
   }

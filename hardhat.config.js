@@ -12,9 +12,8 @@ require('dotenv').config();
 const PRIVATE_KEY = process.env.PRIVATE_KEY || 'ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
 const ALCHEMY_KEY = process.env.ALCHEMY_KEY || '';
 const INFSTONES_KEY = process.env.INFSTONES_KEY || '';
+const INFURA_KEY = process.env.INFURA_KEY || '';
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || '';
-const BSC_API_KEY = process.env.BSC_API_KEY || '';
-const OKC_API_KEY = process.env.OKC_API_KEY || '';
 
 module.exports = {
   solidity: {
@@ -251,6 +250,16 @@ module.exports = {
           runs: 200
         },
       }
+    },
+    linea: {
+      url: `https://linea-mainnet.infura.io/v3/${INFURA_KEY}`,
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
     }
   },
   paths: {
@@ -276,9 +285,7 @@ module.exports = {
   },
   etherscan: {
     apiKey: {
-      mainnet: ETHERSCAN_API_KEY,
-      bsc: BSC_API_KEY,
-      okc: OKC_API_KEY
+      mainnet: ETHERSCAN_API_KEY
     }
   }
 }

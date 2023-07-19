@@ -1,0 +1,18 @@
+module.exports = {
+    wNativeToken: "0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f",
+    wNativeRelayer: "",
+    tokenApprove: "",
+    tokenApproveProxy: "",
+    dexRouter: "",
+    xbridge: "",
+    nftmarket: "",
+    investEntrance: "",
+    limitOrder: "",
+    protocolAdmin: "0x06C95a3934d94d5ae5bf54731bD2840ceFee6F87",
+    _FF_FACTORY: "",
+    _CACHED_DOMAIN_SEPARATOR: "",
+    _HASHED_NAME: "",
+    _HASHED_VERSION: "",
+    _TYPE_HASH: "",
+    _CACHED_CHAIN_ID: 59144,
+}
