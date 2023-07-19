@@ -9,9 +9,15 @@ async function main() {
     deployed.base.tokenApproveProxy
   )
 
-  const result = await tokenApproveProxy.addProxy(deployed.base.commisson);
-  console.log(`tokenApproveProxy add proxy ${deployed.base.commisson}`);
-  console.log(`txHash:`, result.hash);
+  const commisson = deployed.base.commisson;
+  let isProxy = await tokenApproveProxy.allowedApprove(commisson);
+  if(!isProxy){
+    let result = await tokenApproveProxy.addProxy(commisson);
+    console.log(`## Add proxy:[%s] txHash:[%s]`, commisson, result.hash);
+  }else{
+    console.log(`## Skip add proxy:[%s]`, commisson);
+  }
+
 }
 
 main()
