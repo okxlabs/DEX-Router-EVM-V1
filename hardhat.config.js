@@ -260,6 +260,16 @@ module.exports = {
           runs: 200
         },
       }
+    },
+    mantle: {
+      url: `https://rpc.mantle.xyz`,
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
     }
   },
   paths: {

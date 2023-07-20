@@ -14,6 +14,7 @@ const cfx = require('./conflux')
 const polyzkevm = require('./polyzkevm')
 const flare = require('./flare')
 const linea = require('./linea')
+const mantle = require('./mantle')
 
 let config
 
@@ -47,6 +48,8 @@ if (network.name === 'okc') {
     config = flare
 } else if (network.name = 'linea') {
     config = linea
+} else if (network.name = 'mantle') {
+    config = mantle
 }
 
 module.exports = config

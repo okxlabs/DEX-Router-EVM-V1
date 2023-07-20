@@ -10,6 +10,7 @@ const ftm = require('./ftm')
 const polygon = require('./polygon')
 const zksync = require('./zksync')
 const linea = require('./linea')
+const mantle = require('./mantle')
 
 let config
 
@@ -33,6 +34,8 @@ if (network == "okc") {
   config = zksync
 } else if (network == 'linea') {
   config = linea
+} else if (network == 'mantle') {
+  config = mantle
 } else {
   // throw error("network not config")
 }
