@@ -1,4 +1,3 @@
-const { assert } = require("chai");
 const { ethers } = require("hardhat");
 const deployed = require('./deployed');
 
