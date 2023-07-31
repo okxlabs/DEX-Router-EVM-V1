@@ -270,7 +270,27 @@ module.exports = {
           runs: 200
         },
       }
-    }
+    },
+    base: {
+      url: 'https://mainnet.base.org',
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
+    },
+    basetest: {
+      url: 'https://goerli.base.org',
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
+    },
   },
   paths: {
     sources: './contracts/8'

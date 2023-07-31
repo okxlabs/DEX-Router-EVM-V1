@@ -15,6 +15,7 @@ const polyzkevm = require('./polyzkevm')
 const flare = require('./flare')
 const linea = require('./linea')
 const mantle = require('./mantle')
+const base = require('./base')
 
 let config
 
@@ -50,6 +51,8 @@ if (network.name === 'okc') {
     config = linea
 } else if (network.name == 'mantle') {
     config = mantle
+} else if (network.name == 'base') {
+    config = base
 }
 
 module.exports = config
