@@ -9,12 +9,16 @@ import "../libraries/SafeERC20.sol";
 import "../libraries/TickMath.sol";
 
 contract CamelotV3Adapter is IAdapter, IAlgebraSwapCallback {
+    bytes32 constant POOL_INIT_CODE_HASH = 0xb40252dc985eaa48143d8412032add3ca28d824c4790fb9f09e040fedf50d252;
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address immutable POOL_DEPLOYER;
+
     address public immutable WETH;
 
     // weth in arb: 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1
-    constructor(address payable weth) {
+    constructor(address payable weth, address _poolDeployer) {
         WETH = weth;
+        POOL_DEPLOYER = _poolDeployer;
     }
 
     function _camelotV3Swap(
@@ -52,13 +56,7 @@ contract CamelotV3Adapter is IAdapter, IAlgebraSwapCallback {
         address pool,
         bytes memory moreInfo
     ) external override {
-        (uint128 _reserve0, uint128 _reserve1) = ICamelotV3Pool(pool).getReserves();
-        require(
-            _reserve0 > 0 && _reserve1 > 0,
-            "CamelotV3: INSUFFICIENT_LIQUIDITY"
-        );
-
-        (uint160 limitSqrtPrice, bytes memory data) = abi.decode(
+       (uint160 limitSqrtPrice, bytes memory data) = abi.decode(
             moreInfo,
             (uint160, bytes)
         );
@@ -72,12 +70,6 @@ contract CamelotV3Adapter is IAdapter, IAlgebraSwapCallback {
         address pool,
         bytes memory moreInfo
     ) external override {
-        (uint128 _reserve0, uint128 _reserve1) = ICamelotV3Pool(pool).getReserves();
-        require(
-            _reserve0 > 0 && _reserve1 > 0,
-            "CamelotV3: INSUFFICIENT_LIQUIDITY"
-        );
-
         (uint160 limitSqrtPrice, bytes memory data) = abi.decode(
             moreInfo,
             (uint160, bytes)
@@ -92,12 +84,12 @@ contract CamelotV3Adapter is IAdapter, IAlgebraSwapCallback {
         int256 amount1Delta,
         bytes calldata _data
     ) external override {
-        require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
+        require(amount0Delta > 0 || amount1Delta > 0, "amount error"); // swaps entirely within 0-liquidity regions are not supported
         (address tokenIn, address tokenOut) = abi.decode(
             _data,
             (address, address)
         );
-
+        require(msg.sender == _computeAddress(tokenIn, tokenOut), "wrong msgSender");
         (bool isExactInput, uint256 amountToPay) = amount0Delta > 0
             ? (tokenIn < tokenOut, uint256(amount0Delta))
             : (tokenOut < tokenIn, uint256(amount1Delta));
@@ -127,8 +119,13 @@ contract CamelotV3Adapter is IAdapter, IAlgebraSwapCallback {
             // pay through the ERC20tokens contract (for the exact input multihop case)
             SafeERC20.safeTransfer(IERC20(token), recipient, value);
         } else {
-            // pull payment
-            SafeERC20.safeTransferFrom(IERC20(token), payer, recipient, value);
+            revert("can not reach here");
         }
+    }
+    function _computeAddress(address token0, address token1) private view returns (address pool) {
+        if (token0 > token1) {
+            (token1, token0) = (token0, token1);
+        }
+        pool = address(uint160(uint256(keccak256(abi.encodePacked(hex'ff', POOL_DEPLOYER, keccak256(abi.encode(token0, token1)), POOL_INIT_CODE_HASH)))));
     }
 }
