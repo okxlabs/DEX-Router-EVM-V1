@@ -9,5 +9,5 @@ module.exports = {
     investEntrance: "",
     limitOrder: "",
     protocolAdmin: "0x06C95a3934d94d5ae5bf54731bD2840ceFee6F87",
-    _FF_FACTORY: ""
+    _FF_FACTORY: "0xff33128a8fC17869897dcE68Ed026d694621f6FDfD0000000000000000000000",
 }
