@@ -5,5 +5,5 @@ module.exports = {
     tokenApproveProxy: "0x100F3f74125C8c724C7C0eE81E4dd5626830dD9a",
     dexRouter: "0x0112bc6fDB78345e612B862a6B388FfeB00E2320",
     xbridge: "",
-    commisson: "0x12b4a924ff23fd1583edb6dc65f19e16eb468e58"
+    commisson: "0xFF317b4E3041c1838BCfE189F0118aF8A5B5480F"
 }
