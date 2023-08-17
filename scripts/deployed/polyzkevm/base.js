@@ -6,7 +6,7 @@ module.exports = {
     dexRouter: "0x6b2C0c7be2048Daa9b5527982C29f48062B34D58",
     xbridge: "0x5965851f21DAE82eA7C62f87fb7C57172E9F2adD",
     nftmarket: "",
-    investEntrance: "",
+    investEntrance: "0x7251FEbEABB01eC9dE53ECe7a96f1C951F886Dd2",
     limitOrder: "",
     protocolAdmin: "0x06C95a3934d94d5ae5bf54731bD2840ceFee6F87",
     _FF_FACTORY: "0xff1F98431c8aD98523631AE4a59f267346ea31F9840000000000000000000000",
