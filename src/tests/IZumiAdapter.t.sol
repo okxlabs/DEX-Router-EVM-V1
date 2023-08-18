@@ -25,7 +25,7 @@ contract IZumiAdapterTest is Test {
     address WETH_USDT = 0xBE18AAd013699C1CDd903cb3e6d596ef99C37650;
 
     function setUp0() public {
-        vm.createSelectFork("https://rpc.mantle.xyz", 28068);
+        vm.createSelectFork(vm.envString("MANTLE_RPC_URL"), 28068);
 
         address tokenApproveProxyImpl = address(new TokenApproveProxy());
         tokenApproveProxy = TokenApproveProxy(

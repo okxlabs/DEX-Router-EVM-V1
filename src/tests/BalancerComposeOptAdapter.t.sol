@@ -4,6 +4,8 @@ import "forge-std/test.sol";
 import "forge-std/console2.sol";
 
 import "@dex/adapter/BalancerV2ComposableAdapter.sol";
+import "@dex/interfaces/IERC20.sol";
+
 
 contract BalancerV2ComposableAdapterTest is Test {
     BalancerV2ComposableAdapter adapter;
@@ -20,32 +22,45 @@ contract BalancerV2ComposableAdapterTest is Test {
     }
 
     function setUp() public {
-        vm.createSelectFork("https://eth.llamarpc.com", 17631980);
+        // problem
+        // vm.createSelectFork("https://eth.llamarpc.com", 17875000);
+        // vm.createSelectFork("https://eth.llamarpc.com", 17884740);
+
+        // normal
+        // vm.createSelectFork("https://eth.llamarpc.com", 17084740);
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), 17899161);
+
         adapter = new BalancerV2ComposableAdapter(vault);
-        deal(USDT, address(this), 10 ** 6);
+        deal(USDT, address(adapter), 2000 * 10 ** 6);
     }
 
-    function test_1() public {
-        Hop memory hop1 =
-            Hop(bytes32(0x2f4eb100552ef93840d5adc30560e5513dfffacb000000000000000000000334), USDT, bbaUSDT);
-        Hop memory hop2 =
-            Hop(bytes32(0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d), bbaUSDT, bbaUSDC);
-        bytes memory data = abi.encode(hop1, hop2);
-        USDT.call(abi.encodeWithSelector(IERC20.transfer.selector, address(adapter), 10 ** 6));
-        adapter.sellBase(address(this), address(0), abi.encode(uint8(2), data));
-        console2.log(IERC20(bbaUSDC).balanceOf(address(this)));
+    function test_BalancerV2Composable_oneStep_1() public {
+        bytes32 bb_a_USDT = 0x2f4eb100552ef93840d5adc30560e5513dfffacb000000000000000000000334;
+        bytes32 bb_a_USD = 0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d;
+        bytes32 bb_a_USDC = 0x82698aecc9e28e9bb27608bd52cf57f704bd1b83000000000000000000000336;
+        Hop memory hop1 = Hop({
+            poolId: bb_a_USDT,
+            sourceToken: USDT,
+            targetToken: 0x2F4eb100552ef93840d5aDC30560E5513DFfFACb
+        });
+        Hop memory hop2 = Hop({
+            poolId: bb_a_USD,
+            sourceToken: 0x2F4eb100552ef93840d5aDC30560E5513DFfFACb,
+            targetToken: 0x82698aeCc9E28e9Bb27608Bd52cF57f704BD1B83
+        });
+        Hop memory hop3 = Hop({
+            poolId: bb_a_USDC,
+            sourceToken: 0x82698aeCc9E28e9Bb27608Bd52cF57f704BD1B83,
+            targetToken: USDC
+        });
+
+        uint8 Hops = 3;
+
+        bytes memory moreInfo = abi.encode(Hops, abi.encode(hop1, hop2, hop3));
+        adapter.sellBase(address(this), address(0), moreInfo);
+
+        uint256 after_balance = IERC20(USDC).balanceOf(address(this));
+        console2.log(after_balance);
     }
 
-    function test_2() public {
-        Hop memory hop1 =
-            Hop(bytes32(0x2f4eb100552ef93840d5adc30560e5513dfffacb000000000000000000000334), USDT, bbaUSDT);
-        Hop memory hop2 =
-            Hop(bytes32(0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d), bbaUSDT, bbaUSDC);
-        Hop memory hop3 =
-            Hop(bytes32(0x82698aecc9e28e9bb27608bd52cf57f704bd1b83000000000000000000000336), bbaUSDC, USDC);
-        bytes memory data = abi.encode(hop1, hop2, hop3);
-        USDT.call(abi.encodeWithSelector(IERC20.transfer.selector, address(adapter), 10 ** 6));
-        adapter.sellBase(address(this), address(0), abi.encode(uint8(3), data));
-        console2.log(IERC20(USDC).balanceOf(address(this)));
-    }
 }

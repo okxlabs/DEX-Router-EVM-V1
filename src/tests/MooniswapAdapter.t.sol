@@ -12,9 +12,7 @@ contract MooniswapTest is Test {
     MooniswapAdapter adapter;
 
     function test_USDCtoETH() public {
-        vm.createSelectFork(
-            "https://rpc.ankr.com/eth", bytes32(0x471a99ab7e6f102216af2236768b4844a164b9a95496f95701fa3fedc8aba740)
-        );
+        vm.createSelectFork(vm.envString("ETH_RPC_URL"), bytes32(0x471a99ab7e6f102216af2236768b4844a164b9a95496f95701fa3fedc8aba740));
         adapter = new MooniswapAdapter(WETH);
         address user = 0x8D71eAf641F728AdB29D6353FAB85C74DCc30Ad2;
         uint256 amount = 402492779;

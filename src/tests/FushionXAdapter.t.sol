@@ -26,7 +26,7 @@ contract FushionXAdapterTest is Test {
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     function setUp0() public {
-        vm.createSelectFork("https://rpc.mantle.xyz", 29178);
+        vm.createSelectFork(vm.envString("MANTLE_RPC_URL"), 29178);
 
         address tokenApproveProxyImpl = address(new TokenApproveProxy());
         tokenApproveProxy = TokenApproveProxy(
