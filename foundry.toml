@@ -9,4 +9,8 @@ remappings = [
     "hardhat/=node_modules/hardhat/",
 ]
 
+evm_version = "shanghai"
+fs_permissions = [{access = "read-write", path = "./"}]
+
+
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
