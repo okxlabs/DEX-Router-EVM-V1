@@ -2201,9 +2201,7 @@ describe("PMM Test", function() {
         await tokenApproveProxy.connect(tokenApproveProxyOwner).addProxy(dexRouter.address);
         await tokenApproveProxy.connect(tokenApproveProxyOwner).setTokenApprove(tokenApprove.address);
 
-        await dexRouter.setApproveProxy(tokenApproveProxy.address);
-
-
+        // await dexRouter.setApproveProxy(tokenApproveProxy.address);
     }
 
     const initDexRouter = async () => {
@@ -2217,9 +2215,8 @@ describe("PMM Test", function() {
 
     const initWNativeRelayer = async () => {
         wNativeRelayer = await ethers.getContractAt(
-        "WNativeRelayer",
-        ethDeployed.base.wNativeRelayer
-
+            "WNativeRelayer",
+            ethDeployed.base.wNativeRelayer
         );
         let accountAddress = await wNativeRelayer.owner();
         startMockAccount([accountAddress]);
@@ -2227,7 +2224,7 @@ describe("PMM Test", function() {
         setBalance(wNativeRelayerOwner.address, '0x56bc75e2d63100000');
         await wNativeRelayer.connect(wNativeRelayerOwner).setCallerOk([dexRouter.address], [true, true]);
         expect(await dexRouter._WNATIVE_RELAY()).to.be.equal(wNativeRelayer.address);
-        await dexRouter.setWNativeRelayer(wNativeRelayer.address);
+        // await dexRouter.setWNativeRelayer(wNativeRelayer.address);
     } 
 
     const initMockXBridge = async () => {
@@ -2237,16 +2234,15 @@ describe("PMM Test", function() {
         await xBridge.setDexRouter(dexRouter.address);
         await dexRouter.setPriorityAddress(xBridge.address, true);
         await xBridge.connect(owner).setMpc([alice.address], [true]);
-        await xBridge.setApproveProxy(tokenApproveProxy.address);
+        // await xBridge.setApproveProxy(tokenApproveProxy.address);
         return xBridge;
       }
-
-
 
     const getTransactionCost = async (txResult) => {
         const cumulativeGasUsed = (await txResult.wait()).cumulativeGasUsed;
         return ethers.BigNumber.from(txResult.gasPrice).mul(ethers.BigNumber.from(cumulativeGasUsed));
     };
+
     const getSource = async (pair, fromToken, toToken) => {
         let isReverse = "0x0000";
         let token0 = await pair.token0();
@@ -2549,13 +2545,11 @@ describe("PMM Test", function() {
         } else {
           return 8;
         }
-      }
+    }
 
     const getWeight = function(weight) {
         return ethers.utils.hexZeroPad(weight, 2).slice(2);
     }
-
-
 });
 
 

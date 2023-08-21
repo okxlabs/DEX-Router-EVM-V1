@@ -67,8 +67,8 @@ contract FushionXAdapterTest is Test {
         tokenApproveProxy.setTokenApprove(address(tokenApprove));
         tokenApproveProxy.addProxy(address(dexRouter));
 
-        dexRouter.setApproveProxy(address(tokenApproveProxy));
-        dexRouter.setWNativeRelayer(address(wNativeRelayer));
+        // dexRouter.setApproveProxy(address(tokenApproveProxy));
+        // dexRouter.setWNativeRelayer(address(wNativeRelayer));
     }
     // https://explorer.mantle.xyz/tx/0x49d2fba5f0a3d2496ae39be81340df70744285132b18d3e6112dc8b3928dffd3
 

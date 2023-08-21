@@ -99,7 +99,7 @@ describe("Smart route path test by calldata", function() {
       DexRouter
     )
     await dexRouter.deployed();
-    await dexRouter.setApproveProxy(tokenApproveProxy.address);
+    // await dexRouter.setApproveProxy(tokenApproveProxy.address);
 
     await tokenApproveProxy.addProxy(dexRouter.address);
     await tokenApproveProxy.setTokenApprove(tokenApprove.address);

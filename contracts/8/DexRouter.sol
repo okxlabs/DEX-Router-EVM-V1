@@ -53,8 +53,6 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
   //------- Events ----------------
   //-------------------------------
 
-  event ApproveProxyChanged(address approveProxy);
-  event WNativeRelayerChanged(address wNativeRelayer);
   event PriorityAddressChanged(address priorityAddress, bool valid);
   event AdminChanged(address newAdmin);
 
@@ -163,7 +161,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     if (payer == address(this)) {
       SafeERC20.safeTransfer(IERC20(token), to, amount);
     } else {
-      IApproveProxy(approveProxy).claimTokens(token, payer, to, amount);
+      IApproveProxy(_APPROVE_PROXY).claimTokens(token, payer, to, amount);
     }
   }
 
@@ -171,8 +169,8 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     if ((IERC20(token).isETH())) {
       uint256 wethBal = IERC20(address(uint160(_WETH))).balanceOf(address(this));
       if (wethBal > 0) {
-        IWETH(address(uint160(_WETH))).transfer(wNativeRelayer, wethBal);
-        IWNativeRelayer(wNativeRelayer).withdraw(wethBal);
+        IWETH(address(uint160(_WETH))).transfer(_WNATIVE_RELAY, wethBal);
+        IWNativeRelayer(_WNATIVE_RELAY).withdraw(wethBal);
       }
       uint256 ethBal = address(this).balance;
       if (ethBal > 0) {
@@ -258,17 +256,15 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
   //------- Admin functions -------
   //-------------------------------
 
-  function setApproveProxy(address newApproveProxy) external onlyOwner {
-    approveProxy = newApproveProxy;
+  // unused
+  // function setApproveProxy(address newApproveProxy) external onlyOwner {
+  //   approveProxy = newApproveProxy;
+  // }
 
-    emit ApproveProxyChanged(approveProxy);
-  }
-
-  function setWNativeRelayer(address relayer) external onlyOwner {
-    wNativeRelayer = relayer;
-
-    emit WNativeRelayerChanged(relayer);
-  }
+  // // unused
+  // function setWNativeRelayer(address relayer) external onlyOwner {
+  //   wNativeRelayer = relayer;
+  // }
 
   function setPriorityAddress(address _priorityAddress, bool valid) external {
     require(msg.sender == tmpAdmin || msg.sender == admin || msg.sender == owner(), "na");

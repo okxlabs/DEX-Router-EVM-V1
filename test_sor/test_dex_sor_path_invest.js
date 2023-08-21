@@ -578,7 +578,7 @@ describe("Smart route path test", function() {
   });
 
   it("mixSwap with single path and target token is native token", async () => {
-    await dexRouter.setWNativeRelayer(wNativeRelayer.address);
+    // await dexRouter.setWNativeRelayer(wNativeRelayer.address);
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
 
     // wbtc -> eth
@@ -696,7 +696,7 @@ describe("Smart route path test", function() {
   });
 
   it("smartSwapByXBridge WBTC to ETH", async () => {
-    await dexRouter.setWNativeRelayer(wNativeRelayer.address);
+    // await dexRouter.setWNativeRelayer(wNativeRelayer.address);
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
 
     // wbtc -> eth
@@ -824,7 +824,7 @@ describe("Smart route path test", function() {
   });
 
   it("claim smartSwapByXBridge WBTC to ETH", async () => {
-    await dexRouter.setWNativeRelayer(wNativeRelayer.address);
+    // await dexRouter.setWNativeRelayer(wNativeRelayer.address);
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
 
     // wbtc -> eth
@@ -1099,7 +1099,7 @@ describe("Smart route path test", function() {
         DexRouter
     )
     await dexRouter.deployed();
-    await dexRouter.setApproveProxy(tokenApproveProxy.address);
+    // await dexRouter.setApproveProxy(tokenApproveProxy.address);
 
     await tokenApproveProxy.addProxy(dexRouter.address);
     await tokenApproveProxy.setTokenApprove(tokenApprove.address);

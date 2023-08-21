@@ -507,7 +507,7 @@ describe("Unoswap swapForExactTokens test", function() {
         DexRouter
     )
     await dexRouter.deployed()
-    await dexRouter.setApproveProxy(tokenApproveProxy.address)
+    // await dexRouter.setApproveProxy(tokenApproveProxy.address)
 
     expect(await dexRouter._WETH()).to.be.equal(weth.address)
     expect(await dexRouter._APPROVE_PROXY_32()).to.be.equal(tokenApproveProxy.address)

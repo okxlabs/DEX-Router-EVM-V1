@@ -58,8 +58,8 @@ contract uniV3Test is Test {
                 )
             )
         );
-        router.setApproveProxy(approveProxy);
-        router.setWNativeRelayer(wNativeRelayer);
+        // router.setApproveProxy(approveProxy);
+        // router.setWNativeRelayer(wNativeRelayer);
         console2.log("owner", IApproveProxy(approveProxy).owner());
         vm.prank(owner);
         IApproveProxy(approveProxy).addProxy(address(router));

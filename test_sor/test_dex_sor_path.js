@@ -890,7 +890,7 @@ describe("Smart route path test", function() {
   });
 
   it("claim smartSwapByXBridge WBTC to ETH", async () => {
-    await dexRouter.setWNativeRelayer(wNativeRelayer.address);
+    // await dexRouter.setWNativeRelayer(wNativeRelayer.address);
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
 
     // wbtc -> eth
@@ -1237,7 +1237,7 @@ describe("Smart route path test", function() {
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
     expect(await dexRouter._APPROVE_PROXY()).to.be.equal(tokenApproveProxy.address);
 
-    await dexRouter.setApproveProxy(tokenApproveProxy.address);
+    // await dexRouter.setApproveProxy(tokenApproveProxy.address);
 
 
     let accountAddress = await tokenApproveProxy.owner();
@@ -1260,7 +1260,7 @@ describe("Smart route path test", function() {
     wNativeRelayerOwner = await ethers.getSigner(accountAddress);
     setBalance(wNativeRelayerOwner.address, '0x56bc75e2d63100000');
     await wNativeRelayer.connect(wNativeRelayerOwner).setCallerOk([dexRouter.address], [true]);
-    await dexRouter.setWNativeRelayer(wNativeRelayer.address);
+    // await dexRouter.setWNativeRelayer(wNativeRelayer.address);
 
     
     expect(await dexRouter._WNATIVE_RELAY()).to.be.equal(wNativeRelayer.address);

@@ -66,8 +66,8 @@ contract IZumiAdapterTest is Test {
         tokenApproveProxy.setTokenApprove(address(tokenApprove));
         tokenApproveProxy.addProxy(address(dexRouter));
 
-        dexRouter.setApproveProxy(address(tokenApproveProxy));
-        dexRouter.setWNativeRelayer(address(wNativeRelayer));
+        // dexRouter.setApproveProxy(address(tokenApproveProxy));
+        // dexRouter.setWNativeRelayer(address(wNativeRelayer));
     }
     // https://explorer.mantle.xyz/tx/0xfaf2b2527095b64f59f66e1e88877baf2bf81ebcdfe510ad7ffd64c4c7247c6a
 

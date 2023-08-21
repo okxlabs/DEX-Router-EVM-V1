@@ -26,7 +26,7 @@ const initDexRouter = async (weth) => {
     DexRouter
   )
   await dexRouter.deployed();
-  await dexRouter.setApproveProxy(tokenApproveProxy.address);
+  // await dexRouter.setApproveProxy(tokenApproveProxy.address);
 
   await tokenApproveProxy.addProxy(dexRouter.address);
   await tokenApproveProxy.setTokenApprove(tokenApprove.address);
@@ -36,7 +36,7 @@ const initDexRouter = async (weth) => {
   await wNativeRelayer.deployed();
   await wNativeRelayer.initialize(wnativeToken);
   await wNativeRelayer.setCallerOk([dexRouter.address], [true]);
-  await dexRouter.setWNativeRelayer(wNativeRelayer.address);
+  // await dexRouter.setWNativeRelayer(wNativeRelayer.address);
 
   return { dexRouter, tokenApprove }
 }
