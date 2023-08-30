@@ -302,7 +302,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
   ) external payable isExpired(baseRequest.deadLine) nonReentrant onlyPriorityAddress returns (uint256 returnAmount) {
     emit SwapOrderId(orderId);
     (address payer, address receiver) = IXBridge(msg.sender).payerReceiver();
-    require(payer != address(0) && receiver != address(0), "not address(0)");
+    require(receiver != address(0), "not address(0)");
     returnAmount = _smartSwapInternal(baseRequest, batchesAmount, batches, extraData, payer, receiver);
   }
 
@@ -315,7 +315,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
   ) external payable onlyPriorityAddress returns (uint256 returnAmount) {
     emit SwapOrderId((srcToken & _ORDER_ID_MASK) >> 160);
     (address payer, address receiver) = IXBridge(msg.sender).payerReceiver();
-    require(payer != address(0) && receiver != address(0), "not address(0)");
+    require(receiver != address(0), "not address(0)");
     returnAmount = _unxswapInternal(IERC20(address(uint160(srcToken& _ADDRESS_MASK))), amount, minReturn, pools, payer, receiver);
   }
 
@@ -327,7 +327,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
   ) external payable onlyPriorityAddress returns(uint256 returnAmount) {
     emit SwapOrderId((recipient & _ORDER_ID_MASK) >> 160);
     (address payer, address receiver) = IXBridge(msg.sender).payerReceiver();
-    require(payer != address(0) && receiver != address(0), "not address(0)");
+    require(receiver != address(0), "not address(0)");
     return _uniswapV3Swap(payer, payable(receiver), amount, minReturn, pools);
   }
 
