@@ -41,6 +41,18 @@ const rETH = {
     baseTokenAddress: "0x9Bcef72be871e61ED4fBbc7630889beE758eb81D"
 }
 
+const sUSD = {
+    name: "sUSD",
+    decimals: 18,
+    baseTokenAddress: '0x8c6f28f2F1A3C87F0f938b96d27520d9751ec8d9',
+}
+  
+  const sETH = {
+    name: "sETH",
+    decimals: 18,
+    baseTokenAddress: '0xE405de8F52ba7559f9df3C368500B6E6ae6Cee49',
+}
+
 module.exports = {
     WETH,
     OP,
@@ -48,5 +60,7 @@ module.exports = {
     USDT,
     nETH,
     WETH_SYNAPSE,
-    rETH
+    rETH,
+    sUSD,
+    sETH
 }

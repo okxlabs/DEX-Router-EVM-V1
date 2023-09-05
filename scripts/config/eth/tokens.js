@@ -161,6 +161,18 @@ const INCH = {
   baseTokenAddress: "0x111111111117dC0aa78b770fA6A738034120C302"
 }
 
+const sUSD = {
+  name: "sUSD",
+  decimals: 18,
+  baseTokenAddress: '0x57Ab1ec28D129707052df4dF418D58a2D46d5f51',
+}
+
+const sETH = {
+  name: "sETH",
+  decimals: 18,
+  baseTokenAddress: '0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb',
+}
+
 module.exports = {
   BTCB,
   DOT,
@@ -189,5 +201,7 @@ module.exports = {
   GUSD,
   USDP,
   aUSDT,
-  INCH
+  INCH,
+  sUSD,
+  sETH
 }
