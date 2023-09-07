@@ -1,6 +1,4 @@
 const { ethers } = require("hardhat");
-const { getConfig } = require("../config");
-tokenConfig = getConfig("eth");
 
 async function main() {
     const aggV5Addr = "0x1111111254EEB25477B68fb85Ed929f73A960582";

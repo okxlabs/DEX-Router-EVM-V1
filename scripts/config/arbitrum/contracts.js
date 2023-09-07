@@ -3,7 +3,7 @@ const _DODO_SELL_HELPER_ = {
 }
 
 const ClipperVerifiedExchange = {
-  address: "0xE7b0CE0526fbE3969035a145C9e9691d4d9D216c"
+  address: "0x769728b5298445ba2828c0f3f5384227fbf590c5"
 }
 
 module.exports = {
