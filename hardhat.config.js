@@ -171,7 +171,7 @@ module.exports = {
       },
     },
     polygon: {
-      url: ALCHEMY_KEY == '' ? "https://matic-mainnet-archive-rpc.bwarelabs.com" : `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+      url: ALCHEMY_KEY == '' ? "https://1rpc.io/matic" : `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
       accounts: [`${PRIVATE_KEY}`],
       gasPrice: 250000000000,
       settings: {

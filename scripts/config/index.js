@@ -11,6 +11,7 @@ const polygon = require('./polygon')
 const zksync = require('./zksync')
 const linea = require('./linea')
 const mantle = require('./mantle')
+const base = require('./base')
 
 let config
 
@@ -36,6 +37,8 @@ if (network == "okc") {
   config = linea
 } else if (network == 'mantle') {
   config = mantle
+} else if (network == 'base') {
+  config = base
 } else {
   // throw error("network not config")
 }
@@ -61,6 +64,8 @@ const getConfig = function (network) {
     return zksync
   } else if (network == 'linea') {
     config = linea
+  } else if (network == 'base') {
+    config = base
   } else {
     console.log("network not config!!!")
   }
