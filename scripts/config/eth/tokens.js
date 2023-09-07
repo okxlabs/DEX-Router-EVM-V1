@@ -161,6 +161,11 @@ const INCH = {
   baseTokenAddress: "0x111111111117dC0aa78b770fA6A738034120C302"
 }
 
+const xfETH = {
+  name: "xfETH",
+  decimals: 18,
+  baseTokenAddress: "0xa449845c3309ac5269DFA6b2F80eb6E73D0AE021"
+
 const sUSD = {
   name: "sUSD",
   decimals: 18,
@@ -202,6 +207,7 @@ module.exports = {
   USDP,
   aUSDT,
   INCH,
+  xfETH,
   sUSD,
   sETH
 }
