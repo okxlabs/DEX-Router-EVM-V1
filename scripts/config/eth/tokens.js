@@ -165,6 +165,7 @@ const xfETH = {
   name: "xfETH",
   decimals: 18,
   baseTokenAddress: "0xa449845c3309ac5269DFA6b2F80eb6E73D0AE021"
+}
 
 const sUSD = {
   name: "sUSD",
