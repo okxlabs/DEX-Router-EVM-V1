@@ -2,7 +2,6 @@ const { ethers } = require("hardhat");
 require("../../tools");
 const { getConfig } = require("../../config");
 const { initDexRouter, direction, FOREVER, packRawData} = require("./utils");
-//tokenConfig = getConfig("op");
 tokenConfig = getConfig("eth");
 
 //need to change network、base and quote、parameter in initDexRouter、fromtokenamount
@@ -10,24 +9,21 @@ tokenConfig = getConfig("eth");
 async function executeBase2Quote() {
     const pmmReq = []
     // Network eth
-    // await setForkNetWorkAndBlockNumber('op',42438815);
-    await setForkNetWorkAndBlockNumber('eth',17967445);
+    await setForkNetWorkAndBlockNumber('eth',18133086);
 
 
     const accountAddress = "0x358506b4C5c441873AdE429c5A2BE777578E2C6f";
     await startMockAccount([accountAddress]);
     const account = await ethers.getSigner(accountAddress);
-    //await setBalance(accountAddress, "0x1bc16d674ec80000"); // 2 eth
+    await setBalance(accountAddress, "0x1bc16d674ec80000"); // 2 eth
 
     Base = await ethers.getContractAt(
         "MockERC20",
-        //tokenConfig.tokens.DAI.baseTokenAddress
-        tokenConfig.tokens.WETH.baseTokenAddress
+        tokenConfig.tokens.sETH.baseTokenAddress
     )
     Quote = await ethers.getContractAt(
         "MockERC20",
-        //tokenConfig.tokens.sUSD.baseTokenAddress
-        tokenConfig.tokens.sETH.baseTokenAddress    
+        tokenConfig.tokens.WETH.baseTokenAddress    
     )
 
     console.log("before Account Base Balance: " + await Base.balanceOf(account.address));
@@ -36,17 +32,16 @@ async function executeBase2Quote() {
     let { dexRouter, tokenApprove } = await initDexRouter(tokenConfig.tokens.WETH.baseTokenAddress);//eth op and arb
 
     console.log("===== Adapter =====");
-    IntegrationTestAdapter = await ethers.getContractFactory("WrappedSynthetixAdapter");
+    IntegrationTestAdapter = await ethers.getContractFactory("SynthetixEtherWrapperAdapter");
     integrationTestAdapter = await IntegrationTestAdapter.deploy();
     await integrationTestAdapter.deployed();
 
 
-    // transfer 1 USDT to Pool or adapter
-    const fromTokenAmount = ethers.utils.parseUnits('0.01',tokenConfig.tokens.WETH.decimals);//fromTokenAmount
+    // transfer 0.0004 sETH to Pool or adapter
+    const fromTokenAmount = ethers.utils.parseUnits('0.0004',tokenConfig.tokens.sETH.decimals);//fromTokenAmount
     const minReturnAmount = 0;
     const deadLine = FOREVER;
-    const poolAddress = "0x0000000000000000000000000000000000000000";//poolAddress or wrapper
-
+    const poolAddress = "0x0000000000000000000000000000000000000000";
 
 
     const mixAdapter1 = [
@@ -63,16 +58,11 @@ async function executeBase2Quote() {
         weight1 +
         poolAddress.replace("0x", "")  // Pool
     ];
-    //moreInfo
-    const wrapper = "0xCea392596F1AB7f1d6f8F241967094cA519E6129";//this adapter need wrapper
-    //wrapper(op susd):0xad32aA4Bff8b61B4aE07E3BA437CF81100AF0cD7
-    //wrapper(op seth):0x6202A3B0bE1D222971E93AaB084c6E584C29DB70
-    //wrapper(eth susd):0xE01698760Ec750f5f1603CE84C148bAB99cf1A74
-    //wrapper(eth seth):0xCea392596F1AB7f1d6f8F241967094cA519E6129
 
+    //moreInfo
     const moreInfo1 = ethers.utils.defaultAbiCoder.encode(
-        ["address","address","address"],
-        [Base.address,Quote.address,wrapper]
+        ["bool"],
+        [false]
     )
     const extraData1 = [moreInfo1];
     const router1 = [mixAdapter1, assetTo1, rawData1, extraData1, Base.address];
@@ -105,7 +95,7 @@ async function executeBase2Quote() {
 }
 
 // Compare TX：
-// 
+// https://etherscan.io/tx/0xa08515a2a1cb0832e535d45403ebec2f38e4485140fd2d4b91f8e2360768a762
 async function main() {
     await executeBase2Quote();
 }

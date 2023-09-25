@@ -14,3 +14,15 @@ interface ISynthetixWrapper {
 
 }
 
+interface ISynthetixEtherWrapper {
+
+  // token => stoken
+  function mint(uint amount) external;
+
+  // stoken => token
+  function burn(uint amount) external;
+
+  function capacity() external view returns (uint);
+
+  function getReserves() external view returns (uint);
+}

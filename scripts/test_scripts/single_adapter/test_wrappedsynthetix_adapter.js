@@ -9,7 +9,7 @@ async function execute() {
   //
 
   // Network 
-  //await setForkNetWorkAndBlockNumber('polygon',42438815);
+  // await setForkNetWorkAndBlockNumber('op',42438815);
   await setForkNetWorkAndBlockNumber('eth',17967445);
 
   //const tokenConfig = getConfig("op");
@@ -49,7 +49,7 @@ async function execute() {
   console.log("before Quote Balance: " + await Quote.balanceOf(account.address));
 
   // transfer 1dai to adapter
-  //await Base.connect(account).transfer(wrappedSynthetixAdapter.address, ethers.utils.parseUnits('1',tokenConfig.tokens.DAI.decimals));
+  // await Base.connect(account).transfer(wrappedSynthetixAdapter.address, ethers.utils.parseUnits('1',tokenConfig.tokens.DAI.decimals));
   await Base.connect(account).transfer(wrappedSynthetixAdapter.address, ethers.utils.parseUnits('0.01',tokenConfig.tokens.WETH.decimals));
   console.log("flag");
 
@@ -67,7 +67,7 @@ async function execute() {
   console.log("after Quote Balance: " + await Quote.balanceOf(account.address));
 
   // transfer 1 sUSD to adapter
-  //await Quote.connect(account).transfer(wrappedSynthetixAdapter.address, ethers.utils.parseUnits('1',tokenConfig.tokens.sUSD.decimals));
+  // await Quote.connect(account).transfer(wrappedSynthetixAdapter.address, ethers.utils.parseUnits('1',tokenConfig.tokens.sUSD.decimals));
   await Quote.connect(account).transfer(wrappedSynthetixAdapter.address, ethers.utils.parseUnits('0.00999',tokenConfig.tokens.sETH.decimals));      
   
   // sell quote token
