@@ -5,7 +5,7 @@ module.exports = {
     tokenApproveProxy: "0x1b5d39419C268b76Db06DE49e38B010fbFB5e226",
     dexRouter: "0x6b2C0c7be2048Daa9b5527982C29f48062B34D58",
     xbridge: "0x5965851f21DAE82eA7C62f87fb7C57172E9F2adD",
-    nftmarket: "",
+    //nftmarket: "",
     investEntrance: "0x7251FEbEABB01eC9dE53ECe7a96f1C951F886Dd2",
     limitOrder: "",
     protocolAdmin: "0x06C95a3934d94d5ae5bf54731bD2840ceFee6F87",
@@ -15,4 +15,5 @@ module.exports = {
     _HASHED_VERSION: "0xe6bbd6277e1bf288eed5e8d1780f9a50b239e86b153736bceebccf4ea79d90b3",
     _TYPE_HASH: "0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f",
     _CACHED_CHAIN_ID: 1,
+    nftmarketplace: "0xa7FD99748cE527eAdC0bDAc60cba8a4eF4090f7c",
 }

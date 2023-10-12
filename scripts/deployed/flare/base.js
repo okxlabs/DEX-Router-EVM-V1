@@ -5,7 +5,7 @@ module.exports = {
     tokenApproveProxy: "0xE9BBD6eC0c9Ca71d3DcCD1282EE9de4F811E50aF",
     dexRouter: "0x078b9259b4dc543eCa8F85A70d4635F403238D21",
     xbridge: "",
-    nftmarket: "",
+    //nftmarket: "",
     investEntrance: "",
     marketMaker: "",
     pmmAdapter: "",

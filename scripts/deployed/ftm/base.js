@@ -7,5 +7,6 @@ module.exports = {
     xbridge: "0xf956D9FA19656D8e5219fd6fa8bA6cb198094138",
     limitOrder: "0xA6dA84219B1d5F419Ef959F1f2A7ec7E32f45CA6",
     protocolAdmin: "0x06C95a3934d94d5ae5bf54731bD2840ceFee6F87",
-    commisson: "0x838A5832eB19CfCe692809f5b2DE44b15380CDA2"
+    commisson: "0x838A5832eB19CfCe692809f5b2DE44b15380CDA2",
+    p2pTrading: "0xe6C2820Ba3d14d97b9e9A371771ed7A2f28A9c40"
 }

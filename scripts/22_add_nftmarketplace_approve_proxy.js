@@ -9,8 +9,15 @@ async function main() {
     deployed.base.tokenApproveProxy
   )
 
-  await tokenApproveProxy.addProxy(deployed.base.nftmarket);
-  console.log(`tokenApproveProxy add proxy ${deployed.base.nftmarket}`);
+  const nftmarketplace = deployed.base.nftmarketplace;
+  let isProxy = await tokenApproveProxy.allowedApprove(nftmarketplace);
+  if (!isProxy) {
+    let result = await tokenApproveProxy.addProxy(nftmarketplace);
+    console.log(`## Add proxy:[%s] txHash:[%s]`, nftmarketplace, result.hash);
+  } else {
+    console.log(`## Skip add proxy:[%s]`, nftmarketplace);
+  }
+
 }
 
 main()
