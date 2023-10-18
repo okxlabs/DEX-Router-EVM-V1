@@ -16,6 +16,7 @@ const flare = require('./flare')
 const linea = require('./linea')
 const mantle = require('./mantle')
 const base = require('./base')
+const scroll = require('./scroll')
 
 let config
 
@@ -53,6 +54,8 @@ if (network.name === 'okc') {
     config = mantle
 } else if (network.name == 'base') {
     config = base
+} else if (network.name == 'scroll') {
+    config = scroll
 }
 
 module.exports = config

@@ -281,6 +281,16 @@ module.exports = {
         },
       }
     },
+    scroll: {
+      url: "https://rpc.scroll.io" || "",
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
+    },
     basetest: {
       url: 'https://goerli.base.org',
       accounts: [`${PRIVATE_KEY}`],
