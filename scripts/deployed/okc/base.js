@@ -14,6 +14,7 @@ module.exports = {
     limitOrder: "0xF33a9616C207E91678337627460f8AF6838a57b8",
     protocolAdmin: "0x06C95a3934d94d5ae5bf54731bD2840ceFee6F87",
     commisson: "0x838A5832eB19CfCe692809f5b2DE44b15380CDA2",
-    p2pTrading: "0xe6C2820Ba3d14d97b9e9A371771ed7A2f28A9c40",
+    // p2pTrading: "0xe6C2820Ba3d14d97b9e9A371771ed7A2f28A9c40",
+    p2pTrading: "0x0000000017D9a0231430ff2cc3467375a9Af76C7",
     nftmarketplace: "0xa7FD99748cE527eAdC0bDAc60cba8a4eF4090f7c",
 }

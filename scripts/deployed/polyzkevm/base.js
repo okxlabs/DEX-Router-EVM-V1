@@ -16,4 +16,5 @@ module.exports = {
     _TYPE_HASH: "0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f",
     _CACHED_CHAIN_ID: 1,
     nftmarketplace: "0xa7FD99748cE527eAdC0bDAc60cba8a4eF4090f7c",
+    p2pTrading: "0x0000000017D9a0231430ff2cc3467375a9Af76C7",
 }

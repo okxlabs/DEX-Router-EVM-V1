@@ -15,5 +15,6 @@ module.exports = {
     _HASHED_VERSION: "",
     _TYPE_HASH: "",
     _CACHED_CHAIN_ID: 59144,
-    commisson: "0x838A5832eB19CfCe692809f5b2DE44b15380CDA2"
+    commisson: "0x838A5832eB19CfCe692809f5b2DE44b15380CDA2",
+    p2pTrading: "0x0000000017D9a0231430ff2cc3467375a9Af76C7",
 }
