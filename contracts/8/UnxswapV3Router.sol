@@ -1,6 +1,5 @@
 /// SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
-
 import "./interfaces/IUniswapV3SwapCallback.sol";
 import "./interfaces/IUniV3.sol";
 import "./interfaces/IWETH.sol";
@@ -38,7 +37,7 @@ contract UnxswapV3Router is IUniswapV3SwapCallback, CommonUtils {
         uint256 amount,
         uint256 minReturn,
         uint256[] calldata pools
-    ) internal returns (uint256 returnAmount) {
+    ) internal returns (uint256 returnAmount, address srcTokenAddr) {
         assembly {
             function _revertWithReason(m, len) {
                 mstore(0, 0x08c379a000000000000000000000000000000000000000000000000000000000)
@@ -92,11 +91,13 @@ contract UnxswapV3Router is IUniswapV3SwapCallback, CommonUtils {
                 _returnAmount := add(1, not(_returnAmount)) // -a = ~a + 1
             }
             function _wrapWeth(_amount) {
-                if eq(eq(callvalue(), _amount), 0) {
+                // require callvalue() >= amount, lt: if x < y return 1，else return 0
+                if eq(lt(callvalue(), _amount), 1) {
                     mstore(0, 0x1841b4e100000000000000000000000000000000000000000000000000000000) // InvalidMsgValue()
                     revert(0, 4)
                 }
-                let success := call(gas(), _WETH, callvalue(), 0, 0, 0, 0) //进入fallback逻辑
+
+                let success := call(gas(), _WETH, _amount, 0, 0, 0, 0) //进入fallback逻辑
                 if iszero(success) {
                     _revertWithReason(0x0000001357455448206465706f736974206661696c6564000000000000000000, 87) //WETH deposit failed
                 }
@@ -145,8 +146,8 @@ contract UnxswapV3Router is IUniswapV3SwapCallback, CommonUtils {
                 returndatacopy(0, 0, 32)
                 token1 := mload(0)
             }
-            function _emitEventAndReturn(_firstPoolStart, _lastPoolStart, _returnAmount, wrapWeth, unwrapWeth) {
-                let srcToken := _ETH
+            function _emitEvent(_firstPoolStart, _lastPoolStart, _returnAmount, wrapWeth, unwrapWeth) -> srcToken{
+                srcToken := _ETH
                 let toToken := _ETH
                 if eq(wrapWeth, false) {
                     let firstPool := calldataload(_firstPoolStart)
@@ -160,45 +161,54 @@ contract UnxswapV3Router is IUniswapV3SwapCallback, CommonUtils {
                     case true { toToken := _token1(lastPool) }
                     default { toToken := _token0(lastPool) }
                 }
+                let freePtr := mload(0x40)
                 mstore(0, srcToken)
                 mstore(32, toToken)
-                mstore(64, origin())
+                mstore(64, caller())
                 // mstore(96, _initAmount) //avoid stack too deep, since i mstore the initAmount to 96, so no need to re-mstore it
                 mstore(128, _returnAmount)
                 log1(0, 160, 0x1bb43f2da90e35f7b0cf38521ca95a49e68eb42fac49924930a5bd73cdf7576c)
-                return(128, 32)
+                mstore(0x40, freePtr)
             }
+            let firstPoolStart
+            let lastPoolStart
+            {
+                let len := pools.length
+                firstPoolStart := pools.offset //
+                lastPoolStart := sub(add(firstPoolStart, mul(len, 32)), 32)
 
-            let len := pools.length
-            let firstPoolStart := pools.offset //
-            let lastPoolStart := sub(add(firstPoolStart, mul(len, 32)), 32)
-
-            if eq(len, 0) {
-                mstore(0, 0x67e7c0f600000000000000000000000000000000000000000000000000000000) // EmptyPools()
-                revert(0, 4)
+                if eq(len, 0) {
+                    mstore(0, 0x67e7c0f600000000000000000000000000000000000000000000000000000000) // EmptyPools()
+                    revert(0, 4)
+                }
             }
+            
             let wrapWeth := gt(callvalue(), 0)
-            let unwrapWeth := gt(and(calldataload(lastPoolStart), _WETH_UNWRAP_MASK), 0) // pools[lastIndex] & _WETH_UNWRAP_MASK > 0
-            if wrapWeth { _wrapWeth(amount) }
+            if wrapWeth { 
+                _wrapWeth(amount) 
+                payer := address()
+            }
+        
+            
 
-            let _payer := payer
-            if wrapWeth { _payer := address() }
             mstore(96, amount) // 96 is not override by _makeSwap, since it only use freePtr memory, and it is not override by unWrapWeth ethier
             for { let i := firstPoolStart } lt(i, lastPoolStart) { i := add(i, 32) } {
-                amount := _makeSwap(address(), _payer, calldataload(i), amount)
-                _payer := address()
+                amount := _makeSwap(address(), payer, calldataload(i), amount)
+                payer := address()
             }
+            let unwrapWeth := gt(and(calldataload(lastPoolStart), _WETH_UNWRAP_MASK), 0) // pools[lastIndex] & _WETH_UNWRAP_MASK > 0
+
             // last one or only one
             switch unwrapWeth
             case 1 {
-                returnAmount := _makeSwap(address(), _payer, calldataload(lastPoolStart), amount)
+                returnAmount := _makeSwap(address(), payer, calldataload(lastPoolStart), amount)
                 _unWrapWeth(recipient, returnAmount)
             }
-            case 0 { returnAmount := _makeSwap(recipient, _payer, calldataload(lastPoolStart), amount) }
+            case 0 { returnAmount := _makeSwap(recipient, payer, calldataload(lastPoolStart), amount) }
             if lt(returnAmount, minReturn) {
                 _revertWithReason(0x000000164d696e2072657475726e206e6f742072656163686564000000000000, 90) // Min return not reached
             }
-            _emitEventAndReturn(firstPoolStart, lastPoolStart, returnAmount, wrapWeth, unwrapWeth)
+            srcTokenAddr := _emitEvent(firstPoolStart, lastPoolStart, returnAmount, wrapWeth, unwrapWeth)
         }
     }
 

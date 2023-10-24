@@ -5,7 +5,6 @@ import "./interfaces/IUni.sol";
 
 import "./libraries/UniversalERC20.sol";
 import "./libraries/CommonUtils.sol";
-
 contract UnxswapRouter is CommonUtils {
   uint256 private constant _CLAIM_TOKENS_CALL_SELECTOR_32 =
   0x0a5ea46600000000000000000000000000000000000000000000000000000000;
@@ -99,7 +98,8 @@ contract UnxswapRouter is CommonUtils {
       let rawPair := calldataload(poolsOffset)
       switch srcToken
       case 0 {
-        if iszero(eq(amount, callvalue())) {
+        // require callvalue() >= amount, lt: if x < y return 1，else return 0
+        if eq(lt(callvalue(), amount), 1) {
           revertWithReason(0x00000011696e76616c6964206d73672e76616c75650000000000000000000000, 0x55) // "invalid msg.value"
         }
 

@@ -16,6 +16,7 @@ import "./interfaces/IXBridge.sol";
 
 import "./libraries/Permitable.sol";
 import "./libraries/PMMLib.sol";
+import "./libraries/CommissionLib.sol";
 import "./libraries/EthReceiver.sol";
 import "./libraries/WrapETHSwap.sol";
 
@@ -25,7 +26,7 @@ import "./PMMRouter.sol";
 /// @title DexRouterV1
 /// @notice Entrance of Split trading in Dex platform
 /// @dev Entrance of Split trading in Dex platform
-contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable, EthReceiver, UnxswapRouter, UnxswapV3Router, DexRouterStorage, PMMRouter, WrapETHSwap {
+contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable, EthReceiver, UnxswapRouter, UnxswapV3Router, DexRouterStorage, PMMRouter, WrapETHSwap, CommissionLib {
   using UniversalERC20 for IERC20;
 
   struct BaseRequest {
@@ -185,6 +186,42 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     }
   }
 
+  function doCommission(
+    uint256 inputAmount, 
+    address commissionToken
+  ) internal {
+      uint256 commissionInfo;
+      assembly {
+          commissionInfo := calldataload(sub(calldatasize(), 0x20))
+      }
+      
+      if ((commissionInfo & _COMMISSION_FLAG_MASK) == OKX_COMMISSION) {      
+          // 0. decode the commissionInfo
+          address referrerAddress = address(uint160(commissionInfo & _REFERRER_MASK));
+          uint256 commissionRate = uint256((commissionInfo & _COMMISSION_FEE_MASK) >> 160);
+          
+          // 1. Check the commission ratio. CommissionFeeAmount = SwapAmount * Rate / (10000-Rate)
+          // And, set round down to avoid edge case By Comcat.
+          require(commissionRate <= commissionRateLimit,"error commission rate limit");
+          uint256 commissionAmount = (inputAmount * commissionRate) / (10000 - commissionRate);
+
+          // 2. do commission
+          if (IERC20(commissionToken).isETH()) {
+              (bool success,) = payable(referrerAddress).call{value: commissionAmount}("");
+              require(success, "commission with ether error");              
+          } else {
+              IApproveProxy(_APPROVE_PROXY).claimTokens(commissionToken, msg.sender, referrerAddress, commissionAmount);
+          }
+
+          // 3. refund possible ETH token
+          if (IERC20(commissionToken).isETH() && msg.value > inputAmount + commissionAmount) {
+              (bool success2,) = payable(msg.sender).call{value: msg.value - inputAmount - commissionAmount}("");
+              require(success2, "refund ether error");
+          }
+          emit CommissionRecord(commissionAmount, referrerAddress);      
+      }
+  }
+
   function _bytes32ToAddress(uint256 param) private pure returns (address result) {
     assembly {
       result := and(param, _ADDRESS_MASK)
@@ -328,7 +365,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     emit SwapOrderId((recipient & _ORDER_ID_MASK) >> 160);
     (address payer, address receiver) = IXBridge(msg.sender).payerReceiver();
     require(receiver != address(0), "not address(0)");
-    return _uniswapV3Swap(payer, payable(receiver), amount, minReturn, pools);
+    (returnAmount,) = _uniswapV3Swap(payer, payable(receiver), amount, minReturn, pools);
   }
 
   function smartSwapByOrderId(
@@ -337,9 +374,11 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     uint256[] calldata batchesAmount,
     RouterPath[][] calldata batches,
     PMMLib.PMMSwapRequest[] calldata extraData
-  ) external payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) {
+  ) external payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) { 
     emit SwapOrderId(orderId);
     returnAmount = _smartSwapInternal(baseRequest, batchesAmount, batches, extraData, msg.sender, msg.sender);
+    doCommission(baseRequest.fromTokenAmount, address(uint160(baseRequest.fromToken)));
+
   }
 
   function unxswapByOrderId(
@@ -351,6 +390,10 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
   ) external payable returns (uint256 returnAmount) {
     emit SwapOrderId((srcToken & _ORDER_ID_MASK) >> 160);
     returnAmount = _unxswapInternal(IERC20(address(uint160(srcToken& _ADDRESS_MASK))), amount, minReturn, pools, msg.sender, msg.sender);
+    doCommission(
+      amount, 
+      address(uint160(srcToken)) == 0x0000000000000000000000000000000000000000 ? 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE: address(uint160(srcToken))
+    );
   }
 
   function smartSwapByInvest(
@@ -379,7 +422,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     }
     returnAmount = _smartSwapInternal(newBaseRequest, newBatchesAmount, batches, extraData, address(this), to);
   }
-
+ 
   /// @notice Same as `uniswapV3SwapTo` but calls permit first,
   /// allowing to approve token spending and make a swap in one transaction.
   /// @param recipient Address that will receive swap funds
@@ -399,7 +442,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
   ) external returns(uint256 returnAmount) {
     emit SwapOrderId((recipient & _ORDER_ID_MASK) >> 160);
     _permit(address(srcToken), permit);
-    return _uniswapV3Swap(msg.sender, payable(_bytes32ToAddress(recipient)), amount, minReturn, pools);
+    (returnAmount, )= _uniswapV3Swap(msg.sender, payable(_bytes32ToAddress(recipient)), amount, minReturn, pools);
   }
 
   /// @notice Performs swap using Uniswap V3 exchange. Wraps and unwraps ETH if required.
@@ -415,7 +458,9 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     uint256[] calldata pools
   ) external payable returns(uint256 returnAmount) {
     emit SwapOrderId((recipient & _ORDER_ID_MASK) >> 160);
-    return _uniswapV3Swap(msg.sender, payable(_bytes32ToAddress(recipient)), amount, minReturn, pools);
+    address fromToken;
+    (returnAmount, fromToken) = _uniswapV3Swap(msg.sender, payable(_bytes32ToAddress(recipient)), amount, minReturn, pools);
+    doCommission(amount, fromToken);
   }
 
   //-------------------------------
@@ -457,4 +502,5 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     baseRequest.fromTokenAmount = IERC20(request.fromToken).balanceOf(address(this));
     return _PMMV2Swap(address(this), receiver, baseRequest, request);
   }
+
 }
