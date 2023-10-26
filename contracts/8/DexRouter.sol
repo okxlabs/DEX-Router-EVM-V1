@@ -213,11 +213,6 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
               IApproveProxy(_APPROVE_PROXY).claimTokens(commissionToken, msg.sender, referrerAddress, commissionAmount);
           }
 
-          // 3. refund possible ETH token
-          if (IERC20(commissionToken).isETH() && msg.value > inputAmount + commissionAmount) {
-              (bool success2,) = payable(msg.sender).call{value: msg.value - inputAmount - commissionAmount}("");
-              require(success2, "refund ether error");
-          }
           emit CommissionRecord(commissionAmount, referrerAddress);      
       }
   }
@@ -503,4 +498,13 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
     return _PMMV2Swap(address(this), receiver, baseRequest, request);
   }
 
+  function withdrawDust(address token, address to, uint amount) external {
+    require(msg.sender == admin || msg.sender == owner(), "na");
+    if (token == _ETH) {
+      (bool success, bytes memory data) = payable(to).call{value: amount}("");
+      require(success, string(data));
+    } else {
+      SafeERC20.safeTransfer(IERC20(token), to, amount);
+    }
+  }
 }
