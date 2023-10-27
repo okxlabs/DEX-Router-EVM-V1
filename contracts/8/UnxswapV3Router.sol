@@ -164,7 +164,7 @@ contract UnxswapV3Router is IUniswapV3SwapCallback, CommonUtils {
                 let freePtr := mload(0x40)
                 mstore(0, srcToken)
                 mstore(32, toToken)
-                mstore(64, caller())
+                mstore(64, origin())
                 // mstore(96, _initAmount) //avoid stack too deep, since i mstore the initAmount to 96, so no need to re-mstore it
                 mstore(128, _returnAmount)
                 log1(0, 160, 0x1bb43f2da90e35f7b0cf38521ca95a49e68eb42fac49924930a5bd73cdf7576c)
