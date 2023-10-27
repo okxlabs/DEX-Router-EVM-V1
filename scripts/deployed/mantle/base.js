@@ -4,7 +4,7 @@ module.exports = {
     tokenApprove: "0x57df6092665eb6058DE53939612413ff4B09114E",
     tokenApproveProxy: "0x1b5d39419C268b76Db06DE49e38B010fbFB5e226",
     dexRouter: "0x6b2C0c7be2048Daa9b5527982C29f48062B34D58",
-    xbridge: "",
+    xbridge: "0xf956D9FA19656D8e5219fd6fa8bA6cb198094138",
     //nftmarket: "",
     investEntrance: "0x7251FEbEABB01eC9dE53ECe7a96f1C951F886Dd2",
     limitOrder: "",

@@ -9,8 +9,14 @@ async function main() {
     deployed.base.tokenApproveProxy
   )
 
-  await tokenApproveProxy.addProxy(deployed.base.xbridge);
-  console.log(`tokenApproveProxy add proxy ${deployed.base.xbridge}`);
+  const xbridge = deployed.base.xbridge;
+  let isProxy = await tokenApproveProxy.allowedApprove(xbridge);
+  if (!isProxy) {
+    let result = await tokenApproveProxy.addProxy(xbridge);
+    console.log(`## Add proxy:[%s] txHash:[%s]`, xbridge, result.hash);
+  } else {
+    console.log(`## Skip add proxy:[%s]`, xbridge);
+  }
 }
 
 main()
