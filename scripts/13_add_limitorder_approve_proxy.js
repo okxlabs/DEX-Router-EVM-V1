@@ -8,10 +8,14 @@ async function main() {
     "TokenApproveProxy",
     deployed.base.tokenApproveProxy
   )
-
-  const result = await tokenApproveProxy.addProxy(deployed.base.limitOrder);
-  console.log(`tokenApproveProxy add proxy ${deployed.base.limitOrder}`);
-  console.log(`txHash:`, result.hash);
+  const limitOrder = deployed.base.limitOrderV2;
+  let isProxy = await tokenApproveProxy.allowedApprove(limitOrder);
+  if (!isProxy) {
+    let result = await tokenApproveProxy.addProxy(limitOrder);
+    console.log(`## Add proxy:[%s] txHash:[%s]`, limitOrder, result.hash);
+  } else {
+    console.log(`## Skip add proxy:[%s]`, limitOrder);
+  }
 }
 
 main()

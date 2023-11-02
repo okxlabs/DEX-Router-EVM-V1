@@ -8,6 +8,7 @@ module.exports = {
     //nftmarket: "0x8EdfF1177E28dF694A60C9C6133f2f869E15657b",
     investEntrance: "0x7251FEbEABB01eC9dE53ECe7a96f1C951F886Dd2",
     limitOrder: "0xA6dA84219B1d5F419Ef959F1f2A7ec7E32f45CA6",
+    limitOrderV2: "0x2ae8947FB81f0AAd5955Baeff9Dcc7779A3e49F2",
     protocolAdmin: "0x06C95a3934d94d5ae5bf54731bD2840ceFee6F87",
     commisson: "0x838A5832eB19CfCe692809f5b2DE44b15380CDA2",
     nftmarketplace: "0xa7FD99748cE527eAdC0bDAc60cba8a4eF4090f7c",
