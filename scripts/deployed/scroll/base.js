@@ -14,5 +14,5 @@ module.exports = {
     _HASHED_VERSION: "",
     _TYPE_HASH: "",
     _CACHED_CHAIN_ID: 534352,
-    nftmarketplace: "",
+    nftmarketplace: "0xa7FD99748cE527eAdC0bDAc60cba8a4eF4090f7c",
 }
