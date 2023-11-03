@@ -12,5 +12,21 @@ remappings = [
 evm_version = "shanghai"
 fs_permissions = [{access = "read-write", path = "./"}]
 
-
-# See more config options https://github.com/foundry-rs/foundry/tree/master/config
+[rpc_endpoints]
+arb = "https://arb1.arbitrum.io/rpc"
+avax = "https://rpc.ankr.com/avalanche"
+base = "https://mainnet.base.org"
+bsc = "https://bsc.rpc.blxrbdn.com"
+conflux = "https://evm.confluxrpc.com"
+cro = "https://evm-cronos.crypto.org"
+eth = "https://eth-mainnet.g.alchemy.com/v2/aMbWrR8EcmCGpF6rCSNk0P24wTZbbG7R"
+ethw = "https://mainnet.ethereumpow.org"
+flare = "https://flare-api.flare.network/ext/C/rpc"
+ftm = "https://rpc.ankr.com/fantom"
+linea = "https://linea-mainnet.infura.io/v3/13a28cf2840044cda0912560a2336725"
+mantle = "https://rpc.mantle.xyz"
+okc = "http://35.72.176.238:26659"
+op = "https://optimism-mainnet.public.blastapi.io"
+polygon = "https://polygon-mainnet.g.alchemy.com/v2/aMbWrR8EcmCGpF6rCSNk0P24wTZbbG7R"
+polyzkevm = "https://zkevm-rpc.com"
+scroll = "https://rpc.scroll.io"
