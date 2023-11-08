@@ -175,7 +175,7 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
       }
       uint256 ethBal = address(this).balance;
       if (ethBal > 0) {
-        (bool success, ) = payable(to).call{value: ethBal, gas: _CALL_GAS_LIMIT}('');
+        (bool success, ) = payable(to).call{value: ethBal}('');
         require(success, "transfer native token failed");
       }
     } else {
