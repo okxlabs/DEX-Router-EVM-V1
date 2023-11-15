@@ -7,7 +7,7 @@ const tokenConfig = getConfig("arb");
 async function deployContract() {
     RamsesV2Adapter = await ethers.getContractFactory("RamsesV2Adapter");
     // factory：0xAA2cd7477c451E703f3B9Ba5663334914763edF8
-    RamsesV2Adapter = await RamsesV2Adapter.deploy(tokenConfig.tokens.WETH.baseTokenAddress, '0xAA2cd7477c451E703f3B9Ba5663334914763edF8');
+    RamsesV2Adapter = await RamsesV2Adapter.deploy(tokenConfig.tokens.WETH.baseTokenAddress);
     await RamsesV2Adapter.deployed();
     return RamsesV2Adapter
 }
@@ -58,11 +58,10 @@ async function USDCswapFRAX(RamsesV2Adapter) {
     console.log("FRAX before balance: ", (await FRAX.balanceOf(userAddress)).toString());
 
     data = ethers.utils.defaultAbiCoder.encode(
-        ["address", "address", "uint24"],
+        ["address", "address"],
         [
             USDC.address,
             FRAX.address,
-            100
         ]
     )
 

@@ -31,7 +31,7 @@ async function executeSwap() {
 
     RamsesV2Adapter = await ethers.getContractFactory("RamsesV2Adapter");
     // factory：0xAA2cd7477c451E703f3B9Ba5663334914763edF8
-    RamsesV2Adapter = await RamsesV2Adapter.deploy(tokenConfig.tokens.WETH.baseTokenAddress, '0xAA2cd7477c451E703f3B9Ba5663334914763edF8');
+    RamsesV2Adapter = await RamsesV2Adapter.deploy(tokenConfig.tokens.WETH.baseTokenAddress);
     await RamsesV2Adapter.deployed();
 
 
@@ -52,11 +52,10 @@ async function executeSwap() {
     let weight1 = Number(10000).toString(16).replace('0x', '');
 
     data = ethers.utils.defaultAbiCoder.encode(
-        ["address", "address", "uint24"],
+        ["address", "address"],
         [
             USDT.address,
-            USDCe.address,
-            100
+            USDCe.address
         ]
     )
 

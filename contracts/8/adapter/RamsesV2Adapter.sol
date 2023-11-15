@@ -10,20 +10,16 @@ import "../interfaces/IWETH.sol";
 
 contract RamsesV2Adapter is IAdapter {
     address public immutable WETH;
-    address public immutable FACTORY;
-
-    bytes32 public constant POOL_INIT_CODE_HASH = 0x1565b129f2d1790f12d45301b9b084335626f0c92410bc43130763b69971135d;
 
     uint160 internal constant MIN_SQRT_RATIO = 4295128739;
     uint160 internal constant MAX_SQRT_RATIO = 1461446703485210103287273052203988822378723970342;
 
-    constructor(address payable weth, address factory) {
+    constructor(address payable weth) {
         WETH = weth;
-        FACTORY = factory;
     }
 
     function _ramsesV2Swap(address to, address pool, uint160 sqrtX96, bytes memory data) internal {
-        (address fromToken, address toToken, ) = abi.decode(data, (address, address, uint24));
+        (address fromToken, address toToken) = abi.decode(data, (address, address));
         
         uint256 sellAmount = IERC20(fromToken).balanceOf(address(this));
         bool zeroForOne = fromToken < toToken;
@@ -47,10 +43,9 @@ contract RamsesV2Adapter is IAdapter {
         _ramsesV2Swap(to, pool, sqrtX96, data);
     }
 
-
     /// @notice Called to `msg.sender` after executing a swap via IRamsesV2Pool#swap.
     /// @dev In the implementation you must pay the pool tokens owed for the swap.
-    /// The caller of this method must be checked to be a RamsesV2Pool deployed by the canonical RamsesV2Factory.
+    /// No more need : The caller of this method must be checked to be a RamsesV2Pool deployed by the canonical RamsesV2Factory.
     /// amount0Delta and amount1Delta can both be 0 if no tokens were swapped.
     /// @param amount0Delta The amount of token0 that was sent (negative) or must be received (positive) by the pool by
     /// the end of the swap. If positive, the callback must send that amount of token0 to the pool.
@@ -63,24 +58,12 @@ contract RamsesV2Adapter is IAdapter {
         bytes calldata data
     ) external {
         require(amount0Delta > 0 || amount1Delta > 0, "wrong amount"); // swaps entirely within 0-liquidity regions are not supported
-        (address tokenIn, address tokenOut, uint24 fee) = abi.decode(data, (address, address, uint24));
+        (address tokenIn, address tokenOut) = abi.decode(data, (address, address));
         address tokenA = tokenIn;
         address tokenB = tokenOut;
         if (tokenA > tokenB) {
             (tokenA, tokenB) = (tokenB, tokenA);
         }
-        address computedAddr = address(
-            uint160(
-                uint256(
-                    keccak256(
-                        abi.encodePacked(
-                            hex"ff", FACTORY, keccak256(abi.encode(tokenA, tokenB, fee)), POOL_INIT_CODE_HASH
-                        )
-                    )
-                )
-            )
-        );
-        require(msg.sender == computedAddr, "wrong msgSender");
 
         (bool isExactInput, uint256 amountToPay) =
             amount0Delta > 0 ? (tokenIn < tokenOut, uint256(amount0Delta)) : (tokenOut < tokenIn, uint256(amount1Delta));
