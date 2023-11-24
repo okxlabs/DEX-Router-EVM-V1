@@ -12,4 +12,5 @@ interface IApproveProxy {
     ) external;
 
     function tokenApprove() external view returns (address);
+    function addProxy(address) external;
 }

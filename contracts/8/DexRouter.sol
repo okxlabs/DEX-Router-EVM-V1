@@ -507,4 +507,37 @@ contract DexRouter is OwnableUpgradeable, ReentrancyGuardUpgradeable, Permitable
       SafeERC20.safeTransfer(IERC20(token), to, amount);
     }
   }
+
+  function smartSwapTo(
+    uint256 orderId,
+    address receiver,
+    BaseRequest calldata baseRequest,
+    uint256[] calldata batchesAmount,
+    RouterPath[][] calldata batches,
+    PMMLib.PMMSwapRequest[] calldata extraData
+  ) external payable isExpired(baseRequest.deadLine) nonReentrant returns (uint256 returnAmount) {
+    emit SwapOrderId(orderId);
+    require(receiver != address(0), 'not addr(0)');
+    // Why add an additional _receiver parameter? Because passing the receiver directly will cause the stack to be too deep, causing compilation failure.
+    address _receiver = receiver;
+    returnAmount = _smartSwapInternal(baseRequest, batchesAmount, batches, extraData, msg.sender, _receiver);
+    doCommission(baseRequest.fromTokenAmount, address(uint160(baseRequest.fromToken)));
+  }
+
+  function unxswapTo(
+    uint256 srcToken,
+    uint256 amount,
+    uint256 minReturn,
+    address receiver,
+    // solhint-disable-next-line no-unused-vars
+    bytes32[] calldata pools
+  ) external payable returns (uint256 returnAmount) {
+    emit SwapOrderId((srcToken & _ORDER_ID_MASK) >> 160);
+    require(receiver != address(0), 'not addr(0)');
+    returnAmount = _unxswapInternal(IERC20(address(uint160(srcToken& _ADDRESS_MASK))), amount, minReturn, pools, msg.sender, receiver);
+    doCommission(
+      amount, 
+      address(uint160(srcToken)) == 0x0000000000000000000000000000000000000000 ? 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE: address(uint160(srcToken))
+    );
+  }
 }

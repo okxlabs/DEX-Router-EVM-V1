@@ -6,24 +6,22 @@ import "./interfaces/IUni.sol";
 import "./libraries/UniversalERC20.sol";
 import "./libraries/CommonUtils.sol";
 contract UnxswapRouter is CommonUtils {
-  uint256 private constant _CLAIM_TOKENS_CALL_SELECTOR_32 =
-  0x0a5ea46600000000000000000000000000000000000000000000000000000000;
-  uint256 private constant _WETH_DEPOSIT_CALL_SELECTOR_32 =
-  0xd0e30db000000000000000000000000000000000000000000000000000000000;
-  uint256 private constant _WETH_WITHDRAW_CALL_SELECTOR_32 =
-  0x2e1a7d4d00000000000000000000000000000000000000000000000000000000;
-  uint256 private constant _ERC20_TRANSFER_CALL_SELECTOR_32 =
-  0xa9059cbb00000000000000000000000000000000000000000000000000000000;
+  uint256 private constant _IS_TOKEN0_TAX = 0x1000000000000000000000000000000000000000000000000000000000000000;
+  uint256 private constant _IS_TOKEN1_TAX = 0x2000000000000000000000000000000000000000000000000000000000000000;
+  uint256 private constant _CLAIM_TOKENS_CALL_SELECTOR_32 = 0x0a5ea46600000000000000000000000000000000000000000000000000000000;
+  uint256 private constant _TRANSFER_DEPOSIT_SELECTOR = 0xa9059cbbd0e30db0000000000000000000000000000000000000000000000000;
+  uint256 private constant _SWAP_GETRESERVES_SELECTOR = 0x022c0d9f0902f1ac000000000000000000000000000000000000000000000000;
+  uint256 private constant _WITHDRAW_TRNASFER_SELECTOR =0x2e1a7d4da9059cbb000000000000000000000000000000000000000000000000;
+  uint256 private constant _BALANCEOF_TOKEN0_SELECTOR = 0x70a082310dfe1681000000000000000000000000000000000000000000000000;
+  uint256 private constant _BALANCEOF_TOKEN1_SELECTOR = 0x70a08231d21220a7000000000000000000000000000000000000000000000000;
+  
   uint256 private constant _WETH_MASK = 0x4000000000000000000000000000000000000000000000000000000000000000;
   uint256 private constant _NUMERATOR_MASK = 0x0000000000000000ffffffff0000000000000000000000000000000000000000;
-  uint256 private constant _UNISWAP_PAIR_RESERVES_CALL_SELECTOR_32 =
-  0x0902f1ac00000000000000000000000000000000000000000000000000000000;
-  uint256 private constant _UNISWAP_PAIR_SWAP_CALL_SELECTOR_32 =
-  0x022c0d9f00000000000000000000000000000000000000000000000000000000;
+
   uint256 private constant _DENOMINATOR = 1000000000;
   uint256 private constant _NUMERATOR_OFFSET = 160;
 
-  IERC20 private constant ETH_ADDRESS = IERC20(0x0000000000000000000000000000000000000000);
+  uint256 private constant ETH_ADDRESS = 0x00;
 
   //-------------------------------
   //------- Internal Functions ----
@@ -39,10 +37,6 @@ contract UnxswapRouter is CommonUtils {
   ) internal returns (uint256 returnAmount) {
     assembly {
     // solhint-disable-line no-inline-assembly
-      function reRevert() {
-        returndatacopy(0, 0, returndatasize())
-        revert(0, returndatasize())
-      }
 
       function revertWithReason(m, len) {
         mstore(0, 0x08c379a000000000000000000000000000000000000000000000000000000000)
@@ -50,27 +44,67 @@ contract UnxswapRouter is CommonUtils {
         mstore(0x40, m)
         revert(0, len)
       }
-
-      function swap(emptyPtr, swapAmount, pair, reversed, numerator, dst) -> ret {
-        mstore(emptyPtr, _UNISWAP_PAIR_RESERVES_CALL_SELECTOR_32)
-        if iszero(staticcall(gas(), pair, emptyPtr, 0x4, emptyPtr, 0x40)) {
-          reRevert()
+      function _getTokenAddr(emptyPtr, pair, selector) -> token {
+        mstore(emptyPtr, selector)
+        if iszero(staticcall(gas(), pair, add(0x04, emptyPtr), 0x04, 0x00, 0x20)) {
+          revertWithReason(0x0000001067657420746f6b656e206661696c6564000000000000000000000000, 0x54) // "get token failed"
         }
-        if iszero(eq(returndatasize(), 0x60)) {
-          revertWithReason(0x0000001472657365727665732063616c6c206661696c65640000000000000000, 0x59) // "reserves call failed"
+        token := mload(0x00)
+      }
+      function _getBalanceOfToken0(emptyPtr, pair) -> token0, balance0 {
+        mstore(emptyPtr, _BALANCEOF_TOKEN0_SELECTOR)
+        if iszero(staticcall(gas(), pair, add(0x04, emptyPtr), 0x04, 0x00, 0x20)) {
+          revertWithReason(0x00000012746f6b656e302063616c6c206661696c656400000000000000000000, 0x56) // "token0 call failed"
         }
+        token0 := mload(0x00)
+        mstore(add(0x04, emptyPtr), pair)
+        if iszero(staticcall(gas(), token0, emptyPtr, 0x24, 0x00, 0x20)) {
+          revertWithReason(0x0000001562616c616e63654f662063616c6c206661696c656400000000000000, 0x59) // "balanceOf call failed"
+        }
+        balance0 := mload(0x00)
+      }
+      function _getBalanceOfToken1(emptyPtr, pair) -> token1, balance1 {
+        mstore(emptyPtr, _BALANCEOF_TOKEN1_SELECTOR)
+        if iszero(staticcall(gas(), pair,add(0x04, emptyPtr), 0x04, 0x00, 0x20)) {
+          revertWithReason(0x00000012746f6b656e312063616c6c206661696c656400000000000000000000, 0x56) // "token1 call failed"
+        }
+        token1 := mload(0x00)
+        mstore(add(0x04, emptyPtr), pair)
+        if iszero(staticcall(gas(), token1, emptyPtr, 0x24, 0x00, 0x20)) {
+          revertWithReason(0x0000001562616c616e63654f662063616c6c206661696c656400000000000000, 0x59) // "balanceOf call failed"
+        }
+        balance1 := mload(0x00)
+      }
 
-        let reserve0 := mload(emptyPtr)
-        let reserve1 := mload(add(emptyPtr, 0x20))
-        if reversed {
-          let tmp := reserve0
+      function swap(emptyPtr, swapAmount, pair, reversed, isToken0Tax, isToken1Tax, numerator, dst) -> ret {
+        mstore(emptyPtr, _SWAP_GETRESERVES_SELECTOR)
+        if iszero(staticcall(gas(), pair, add(0x04, emptyPtr), 0x4, 0x00, 0x40))     // we only need the first 0x40 bytes, no need timestamp info
+        {
+          revertWithReason(0x0000001472657365727665732063616c6c206661696c65640000000000000000, 0x58) // "reserves call failed"
+        }
+        let reserve0 := mload(0x00)
+        let reserve1 := mload(0x20)
+
+        switch reversed
+        case 0 { //swap token0 for token1
+          if isToken0Tax {
+            let token0,balance0 := _getBalanceOfToken0(emptyPtr, pair)
+            swapAmount := sub(balance0, reserve0)
+          }
+        }
+        default { //swap token1 for token0
+          if isToken1Tax {
+            let token1,balance1 := _getBalanceOfToken1(emptyPtr, pair)
+            swapAmount := sub(balance1,reserve1)
+          }
+          let temp := reserve0
           reserve0 := reserve1
-          reserve1 := tmp
+          reserve1 := temp
         }
+
         ret := mul(swapAmount, numerator)
         ret := div(mul(ret, reserve1), add(ret, mul(reserve0, _DENOMINATOR)))
-
-        mstore(emptyPtr, _UNISWAP_PAIR_SWAP_CALL_SELECTOR_32)
+        mstore(emptyPtr, _SWAP_GETRESERVES_SELECTOR)
         switch reversed
         case 0 {
           mstore(add(emptyPtr, 0x04), 0)
@@ -84,36 +118,41 @@ contract UnxswapRouter is CommonUtils {
         mstore(add(emptyPtr, 0x64), 0x80)
         mstore(add(emptyPtr, 0x84), 0)
         if iszero(call(gas(), pair, 0, emptyPtr, 0xa4, 0, 0)) {
-          reRevert()
+          revertWithReason(0x00000010737761702063616c6c206661696c6564000000000000000000000000, 0x54) // "swap call failed"
         }
       }
 
-      let emptyPtr := mload(0x40)
-      mstore(0x40, add(emptyPtr, 0xc0))
+      let poolsOffset
+      let poolsEndOffset
+      {
+          let len := pools.length
+          poolsOffset := pools.offset //
+          poolsEndOffset := add(poolsOffset, mul(len, 32))
 
-      let poolsOffset := add(calldataload(0x64), 0x4)
-      let poolsEndOffset := calldataload(poolsOffset)
-      poolsOffset := add(poolsOffset, 0x20)
-      poolsEndOffset := add(poolsOffset, mul(0x20, poolsEndOffset))
+          if eq(len, 0) {
+            revertWithReason(0x000000b656d70747920706f6f6c73000000000000000000000000000000000000, 0x4e) // "empty pools"
+
+          }
+      }
+      let emptyPtr := mload(0x40)
       let rawPair := calldataload(poolsOffset)
-      switch srcToken
-      case 0 {
+      switch eq(ETH_ADDRESS, srcToken)
+      case 1 {
         // require callvalue() >= amount, lt: if x < y return 1，else return 0
         if eq(lt(callvalue(), amount), 1) {
           revertWithReason(0x00000011696e76616c6964206d73672e76616c75650000000000000000000000, 0x55) // "invalid msg.value"
         }
 
-        mstore(emptyPtr, _WETH_DEPOSIT_CALL_SELECTOR_32)
-        if iszero(call(gas(), _WETH, amount, emptyPtr, 0x4, 0, 0)) {
-          reRevert()
+        mstore(emptyPtr, _TRANSFER_DEPOSIT_SELECTOR)
+        if iszero(call(gas(), _WETH, amount, add(emptyPtr, 0x04), 0x4, 0, 0)) {
+          revertWithReason(0x000000126465706f73697420455448206661696c656400000000000000000000, 0x56) // "deposit ETH failed"
+        }
+        mstore(add(0x04, emptyPtr), and(rawPair, _ADDRESS_MASK))
+        mstore(add(0x24, emptyPtr), amount)
+        if iszero(call(gas(), _WETH, 0, emptyPtr, 0x44, 0, 0x20)) {
+          revertWithReason(0x000000147472616e736665722057455448206661696c65640000000000000000, 0x58) // "transfer WETH failed"
         }
 
-        mstore(emptyPtr, _ERC20_TRANSFER_CALL_SELECTOR_32)
-        mstore(add(emptyPtr, 0x4), and(rawPair, _ADDRESS_MASK))
-        mstore(add(emptyPtr, 0x24), amount)
-        if iszero(call(gas(), _WETH, 0, emptyPtr, 0x44, 0, 0)) {
-          reRevert()
-        }
       }
       default {
         if callvalue() {
@@ -126,7 +165,7 @@ contract UnxswapRouter is CommonUtils {
         mstore(add(emptyPtr, 0x44), and(rawPair, _ADDRESS_MASK))
         mstore(add(emptyPtr, 0x64), amount)
         if iszero(call(gas(), _APPROVE_PROXY, 0, emptyPtr, 0x84, 0, 0)) {
-          reRevert()
+          revertWithReason(0x00000012636c61696d20746f6b656e206661696c656400000000000000000000, 0x56) // "claim token failed"
         }
       }
 
@@ -144,68 +183,121 @@ contract UnxswapRouter is CommonUtils {
         returnAmount,
         and(rawPair, _ADDRESS_MASK),
         and(rawPair, _REVERSE_MASK),
+        and(rawPair, _IS_TOKEN0_TAX),
+        and(rawPair, _IS_TOKEN1_TAX),
         shr(_NUMERATOR_OFFSET, and(rawPair, _NUMERATOR_MASK)),
         and(nextRawPair, _ADDRESS_MASK)
         )
 
         rawPair := nextRawPair
       }
-
+      let toToken
       switch and(rawPair, _WETH_MASK)
       case 0 {
+        let beforeAmount
+        switch and(rawPair, _REVERSE_MASK)
+         case 0 {
+          if and(rawPair, _IS_TOKEN1_TAX) {
+            mstore(emptyPtr, _BALANCEOF_TOKEN1_SELECTOR)
+            if iszero(staticcall(gas(), and(rawPair, _ADDRESS_MASK),add(0x04, emptyPtr), 0x04, 0x00, 0x20)) {
+              revertWithReason(0x00000012746f6b656e312063616c6c206661696c656400000000000000000000, 0x56) // "token1 call failed"
+            }
+            toToken := mload(0)
+            mstore(add(0x04, emptyPtr), receiver)
+            if iszero(staticcall(gas(), toToken, emptyPtr, 0x24, 0x00, 0x20)) {
+              revertWithReason(0x00000015746f6b656e312062616c616e6365206661696c656400000000000000, 0x59) // "token1 balance failed"
+            }
+            beforeAmount := mload(0)
+          }
+        }
+        default {
+          if and(rawPair, _IS_TOKEN0_TAX) {
+            mstore(emptyPtr, _BALANCEOF_TOKEN0_SELECTOR)
+            if iszero(staticcall(gas(), and(rawPair, _ADDRESS_MASK),add(0x04, emptyPtr), 0x04, 0x00, 0x20)) {
+              revertWithReason(0x00000012746f6b656e302063616c6c206661696c656400000000000000000000, 0x56) // "token0 call failed"
+            }
+            toToken := mload(0)
+            mstore(add(0x04, emptyPtr), receiver)
+            if iszero(staticcall(gas(), toToken, emptyPtr, 0x24, 0x00, 0x20)) {
+              revertWithReason(0x00000015746f6b656e302062616c616e6365206661696c656400000000000000, 0x56) // "token0 balance failed"
+            }
+            beforeAmount := mload(0)
+          }
+        }
         returnAmount := swap(
-        emptyPtr,
-        returnAmount,
-        and(rawPair, _ADDRESS_MASK),
-        and(rawPair, _REVERSE_MASK),
-        shr(_NUMERATOR_OFFSET, and(rawPair, _NUMERATOR_MASK)),
-        receiver
+          emptyPtr,
+          returnAmount,
+          and(rawPair, _ADDRESS_MASK),
+          and(rawPair, _REVERSE_MASK),
+          and(rawPair, _IS_TOKEN0_TAX),
+          and(rawPair, _IS_TOKEN1_TAX),
+          shr(_NUMERATOR_OFFSET, and(rawPair, _NUMERATOR_MASK)),
+          receiver
         )
+        switch lt(0x0, toToken)
+        case 1 {
+          mstore(emptyPtr, _BALANCEOF_TOKEN0_SELECTOR)
+          mstore(add(0x04, emptyPtr), receiver)
+          if iszero(staticcall(gas(), toToken, emptyPtr, 0x24, 0x00, 0x20)) {
+            revertWithReason(0x000000146765742062616c616e63654f66206661696c65640000000000000000, 0x58) // "get balanceOf failed"
+          }
+          returnAmount := sub(mload(0), beforeAmount)
+        }
+        default {
+          // set token0 addr for the non-safemoon token
+          switch and(rawPair, _REVERSE_MASK)
+          case 0 {
+            // get token1
+            toToken := _getTokenAddr(emptyPtr, and(rawPair, _ADDRESS_MASK), _BALANCEOF_TOKEN1_SELECTOR)
+          }
+          default {
+            // get token0
+            toToken := _getTokenAddr(emptyPtr, and(rawPair, _ADDRESS_MASK), _BALANCEOF_TOKEN0_SELECTOR)
+          }
+        }
+
       }
       default {
+        toToken := ETH_ADDRESS
         returnAmount := swap(
-        emptyPtr,
-        returnAmount,
-        and(rawPair, _ADDRESS_MASK),
-        and(rawPair, _REVERSE_MASK),
-        shr(_NUMERATOR_OFFSET, and(rawPair, _NUMERATOR_MASK)),
-        address()
-        )
+          emptyPtr,
+          returnAmount,
+          and(rawPair, _ADDRESS_MASK),
+          and(rawPair, _REVERSE_MASK),
+          and(rawPair, _IS_TOKEN0_TAX),
+          and(rawPair, _IS_TOKEN1_TAX),
+          shr(_NUMERATOR_OFFSET, and(rawPair, _NUMERATOR_MASK)),
+          address()
+          )
 
-        mstore(emptyPtr, _ERC20_TRANSFER_CALL_SELECTOR_32)
-        mstore(add(emptyPtr, 0x4), _WNATIVE_RELAY)
-        mstore(add(emptyPtr, 0x24), returnAmount)
-        if iszero(call(gas(), _WETH, 0, emptyPtr, 0x44, 0, 0)) {
-          reRevert()
+        mstore(emptyPtr, _WITHDRAW_TRNASFER_SELECTOR)
+        mstore(add(emptyPtr, 0x08), _WNATIVE_RELAY)
+        mstore(add(emptyPtr, 0x28), returnAmount)
+        if iszero(call(gas(), _WETH, 0, add(0x04,emptyPtr), 0x44, 0, 0x20)) {
+          revertWithReason(0x000000147472616e736665722057455448206661696c65640000000000000000, 0x58) // "transfer WETH failed"
         }
-
-        mstore(emptyPtr, _WETH_WITHDRAW_CALL_SELECTOR_32)
         mstore(add(emptyPtr, 0x04), returnAmount)
-        if iszero(call(gas(), _WNATIVE_RELAY, 0, emptyPtr, 0x24, 0, 0)) {
-          reRevert()
+        if iszero(call(gas(), _WNATIVE_RELAY, 0, emptyPtr, 0x24, 0, 0x20)) {
+          revertWithReason(0x00000013776974686472617720455448206661696c6564000000000000000000, 0x57) // "withdraw ETH failed"
         }
-
         if iszero(call(gas(), receiver, returnAmount, 0, 0, 0, 0)) {
-          reRevert()
+          revertWithReason(0x000000137472616e7366657220455448206661696c6564000000000000000000, 0x57) // "transfer ETH failed"
         }
       }
 
       if lt(returnAmount, minReturn) {
         revertWithReason(0x000000164d696e2072657475726e206e6f742072656163686564000000000000, 0x5a) // "Min return not reached"
       }
+      // emit event
+      mstore(emptyPtr, srcToken)
+      mstore(add(emptyPtr, 0x20), toToken)
+      mstore(add(emptyPtr, 0x40), origin())
+      mstore(add(emptyPtr, 0x60), amount)
+      mstore(add(emptyPtr, 0x80), returnAmount)
+      log1(emptyPtr,0xa0,0x1bb43f2da90e35f7b0cf38521ca95a49e68eb42fac49924930a5bd73cdf7576c)
+      mstore(0, returnAmount)
+      return(0, 0x20)
     }
-
-    // the last pool
-    bytes32 rawPair = pools[pools.length - 1];
-    address pair;
-    bool reserve;
-    assembly {
-      pair := and(rawPair, _ADDRESS_MASK)
-      reserve := and(rawPair, _REVERSE_MASK)
-    }
-    pair = reserve ? IUni(pair).token0() : IUni(pair).token1();
-    emit OrderRecord(address(srcToken), pair, tx.origin, amount, returnAmount);
-    return returnAmount;
   }
 
   /// @notice Performs swap using Uniswap exchange. Wraps and unwraps ETH if required.
