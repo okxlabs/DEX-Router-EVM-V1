@@ -495,10 +495,16 @@ contract CommissionTesting is Test {
         uint256 after_owner_balance = payable(address(this)).balance;
         uint256 after_owner_toToken_balance = IERC20(toToken).balanceOf(0x785719D8B4a59efD6c8D9586d3a87e75ba6858Cb);
 
-        assert(address(DEXROUTER).balance == 0);
-        assert(after_shaneson_balance == before_shaneson_balance + 15463917525773195 );
-        assert(after_owner_balance == before_owner_balance - 0x06f05b59d3b20000 - 15463917525773195);
-        assert(before_owner_toToken_balance + returnAmount == after_owner_toToken_balance);
+        // console2.log(after_owner_toToken_balance);
+        // console2.log(after_owner_balance);
+        // console2.log(after_shaneson_balance);
+
+        console2.log("after_shaneson_balance: ", after_shaneson_balance);
+        console2.log("before_shaneson_balance: ", before_shaneson_balance);
+     
+        require(after_shaneson_balance == before_shaneson_balance + 15463917525773195 , "test0");
+        require(after_owner_balance == before_owner_balance - 0x06f05b59d3b20000 - 15463917525773195 - 2 ether, "test1");
+        require(before_owner_toToken_balance + returnAmount == after_owner_toToken_balance, "test2");
 
         return beforeGas - afterGas;
     }

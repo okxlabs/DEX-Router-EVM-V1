@@ -17,4 +17,6 @@ jobs:
       - run: npx hardhat test test_unxswap/test_unxswap_path.js
       - run: npx hardhat test test_unxswapV3/test_unxswap_v3_path.js
       - run: npx hardhat test test_sor/test_dex_sor_path.js
-
+      - run: npx hardhat test test_unxswap/test_unxswap_path_commission.js
+      - run: npx hardhat test test_unxswapV3/test_unxswap_v3_path_commission.js
+      - run: npx hardhat test test_sor/test_dex_sor_path_commission.js
