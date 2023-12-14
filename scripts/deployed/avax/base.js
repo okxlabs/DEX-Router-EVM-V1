@@ -13,4 +13,5 @@ module.exports = {
     commisson: "0x838A5832eB19CfCe692809f5b2DE44b15380CDA2",
     nftmarketplace: "0xa7FD99748cE527eAdC0bDAc60cba8a4eF4090f7c",
     p2pTrading: "0x0000000017D9a0231430ff2cc3467375a9Af76C7",
+    _FF_FACTORY: "0xff740b1c1de25031c31ff4fc9a62f554a55cdc1bad0000000000000000000000",
 }
