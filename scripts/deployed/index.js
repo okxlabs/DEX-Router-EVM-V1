@@ -17,6 +17,7 @@ const linea = require('./linea')
 const mantle = require('./mantle')
 const base = require('./base')
 const scroll = require('./scroll')
+const canto = require('./canto')
 
 let config
 
@@ -56,6 +57,8 @@ if (network.name === 'okc') {
     config = base
 } else if (network.name == 'scroll') {
     config = scroll
+} else if (network.name == 'canto') {
+    config = canto
 }
 
 module.exports = config

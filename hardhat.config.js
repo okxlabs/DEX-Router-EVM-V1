@@ -302,6 +302,16 @@ module.exports = {
         },
       }
     },
+    canto: {
+      url: 'https://mainnode.plexnode.org:8545',
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
+    },
   },
   paths: {
     sources: './contracts/8'
