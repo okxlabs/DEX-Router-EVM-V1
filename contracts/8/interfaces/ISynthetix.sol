@@ -12,5 +12,13 @@ interface ISNXPROXY {
       uint minAmount
   ) external returns (uint amountReceived);
 
+  function exchangeWithTracking(
+      bytes32 sourceCurrencyKey,
+      uint sourceAmount,
+      bytes32 destinationCurrencyKey,
+      address rewardAddress,
+      bytes32 trackingCode
+  ) external returns (uint amountReceived);
+
 }
 
