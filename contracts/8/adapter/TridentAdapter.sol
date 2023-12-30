@@ -15,11 +15,11 @@ contract TridentAdapter is IAdapter {
         BENTO = _bento;
     }
     function _tridentSwap(
-        address ,
+        address to,
         address pool,        
         bytes memory moreInfo
     ) internal {
-        (address tokenIn, , ) = abi.decode(moreInfo, (address, address, bool));
+        address tokenIn = abi.decode(moreInfo, (address));
         uint256 amountIn = IERC20(tokenIn).balanceOf(address(this));
         SafeERC20.safeApprove(
             IERC20(tokenIn),
@@ -29,7 +29,8 @@ contract TridentAdapter is IAdapter {
         ITridentBento(BENTO).deposit(IERC20(tokenIn), address(this), address(this), amountIn, 0);
         uint256 shares = ITridentBento(BENTO).balanceOf(IERC20(tokenIn), address(this));
         ITridentBento(BENTO).transfer(IERC20(tokenIn),address(this), pool, shares);
-        ITridentPool(pool).swap(moreInfo);
+        bytes memory swapdata = abi.encode(tokenIn,to,true);
+        ITridentPool(pool).swap(swapdata);
 
     }
 
