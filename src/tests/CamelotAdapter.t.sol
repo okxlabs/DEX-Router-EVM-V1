@@ -14,7 +14,7 @@ contract CamelotV3AdapterTest is Test {
     address WETH_USDC = 0xb7Dd20F3FBF4dB42Fd85C839ac0241D09F72955f;
     function setUp() public {
         vm.createSelectFork(vm.envString("ARBI_RPC_URL"), 115330264);
-        adapter = new CamelotV3Adapter(WETH, POOL_DEPLOYER);
+        adapter = new CamelotV3Adapter(WETH);
         deal(WETH, address(this), 1 ether);
         deal(USDC, address(this), 1000 * 10**6);
     }
