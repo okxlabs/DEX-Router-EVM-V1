@@ -312,6 +312,16 @@ module.exports = {
         },
       }
     },
+    manta: {
+      url: 'https://pacific-rpc.manta.network/http',
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
+    },
   },
   paths: {
     sources: './contracts/8'
