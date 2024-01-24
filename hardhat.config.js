@@ -322,6 +322,16 @@ module.exports = {
         },
       }
     },
+    metis: {
+      url: 'https://andromeda.metis.io/?owner=1088',
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
+    },
   },
   paths: {
     sources: './contracts/8'

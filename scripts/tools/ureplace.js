@@ -10,28 +10,28 @@ const UNIV3_PATH = "./contracts/8/UnxswapV3Router.sol";
 // _WETH, _APPROVE_PROXY_32, _WNATIVE_RELAY_32 Three constant addresses
 // npx hardhat run scripts/tools/ureplace.js [network name, eg: eth]
 function replace_contant(UnxswapRouterPath) {
-    console.log(deployed.base);
+  console.log(deployed.base);
 
-    // Reading the file
-    fs.readFile(UnxswapRouterPath, function (err, data) {
+  // Reading the file
+  fs.readFile(UnxswapRouterPath, function (err, data) {
+    if (err) {
+      return console.error(err);
+    }
+
+    let context = data.toString();
+    // address public constant
+    context = context.replace(/_WETH\s=\s\w*/, "_WETH = " + deployed.base.wNativeToken)
+    context = context.replace(/_APPROVE_PROXY\s=\s\w*/, "_APPROVE_PROXY = " + deployed.base.tokenApproveProxy)
+    context = context.replace(/_WNATIVE_RELAY\s=\s\w*/, "_WNATIVE_RELAY = " + deployed.base.wNativeRelayer)
+
+    fs.writeFile(UnxswapRouterPath, context, (err) => {
       if (err) {
-        return console.error(err);
+        console.log(err);
       }
-      
-      let context = data.toString();
-      // address public constant
-      context = context.replace(/_WETH\s=\s\w*/, "_WETH = " + deployed.base.wNativeToken)
-      context = context.replace(/_APPROVE_PROXY\s=\s\w*/, "_APPROVE_PROXY = " + deployed.base.tokenApproveProxy )
-      context = context.replace(/_WNATIVE_RELAY\s=\s\w*/, "_WNATIVE_RELAY = " + deployed.base.wNativeRelayer ) 
-
-      fs.writeFile(UnxswapRouterPath, context, (err) => {
-        if (err) {
-          console.log(err);
-        }
-      });
-
-      console.log("replace finish !")
     });
+
+    console.log("replace finish !")
+  });
 }
 
 function replace_pmm_contant(PMMROUTER_PATH) {
@@ -42,7 +42,7 @@ function replace_pmm_contant(PMMROUTER_PATH) {
     if (err) {
       return console.error(err);
     }
-    
+
     let context = data.toString();
     // address public constant
     context = context.replace(/_FACTORY\s=\s\w*/, "_FACTORY = " + deployed.base._FACTORY)
@@ -65,7 +65,7 @@ function replace_pmm_eip712_contant(EIP712_PATH) {
     if (err) {
       return console.error(err);
     }
-    
+
     let context = data.toString();
     // address public constant
     context = context.replace(/_CACHED_DOMAIN_SEPARATOR\s=\s\w*/, "_CACHED_DOMAIN_SEPARATOR = " + deployed.base._CACHED_DOMAIN_SEPARATOR)
@@ -97,10 +97,11 @@ function replace_univ3_contant(UnxswapRouterPath) {
     if (err) {
       return console.error(err);
     }
-    
+
     let context = data.toString();
     // address public constant
     context = context.replace(/_FF_FACTORY\s=\s\w*/, "_FF_FACTORY = " + deployed.base._FF_FACTORY);
+    context = context.replace(/_POOL_INIT_CODE_HASH\s=\s\w*/, "_POOL_INIT_CODE_HASH = " + deployed.base._POOL_INIT_CODE_HASH);
 
     fs.writeFile(UnxswapRouterPath, context, (err) => {
       if (err) {

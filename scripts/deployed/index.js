@@ -19,6 +19,7 @@ const base = require('./base')
 const scroll = require('./scroll')
 const canto = require('./canto')
 const manta = require('./manta')
+const metis = require('./metis')
 
 let config
 
@@ -62,6 +63,8 @@ if (network.name === 'okc') {
     config = canto
 } else if (network.name == 'manta') {
     config = manta
+} else if (network.name == 'metis') {
+    config = metis
 }
 
 module.exports = config
