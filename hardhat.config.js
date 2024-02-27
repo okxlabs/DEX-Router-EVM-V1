@@ -332,6 +332,16 @@ module.exports = {
         },
       }
     },
+    merlin: {
+      url: 'https://rpc.merlinchain.io',
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
+    }
   },
   paths: {
     sources: './contracts/8'
