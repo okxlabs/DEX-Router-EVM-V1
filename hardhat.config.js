@@ -137,6 +137,16 @@ module.exports = {
         },
       },
     },
+    sepolia: {
+      url: `https://rpc.sepolia.org`,
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      },
+    },
     cro: {
       url: "https://evm-cronos.crypto.org",
       accounts: [`${PRIVATE_KEY}`],
