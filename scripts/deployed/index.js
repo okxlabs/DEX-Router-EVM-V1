@@ -20,7 +20,9 @@ const scroll = require('./scroll')
 const canto = require('./canto')
 const manta = require('./manta')
 const metis = require('./metis')
+const zeta = require('./zeta')
 const merlin = require('./merlin')
+const zeta = require('./zeta')
 
 let config
 
@@ -66,8 +68,12 @@ if (network.name === 'okc') {
     config = manta
 } else if (network.name == 'metis') {
     config = metis
+} else if (network.name == 'zeta') {
+    config = zeta
 } else if (network.name == 'merlin') {
     config = merlin
-} 
+} else if (network.name == 'zeta') {
+    config = zeta
+}
 
 module.exports = config

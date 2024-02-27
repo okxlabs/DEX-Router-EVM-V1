@@ -64,6 +64,16 @@ module.exports = {
         },
       },
     },
+    zeta: {
+      url: 'https://zetachain-evm.blockpi.network/v1/rpc/public',
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
+    },
     flare: {
       url: "https://flare-api.flare.network/ext/C/rpc",
       accounts: [`${PRIVATE_KEY}`],

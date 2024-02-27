@@ -1,0 +1,17 @@
+module.exports = {
+    wNativeToken: "0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf",
+    wNativeRelayer: "0x4CD5e737D1aD509573f6924465168e54417F013E",
+    tokenApprove: "0x03B5ACdA01207824cc7Bc21783Ee5aa2B8d1D2fE",
+    tokenApproveProxy: "0x8009858707810928CCe2c3526B78A4Eb8043888c",
+    dexRouter: "0x0DaB5A5294AfAae76Ce990993fC10b896A01DBd1",
+    xbridge: "",
+    investEntrance: "",
+    limitOrder: "",
+    protocolAdmin: "",
+    _FF_FACTORY: "",
+    _CACHED_DOMAIN_SEPARATOR: "",
+    _HASHED_NAME: "",
+    _HASHED_VERSION: "",
+    _TYPE_HASH: "",
+    nftmarketplace: "",
+}
