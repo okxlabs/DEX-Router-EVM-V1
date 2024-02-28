@@ -20,6 +20,10 @@ const { ethers } = require("hardhat");
 // WCFX: 0x14b2d3bc65e74dae1030eafd8ac30c533c976a9b
 // IZumiAdapter deployed: 0x022fBeFfA9B0422F0A2Eab63A75533c48a13cC38
 
+// merlin
+// factory: 0xe29a6620dac789b8a76e9b9ec8fe9b7cf2b663d5
+// WETH: 0xF6D226f9Dc15d9bB51182815b320D3fBE324e1bA
+// IZumiAdapter deployed: 0x02D0131E5Cc86766e234EbF1eBe33444443b98a3
 
 async function deployIzumiAdapter() {
     factory = "0x110dE362cc436D7f54210f96b8C7652C2617887D"

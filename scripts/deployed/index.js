@@ -22,7 +22,6 @@ const manta = require('./manta')
 const metis = require('./metis')
 const zeta = require('./zeta')
 const merlin = require('./merlin')
-const zeta = require('./zeta')
 const sepolia = require('./eth_sepolia')
 
 let config
@@ -73,8 +72,6 @@ if (network.name === 'okc') {
     config = zeta
 } else if (network.name == 'merlin') {
     config = merlin
-} else if (network.name == 'zeta') {
-    config = zeta
 }else if (network.name == 'sepolia') {
     config = sepolia
 }
