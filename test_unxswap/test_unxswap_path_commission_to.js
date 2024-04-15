@@ -24,7 +24,7 @@ describe("Unxswap swap test with commission", function () {
 
   const feeReceiver = "0x94d3af948652ea2b272870ffa10da3250e0a34c3" // unibot address
   const fee = ethers.BigNumber.from(100).toHexString()
-  const commissionFlag = "0x3ca20afc2aaa"
+  const commissionFlag = "0x3ca20afc2bbb"
   const commissionInfo = "0x" + commissionFlag.replace('0x', '') + '0000000000' + fee.replace('0x', '') + feeReceiver.replace('0x', '')
   // const commissionInfo = "0x3ca20afc2aaa00000000006494d3af948652ea2b272870ffa10da3250e0a34c3"; // unibot address, with commission fee 100/10000
 
@@ -81,8 +81,7 @@ describe("Unxswap swap test with commission", function () {
     sourceToken = wbtc;
     targetToken = usdt;
     const totalAmount = ethers.utils.parseEther('0.1');
-    const commissionAmount = totalAmount.mul(fee).div(10000)
-    const fromTokenAmount = totalAmount.sub(commissionAmount)
+
     // 0x4 WETH -> ETH; 0x8 reverse pair
     flag = sourceToken.address == token0 ? '0x0' : "0x8";
     poolAddr = lpWBTCUSDT.address.toString().replace('0x', '');
@@ -93,20 +92,22 @@ describe("Unxswap swap test with commission", function () {
 
     let rawInfo = await dexRouter.connect(alice).populateTransaction.unxswapByOrderId(
       sourceToken.address,
-      fromTokenAmount,
+      totalAmount,
       0,
       [pool0]
     );
-    let commissionToken = "000000000000000000000000" + sourceToken.address.toString().replace('0x', '')
+    let commissionToken = "000000000000000000000000" + targetToken.address.toString().replace('0x', '')
     rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
     let tx = await alice.sendTransaction(rawInfo)
     let receipt = await tx.wait();
     console.log("receipt", receipt.cumulativeGasUsed);
 
-    const amount = getAmountOut(fromTokenAmount, "4000000000000000000000000", "100000000000000000000");
+    let amount = getAmountOut(totalAmount, "4000000000000000000000000", "100000000000000000000");
+    commissionAmount = amount.mul(fee).div(10000);
+    amount = amount.sub(commissionAmount)
     expect(await usdt.balanceOf(alice.address)).to.be.equal(amount);
     // commission fee
-    expect(await wbtc.balanceOf(feeReceiver)).to.be.equal(commissionAmount)
+    expect(await targetToken.balanceOf(feeReceiver)).to.be.equal(commissionAmount)
   });
 
   it("WETH token single pool exchange with commissionfee 100", async () => {
@@ -123,8 +124,8 @@ describe("Unxswap swap test with commission", function () {
     sourceToken = weth;
     targetToken = usdt;
     const totalAmount = ethers.utils.parseEther('0.1');
-    const commissionAmount = totalAmount.mul(fee).div(10000)
-    const fromTokenAmount = totalAmount.sub(commissionAmount)
+    // const commissionAmount = totalAmount.mul(fee).div(10000)
+    // const fromTokenAmount = totalAmount.sub(commissionAmount)
     // 0x4 WETH -> ETH 0x8 reverse pair
     flag = sourceToken.address == token0 ? '0x0' : "0x8";
     poolAddr = lpWETHUSDT.address.toString().replace('0x', '');
@@ -138,18 +139,18 @@ describe("Unxswap swap test with commission", function () {
 
     let rawInfo = await dexRouter.connect(alice).populateTransaction.unxswapByOrderId(
       sourceToken.address,
-      fromTokenAmount,
+      totalAmount,
       0,
       [pool0]
     );
-    let commissionToken = "000000000000000000000000" + sourceToken.address.toString().replace('0x', '')
+    let commissionToken = "000000000000000000000000" + targetToken.address.toString().replace('0x', '')
     rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
     let tx = await alice.sendTransaction(rawInfo)
     let receipt = await tx.wait()
     console.log("receipt", receipt.cumulativeGasUsed);
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
-    expect(await usdt.balanceOf(alice.address)).to.be.equal("295817019727018840593");
-    expect(await weth.balanceOf(feeReceiver)).to.be.equal(commissionAmount);
+    expect(await usdt.balanceOf(alice.address)).to.be.equal("295814073368851255298");
+    expect(await usdt.balanceOf(feeReceiver)).to.be.equal("2988020943119709649");
   });
 
   it("multi-pool token exchange with commissionfee 100", async () => {
@@ -180,8 +181,8 @@ describe("Unxswap swap test with commission", function () {
     // Bob transfer 0.1 ether wbtc to Alice
     await sourceToken.connect(bob).transfer(alice.address, ethers.utils.parseEther('0.1'));
     const totalAmount = ethers.utils.parseEther('0.1');
-    const commissionAmount = totalAmount.mul(fee).div(10000)
-    const fromTokenAmount = totalAmount.sub(commissionAmount)
+    // const commissionAmount = totalAmount.mul(fee).div(10000)
+    // const fromTokenAmount = totalAmount.sub(commissionAmount)
     // 0x4: WETH -> ETH 0x8: reverse pair
     flag0 = sourceToken.address == token00 ? '0x0' : "0x8";
     flag1 = middleToken.address == token10 ? '0x0' : "0x8";
@@ -195,19 +196,19 @@ describe("Unxswap swap test with commission", function () {
 
     let rawInfo = await dexRouter.connect(alice).populateTransaction.unxswapByOrderId(
       sourceToken.address,
-      fromTokenAmount,
+      totalAmount,
       0,
       [pool0, pool1]
     );
-    let commissionToken = "000000000000000000000000" + sourceToken.address.toString().replace('0x', '')
+    let commissionToken = "000000000000000000000000" + targetToken.address.toString().replace('0x', '')
     rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
 
     let tx = await alice.sendTransaction(rawInfo)
     let receipt = await tx.wait();
     console.log("receipt", receipt.cumulativeGasUsed);
     // const rev = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
-    expect(await targetToken.balanceOf(alice.address)).to.be.equal("1293838473066507532");
-    expect(await sourceToken.balanceOf(feeReceiver)).to.be.equal(commissionAmount)
+    expect(await targetToken.balanceOf(alice.address)).to.be.equal("1293656685770078828");
+    expect(await targetToken.balanceOf(feeReceiver)).to.be.equal("13067239250202816")
   });
 
   it("if the source token is ETH, it should be successfully converted with commissionfee 100", async () => {
@@ -224,8 +225,8 @@ describe("Unxswap swap test with commission", function () {
     sourceToken = ETH;
     targetToken = usdt;
     const totalAmount = ethers.utils.parseEther('0.1');
-    const commissionAmount = totalAmount.mul(fee).div(10000)
-    const fromTokenAmount = totalAmount.sub(commissionAmount)
+    // const commissionAmount = totalAmount.mul(fee).div(10000)
+    // const fromTokenAmount = totalAmount.sub(commissionAmount)
     // 0x4 WETH -> ETH 0x8 reverse pair
     flag = token0 == weth.address ? '0x0' : '0x8'
     poolAddr = lpWETHUSDT.address.toString().replace('0x', '');
@@ -234,22 +235,22 @@ describe("Unxswap swap test with commission", function () {
     // await sourceToken.connect(bob).approve(tokenApprove.address, fromTokenAmount);
     let rawInfo = await dexRouter.connect(alice).populateTransaction.unxswapByOrderId(
       sourceToken.address,
-      fromTokenAmount,
+      totalAmount,
       0,
       [pool0],
       {
         value: ethers.utils.parseEther('0.1')
       }
     );
-    let commissionToken = "000000000000000000000000" + "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE".replace('0x', '')
+    let commissionToken = "000000000000000000000000" + targetToken.address.toString().replace('0x', '')
     rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
     let tx = await alice.sendTransaction(rawInfo)
     let receipt = await tx.wait();
 
     console.log("receipt", receipt.cumulativeGasUsed);
     // const rev = fromTokenAmount * fee * r0 / (r1 * 1000 + fromTokenAmount * fee);
-    expect(await targetToken.balanceOf(alice.address)).to.be.equal("295817019727018840593");
-    expect(await ethers.provider.getBalance(feeReceiver)).to.be.equal(commissionAmount)
+    expect(await targetToken.balanceOf(alice.address)).to.be.equal("295814073368851255298");
+    expect(await targetToken.provider.getBalance(feeReceiver)).to.be.equal("0")
   });
 
   it("if the target token is ETH, it should be successfully converted with commission fee 100", async () => {
@@ -267,8 +268,8 @@ describe("Unxswap swap test with commission", function () {
     sourceToken = usdt;
     targetToken = ETH;
     const totalAmount = ethers.utils.parseEther('3000');
-    const commissionAmount = totalAmount.mul(fee).div(10000)
-    const fromTokenAmount = totalAmount.sub(commissionAmount)
+    // const commissionAmount = totalAmount.mul(fee).div(10000)
+    // const fromTokenAmount = totalAmount.sub(commissionAmount)
     // 0x4 WETH -> ETH 0x8 reverse pair
     flag = sourceToken.address == token0 ? "0x4" : "0xc";
     poolAddr = lpWETHUSDT.address.toString().replace('0x', '');
@@ -280,12 +281,12 @@ describe("Unxswap swap test with commission", function () {
     const beforeBalance = await ethers.provider.getBalance(alice.address);
     let rawInfo = await dexRouter.connect(alice).populateTransaction.unxswapTo(
       sourceToken.address,
-      fromTokenAmount,
+      totalAmount,
       0,
       tom.address,
       [pool0]
     );
-    let commissionToken = "000000000000000000000000" + sourceToken.address.toString().replace('0x', '')
+    let commissionToken = "000000000000000000000000" + "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE".replace('0x', '')
     rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
     let tx = await alice.sendTransaction(rawInfo)
     let receipt = await tx.wait();
@@ -295,10 +296,9 @@ describe("Unxswap swap test with commission", function () {
     const afterBalance = await ethers.provider.getBalance(tom.address);
 
     // const rev = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
-    expect(afterBalance).to.be.equal(BigNumber.from('977382937195004150'));
-    // console.log(await sourceToken.balanceOf(feeReceiver))
-    // console.log(commissionAmount)
-    expect(await sourceToken.balanceOf(feeReceiver)).to.be.equal(commissionAmount)
+    expect(afterBalance).to.be.equal(BigNumber.from('977286454053090686'));
+
+    expect(await ethers.provider.getBalance(feeReceiver)).to.be.equal("9871580343970612")
   })
 
   it("ERC20 token single pool exchange with order id", async () => {
@@ -315,8 +315,8 @@ describe("Unxswap swap test with commission", function () {
     sourceToken = wbtc;
     targetToken = usdt;
     const totalAmount = ethers.utils.parseEther('0.1');
-    const commissionAmount = totalAmount.mul(fee).div(10000)
-    const fromTokenAmount = totalAmount.sub(commissionAmount)
+    // const commissionAmount = totalAmount.mul(fee).div(10000)
+    // const fromTokenAmount = totalAmount.sub(commissionAmount)
     // 0x4 WETH -> ETH 0x8 reverse pair
     flag = sourceToken.address == token0 ? '0x0' : "0x8";
     poolAddr = lpWBTCUSDT.address.toString().replace('0x', '');
@@ -328,12 +328,12 @@ describe("Unxswap swap test with commission", function () {
     const orderId = "000000000000000000000001";
     let rawInfo = await dexRouter.connect(alice).populateTransaction.unxswapTo(
       "0x" + orderId + sourceToken.address.replace("0x", ""),
-      fromTokenAmount,
+      totalAmount,
       0,
       tom.address,
       [pool0]
     );
-    let commissionToken = "000000000000000000000000" + sourceToken.address.toString().replace('0x', '')
+    let commissionToken = "000000000000000000000000" + targetToken.address.toString().replace('0x', '')
     rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
     let tx = await alice.sendTransaction(rawInfo)
     let receipt = await tx.wait();
@@ -342,9 +342,9 @@ describe("Unxswap swap test with commission", function () {
     expect(receipt.logs[0].topics[0]).to.be.equal(iface.getEventTopic("SwapOrderId(uint256)"))
     // expect(receipt.events[0].event).to.be.eq("SwapOrderId");
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
-    const amount = getAmountOut(fromTokenAmount, "4000000000000000000000000", "100000000000000000000");
-    expect(await targetToken.balanceOf(tom.address)).to.be.equal(amount);
-    expect(await sourceToken.balanceOf(feeReceiver)).to.be.equal(commissionAmount)
+    // const amount = getAmountOut(fromTokenAmount, "4000000000000000000000000", "100000000000000000000");
+    expect(await targetToken.balanceOf(tom.address)).to.be.equal("3944187644918016737313");
+    expect(await targetToken.balanceOf(feeReceiver)).to.be.equal("39840279241596128659")
   });
 
 

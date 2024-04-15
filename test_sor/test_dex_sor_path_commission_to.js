@@ -6,16 +6,22 @@ const pmm_params = require("../dex_router_v2_test/pmm/pmm_params");
 
 require('../scripts/tools');
 
-describe("Smart route path test", function () {
+describe("Smart route path test with commission", function () {
   this.timeout(300000);
   const FOREVER = '2000000000';
   let wbtc, weth, dot, bnb, usdc, usdt, memeToken;
   let router, tokenApprove, dexRouter, wNativeRelayer, tokenApproveProxy;
   let owner, alice, bob, liquidity, ethHolder;
 
+  const feeReceiver = "0x94d3af948652ea2b272870ffa10da3250e0a34c3" // unibot address
+  const fee = ethers.BigNumber.from(100).toHexString()
+  const commissionFlag = "0x3ca20afc2bbb"
+  const commissionInfo = "0x" + commissionFlag.replace('0x', '') + '0000000000' + fee.replace('0x', '') + feeReceiver.replace('0x', '')
+  // const commissionInfo = "0x3ca20afc2aaa00000000006494d3af948652ea2b272870ffa10da3250e0a34c3"; // unibot address, with commission fee 100/10000
+
   before(async () => {
     [owner, alice, bob, liquidity, ethHolder] = await ethers.getSigners();
-
+    tom = { "address": '0xeeeEEEeEeeEeEeeEEeeEeeeEeeEeEEeeeeEeffFf' }
     await setForkBlockNumber(16094434);
     await initWeth();
     await initTokenApproveProxy();
@@ -54,14 +60,16 @@ describe("Smart route path test", function () {
     }
   });
 
-  it("mixSwap with single path with safemoon token", async () => {
+  it("mixSwap with single path with safemoon token with commission", async () => {
     // wbtc -> weth -> usdt
 
     await memeToken.transfer(alice.address, ethers.utils.parseEther('100000000'));
 
     fromToken = memeToken;
     toToken = usdt;
-    const fromTokenAmount = ethers.utils.parseEther('1000');
+    const totalAmount = ethers.utils.parseEther('1000');
+    // const commissionAmount = totalAmount.mul(fee).div(10000)
+    // const fromTokenAmount = totalAmount.sub(commissionAmount)
     const minReturnAmount = ethers.utils.parseEther('0');
     const deadLine = FOREVER;
 
@@ -81,61 +89,44 @@ describe("Smart route path test", function () {
     const extraData1 = [0x0];
     const router1 = [mixAdapter1, assertTo1, rawData1, extraData1, memeToken.address];
 
-    // node2
-    // const mixAdapter2 = [
-    //   uniAdapter.address
-    // ];
-    // const assertTo2 = [
-    //   lpWETHUSDT.address
-    // ];
-    // const weight2 = getWeight(10000);
-    // const rawData2 = [
-    //   "0x" + await await direction(weth.address, usdt.address, lpWETHUSDT) + "0000000000000000000" + weight2 + lpWETHUSDT.address.replace("0x", "")
-    // ];
-    // const extraData2 = [0x0];
-    // const router2 = [mixAdapter2, assertTo2, rawData2, extraData2, weth.address];
-
     // layer1
     const layer1 = [router1];
 
     const baseRequest = [
       fromToken.address,
       toToken.address,
-      fromTokenAmount,
+      totalAmount,
       minReturnAmount,
       deadLine,
     ]
     const orderId = 1;
-    let tx = await dexRouter.connect(alice).smartSwapByOrderId(
+    let rawInfo = await dexRouter.connect(alice).populateTransaction.smartSwapTo(
       orderId,
+      tom.address,
       baseRequest,
-      [fromTokenAmount],
+      [totalAmount],
       [layer1],
       []
     );
+    let commissionToken = "000000000000000000000000" + toToken.address.toString().replace('0x', '')
+    rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
 
-    // console.log("tx", tx);
+    let tx = await alice.sendTransaction(rawInfo)
+    let receipt = await tx.wait()
 
-    // expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
-    // // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
-    // // wbtc -> weth 1:10
-    // // 10000000000000000000 * 997 * 10000000000000000000000 / (1000000000000000000000 * 1000 +  10000000000000000000 * 997) = 98715803439706130000
-    // const receive0 = getAmountOut(fromTokenAmount, '10000000000000000000000', '1000000000000000000000');
-    // // weth -> usdt 1:3000
-    // // 98715803439706130000 * 997 * 300000000000000000000000 / (100000000000000000000 * 1000 +  98715803439706130000 * 997) = 148805301851965514608651
-    // const receive1 = getAmountOut(receive0, '300000000000000000000000', '100000000000000000000');
-    // expect(await usdt.balanceOf(alice.address)).to.be.eq(receive1.toString());
+    expect(await toToken.balanceOf(feeReceiver)).to.be.equal("9960069810399032164")
+    expect(await toToken.balanceOf(tom.address)).to.be.equal("986046911229504184329")
+
   });
 
-  it("mixSwap with single path", async () => {
+  it("mixSwap with single path with commission", async () => {
     // wbtc -> weth -> usdt
-
-    // console.log("alice" + alice.address);
-    // console.log("wbtc: " + wbtc.address);
 
     fromToken = wbtc;
     toToken = usdt;
-    const fromTokenAmount = ethers.utils.parseEther('10');
+    const totalAmount = ethers.utils.parseEther('10');
+    // const commissionAmount = totalAmount.mul(fee).div(10000)
+    // const fromTokenAmount = totalAmount.sub(commissionAmount)
     const minReturnAmount = ethers.utils.parseEther('0');
     const deadLine = FOREVER;
 
@@ -175,40 +166,48 @@ describe("Smart route path test", function () {
     const baseRequest = [
       fromToken.address,
       toToken.address,
-      fromTokenAmount,
+      totalAmount,
       minReturnAmount,
       deadLine,
     ]
     const orderId = 1;
-    let tx = await dexRouter.connect(alice).smartSwapByOrderId(
+    let rawInfo = await dexRouter.connect(alice).populateTransaction.smartSwapTo(
       orderId,
+      tom.address,
       baseRequest,
-      [fromTokenAmount],
+      [totalAmount],
       [layer1],
       []
     );
-    let receipt = await tx.wait();
+    let commissionToken = "000000000000000000000000" + toToken.address.toString().replace('0x', '')
+    rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
+    let tx = await alice.sendTransaction(rawInfo)
+    let receipt = await tx.wait()
 
-    expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
     // wbtc -> weth 1:10
     // 10000000000000000000 * 997 * 10000000000000000000000 / (1000000000000000000000 * 1000 +  10000000000000000000 * 997) = 98715803439706130000
-    const receive0 = getAmountOut(fromTokenAmount, '10000000000000000000000', '1000000000000000000000');
+    const receive0 = getAmountOut(totalAmount, '10000000000000000000000', '1000000000000000000000');
     // weth -> usdt 1:3000
     // 98715803439706130000 * 997 * 300000000000000000000000 / (100000000000000000000 * 1000 +  98715803439706130000 * 997) = 148805301851965514608651
     const receive1 = getAmountOut(receive0, '300000000000000000000000', '100000000000000000000');
-    expect(await usdt.balanceOf(alice.address)).to.be.eq(receive1.toString());
+    expect(await usdt.balanceOf(tom.address)).to.be.eq("147317248833445859462565");
+    expect(await usdt.balanceOf(feeReceiver)).to.be.eq("1488053018519655146086");
+
   });
 
-  it("mixSwap with two fork path", async () => {
+  it("mixSwap with two fork path with commission", async () => {
     // wbtc -> weth -> usdt
     //      -> dot  -> usdt
 
     const fromToken = wbtc;
     const toToken = usdt;
-    const fromTokenAmount = ethers.utils.parseEther('10');
-    const fromTokenAmount1 = ethers.utils.parseEther('5');
-    const fromTokenAmount2 = ethers.utils.parseEther('5');
+    const totalAmount = ethers.utils.parseEther('10');
+    // const commissionAmount = totalAmount.mul(fee).div(10000)
+    // const fromTokenAmount = totalAmount.sub(commissionAmount)
+
+    const fromTokenAmount1 = totalAmount.div(2);
+    const fromTokenAmount2 = totalAmount.div(2);
     const minReturnAmount = ethers.utils.parseEther('0');
     const deadLine = FOREVER;
 
@@ -223,7 +222,7 @@ describe("Smart route path test", function () {
     ];
     const weight1 = getWeight(10000);
     const rawData1 = [
-      "0x" + await await direction(wbtc.address, weth.address, lpWBTCWETH) + "0000000000000000000" + weight1 + lpWBTCWETH.address.replace("0x", "")
+      "0x" + await direction(wbtc.address, weth.address, lpWBTCWETH) + "0000000000000000000" + weight1 + lpWBTCWETH.address.replace("0x", "")
     ];
     const extraData1 = [0x0];
     const router1 = [mixAdapter1, assertTo1, rawData1, extraData1, wbtc.address];
@@ -237,7 +236,7 @@ describe("Smart route path test", function () {
     ];
     const weight3 = getWeight(10000);
     const rawData3 = [
-      "0x" + await await direction(weth.address, usdt.address, lpWETHUSDT) + "0000000000000000000" + weight3 + lpWETHUSDT.address.replace("0x", "")
+      "0x" + await direction(weth.address, usdt.address, lpWETHUSDT) + "0000000000000000000" + weight3 + lpWETHUSDT.address.replace("0x", "")
     ];
     const extraData3 = [0x0];
     const router3 = [mixAdapter3, assertTo3, rawData3, extraData3, weth.address];
@@ -251,7 +250,7 @@ describe("Smart route path test", function () {
     ];
     const weight2 = getWeight(10000);
     const rawData2 = [
-      "0x" + await await direction(wbtc.address, dot.address, lpWBTCDOT) + "0000000000000000000" + weight2 + lpWBTCDOT.address.replace("0x", "")
+      "0x" + await direction(wbtc.address, dot.address, lpWBTCDOT) + "0000000000000000000" + weight2 + lpWBTCDOT.address.replace("0x", "")
     ];
     const extraData2 = ['0x'];
     const router2 = [mixAdapter2, assertTo2, rawData2, extraData2, wbtc.address];
@@ -265,7 +264,7 @@ describe("Smart route path test", function () {
     ];
     const weight4 = '2710'; // Number(10000).toString(16).replace('0x', '');
     const rawData4 = [
-      "0x" + await await direction(dot.address, usdt.address, lpDOTUSDT) + "0000000000000000000" + weight4 + lpDOTUSDT.address.replace("0x", "")
+      "0x" + await direction(dot.address, usdt.address, lpDOTUSDT) + "0000000000000000000" + weight4 + lpDOTUSDT.address.replace("0x", "")
     ];
     const extraData4 = [0x0];
     const router4 = [mixAdapter4, assertTo4, rawData4, extraData4, dot.address];
@@ -277,18 +276,23 @@ describe("Smart route path test", function () {
     const baseRequest = [
       fromToken.address,
       toToken.address,
-      fromTokenAmount,
+      totalAmount,
       minReturnAmount,
       deadLine,
     ]
     const orderId = 1;
-    rxResult = await dexRouter.connect(alice).smartSwapByOrderId(
+    let rawInfo = await dexRouter.connect(alice).populateTransaction.smartSwapTo(
       orderId,
+      tom.address,
       baseRequest,
       [fromTokenAmount1, fromTokenAmount2],
       [layer1, layer2],
       []
     );
+    let commissionToken = "000000000000000000000000" + toToken.address.toString().replace('0x', '')
+    rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
+    let tx = await alice.sendTransaction(rawInfo)
+    let receipt = await tx.wait()
     // console.log(rxResult.data)
     expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
     // wbtc -> weth
@@ -305,10 +309,12 @@ describe("Smart route path test", function () {
     const receive11 = getAmountOut(receive1, '3000000000000000000000', '100000000000000000000');
     // usdt: 9.926923590344674e+22 + 2.937940268333389e+21 = 10220717617178012e+23 (102207176171780117650753)
     const receive = receive00.add(receive11);
-    expect(await usdt.balanceOf(alice.address)).to.be.eq(receive);
+    expect(await usdt.balanceOf(tom.address)).to.be.eq("101185104410062316474246");
+    expect(await usdt.balanceOf(feeReceiver)).to.be.eq("1022071761717801176507");
+
   });
 
-  it("mixSwap with four path, same token", async () => {
+  it("mixSwap with four path, same token with commission", async () => {
     // wbtc -> weth(uni)
     //      -> weth(curve)
     //      -> weth(dodo)
@@ -318,10 +324,10 @@ describe("Smart route path test", function () {
 
     fromToken = wbtc;
     toToken = weth;
-    fromTokenAmount = ethers.utils.parseEther('10');
-    fromTokenAmount1 = ethers.utils.parseEther('2');
-    fromTokenAmount2 = ethers.utils.parseEther('3');
-    fromTokenAmount3 = ethers.utils.parseEther('5');
+    const totalAmount = ethers.utils.parseEther('10');
+    // const commissionAmount = totalAmount.mul(fee).div(10000)
+    // const fromTokenAmount = totalAmount.sub(commissionAmount)
+
     minReturnAmount = 0;
     deadLine = FOREVER;
 
@@ -356,34 +362,32 @@ describe("Smart route path test", function () {
     baseRequest = [
       fromToken.address,
       toToken.address,
-      fromTokenAmount,
+      totalAmount,
       minReturnAmount,
       deadLine
     ]
     const orderId = 1;
-    rxResult = await dexRouter.connect(alice).smartSwapByOrderId(
+    let rawInfo = await dexRouter.connect(alice).populateTransaction.smartSwapTo(
       orderId,
+      tom.address,
       baseRequest,
-      [fromTokenAmount],
+      [totalAmount],
       [layer1],
       []
     );
-    // console.log(rxResult.data)
-    // wbtc -> weth
-    // 2000000000000000000 * 997 * 10000000000000000000000 / (1000000000000000000000 * 1000 +  2000000000000000000 * 997) = 19900318764383818000
-    // 3000000000000000000 * 997 * 9980099681235616181335 / (1002000000000000000000 * 1000 +  3000000000000000000 * 997) = 29702234295208346000
-    // 5000000000000000000 * 997 * 9950397446940407838178 / (1005000000000000000000 * 1000 +  5000000000000000000 * 997) = 49112344513035270000
-    // 19900318764383818000 + 29820805969345690000 + 49602730389010784000 = 98714897572627430000 ~> 98714897572627437666
-    const receive0 = getAmountOut(fromTokenAmount1, '10000000000000000000000', '1000000000000000000000');
-    const receive1 = getAmountOut(fromTokenAmount2, '9980099681235616181335', '1002000000000000000000');
-    const receive2 = getAmountOut(fromTokenAmount3, '9950397446940407838178', '1005000000000000000000');
-    const receive = receive0.add(receive1).add(receive2);
+    let commissionToken = "000000000000000000000000" + toToken.address.toString().replace('0x', '')
+    rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
+    let tx = await alice.sendTransaction(rawInfo)
+    let receipt = await tx.wait()
+
 
     expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
-    expect(await weth.balanceOf(alice.address)).to.be.eq(receive);
+    expect(await toToken.balanceOf(feeReceiver)).to.be.eq("987148975726274376")
+    expect(await weth.balanceOf(tom.address)).to.be.eq("97727748596901163290");
+
   });
 
-  it("mixSwap with three fork path", async () => {
+  it("mixSwap with three fork path with commission", async () => {
     //       -> weth -> usdt
     //  wbtc -> dot  -> usdt
     //       -> bnb  -> weth -> usdt
@@ -391,10 +395,14 @@ describe("Smart route path test", function () {
 
     const fromToken = wbtc;
     const toToken = usdt;
-    const fromTokenAmount = ethers.utils.parseEther('10');
+
+    const fromTokenAmount = ethers.utils.parseEther('10')
     const fromTokenAmount1 = ethers.utils.parseEther('2');
     const fromTokenAmount2 = ethers.utils.parseEther('3');
     const fromTokenAmount3 = ethers.utils.parseEther('5');
+    const totalAmount = fromTokenAmount
+    // const commissionAmount = totalAmount.mul(fee).div(10000)
+
     const minReturnAmount = ethers.utils.parseEther('0');
     const deadLine = FOREVER;
 
@@ -514,24 +522,30 @@ describe("Smart route path test", function () {
     const baseRequest = [
       fromToken.address,
       toToken.address,
-      fromTokenAmount,
+      totalAmount,
       minReturnAmount,
       deadLine,
     ]
     const orderId = 1;
-    await dexRouter.connect(alice).smartSwapByOrderId(
+    let rawInfo = await dexRouter.connect(alice).populateTransaction.smartSwapTo(
       orderId,
+      tom.address,
       baseRequest,
       [fromTokenAmount1, fromTokenAmount2, fromTokenAmount3],
       [layer1, layer2, layer3],
       []
     );
+    let commissionToken = "000000000000000000000000" + toToken.address.toString().replace('0x', '')
+    rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
+    let tx = await alice.sendTransaction(rawInfo)
+    let receipt = await tx.wait()
 
     expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
-    expect(await toToken.balanceOf(alice.address)).to.be.eq("53597548250295474132461");
+    expect(await toToken.balanceOf(tom.address)).to.be.eq("53061572767792519391137");
+    expect(await toToken.balanceOf(feeReceiver)).to.be.eq("535975482502954741324")
   });
 
-  it("mixSwap with single path and source token is native token", async () => {
+  it("mixSwap with single path and source token is native token with commission", async () => {
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
     // ETH -> WBTC
     ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
@@ -539,6 +553,9 @@ describe("Smart route path test", function () {
     fromToken = ETH;
     toToken = wbtc;
     const fromTokenAmount = ethers.utils.parseEther('10');
+    const totalAmount = fromTokenAmount.mul(ethers.BigNumber.from(10000)).div(ethers.BigNumber.from(10000).sub(fee))
+    const commissionAmount = totalAmount.mul(fee).div(10000)
+
     const minReturnAmount = ethers.utils.parseEther('0');
     const deadLine = FOREVER;
 
@@ -568,26 +585,31 @@ describe("Smart route path test", function () {
       deadLine,
     ]
     const orderId = 1;
-    rxResult = await dexRouter.connect(alice).smartSwapByOrderId(
+    let rawInfo = await dexRouter.connect(alice).populateTransaction.smartSwapTo(
       orderId,
+      tom.address,
       baseRequest,
       [fromTokenAmount],
       [layer1],
       [],
       {
-        value: fromTokenAmount
+        value: totalAmount
       }
     );
+    let commissionToken = "000000000000000000000000" + toToken.address.toString().replace('0x', '')
+    rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
+    let tx = await alice.sendTransaction(rawInfo)
+    let receipt = await tx.wait()
 
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
     // wbtc -> weth 1:10
     // 10000000000000000000 * 997 * 10000000000000000000000 / (1000000000000000000000 * 1000 +  10000000000000000000 * 997) = 98715803439706130000
     const receive0 = getAmountOut(fromTokenAmount, '1000000000000000000000', '10000000000000000000000');
-    const receive = receive0.add(beforeToTokenBalance);
-    expect(await toToken.balanceOf(alice.address)).to.be.eq(receive);
+    expect(await toToken.balanceOf(tom.address)).to.be.eq("986046911229504184");
+    expect(await ethers.provider.getBalance(feeReceiver)).to.be.eq("0")
   });
 
-  it("mixSwap with single path and target token is native token", async () => {
+  it("mixSwap with single path and target token is native token with commission", async () => {
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
 
     // wbtc -> eth
@@ -595,11 +617,14 @@ describe("Smart route path test", function () {
 
     fromToken = wbtc;
     toToken = ETH;
-    const fromTokenAmount = ethers.utils.parseEther('10');
+    const totalAmount = ethers.utils.parseEther('10');
+    // const commissionAmount = totalAmount.mul(fee).div(10000)
+    // const fromTokenAmount = totalAmount.sub(commissionAmount)
+
     const minReturnAmount = ethers.utils.parseEther('0');
     const deadLine = FOREVER;
 
-    await fromToken.connect(alice).approve(tokenApprove.address, fromTokenAmount);
+    await fromToken.connect(alice).approve(tokenApprove.address, ethers.constants.MaxUint256);
     const beforeAliceBalance = await ethers.provider.getBalance(alice.address);
 
     // node1
@@ -621,36 +646,44 @@ describe("Smart route path test", function () {
     const baseRequest = [
       fromToken.address,
       toToken.address,
-      fromTokenAmount,
+      totalAmount,
       minReturnAmount,
       deadLine,
     ]
     const orderId = 1;
-    rxResult = await dexRouter.connect(alice).smartSwapByOrderId(
+    let rawInfo = await dexRouter.connect(alice).populateTransaction.smartSwapTo(
       orderId,
+      tom.address,
       baseRequest,
-      [fromTokenAmount],
+      [totalAmount],
       [layer1],
       []
     );
+    let commissionToken = "000000000000000000000000" + toToken.address.toString().replace('0x', '')
+    rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
+    let tx = await alice.sendTransaction(rawInfo)
+    let receipt = await tx.wait()
 
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
     // wbtc -> weth 1:10
     // 10000000000000000000 * 997 * 10000000000000000000000 / (1000000000000000000000 * 1000 +  10000000000000000000 * 997) = 98715803439706130000
-    const receiveAmount = getAmountOut(fromTokenAmount, '10000000000000000000000', '1000000000000000000000');
-    const gasCost = await getTransactionCost(rxResult);
-    const finalAmount = beforeAliceBalance.sub(gasCost).add(receiveAmount);
-    expect(await ethers.provider.getBalance(alice.address)).to.be.gte(finalAmount);
+    // const receiveAmount = getAmountOut(fromTokenAmount, '10000000000000000000000', '1000000000000000000000');
+    // const gasCost = await getTransactionCost(tx);
+    // const finalAmount = beforeAliceBalance.sub(gasCost).add(receiveAmount);
+    expect(await ethers.provider.getBalance(tom.address)).to.be.eq("97728645405309068588");
+    expect(await ethers.provider.getBalance(feeReceiver)).to.be.eq("987158034397061298")
   });
 
-  it("mixSwap with single path and source token is wrapped native token", async () => {
+  it("mixSwap with single path and source token is wrapped native token with commission", async () => {
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
     setBalance(alice.address, ethers.utils.parseEther('1100000'));
     await weth.connect(alice).deposit({ value: ethers.utils.parseEther('1000000') });
     // WETH -> WBTC
     fromToken = weth;
     toToken = wbtc;
-    const fromTokenAmount = ethers.utils.parseEther('10');
+    const totalAmount = ethers.utils.parseEther('10');
+    // const commissionAmount = totalAmount.mul(fee).div(10000)
+    // const fromTokenAmount = totalAmount.sub(commissionAmount)
     const minReturnAmount = ethers.utils.parseEther('0');
     const deadLine = FOREVER;
 
@@ -675,297 +708,43 @@ describe("Smart route path test", function () {
     const baseRequest = [
       fromToken.address,
       toToken.address,
-      fromTokenAmount,
+      totalAmount,
       minReturnAmount,
       deadLine,
     ]
     const orderId = 1;
     await fromToken.connect(alice).approve(tokenApprove.address, ethers.utils.parseEther('1000'));
-    rxResult = await dexRouter.connect(alice).smartSwapByOrderId(
+    let rawInfo = await dexRouter.connect(alice).populateTransaction.smartSwapTo(
       orderId,
+      tom.address,
       baseRequest,
-      [fromTokenAmount],
+      [totalAmount],
       [layer1],
       []
     );
-
+    let commissionToken = "000000000000000000000000" + toToken.address.toString().replace('0x', '')
+    rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
+    let tx = await alice.sendTransaction(rawInfo)
+    let receipt = await tx.wait()
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
     // wbtc -> weth 1:10
     // 10000000000000000000 * 997 * 10000000000000000000000 / (1000000000000000000000 * 1000 +  10000000000000000000 * 997) = 98715803439706130000
-    const receive0 = getAmountOut(fromTokenAmount, '1000000000000000000000', '10000000000000000000000');
-    const receive = receive0.add(beforeToTokenBalance);
-    expect(await toToken.balanceOf(alice.address)).to.be.eq(receive);
+    const receive0 = getAmountOut(totalAmount, '1000000000000000000000', '10000000000000000000000');
+    expect(await toToken.balanceOf(tom.address)).to.be.eq("986046911229504184");
+    expect(await toToken.balanceOf(feeReceiver)).to.be.eq("9960069810399032")
   });
 
-  it("smartSwapByXBridge ETH to WBTC", async () => {
-    expect(await dexRouter._WETH()).to.be.equal(weth.address);
-    // ETH -> WBTC
-    ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
 
-    fromToken = ETH;
-    toToken = wbtc;
-    const fromTokenAmount = ethers.utils.parseEther('10');
-    const minReturnAmount = ethers.utils.parseEther('0');
-    const deadLine = FOREVER;
-
-    // node1
-    const mixAdapter1 = [
-      uniAdapter.address
-    ];
-    const assertTo1 = [
-      lpWBTCWETH.address
-    ];
-    const weight1 = '2710'; // Number(10000).toString(16).replace('0x', '');
-    const rawData1 = [
-      "0x" + await direction(weth.address, wbtc.address, lpWBTCWETH) + "0000000000000000000" + weight1 + lpWBTCWETH.address.replace("0x", "")];
-    const extraData1 = ['0x'];
-    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1, weth.address];
-
-    // layer1
-    const layer1 = [router1];
-
-    const baseRequest = [
-      fromToken.address,
-      toToken.address,
-      fromTokenAmount,
-      minReturnAmount,
-      deadLine,
-    ]
-    let encodeABI = dexRouter.interface.encodeFunctionData('smartSwapByOrderIdByXBridge', [0, baseRequest, [fromTokenAmount], [layer1], []]);
-    let xBridge = await initMockXBridge();
-    const beforeToTokenBalance = await toToken.balanceOf(xBridge.address);
-    expect(await wbtc.balanceOf(xBridge.address)).to.be.equal(0);
-    let request = {
-      adaptorId: 2,
-      fromToken: fromToken.address,
-      toToken: toToken.address,
-      to: alice.address,
-      toChainId: 56,
-      fromTokenAmount: fromTokenAmount,
-      toTokenMinAmount: 0,
-      toChainToTokenMinAmount: 0,
-      data: ethers.utils.defaultAbiCoder.encode(["address", "uint64", "uint32"], [usdt.address, 0, 501]),
-      dexData: encodeABI,
-      extData: "0x"
-    };
-    await xBridge.connect(alice).swapBridgeToV2(request, { value: fromTokenAmount });
-
-    // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
-    // wbtc -> weth 1:10
-    // 10000000000000000000 * 997 * 10000000000000000000000 / (1000000000000000000000 * 1000 +  10000000000000000000 * 997) = 98715803439706130000
-    const receive0 = getAmountOut(fromTokenAmount, '1000000000000000000000', '10000000000000000000000');
-    const receive = receive0.add(beforeToTokenBalance);
-    expect(await toToken.balanceOf(xBridge.address)).to.be.eq(receive);
-  });
-
-  it("smartSwapByXBridge WBTC to ETH", async () => {
-    // await dexRouter.setWNativeRelayer(wNativeRelayer.address);
-    // await wNativeRelayer.setCallerOk([dexRouter.address], true);
-    expect(await dexRouter._WETH()).to.be.equal(weth.address);
-
-    // wbtc -> eth
-    ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
-
-    fromToken = wbtc;
-    toToken = ETH;
-    const fromTokenAmount = ethers.utils.parseEther('10');
-    const minReturnAmount = ethers.utils.parseEther('0');
-    const deadLine = FOREVER;
-
-    await fromToken.connect(alice).approve(tokenApprove.address, fromTokenAmount);
-
-    // node1
-    const mixAdapter1 = [
-      uniAdapter.address
-    ];
-    const assertTo1 = [
-      lpWBTCWETH.address
-    ];
-    const weight1 = getWeight(10000);
-    const rawData1 = [
-      "0x" + await direction(wbtc.address, weth.address, lpWBTCWETH) + "0000000000000000000" + weight1 + lpWBTCWETH.address.replace("0x", "")];
-    const extraData1 = ['0x'];
-    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1, wbtc.address];
-
-    // layer1
-    const layer1 = [router1];
-
-    const baseRequest = [
-      fromToken.address,
-      toToken.address,
-      fromTokenAmount,
-      minReturnAmount,
-      deadLine,
-    ]
-
-    //encodeFunctionData
-    let encodeABI = dexRouter.interface.encodeFunctionData('smartSwapByOrderIdByXBridge', [0, baseRequest, [fromTokenAmount], [layer1], []]);
-
-    let xBridge = await initMockXBridge();
-    const beforeEthBalance = await ethers.provider.getBalance(xBridge.address);
-    expect(await wbtc.balanceOf(xBridge.address)).to.be.equal(0);
-    let request = {
-      adaptorId: 2,
-      fromToken: fromToken.address,
-      toToken: toToken.address,
-      to: alice.address,
-      toChainId: 56,
-      fromTokenAmount: fromTokenAmount,
-      toTokenMinAmount: 0,
-      toChainToTokenMinAmount: 0,
-      data: ethers.utils.defaultAbiCoder.encode(["address", "uint64", "uint32"], [usdt.address, 0, 501]),
-      dexData: encodeABI,
-      extData: "0x"
-    };
-    await xBridge.connect(alice).swapBridgeToV2(request);
-
-
-    // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
-    // wbtc -> weth 1:10
-    // 10000000000000000000 * 997 * 10000000000000000000000 / (1000000000000000000000 * 1000 +  10000000000000000000 * 997) = 98715803439706130000
-    const receiveAmount = getAmountOut(fromTokenAmount, '10000000000000000000000', '1000000000000000000000');
-    expect(await ethers.provider.getBalance(xBridge.address)).to.be.eq(receiveAmount);
-  });
-
-  it("claim smartSwapByXBridge ETH to WBTC", async () => {
-    expect(await dexRouter._WETH()).to.be.equal(weth.address);
-    // ETH -> WBTC
-    ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
-
-    fromToken = ETH;
-    toToken = wbtc;
-    const fromTokenAmount = ethers.utils.parseEther('10');
-    const minReturnAmount = ethers.utils.parseEther('0');
-    const deadLine = FOREVER;
-
-    // node1
-    const mixAdapter1 = [
-      uniAdapter.address
-    ];
-    const assertTo1 = [
-      lpWBTCWETH.address
-    ];
-    const weight1 = '2710'; // Number(10000).toString(16).replace('0x', '');
-    const rawData1 = [
-      "0x" + await direction(weth.address, wbtc.address, lpWBTCWETH) + "0000000000000000000" + weight1 + lpWBTCWETH.address.replace("0x", "")];
-    const extraData1 = ['0x'];
-    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1, weth.address];
-
-    // layer1
-    const layer1 = [router1];
-
-    const baseRequest = [
-      fromToken.address,
-      toToken.address,
-      fromTokenAmount,
-      minReturnAmount,
-      deadLine,
-    ]
-    // selector 0xe051c6e8
-    let encodeABI = dexRouter.interface.encodeFunctionData('smartSwapByOrderIdByXBridge', [0, baseRequest, [fromTokenAmount], [layer1], []]);
-    let xBridge = await initMockXBridge();
-    const beforeToTokenBalance = await toToken.balanceOf(bob.address);
-    expect(await wbtc.balanceOf(xBridge.address)).to.be.equal(0);
-    let request = {
-      fromToken: fromToken.address,
-      toToken: toToken.address,
-      to: bob.address,
-      amount: fromTokenAmount,
-      gasFeeAmount: 0,
-      srcChainId: 1,
-      srcTxHash: ethers.utils.defaultAbiCoder.encode(['bytes32'], ['0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9']),
-      dexData: encodeABI,
-      extData: ethers.utils.defaultAbiCoder.encode(['bytes'], ['0x6e']),
-    };
-
-    await alice.sendTransaction({ to: xBridge.address, value: fromTokenAmount });
-    await xBridge.connect(alice).claim(request);
-
-    // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
-    // wbtc -> weth 1:10
-    // 10000000000000000000 * 997 * 10000000000000000000000 / (1000000000000000000000 * 1000 +  10000000000000000000 * 997) = 98715803439706130000
-    const receive0 = getAmountOut(fromTokenAmount, '1000000000000000000000', '10000000000000000000000');
-    const receive = receive0.add(beforeToTokenBalance);
-    expect(await toToken.balanceOf(bob.address)).to.be.eq(receive);
-  });
-
-  it("claim smartSwapByXBridge WBTC to ETH", async () => {
-    // await dexRouter.setWNativeRelayer(wNativeRelayer.address);
-    expect(await dexRouter._WETH()).to.be.equal(weth.address);
-
-    // wbtc -> eth
-    ETH = { address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }
-
-    fromToken = wbtc;
-    toToken = ETH;
-    const fromTokenAmount = ethers.utils.parseEther('10');
-    const minReturnAmount = ethers.utils.parseEther('0');
-    const deadLine = FOREVER;
-
-    await fromToken.connect(alice).approve(tokenApprove.address, fromTokenAmount);
-
-    // node1
-    const mixAdapter1 = [
-      uniAdapter.address
-    ];
-    const assertTo1 = [
-      lpWBTCWETH.address
-    ];
-    const weight1 = getWeight(10000);
-    const rawData1 = [
-      "0x" + await direction(wbtc.address, weth.address, lpWBTCWETH) + "0000000000000000000" + weight1 + lpWBTCWETH.address.replace("0x", "")];
-    const extraData1 = ['0x'];
-    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1, wbtc.address];
-
-    // layer1
-    const layer1 = [router1];
-
-    const baseRequest = [
-      fromToken.address,
-      toToken.address,
-      fromTokenAmount,
-      minReturnAmount,
-      deadLine,
-    ]
-
-    //encodeFunctionData
-    let encodeABI = dexRouter.interface.encodeFunctionData('smartSwapByOrderIdByXBridge', [0, baseRequest, [fromTokenAmount], [layer1], []]);
-
-    let xBridge = await initMockXBridge();
-    expect(await wbtc.balanceOf(xBridge.address)).to.be.equal(0);
-    let beforeToTokenBalance = await ethers.provider.getBalance(bob.address)
-    let request = {
-      fromToken: fromToken.address,
-      toToken: toToken.address,
-      to: bob.address,
-      amount: fromTokenAmount,
-      gasFeeAmount: 0,
-      srcChainId: 1,
-      srcTxHash: ethers.utils.defaultAbiCoder.encode(['bytes32'], ['0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9']),
-      dexData: encodeABI,
-      extData: ethers.utils.defaultAbiCoder.encode(['bytes'], ['0x6e']),
-    };
-
-    await fromToken.connect(alice).transfer(xBridge.address, fromTokenAmount);
-    expect(await fromToken.balanceOf(xBridge.address)).to.be.equal(fromTokenAmount);
-    await xBridge.connect(alice).claim(request);
-    expect(await wbtc.balanceOf(xBridge.address)).to.be.equal(0);
-
-    // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
-    // wbtc -> weth 1:10
-    // 10000000000000000000 * 997 * 10000000000000000000000 / (1000000000000000000000 * 1000 +  10000000000000000000 * 997) = 98715803439706130000
-    const receiveAmount = getAmountOut(fromTokenAmount, '10000000000000000000000', '1000000000000000000000');
-    expect(await ethers.provider.getBalance(bob.address)).to.be.eq(receiveAmount.add(beforeToTokenBalance));
-  });
-
-  it("mixSwap with single path with order id", async () => {
+  it("mixSwap with single path with order id with commission", async () => {
     // wbtc -> weth -> usdt
 
     await memeToken.transfer(alice.address, ethers.utils.parseEther('100000000'));
 
     fromToken = memeToken;
     toToken = usdt;
-    const fromTokenAmount = ethers.utils.parseEther('1000');
+    const totalAmount = ethers.utils.parseEther('1000');
+    // const commissionAmount = totalAmount.mul(fee).div(10000)
+    // const fromTokenAmount = totalAmount.sub(commissionAmount)
     const minReturnAmount = ethers.utils.parseEther('0');
     const deadLine = FOREVER;
 
@@ -991,76 +770,31 @@ describe("Smart route path test", function () {
     const baseRequest = [
       fromToken.address,
       toToken.address,
-      fromTokenAmount,
+      totalAmount,
       minReturnAmount,
       deadLine,
     ]
     const orderId = 1;
-    const tx = await dexRouter.connect(alice).smartSwapByOrderId(
+    let rawInfo = await dexRouter.connect(alice).populateTransaction.smartSwapTo(
       orderId,
+      tom.address,
       baseRequest,
-      [fromTokenAmount],
+      [totalAmount],
       [layer1],
       []
     );
-    const receipt = await tx.wait();
-    expect(receipt.events[0].event).to.be.eq("SwapOrderId");
+    let commissionToken = "000000000000000000000000" + toToken.address.toString().replace('0x', '')
+    rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
+    let tx = await alice.sendTransaction(rawInfo)
+    let receipt = await tx.wait()
+    const iface = new ethers.utils.Interface(["event SwapOrderId(uint256 id)"]);
+    expect(receipt.logs[0].topics[0]).to.be.equal(iface.getEventTopic("SwapOrderId(uint256)"))
     expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
+    expect(await toToken.balanceOf(tom.address)).to.be.eq("986046911229504184329")
+    expect(await toToken.balanceOf(feeReceiver)).to.be.eq("9960069810399032164")
   });
 
-  it("mixSwap with single path by invest", async () => {
-    await memeToken.transfer(alice.address, ethers.utils.parseEther('100000000'));
 
-    fromToken = memeToken;
-    toToken = usdt;
-    const fromTokenAmount = ethers.utils.parseEther('1000');
-    const minReturnAmount = ethers.utils.parseEther('50');
-    const deadLine = FOREVER;
-
-    // await fromToken.connect(alice).approve(tokenApprove.address, ethers.utils.parseEther('1000000'));
-    await fromToken.connect(alice).transfer(dexRouter.address, ethers.utils.parseEther('100'));
-
-    // node1
-    const mixAdapter1 = [
-      uniAdapter.address
-    ];
-    const assertTo1 = [
-      lpMemeUSDT.address
-    ];
-    const weight1 = getWeight(10000);
-    const rawData1 = [
-      "0x" + await direction(memeToken.address, usdt.address, lpMemeUSDT) + "0000000000000000000" + weight1 + lpMemeUSDT.address.replace("0x", "")
-    ];
-    const extraData1 = [[]];
-    const router1 = [mixAdapter1, assertTo1, rawData1, extraData1, memeToken.address];
-
-    // layer1
-    const layer1 = [router1];
-
-    const baseRequest = [
-      fromToken.address,
-      toToken.address,
-      fromTokenAmount,
-      minReturnAmount,
-      deadLine,
-    ]
-    let balBefore = await toToken.balanceOf(alice.address);
-    const tx = await dexRouter.connect(alice).smartSwapByInvest(
-      baseRequest,
-      [fromTokenAmount],
-      [layer1],
-      [],
-      alice.address
-    );
-    let receipt = await tx.wait();
-
-    let balAfter = await toToken.balanceOf(alice.address);
-    // console.log("balAfter - balBefore", balAfter - balBefore);
-
-    expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
-    expect((await toToken.balanceOf(alice.address)).sub(minReturnAmount)).to.be.gte("0");
-
-  });
 
   const direction = async (fromToken, toToken, pair) => {
     if (!pair) return 0;
@@ -1231,7 +965,7 @@ describe("Smart route path test", function () {
     DexRouter = await ethers.getContractFactory("DexRouter");
     dexRouter = await upgrades.deployProxy(DexRouter);
     await dexRouter.deployed();
-    // await dexRouter.initializePMMRouter(_feeRateAndReceiver);
+    //await dexRouter.initializePMMRouter(_feeRateAndReceiver);
 
 
     expect(await dexRouter._WETH()).to.be.equal(weth.address);

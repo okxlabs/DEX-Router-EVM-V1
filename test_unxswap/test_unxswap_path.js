@@ -7,12 +7,12 @@ const pmm_params = require("../test_pmm/pmm/pmm_params");
 
 const ethDeployed = require("../scripts/deployed/eth");
 
-require ('../scripts/tools');
+require('../scripts/tools');
 
 //
 // You need to change the address in the Unxswap contract before running the test case
 //
-describe("Unxswap swap test", function() {
+describe("Unxswap swap test", function () {
   this.timeout(300000);
 
   const ETH = { address: '0x0000000000000000000000000000000000000000' }
@@ -23,9 +23,9 @@ describe("Unxswap swap test", function() {
   let cBridge = "0x5427FEFA711Eff984124bFBB1AB6fbf5E3DA1820";
 
 
-  before(async function() {
+  before(async function () {
     [owner, alice, bob, liquidity] = await ethers.getSigners();
-    await setForkBlockNumber(16094434); 
+    await setForkBlockNumber(16094434);
 
     await initWeth();
     await initTokenApproveProxy();
@@ -35,7 +35,7 @@ describe("Unxswap swap test", function() {
 
   });
 
-  beforeEach(async function() {
+  beforeEach(async function () {
     await initMockTokens();
     await initUniSwap();
 
@@ -44,17 +44,17 @@ describe("Unxswap swap test", function() {
       [wbtc, usdt, ethers.utils.parseEther('100'), ethers.utils.parseEther('4000000')],
       [wbtc, weth, ethers.utils.parseEther('10'), ethers.utils.parseEther('100')],
       [weth, dot, ethers.utils.parseEther('10'), ethers.utils.parseEther('100')],
-      [dot,  usdt, ethers.utils.parseEther('100'), ethers.utils.parseEther('3000')],
+      [dot, usdt, ethers.utils.parseEther('100'), ethers.utils.parseEther('3000')],
       [wbtc, dot, ethers.utils.parseEther('10'), ethers.utils.parseEther('10000')],
       [usdt, usdc, ethers.utils.parseEther('10000'), ethers.utils.parseEther('10000')],
       [bnb, wbtc, ethers.utils.parseEther('100'), ethers.utils.parseEther('100000')],
     ]
     for (let i = 0; i < pairs.length; i++) {
       await addLiquidity(
-          pairs[i][0],
-          pairs[i][1],
-          pairs[i][2],
-          pairs[i][3],
+        pairs[i][0],
+        pairs[i][1],
+        pairs[i][2],
+        pairs[i][3],
       );
     }
   });
@@ -82,10 +82,10 @@ describe("Unxswap swap test", function() {
     await sourceToken.connect(alice).approve(tokenApprove.address, fromTokenAmount);
 
     let tx = await dexRouter.connect(alice).unxswapByOrderId(
-        sourceToken.address,
-        fromTokenAmount,
-        0,
-        [pool0]
+      sourceToken.address,
+      fromTokenAmount,
+      0,
+      [pool0]
     );
     let receipt = await tx.wait();
     console.log("receipt", receipt.cumulativeGasUsed);
@@ -121,10 +121,10 @@ describe("Unxswap swap test", function() {
     await sourceToken.connect(alice).approve(tokenApprove.address, fromTokenAmount);
 
     let tx = await dexRouter.connect(alice).unxswapByOrderId(
-        sourceToken.address,
-        fromTokenAmount,
-        0,
-        [pool0]
+      sourceToken.address,
+      fromTokenAmount,
+      0,
+      [pool0]
     );
     let receipt = await tx.wait();
     console.log("receipt", receipt.cumulativeGasUsed);
@@ -172,10 +172,10 @@ describe("Unxswap swap test", function() {
     await sourceToken.connect(alice).approve(tokenApprove.address, fromTokenAmount);
 
     let tx = await dexRouter.connect(alice).unxswapByOrderId(
-        sourceToken.address,
-        fromTokenAmount,
-        0,
-        [pool0, pool1]
+      sourceToken.address,
+      fromTokenAmount,
+      0,
+      [pool0, pool1]
     );
     let receipt = await tx.wait();
     console.log("receipt", receipt.cumulativeGasUsed);
@@ -204,13 +204,13 @@ describe("Unxswap swap test", function() {
     pool0 = flag + '000000000000000' + poolFee + poolAddr;
     // await sourceToken.connect(bob).approve(tokenApprove.address, fromTokenAmount);
     let tx = await dexRouter.connect(alice).unxswapByOrderId(
-        sourceToken.address,
-        fromTokenAmount,
-        0,
-        [pool0],
-        {
-          value: ethers.utils.parseEther('0.1')
-        }
+      sourceToken.address,
+      fromTokenAmount,
+      0,
+      [pool0],
+      {
+        value: ethers.utils.parseEther('0.1')
+      }
     );
 
     let receipt = await tx.wait();
@@ -244,10 +244,10 @@ describe("Unxswap swap test", function() {
     await sourceToken.connect(alice).approve(tokenApprove.address, fromTokenAmount);
     const beforeBalance = await ethers.provider.getBalance(alice.address);
     let tx = await dexRouter.connect(alice).unxswapByOrderId(
-        sourceToken.address,
-        fromTokenAmount,
-        0,
-        [pool0]
+      sourceToken.address,
+      fromTokenAmount,
+      0,
+      [pool0]
     );
     let receipt = await tx.wait();
     console.log("receipt", receipt.cumulativeGasUsed);
@@ -259,7 +259,7 @@ describe("Unxswap swap test", function() {
     expect(afterBalance).to.be.equal(BigNumber.from('987158034397061298').add(BigNumber.from(beforeBalance)).sub(costGas));
   })
 
-  xit("trader trades in permit signature mode", async() => {
+  xit("trader trades in permit signature mode", async () => {
     // token must support permit (EIP712)
     const token0 = await lpDOTUSDT.token0();
     reserves = await lpDOTUSDT.getReserves();
@@ -288,7 +288,7 @@ describe("Unxswap swap test", function() {
     const deadline = 200000000000000;
     // Get the EIP712 digest
     const digest = getPermitDigest(
-        await sourceToken.name(), sourceToken.address, chainId, approve, nonce, deadline
+      await sourceToken.name(), sourceToken.address, chainId, approve, nonce, deadline
     )
 
     const mnemonic = "test test test test test test test test test test test junk"
@@ -305,25 +305,25 @@ describe("Unxswap swap test", function() {
     //  479631220d2549f7f658f8534ff412c3e90fc6a355458342bfd08edcba9e0081
 
     const signdata = await ethers.utils.defaultAbiCoder.encode(
-        ['address', 'address', 'uint256', 'uint256', 'uint8', 'bytes32', 'bytes32'],
-        [
-          approve.owner,
-          approve.spender,
-          approve.value,
-          deadline,
-          v,
-          r,
-          s
-        ]
+      ['address', 'address', 'uint256', 'uint256', 'uint8', 'bytes32', 'bytes32'],
+      [
+        approve.owner,
+        approve.spender,
+        approve.value,
+        deadline,
+        v,
+        r,
+        s
+      ]
     )
 
     const beforeBalance = await usdt.balanceOf(owner.address);
     let tx = await dexRouter.connect(owner).unxswapByOrderId(
-        sourceToken.address,
-        fromTokenAmount,
-        0,
-        [pool0],
-        signdata
+      sourceToken.address,
+      fromTokenAmount,
+      0,
+      [pool0],
+      signdata
     );
     let receipt = await tx.wait();
     console.log("receipt", receipt.cumulativeGasUsed);
@@ -335,7 +335,7 @@ describe("Unxswap swap test", function() {
     // Re-using the same sig doesn't work since the nonce has been incremented
     // on the contract level for replay-protection
     await expect(
-        sourceToken.permit(approve.owner, approve.spender, approve.value, deadline, v, r, s)
+      sourceToken.permit(approve.owner, approve.spender, approve.value, deadline, v, r, s)
     ).to.be.revertedWith('ERC20Permit: invalid signature')
   });
 
@@ -363,19 +363,19 @@ describe("Unxswap swap test", function() {
     // console.log("encodeABI",encodeABI);
     let balBeforeTx = await targetToken.balanceOf(cBridge);
     let request = {
-      adaptorId : 2,
-      fromToken : '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-      toToken : usdt.address,
-      to : alice.address,
-      toChainId : 56,
-      fromTokenAmount : fromTokenAmount,
-      toTokenMinAmount : 0,
-      toChainToTokenMinAmount : 0,
-      data : ethers.utils.defaultAbiCoder.encode(["address", "uint64", "uint32"], [cBridge, 0, 501]),
-      dexData : encodeABI,
+      adaptorId: 2,
+      fromToken: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+      toToken: usdt.address,
+      to: alice.address,
+      toChainId: 56,
+      fromTokenAmount: fromTokenAmount,
+      toTokenMinAmount: 0,
+      toChainToTokenMinAmount: 0,
+      data: ethers.utils.defaultAbiCoder.encode(["address", "uint64", "uint32"], [cBridge, 0, 501]),
+      dexData: encodeABI,
       extData: "0x",
     };
-    await xBridge.connect(alice).swapBridgeToV2(request, {value: fromTokenAmount});
+    await xBridge.connect(alice).swapBridgeToV2(request, { value: fromTokenAmount });
     let balAfterTx = await targetToken.balanceOf(cBridge);
     let balReceived = balAfterTx.sub(balBeforeTx);
     expect(balReceived).to.be.equal("298802094311970964947");
@@ -407,16 +407,16 @@ describe("Unxswap swap test", function() {
     let balBeforeTx = await targetToken.balanceOf(cBridge);
 
     let request = {
-      adaptorId : 2,
-      fromToken : sourceToken.address,
-      toToken : targetToken.address,
-      to : alice.address,
-      toChainId : 56,
-      fromTokenAmount : fromTokenAmount,
-      toTokenMinAmount : 0,
-      toChainToTokenMinAmount : 0,
-      data : ethers.utils.defaultAbiCoder.encode(["address", "uint64", "uint32"], [cBridge, 0, 501]),
-      dexData : encodeABI,
+      adaptorId: 2,
+      fromToken: sourceToken.address,
+      toToken: targetToken.address,
+      to: alice.address,
+      toChainId: 56,
+      fromTokenAmount: fromTokenAmount,
+      toTokenMinAmount: 0,
+      toChainToTokenMinAmount: 0,
+      data: ethers.utils.defaultAbiCoder.encode(["address", "uint64", "uint32"], [cBridge, 0, 501]),
+      dexData: encodeABI,
       extData: "0x",
     };
 
@@ -456,15 +456,15 @@ describe("Unxswap swap test", function() {
     // let xBridge = await initMockXBridge();
     let beforeBalance = await usdt.balanceOf(bob.address);
     let request = {
-      fromToken : sourceToken.address,
-      toToken : targetToken.address,
-      to : bob.address,
+      fromToken: sourceToken.address,
+      toToken: targetToken.address,
+      to: bob.address,
       amount: fromTokenAmount,
-      gasFeeAmount : 0,
-      srcChainId : 1,
-      srcTxHash : ethers.utils.defaultAbiCoder.encode(['bytes32'], ['0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9']),
-      dexData : encodeABI,
-      extData : ethers.utils.defaultAbiCoder.encode(['bytes'], ['0x6e']),
+      gasFeeAmount: 0,
+      srcChainId: 1,
+      srcTxHash: ethers.utils.defaultAbiCoder.encode(['bytes32'], ['0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9']),
+      dexData: encodeABI,
+      extData: ethers.utils.defaultAbiCoder.encode(['bytes'], ['0x6e']),
     };
 
     // await sourceToken.connect(alice).transfer(xBridge.address, fromTokenAmount);
@@ -478,42 +478,42 @@ describe("Unxswap swap test", function() {
   });
 
   it("claim unxswapByXBridge source token ETH to usdt", async () => {
-      const token0 = await lpWETHUSDT.token0();
-      const reserves = await lpWETHUSDT.getReserves();
-      if (token0 == weth.address) {
-        expect(reserves[1]).to.be.eq("300000000000000000000000");
-        expect(reserves[0]).to.be.eq("100000000000000000000");
-      } else {
-        expect(reserves[0]).to.be.eq("300000000000000000000000");
-        expect(reserves[1]).to.be.eq("100000000000000000000");
-      }
+    const token0 = await lpWETHUSDT.token0();
+    const reserves = await lpWETHUSDT.getReserves();
+    if (token0 == weth.address) {
+      expect(reserves[1]).to.be.eq("300000000000000000000000");
+      expect(reserves[0]).to.be.eq("100000000000000000000");
+    } else {
+      expect(reserves[0]).to.be.eq("300000000000000000000000");
+      expect(reserves[1]).to.be.eq("100000000000000000000");
+    }
 
-      sourceToken = ETH;
-      targetToken = usdt;
-      const fromTokenAmount = ethers.utils.parseEther('0.1');
-      // 0x4 WETH -> ETH 0x8 reverse pair
-      flag = token0 == weth.address ? '0x0' : '0x8'
-      poolAddr = lpWETHUSDT.address.toString().replace('0x', '');
-      poolFee = Number(997000000).toString(16).replace('0x', '');
-      pool0 = flag + '000000000000000' + poolFee + poolAddr;
+    sourceToken = ETH;
+    targetToken = usdt;
+    const fromTokenAmount = ethers.utils.parseEther('0.1');
+    // 0x4 WETH -> ETH 0x8 reverse pair
+    flag = token0 == weth.address ? '0x0' : '0x8'
+    poolAddr = lpWETHUSDT.address.toString().replace('0x', '');
+    poolFee = Number(997000000).toString(16).replace('0x', '');
+    pool0 = flag + '000000000000000' + poolFee + poolAddr;
 
-      let encodeABI = dexRouter.interface.encodeFunctionData('unxswapByOrderIdByXBridge', ['0x0000000000000000000000000000000000000000', fromTokenAmount, 0, [pool0]]);
-      // let xBridge = await initMockXBridge();
-      const beforeBalance = await usdt.balanceOf(owner.address);
-      let request = {
-        fromToken : '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-        toToken : targetToken.address,
-        to : owner.address,
-        amount: fromTokenAmount,
-        gasFeeAmount : 0,
-        srcChainId : 1,
-        srcTxHash : ethers.utils.defaultAbiCoder.encode(['bytes32'], ['0x6e72edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9']),
-        dexData : encodeABI,
-        extData : ethers.utils.defaultAbiCoder.encode(['bytes'], ['0x6e']),
-      };
-      await liquidity.sendTransaction({to: xBridge.address, value: fromTokenAmount});
-      await xBridge.connect(alice).claim(request);
-      expect(await usdt.balanceOf(owner.address)).to.be.equal(beforeBalance.add("298802094311970964947"));
+    let encodeABI = dexRouter.interface.encodeFunctionData('unxswapByOrderIdByXBridge', ['0x0000000000000000000000000000000000000000', fromTokenAmount, 0, [pool0]]);
+    // let xBridge = await initMockXBridge();
+    const beforeBalance = await usdt.balanceOf(owner.address);
+    let request = {
+      fromToken: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+      toToken: targetToken.address,
+      to: owner.address,
+      amount: fromTokenAmount,
+      gasFeeAmount: 0,
+      srcChainId: 1,
+      srcTxHash: ethers.utils.defaultAbiCoder.encode(['bytes32'], ['0x6e72edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9']),
+      dexData: encodeABI,
+      extData: ethers.utils.defaultAbiCoder.encode(['bytes'], ['0x6e']),
+    };
+    await liquidity.sendTransaction({ to: xBridge.address, value: fromTokenAmount });
+    await xBridge.connect(alice).claim(request);
+    expect(await usdt.balanceOf(owner.address)).to.be.equal(beforeBalance.add("298802094311970964947"));
   });
 
   it("ERC20 token single pool exchange with order id", async () => {
@@ -540,13 +540,13 @@ describe("Unxswap swap test", function() {
 
     const orderId = 000000000000000000000001;
     const tx = await dexRouter.connect(alice).unxswapByOrderId(
-        "0x" + orderId + sourceToken.address.replace("0x", ""),
-        fromTokenAmount,
-        0,
-        [pool0]
+      "0x" + orderId + sourceToken.address.replace("0x", ""),
+      fromTokenAmount,
+      0,
+      [pool0]
     );
     let receipt = await tx.wait();
-    console.log("receipt", receipt.cumulativeGasUsed);    
+    console.log("receipt", receipt.cumulativeGasUsed);
     expect(receipt.events[0].event).to.be.eq("SwapOrderId");
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
     const amount = getAmountOut(fromTokenAmount, "4000000000000000000000000", "100000000000000000000");
@@ -579,11 +579,11 @@ describe("Unxswap swap test", function() {
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
     const amount = getAmountOut(fromTokenAmount, "4000000000000000000000000", "100000000000000000000");
     const tx = await dexRouter.connect(alice).unxswapForExactTokens(
-        sourceToken.address,
-        amount,
-        fromTokenAmount,
-        [pool0],
-        "0x"
+      sourceToken.address,
+      amount,
+      fromTokenAmount,
+      [pool0],
+      "0x"
     );
     // console.log("tx",tx);
     const receipt = await tx.wait();
@@ -591,7 +591,7 @@ describe("Unxswap swap test", function() {
     expect(await usdt.balanceOf(alice.address)).to.be.equal(amount);
   });
 
-  xit("ERC20 token single pool exchange for exact token amount out with permit", async() => {
+  xit("ERC20 token single pool exchange for exact token amount out with permit", async () => {
     // token must support permit (EIP712)
     const token0 = await lpDOTUSDT.token0();
     reserves = await lpDOTUSDT.getReserves();
@@ -620,7 +620,7 @@ describe("Unxswap swap test", function() {
     const deadline = 200000000000000;
     // Get the EIP712 digest
     const digest = getPermitDigest(
-        await sourceToken.name(), sourceToken.address, chainId, approve, nonce, deadline
+      await sourceToken.name(), sourceToken.address, chainId, approve, nonce, deadline
     )
 
     const mnemonic = "test test test test test test test test test test test junk"
@@ -637,33 +637,33 @@ describe("Unxswap swap test", function() {
     //  479631220d2549f7f658f8534ff412c3e90fc6a355458342bfd08edcba9e0081
 
     const signdata = await ethers.utils.defaultAbiCoder.encode(
-        ['address', 'address', 'uint256', 'uint256', 'uint8', 'bytes32', 'bytes32'],
-        [
-          approve.owner,
-          approve.spender,
-          approve.value,
-          deadline,
-          v,
-          r,
-          s
-        ]
+      ['address', 'address', 'uint256', 'uint256', 'uint8', 'bytes32', 'bytes32'],
+      [
+        approve.owner,
+        approve.spender,
+        approve.value,
+        deadline,
+        v,
+        r,
+        s
+      ]
     )
 
-       // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
-       const amount = getAmountOut(fromTokenAmount, "3000000000000000000000", "100000000000000000000");
-       let amount0 = await targetToken.balanceOf(owner.address);
-       const tx = await dexRouter.connect(owner).unxswapForExactTokens(
-           sourceToken.address,
-           amount,
-           fromTokenAmount,
-           [pool0],
-           signdata
-       );
-       // console.log("tx",tx);
-       const receipt = await tx.wait();
-       let amount1 = await targetToken.balanceOf(owner.address);
+    // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
+    const amount = getAmountOut(fromTokenAmount, "3000000000000000000000", "100000000000000000000");
+    let amount0 = await targetToken.balanceOf(owner.address);
+    const tx = await dexRouter.connect(owner).unxswapForExactTokens(
+      sourceToken.address,
+      amount,
+      fromTokenAmount,
+      [pool0],
+      signdata
+    );
+    // console.log("tx",tx);
+    const receipt = await tx.wait();
+    let amount1 = await targetToken.balanceOf(owner.address);
 
-       expect(amount1.sub(amount0)).to.be.equal(amount);
+    expect(amount1.sub(amount0)).to.be.equal(amount);
 
   });
 
@@ -693,12 +693,12 @@ describe("Unxswap swap test", function() {
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
     const amount = getAmountOut(fromTokenAmount, "300000000000000000000000", "100000000000000000000");
     const tx = await dexRouter.connect(alice).unxswapForExactTokens(
-        sourceToken.address,
-        amount,
-        fromTokenAmount.add(ethers.utils.parseEther('0.1')),
-        [pool0],
-        "0x",
-        {value: ethers.utils.parseEther('0.2')}
+      sourceToken.address,
+      amount,
+      fromTokenAmount.add(ethers.utils.parseEther('0.1')),
+      [pool0],
+      "0x",
+      { value: ethers.utils.parseEther('0.2') }
     );
     // console.log("tx",tx);
     const receipt = await tx.wait();
@@ -720,7 +720,7 @@ describe("Unxswap swap test", function() {
     await wbtc.transfer(bob.address, ethers.utils.parseEther('100000000'));
 
     const PermitToken = await ethers.getContractFactory("ERC20PermitMock");
-    dot = await PermitToken.deploy('DOT', 'DOT',  ethers.utils.parseEther('10000000000'));
+    dot = await PermitToken.deploy('DOT', 'DOT', ethers.utils.parseEther('10000000000'));
     await dot.deployed();
     await dot.transfer(alice.address, ethers.utils.parseEther('0'));
     await dot.transfer(owner.address, ethers.utils.parseEther('100000000'));
@@ -750,12 +750,12 @@ describe("Unxswap swap test", function() {
     await factory.createPair(wbtc.address, usdc.address);
     await factory.createPair(wbtc.address, weth.address);
     await factory.createPair(wbtc.address, bnb.address);
-    await factory.createPair(dot.address,  usdt.address);
-    await factory.createPair(dot.address,  weth.address);
+    await factory.createPair(dot.address, usdt.address);
+    await factory.createPair(dot.address, weth.address);
     await factory.createPair(usdt.address, weth.address);
-    await factory.createPair(bnb.address,  usdc.address);
-    await factory.createPair(bnb.address,  usdt.address);
-    await factory.createPair(bnb.address,  weth.address);
+    await factory.createPair(bnb.address, usdc.address);
+    await factory.createPair(bnb.address, usdt.address);
+    await factory.createPair(bnb.address, weth.address);
     const UniswapPair = await ethers.getContractFactory("UniswapV2Pair");
 
     pair = await factory.getPair(wbtc.address, dot.address)
@@ -793,14 +793,14 @@ describe("Unxswap swap test", function() {
     await token0.connect(bob).approve(router.address, amount0);
     await token1.connect(bob).approve(router.address, amount1);
     await router.connect(bob).addLiquidity(
-        token0.address,
-        token1.address,
-        amount0,
-        amount1,
-        '0',
-        '0',
-        bob.address,
-        FOREVER
+      token0.address,
+      token1.address,
+      amount0,
+      amount1,
+      '0',
+      '0',
+      bob.address,
+      FOREVER
     );
   }
 
@@ -820,7 +820,7 @@ describe("Unxswap swap test", function() {
       "TokenApproveProxy",
       ethDeployed.base.tokenApproveProxy
 
-  );
+    );
     tokenApprove = await ethers.getContractAt(
       "TokenApprove",
       ethDeployed.base.tokenApprove
@@ -831,14 +831,14 @@ describe("Unxswap swap test", function() {
     let _feeRateAndReceiver = "0x000000000000000000000000" + pmm_params.feeTo.slice(2);
     DexRouter = await ethers.getContractFactory("DexRouter");
     dexRouter = await upgrades.deployProxy(
-        DexRouter
+      DexRouter
     )
 
-    
-    await dexRouter.deployed();
-    await dexRouter.initializePMMRouter(_feeRateAndReceiver);
 
-    
+    await dexRouter.deployed();
+    // await dexRouter.initializePMMRouter(_feeRateAndReceiver);
+
+
     // await dexRouter.setApproveProxy(tokenApproveProxy.address);
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
     expect(await dexRouter._APPROVE_PROXY()).to.be.equal(tokenApproveProxy.address);
@@ -879,7 +879,7 @@ describe("Unxswap swap test", function() {
 
     await xBridge.connect(XBridgeOwner).setDexRouter(dexRouter.address);
 
-    await xBridge.connect(XBridgeOwner).setMpc([alice.address],[true]);
+    await xBridge.connect(XBridgeOwner).setMpc([alice.address], [true]);
     await xBridge.connect(XBridgeOwner).setApproveProxy(tokenApproveProxy.address);
 
     await dexRouter.setPriorityAddress(xBridge.address, true);
@@ -890,14 +890,14 @@ describe("Unxswap swap test", function() {
     return BigNumber.from(txResult.gasPrice).mul(BigNumber.from(cumulativeGasUsed));
   };
 
-  const getAmountOut = function(amountIn, r0, r1) {
+  const getAmountOut = function (amountIn, r0, r1) {
     return ethers.BigNumber.from(amountIn.toString())
-        .mul(ethers.BigNumber.from('997'))
-        .mul(ethers.BigNumber.from(r0))
-        .div(
-            ethers.BigNumber.from(r1)
-                .mul(ethers.BigNumber.from('1000'))
-                .add(ethers.BigNumber.from(amountIn.toString()).mul(ethers.BigNumber.from('997')))
-        );
+      .mul(ethers.BigNumber.from('997'))
+      .mul(ethers.BigNumber.from(r0))
+      .div(
+        ethers.BigNumber.from(r1)
+          .mul(ethers.BigNumber.from('1000'))
+          .add(ethers.BigNumber.from(amountIn.toString()).mul(ethers.BigNumber.from('997')))
+      );
   }
 });

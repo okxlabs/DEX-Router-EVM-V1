@@ -28,7 +28,7 @@ jobs:
       - name: Fetch semgrep rules
         uses: actions/checkout@v3
         with:
-          repository: OKX-Web3/semgrep-smart-contracts
+          repository: OKX/semgrep-smart-contracts
           path: rules
       # Run security and gas optimization rules
       - run: semgrep ci

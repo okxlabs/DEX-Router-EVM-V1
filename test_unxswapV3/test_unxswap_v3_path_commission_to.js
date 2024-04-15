@@ -18,12 +18,12 @@ describe("Test unxswapV3 path with commission", function () {
     const ETH = { "address": '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' };
     const feeReceiver = "0x94d3af948652ea2b272870ffa10da3250e0a34c3" // unibot address
     const fee = ethers.BigNumber.from(100).toHexString()
-    const commissionFlag = "0x3ca20afc2aaa"
+    const commissionFlag = "0x3ca20afc2bbb"
     const commissionInfo = "0x" + commissionFlag.replace('0x', '') + '0000000000' + fee.replace('0x', '') + feeReceiver.replace('0x', '')
     // const commissionInfo = "0x3ca20afc2aaa00000000006494d3af948652ea2b272870ffa10da3250e0a34c3"; // unibot address, with commission fee 100/10000
 
     beforeEach(async function () {
-        [owner, alice, bob, liquidity] = await ethers.getSigners();
+        [owner, alice, bob] = await ethers.getSigners();
         tom = { "address": '0xeeeEEEeEeeEeEeeEEeeEeeeEeeEeEEeeeeEeffFf' }
         await setForkBlockNumber(16094434);
         await initWeth();
@@ -48,8 +48,8 @@ describe("Test unxswapV3 path with commission", function () {
         pool0 = flag + '00000000000000000000000' + lpDAIBUSD.address.slice(2);
 
         const totalAmount = ethers.utils.parseEther('0.1');
-        const commissionAmount = totalAmount.mul(fee).div(10000)
-        const fromTokenAmount = totalAmount.sub(commissionAmount)
+        // const commissionAmount = totalAmount.mul(fee).div(10000)
+        // const fromTokenAmount = totalAmount.sub(commissionAmount)
         let minReturn = ethers.utils.parseEther('0.09');
 
         // 2. swap
@@ -57,17 +57,17 @@ describe("Test unxswapV3 path with commission", function () {
 
         let rawInfo = await dexRouter.connect(bob).populateTransaction.uniswapV3SwapTo(
             tom.address,
-            fromTokenAmount,
+            totalAmount,
             minReturn,
             [pool0]
         );
-        let commissionToken = "000000000000000000000000" + fromToken.address.toString().replace('0x', '')
+        let commissionToken = "000000000000000000000000" + toToken.address.toString().replace('0x', '')
         rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
         let tx = await bob.sendTransaction(rawInfo)
         let receipt = await tx.wait()
 
-        expect(await fromToken.balanceOf(feeReceiver)).to.be.equal(commissionAmount)
-        expect(await toToken.balanceOf(tom.address)).to.be.equal("98988016503682195")
+        expect(await toToken.balanceOf(feeReceiver)).to.be.equal("999878954572027")
+        expect(await toToken.balanceOf(tom.address)).to.be.equal("98988016502630696")
 
 
     })
@@ -83,8 +83,8 @@ describe("Test unxswapV3 path with commission", function () {
         pool0 = flag + '00000000000000000000000' + lpDAIWETH.address.slice(2);
 
         const totalAmount = ethers.utils.parseEther('0.1');
-        const commissionAmount = totalAmount.mul(fee).div(10000)
-        const fromTokenAmount = totalAmount.sub(commissionAmount)
+        // const commissionAmount = totalAmount.mul(fee).div(10000)
+        // const fromTokenAmount = totalAmount.sub(commissionAmount)
         let minReturn = ethers.utils.parseEther('0.00001');
 
         // 2. swap
@@ -93,19 +93,19 @@ describe("Test unxswapV3 path with commission", function () {
 
         let rawInfo = await dexRouter.connect(bob).populateTransaction.uniswapV3SwapTo(
             tom.address,
-            fromTokenAmount,
+            totalAmount,
             minReturn,
             [pool0]
         );
-        let commissionToken = "000000000000000000000000" + fromToken.address.toString().replace('0x', '')
+        let commissionToken = "000000000000000000000000" + ETH.address.toString().replace('0x', '')
         rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
         let tx = await bob.sendTransaction(rawInfo)
         let receipt = await tx.wait()
 
 
         // 3. check 
-        expect(await fromToken.balanceOf(feeReceiver)).to.be.equal(commissionAmount)
-        expect(await ethers.provider.getBalance(tom.address)).to.be.equal("77705569872760")
+        expect(await ethers.provider.getBalance(feeReceiver)).to.be.equal("784904746158")
+        expect(await ethers.provider.getBalance(tom.address)).to.be.equal("77705569869722")
 
     })
 
@@ -121,8 +121,8 @@ describe("Test unxswapV3 path with commission", function () {
         pool0 = flag + '00000000000000000000000' + lpDAIWETH.address.slice(2);
 
         const totalAmount = ethers.utils.parseEther('1');
-        const commissionAmount = totalAmount.mul(fee).div(10000)
-        const fromTokenAmount = totalAmount.sub(commissionAmount)
+        // const commissionAmount = totalAmount.mul(fee).div(10000)
+        // const fromTokenAmount = totalAmount.sub(commissionAmount)
         let minReturn = ethers.utils.parseEther('1000');
 
         // 2. swap
@@ -130,20 +130,20 @@ describe("Test unxswapV3 path with commission", function () {
         let toBalBeforeTx = await dai.balanceOf(bob.address);
         let rawInfo = await dexRouter.connect(bob).populateTransaction.uniswapV3SwapTo(
             tom.address,
-            fromTokenAmount,
+            totalAmount,
             minReturn,
             [pool0],
             {
                 value: totalAmount
             }
         );
-        let commissionToken = "000000000000000000000000" + fromToken.address.toString().replace('0x', '')
+        let commissionToken = "000000000000000000000000" + toToken.address.toString().replace('0x', '')
         rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
         let tx = await bob.sendTransaction(rawInfo)
         let receipt = await tx.wait()
 
-        expect(await ethers.provider.getBalance(feeReceiver)).to.be.equal(commissionAmount)
-        expect(await toToken.balanceOf(tom.address)).to.be.equal("1259976436924206629708")
+        expect(await toToken.balanceOf(feeReceiver)).to.be.equal("12727028378598286724")
+        expect(await toToken.balanceOf(tom.address)).to.be.equal("1259975809481230385704")
     });
 
     // two hops: OKX V2 245631 vs OKX V1 ~300000 vs 1inch V5 193359
@@ -162,8 +162,8 @@ describe("Test unxswapV3 path with commission", function () {
         pool1 = flag1 + '00000000000000000000000' + lpDAIWETH.address.slice(2);
 
         const totalAmount = ethers.utils.parseEther('1');
-        const commissionAmount = totalAmount.mul(fee).div(10000)
-        const fromTokenAmount = totalAmount.sub(commissionAmount)
+        // const commissionAmount = totalAmount.mul(fee).div(10000)
+        // const fromTokenAmount = totalAmount.sub(commissionAmount)
         let minReturn = ethers.utils.parseEther('0.0005');
 
         // 2. swap
@@ -171,19 +171,19 @@ describe("Test unxswapV3 path with commission", function () {
 
         let rawInfo = await dexRouter.connect(bob).populateTransaction.uniswapV3SwapTo(
             tom.address,
-            fromTokenAmount,
+            totalAmount,
             minReturn,
             [pool0, pool1]
         );
-        let commissionToken = "000000000000000000000000" + fromToken.address.toString().replace('0x', '')
+        let commissionToken = "000000000000000000000000" + ETH.address.toString().replace('0x', '')
         rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
         let tx = await bob.sendTransaction(rawInfo)
         let receipt = await tx.wait()
 
 
         // 3. check
-        expect(await fromToken.balanceOf(feeReceiver)).to.be.equal(commissionAmount)
-        expect(await ethers.provider.getBalance(tom.address)).to.be.equal("776994310902772")
+        expect(await ethers.provider.getBalance(feeReceiver)).to.be.equal("7848427378953")
+        expect(await ethers.provider.getBalance(tom.address)).to.be.equal("776994310516390")
     });
 
     // three hops: OKX V2 279536 vs OKX V1 ~410000 vs 1inch V5 263991
@@ -208,8 +208,8 @@ describe("Test unxswapV3 path with commission", function () {
         pool2 = flag2 + '00000000000000000000000' + lpBUSDUSDC.address.slice(2);
 
         const totalAmount = ethers.utils.parseEther('1');
-        const commissionAmount = totalAmount.mul(fee).div(10000)
-        const fromTokenAmount = totalAmount.sub(commissionAmount)
+        // const commissionAmount = totalAmount.mul(fee).div(10000)
+        // const fromTokenAmount = totalAmount.sub(commissionAmount)
         let minReturn = "1000000000";
 
         // 2. swap
@@ -217,20 +217,20 @@ describe("Test unxswapV3 path with commission", function () {
         let toBalBeforeTx = await usdc.balanceOf(bob.address);
         let rawInfo = await dexRouter.connect(bob).populateTransaction.uniswapV3SwapTo(
             tom.address,
-            fromTokenAmount,
+            totalAmount,
             minReturn,
             [pool0, pool1, pool2],
             {
                 value: totalAmount
             }
         );
-        let commissionToken = "000000000000000000000000" + fromToken.address.toString().replace('0x', '')
+        let commissionToken = "000000000000000000000000" + toToken.address.toString().replace('0x', '')
         rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
         let tx = await bob.sendTransaction(rawInfo)
         let receipt = await tx.wait()
 
-        expect(await ethers.provider.getBalance(feeReceiver)).to.be.equal(commissionAmount)
-        expect(await toToken.balanceOf(tom.address)).to.be.equal("1259540490")
+        expect(await toToken.balanceOf(feeReceiver)).to.be.equal("12722623")
+        expect(await toToken.balanceOf(tom.address)).to.be.equal("1259539692")
 
 
     });

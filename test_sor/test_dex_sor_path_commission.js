@@ -1,12 +1,12 @@
-const { ethers, upgrades, network} = require("hardhat");
+const { ethers, upgrades, network } = require("hardhat");
 const hre = require("hardhat");
 const ethDeployed = require("../scripts/deployed/eth");
 const { expect } = require('chai');
 const pmm_params = require("../dex_router_v2_test/pmm/pmm_params");
 
-require ('../scripts/tools');
+require('../scripts/tools');
 
-describe("Smart route path test with commission", function() {
+describe("Smart route path test with commission", function () {
   this.timeout(300000);
   const FOREVER = '2000000000';
   let wbtc, weth, dot, bnb, usdc, usdt, memeToken;
@@ -16,34 +16,34 @@ describe("Smart route path test with commission", function() {
   const feeReceiver = "0x94d3af948652ea2b272870ffa10da3250e0a34c3" // unibot address
   const fee = ethers.BigNumber.from(100).toHexString()
   const commissionFlag = "0x3ca20afc2aaa"
-  const commissionInfo = "0x"+commissionFlag.replace('0x','')+'0000000000'+fee.replace('0x','')+feeReceiver.replace('0x','')
+  const commissionInfo = "0x" + commissionFlag.replace('0x', '') + '0000000000' + fee.replace('0x', '') + feeReceiver.replace('0x', '')
   // const commissionInfo = "0x3ca20afc2aaa00000000006494d3af948652ea2b272870ffa10da3250e0a34c3"; // unibot address, with commission fee 100/10000
 
   before(async () => {
     [owner, alice, bob, liquidity, ethHolder, tom] = await ethers.getSigners();
 
-    await setForkBlockNumber(16094434); 
+    await setForkBlockNumber(16094434);
     await initWeth();
     await initTokenApproveProxy();
     await initDexRouter();
     await initMockXBridge();
     await initWNativeRelayer();
 
-    await ethHolder.sendTransaction({ to : bob.address, value : ethers.utils.parseEther('4000')});
-    await ethHolder.sendTransaction({ to : liquidity.address, value : ethers.utils.parseEther('4000')});
+    await ethHolder.sendTransaction({ to: bob.address, value: ethers.utils.parseEther('4000') });
+    await ethHolder.sendTransaction({ to: liquidity.address, value: ethers.utils.parseEther('4000') });
   });
 
   beforeEach(async () => {
     await initMockTokens();
     await dispatchAsset();
     await initUniswap();
-    
+
     const pairs = [
       [weth, usdt, ethers.utils.parseEther('100'), ethers.utils.parseEther('300000')],
       [wbtc, usdt, ethers.utils.parseEther('100'), ethers.utils.parseEther('3000000')],
       [wbtc, weth, ethers.utils.parseEther('1000'), ethers.utils.parseEther('10000')],
       [weth, dot, ethers.utils.parseEther('100'), ethers.utils.parseEther('1000')],
-      [dot,  usdt, ethers.utils.parseEther('100'), ethers.utils.parseEther('3000')],
+      [dot, usdt, ethers.utils.parseEther('100'), ethers.utils.parseEther('3000')],
       [wbtc, dot, ethers.utils.parseEther('100'), ethers.utils.parseEther('100000')],
       [usdt, usdc, ethers.utils.parseEther('10000'), ethers.utils.parseEther('10000')],
       [bnb, weth, ethers.utils.parseEther('100'), ethers.utils.parseEther('10000')],
@@ -52,10 +52,10 @@ describe("Smart route path test with commission", function() {
     ]
     for (let i = 0; i < pairs.length; i++) {
       await addLiquidity(
-          pairs[i][0],
-          pairs[i][1],
-          pairs[i][2],
-          pairs[i][3],
+        pairs[i][0],
+        pairs[i][1],
+        pairs[i][2],
+        pairs[i][3],
       );
     }
   });
@@ -101,14 +101,16 @@ describe("Smart route path test with commission", function() {
     ]
     const orderId = 1;
     let rawInfo = await dexRouter.connect(alice).populateTransaction.smartSwapTo(
-        orderId,
-        tom.address,
-        baseRequest,
-        [fromTokenAmount],
-        [layer1],
-        []
+      orderId,
+      tom.address,
+      baseRequest,
+      [fromTokenAmount],
+      [layer1],
+      []
     );
-    rawInfo.data = rawInfo.data + commissionInfo.replace('0x','')
+    let commissionToken = "000000000000000000000000" + fromToken.address.toString().replace('0x', '')
+    rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
+
     let tx = await alice.sendTransaction(rawInfo)
     let receipt = await tx.wait()
 
@@ -170,14 +172,15 @@ describe("Smart route path test with commission", function() {
     ]
     const orderId = 1;
     let rawInfo = await dexRouter.connect(alice).populateTransaction.smartSwapTo(
-        orderId,
-        tom.address,
-        baseRequest,
-        [fromTokenAmount],
-        [layer1],
-        []
+      orderId,
+      tom.address,
+      baseRequest,
+      [fromTokenAmount],
+      [layer1],
+      []
     );
-    rawInfo.data = rawInfo.data + commissionInfo.replace('0x','')
+    let commissionToken = "000000000000000000000000" + fromToken.address.toString().replace('0x', '')
+    rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
     let tx = await alice.sendTransaction(rawInfo)
     let receipt = await tx.wait()
     expect(await fromToken.balanceOf(feeReceiver)).to.be.equal(commissionAmount)
@@ -278,14 +281,15 @@ describe("Smart route path test with commission", function() {
     ]
     const orderId = 1;
     let rawInfo = await dexRouter.connect(alice).populateTransaction.smartSwapTo(
-        orderId,
-        tom.address,
-        baseRequest,
-        [fromTokenAmount1, fromTokenAmount2],
-        [layer1, layer2],
-        []
+      orderId,
+      tom.address,
+      baseRequest,
+      [fromTokenAmount1, fromTokenAmount2],
+      [layer1, layer2],
+      []
     );
-    rawInfo.data = rawInfo.data + commissionInfo.replace('0x','')
+    let commissionToken = "000000000000000000000000" + fromToken.address.toString().replace('0x', '')
+    rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
     let tx = await alice.sendTransaction(rawInfo)
     let receipt = await tx.wait()
     // console.log(rxResult.data)
@@ -362,14 +366,15 @@ describe("Smart route path test with commission", function() {
     ]
     const orderId = 1;
     let rawInfo = await dexRouter.connect(alice).populateTransaction.smartSwapTo(
-        orderId,
-        tom.address,
-        baseRequest,
-        [fromTokenAmount],
-        [layer1],
-        []
+      orderId,
+      tom.address,
+      baseRequest,
+      [fromTokenAmount],
+      [layer1],
+      []
     );
-    rawInfo.data = rawInfo.data + commissionInfo.replace('0x','')
+    let commissionToken = "000000000000000000000000" + fromToken.address.toString().replace('0x', '')
+    rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
     let tx = await alice.sendTransaction(rawInfo)
     let receipt = await tx.wait()
 
@@ -377,7 +382,7 @@ describe("Smart route path test with commission", function() {
     expect(await toToken.balanceOf(dexRouter.address)).to.be.eq("0");
     expect(await fromToken.balanceOf(feeReceiver)).to.be.eq(commissionAmount)
     expect(await weth.balanceOf(tom.address)).to.be.eq("97737405673331720179");
-    
+
   });
 
   it("mixSwap with three fork path with commission", async () => {
@@ -395,7 +400,7 @@ describe("Smart route path test with commission", function() {
     const fromTokenAmount3 = ethers.utils.parseEther('5');
     const totalAmount = fromTokenAmount.mul(ethers.BigNumber.from(10000)).div(ethers.BigNumber.from(10000).sub(fee))
     const commissionAmount = totalAmount.mul(fee).div(10000)
-    
+
     const minReturnAmount = ethers.utils.parseEther('0');
     const deadLine = FOREVER;
 
@@ -508,9 +513,9 @@ describe("Smart route path test with commission", function() {
     const router7 = [mixAdapter7, assertTo7, rawData7, extraData7, weth.address];
 
     // layer1
-    const layer1 =   [router1, router3];
-    const layer2 =   [router2, router4];
-    const layer3 =   [router5, router6, router7];
+    const layer1 = [router1, router3];
+    const layer2 = [router2, router4];
+    const layer3 = [router5, router6, router7];
 
     const baseRequest = [
       fromToken.address,
@@ -521,14 +526,15 @@ describe("Smart route path test with commission", function() {
     ]
     const orderId = 1;
     let rawInfo = await dexRouter.connect(alice).populateTransaction.smartSwapTo(
-        orderId,
-        tom.address,
-        baseRequest,
-        [fromTokenAmount1, fromTokenAmount2, fromTokenAmount3],
-        [layer1, layer2, layer3],
-        []
+      orderId,
+      tom.address,
+      baseRequest,
+      [fromTokenAmount1, fromTokenAmount2, fromTokenAmount3],
+      [layer1, layer2, layer3],
+      []
     );
-    rawInfo.data = rawInfo.data + commissionInfo.replace('0x','')
+    let commissionToken = "000000000000000000000000" + fromToken.address.toString().replace('0x', '')
+    rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
     let tx = await alice.sendTransaction(rawInfo)
     let receipt = await tx.wait()
 
@@ -578,17 +584,18 @@ describe("Smart route path test with commission", function() {
     ]
     const orderId = 1;
     let rawInfo = await dexRouter.connect(alice).populateTransaction.smartSwapTo(
-        orderId,
-        tom.address,
-        baseRequest,
-        [fromTokenAmount],
-        [layer1],
-        [],
-        {
-          value: totalAmount
-        }
+      orderId,
+      tom.address,
+      baseRequest,
+      [fromTokenAmount],
+      [layer1],
+      [],
+      {
+        value: totalAmount
+      }
     );
-    rawInfo.data = rawInfo.data + commissionInfo.replace('0x','')
+    let commissionToken = "000000000000000000000000" + fromToken.address.toString().replace('0x', '')
+    rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
     let tx = await alice.sendTransaction(rawInfo)
     let receipt = await tx.wait()
 
@@ -643,14 +650,15 @@ describe("Smart route path test with commission", function() {
     ]
     const orderId = 1;
     let rawInfo = await dexRouter.connect(alice).populateTransaction.smartSwapTo(
-        orderId,
-        tom.address,
-        baseRequest,
-        [fromTokenAmount],
-        [layer1],
-        []
+      orderId,
+      tom.address,
+      baseRequest,
+      [fromTokenAmount],
+      [layer1],
+      []
     );
-    rawInfo.data = rawInfo.data + commissionInfo.replace('0x','')
+    let commissionToken = "000000000000000000000000" + fromToken.address.toString().replace('0x', '')
+    rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
     let tx = await alice.sendTransaction(rawInfo)
     let receipt = await tx.wait()
 
@@ -707,12 +715,13 @@ describe("Smart route path test with commission", function() {
     let rawInfo = await dexRouter.connect(alice).populateTransaction.smartSwapTo(
       orderId,
       tom.address,
-        baseRequest,
-        [fromTokenAmount],
-        [layer1],
-        []
+      baseRequest,
+      [fromTokenAmount],
+      [layer1],
+      []
     );
-    rawInfo.data = rawInfo.data + commissionInfo.replace('0x','')
+    let commissionToken = "000000000000000000000000" + fromToken.address.toString().replace('0x', '')
+    rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
     let tx = await alice.sendTransaction(rawInfo)
     let receipt = await tx.wait()
     // reveiveAmount = fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997);
@@ -772,7 +781,8 @@ describe("Smart route path test with commission", function() {
       [layer1],
       []
     );
-    rawInfo.data = rawInfo.data + commissionInfo.replace('0x','')
+    let commissionToken = "000000000000000000000000" + fromToken.address.toString().replace('0x', '')
+    rawInfo.data = rawInfo.data + commissionToken + commissionInfo.replace('0x', '')
     let tx = await alice.sendTransaction(rawInfo)
     let receipt = await tx.wait()
     const iface = new ethers.utils.Interface(["event SwapOrderId(uint256 id)"]);
@@ -799,14 +809,14 @@ describe("Smart route path test with commission", function() {
     await token0.connect(bob).approve(router.address, amount0);
     await token1.connect(bob).approve(router.address, amount1);
     await router.connect(bob).addLiquidity(
-        token0.address,
-        token1.address,
-        amount0,
-        amount1,
-        '0',
-        '0',
-        bob.address,
-        FOREVER
+      token0.address,
+      token1.address,
+      amount0,
+      amount1,
+      '0',
+      '0',
+      bob.address,
+      FOREVER
     );
   }
 
@@ -830,15 +840,15 @@ describe("Smart route path test with commission", function() {
 
     const MEMEERC20 = await ethers.getContractFactory("CustomERC20");
     memeToken = await MEMEERC20.deploy(
-        owner.address,
-        ethers.utils.parseEther('10000000000'),
-        'YYDS',
-        'YYDS',
-        18,
-        100,
-        10,
-        liquidity.address,
-        false
+      owner.address,
+      ethers.utils.parseEther('10000000000'),
+      'YYDS',
+      'YYDS',
+      18,
+      100,
+      10,
+      liquidity.address,
+      false
     );
     await memeToken.deployed();
   }
@@ -925,11 +935,11 @@ describe("Smart route path test with commission", function() {
     lpMemeUSDT = await UniswapPair.attach(pair);
   }
 
-       
+
   const initWeth = async () => {
     weth = await ethers.getContractAt(
-        "WETH9",
-        ethDeployed.tokens.weth
+      "WETH9",
+      ethDeployed.tokens.weth
     );
     setBalance(bob.address, ethers.utils.parseEther('1100000'));
     await weth.connect(bob).deposit({ value: ethers.utils.parseEther('1000000') });
@@ -937,13 +947,13 @@ describe("Smart route path test with commission", function() {
 
   const initTokenApproveProxy = async () => {
     tokenApproveProxy = await ethers.getContractAt(
-        "TokenApproveProxy",
-        ethDeployed.base.tokenApproveProxy
+      "TokenApproveProxy",
+      ethDeployed.base.tokenApproveProxy
 
     );
     tokenApprove = await ethers.getContractAt(
-        "TokenApprove",
-        ethDeployed.base.tokenApprove
+      "TokenApprove",
+      ethDeployed.base.tokenApprove
 
     );
   }
@@ -953,7 +963,7 @@ describe("Smart route path test with commission", function() {
     DexRouter = await ethers.getContractFactory("DexRouter");
     dexRouter = await upgrades.deployProxy(DexRouter);
     await dexRouter.deployed();
-    await dexRouter.initializePMMRouter(_feeRateAndReceiver);
+    //await dexRouter.initializePMMRouter(_feeRateAndReceiver);
 
 
     expect(await dexRouter._WETH()).to.be.equal(weth.address);
@@ -973,8 +983,8 @@ describe("Smart route path test with commission", function() {
 
   const initWNativeRelayer = async () => {
     wNativeRelayer = await ethers.getContractAt(
-        "WNativeRelayer",
-        ethDeployed.base.wNativeRelayer
+      "WNativeRelayer",
+      ethDeployed.base.wNativeRelayer
 
     );
     let accountAddress = await wNativeRelayer.owner();
@@ -984,7 +994,7 @@ describe("Smart route path test with commission", function() {
     await wNativeRelayer.connect(wNativeRelayerOwner).setCallerOk([dexRouter.address], [true]);
     // await dexRouter.setWNativeRelayer(wNativeRelayer.address);
 
-    
+
     expect(await dexRouter._WNATIVE_RELAY()).to.be.equal(wNativeRelayer.address);
   }
 
@@ -1021,20 +1031,20 @@ describe("Smart route path test with commission", function() {
     return xBridge;
   }
 
-  const getWeight = function(weight) {
+  const getWeight = function (weight) {
     return ethers.utils.hexZeroPad(weight, 2).replace('0x', '');
   }
 
   // fromTokenAmount * 997 * r0 / (r1 * 1000 + fromTokenAmount * 997)
-  const getAmountOut = function(amountIn, r0, r1) {
+  const getAmountOut = function (amountIn, r0, r1) {
     return ethers.BigNumber.from(amountIn.toString())
-        .mul(ethers.BigNumber.from('997'))
-        .mul(ethers.BigNumber.from(r0))
-        .div(
-            ethers.BigNumber.from(r1)
-                .mul(ethers.BigNumber.from('1000'))
-                .add(ethers.BigNumber.from(amountIn.toString()).mul(ethers.BigNumber.from('997')))
-        );
+      .mul(ethers.BigNumber.from('997'))
+      .mul(ethers.BigNumber.from(r0))
+      .div(
+        ethers.BigNumber.from(r1)
+          .mul(ethers.BigNumber.from('1000'))
+          .add(ethers.BigNumber.from(amountIn.toString()).mul(ethers.BigNumber.from('997')))
+      );
   }
 
   const getTransactionCost = async (txResult) => {

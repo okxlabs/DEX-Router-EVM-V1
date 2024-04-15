@@ -1,4 +1,4 @@
-const { ethers, upgrades, network} = require("hardhat");
+const { ethers, upgrades, network } = require("hardhat");
 const hre = require("hardhat");
 const { BigNumber } = require('ethers')
 const { expect } = require("chai");
@@ -6,28 +6,28 @@ const ethDeployed = require("../scripts/deployed/eth");
 const pmm_params = require("../dex_router_v2_test/pmm/pmm_params");
 const { getDaiLikePermitDigest, sign } = require('../dex_router_v2_test/signatures')
 
-require ('../scripts/tools');
+require('../scripts/tools');
 
 
-describe("Test unxswapV3 path", function() {
+describe("Test unxswapV3 path", function () {
     this.timeout(300000);
     let weth, usdc, dai, busd, lpDAIBUSD, lpDAIWETH;
     let tokenApprove, dexRouter, xBridge, WNativeRelayer, OneInchRouter;
     let owner, alice, bob, wNativeRelayerOwner, XBridgeOwner;
 
-    const ETH = {"address":'0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'};
-  
-    before(async function() {
-      [owner,alice, bob] = await ethers.getSigners();
-      await setForkBlockNumber(16094434); 
-      await initWeth();
-      await initTokenApproveProxy();
-      await initDexRouter();
-      await initMockXBridge();
-      await initWNativeRelayer();
-      await initAccounts();
-      await initTokens();
-      await initOneInchRouter();
+    const ETH = { "address": '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' };
+
+    before(async function () {
+        [owner, alice, bob] = await ethers.getSigners();
+        await setForkBlockNumber(16094434);
+        await initWeth();
+        await initTokenApproveProxy();
+        await initDexRouter();
+        await initMockXBridge();
+        await initWNativeRelayer();
+        await initAccounts();
+        await initTokens();
+        await initOneInchRouter();
     });
 
 
@@ -56,7 +56,7 @@ describe("Test unxswapV3 path", function() {
             [pool0]
         );
         await expect(
-                dexRouter.connect(bob).uniswapV3SwapTo(
+            dexRouter.connect(bob).uniswapV3SwapTo(
                 bob.address,
                 fromTokenAmount,
                 minReturn,
@@ -135,7 +135,7 @@ describe("Test unxswapV3 path", function() {
         // 3. check 
         expect(fromBalAfterTx.eq(fromBalBeforeTx.sub(fromTokenAmount))).to.be.ok;
         // expect(toBalAfterTx.sub(toBalBeforeTx.sub(gasCost)).gte(minReturn)).to.be.ok;  
-        
+
         // 4. test in 1inch 
         // await dai.connect(bob).approve(OneInchRouter.address, ethers.utils.parseEther('10000'));
         // await dai.connect(bob).transfer(OneInchRouter.address, "1");
@@ -179,7 +179,7 @@ describe("Test unxswapV3 path", function() {
             }
         );
         await expect(
-                dexRouter.connect(bob).uniswapV3SwapTo(
+            dexRouter.connect(bob).uniswapV3SwapTo(
                 bob.address,
                 fromTokenAmount,
                 minReturn,
@@ -197,7 +197,7 @@ describe("Test unxswapV3 path", function() {
 
         // 3. check 
         // expect(fromBalAfterTx.eq(fromBalBeforeTx.sub(fromTokenAmount).sub(gasCost))).to.be.ok;
-        expect(toBalAfterTx.sub(toBalBeforeTx).gte(minReturn)).to.be.ok;    
+        expect(toBalAfterTx.sub(toBalBeforeTx).gte(minReturn)).to.be.ok;
 
         // 4. test in 1inch router
         // await dai.connect(bob).transfer(OneInchRouter.address, "1");
@@ -228,7 +228,7 @@ describe("Test unxswapV3 path", function() {
 
         // unwrap = 1
         token0 = await lpDAIWETH.token0();
-        flag1 = dai.address == token0 ?  "0x2" : "0xa";
+        flag1 = dai.address == token0 ? "0x2" : "0xa";
         pool1 = flag1 + '00000000000000000000000' + lpDAIWETH.address.slice(2);
 
         let fromTokenAmount = ethers.utils.parseEther('1');
@@ -242,14 +242,14 @@ describe("Test unxswapV3 path", function() {
             bob.address,
             fromTokenAmount,
             minReturn,
-            [pool0,pool1]
+            [pool0, pool1]
         );
         await expect(
-                dexRouter.connect(bob).uniswapV3SwapTo(
+            dexRouter.connect(bob).uniswapV3SwapTo(
                 bob.address,
                 fromTokenAmount,
                 minReturn,
-                [pool0,pool1]
+                [pool0, pool1]
             )
         ).to.emit(dexRouter, "OrderRecord").withArgs(fromToken.address, toToken.address, bob.address, fromTokenAmount, returnAmount);
 
@@ -291,12 +291,12 @@ describe("Test unxswapV3 path", function() {
 
         // unwrap = 0
         token0 = await lpDAIBUSD.token0();
-        flag1 = dai.address == token0 ?  "0x0" : "0x8";
+        flag1 = dai.address == token0 ? "0x0" : "0x8";
         pool1 = flag1 + '00000000000000000000000' + lpDAIBUSD.address.slice(2);
 
         // unwrap = 0
         token0 = await lpBUSDUSDC.token0();
-        flag2 = busd.address == token0 ?  "0x0" : "0x8";
+        flag2 = busd.address == token0 ? "0x0" : "0x8";
         pool2 = flag2 + '00000000000000000000000' + lpBUSDUSDC.address.slice(2);
 
         let fromTokenAmount = ethers.utils.parseEther('1');
@@ -309,7 +309,7 @@ describe("Test unxswapV3 path", function() {
             bob.address,
             fromTokenAmount,
             minReturn,
-            [pool0,pool1,pool2],
+            [pool0, pool1, pool2],
             {
                 value: ethers.utils.parseEther('1')
             }
@@ -319,7 +319,7 @@ describe("Test unxswapV3 path", function() {
                 bob.address,
                 fromTokenAmount,
                 minReturn,
-                [pool0,pool1,pool2],
+                [pool0, pool1, pool2],
                 {
                     value: ethers.utils.parseEther('1')
                 }
@@ -375,9 +375,9 @@ describe("Test unxswapV3 path", function() {
         const nonce = await fromToken.nonces(owner.address);
 
         const approve = {
-          owner: owner.address,
-          spender: tokenApprove.address,
-          allowed: true,
+            owner: owner.address,
+            spender: tokenApprove.address,
+            allowed: true,
         }
         const deadline = 200000000000000;
 
@@ -387,7 +387,7 @@ describe("Test unxswapV3 path", function() {
         const digest = getDaiLikePermitDigest(
             name, fromToken.address, chainId, approve, nonce, deadline
         )
-    
+
         const mnemonic = "test test test test test test test test test test test junk"
         const walletMnemonic = ethers.Wallet.fromMnemonic(mnemonic)
         const ownerPrivateKey = Buffer.from(walletMnemonic.privateKey.replace('0x', ''), 'hex')
@@ -396,14 +396,14 @@ describe("Test unxswapV3 path", function() {
         const signdata = await ethers.utils.defaultAbiCoder.encode(
             ['address', 'address', 'uint256', 'uint256', 'bool', 'uint8', 'bytes32', 'bytes32'],
             [
-              approve.owner,
-              approve.spender,
-              nonce,
-              deadline,
-              approve.allowed,
-              v,
-              r,
-              s
+                approve.owner,
+                approve.spender,
+                nonce,
+                deadline,
+                approve.allowed,
+                v,
+                r,
+                s
             ]
         )
 
@@ -456,7 +456,7 @@ describe("Test unxswapV3 path", function() {
 
     //  ==========================  internal functions  ===========================
 
-        
+
     const initWeth = async () => {
         weth = await ethers.getContractAt(
             "WETH9",
@@ -482,9 +482,9 @@ describe("Test unxswapV3 path", function() {
         DexRouter = await ethers.getContractFactory("DexRouter");
         dexRouter = await upgrades.deployProxy(DexRouter);
         await dexRouter.deployed();
-        await dexRouter.initializePMMRouter(_feeRateAndReceiver);
+        // await dexRouter.initializePMMRouter(_feeRateAndReceiver);
 
-  
+
         expect(await dexRouter._WETH()).to.be.equal(weth.address);
         expect(await dexRouter._APPROVE_PROXY()).to.be.equal(tokenApproveProxy.address);
 
@@ -508,7 +508,7 @@ describe("Test unxswapV3 path", function() {
         wNativeRelayerOwner = await ethers.getSigner(accountAddress);
         setBalance(wNativeRelayerOwner.address, '0x56bc75e2d63100000');
         await wNativeRelayer.connect(wNativeRelayerOwner).setCallerOk([dexRouter.address], [true]);
-        
+
         expect(await dexRouter._WNATIVE_RELAY()).to.be.equal(wNativeRelayer.address);
     }
 
@@ -524,7 +524,7 @@ describe("Test unxswapV3 path", function() {
         setBalance(XBridgeOwner.address, '0x56bc75e2d63100000');
 
         await xBridge.connect(XBridgeOwner).setDexRouter(dexRouter.address);
-        await xBridge.connect(XBridgeOwner).setMpc([alice.address],[true]);
+        await xBridge.connect(XBridgeOwner).setMpc([alice.address], [true]);
         await xBridge.connect(XBridgeOwner).setApproveProxy(tokenApproveProxy.address);
     }
 
@@ -577,7 +577,7 @@ describe("Test unxswapV3 path", function() {
         const cumulativeGasUsed = (await txResult.wait()).cumulativeGasUsed;
         // console.log("cumulativeGasUsed", cumulativeGasUsed);
         return BigNumber.from(txResult.gasPrice).mul(BigNumber.from(cumulativeGasUsed));
-      };
+    };
 
 });
 
