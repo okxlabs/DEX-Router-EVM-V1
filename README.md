@@ -113,3 +113,12 @@ ETH_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/7Brn0mxZnlMWbHf0yqAEicmsgKdLJGm
 ```
 
 before submit the PR, please delete the dry-run folder under the broadcast folder.
+
+## how to run it locally
+```js
+forge install OpenZeppelin/openzeppelin-contracts@v4.9.3 --no-git
+forge install foundry-rs/forge-std --no-git
+cp lib/forge-std/src/Test.sol lib/forge-std/src/test.sol
+yarn
+forge b
+```

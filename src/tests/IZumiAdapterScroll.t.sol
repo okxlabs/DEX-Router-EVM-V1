@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 import "forge-std/test.sol";
 import "forge-std/console2.sol";
-import "@dex/adapter/IZumiAdapter.sol";
+import "@dex/adapter/IzumiAdapter.sol";
 import "@dex/DexRouter.sol";
 import {PMMLib} from "@dex/libraries/PMMLib.sol";
 

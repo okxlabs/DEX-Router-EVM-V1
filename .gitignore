@@ -1,5 +1,6 @@
 node_modules
 lib
+lib/forge-std
 broadcast
 #Hardhat files
 cache

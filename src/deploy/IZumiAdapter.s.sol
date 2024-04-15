@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/test.sol";
 import "forge-std/console2.sol";
-import "@dex/adapter/IZumiAdapter.sol";
+import "@dex/adapter/IzumiAdapter.sol";
 
 contract Deploy is Test {
     address deployer = vm.rememberKey(vm.envUint("PRIVATE_KEY"));

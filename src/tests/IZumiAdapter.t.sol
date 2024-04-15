@@ -8,7 +8,7 @@ import {TokenApprove} from "@dex/TokenApprove.sol";
 import {DexRouter, PMMLib} from "@dex/DexRouter.sol";
 import {WNativeRelayer} from "@dex/utils/WNativeRelayer.sol";
 
-import {IZumiAdapter, IERC20} from "@dex/adapter/izumiAdapter.sol";
+import {IZumiAdapter, IERC20} from "@dex/adapter/IzumiAdapter.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract IZumiAdapterTest is Test {
