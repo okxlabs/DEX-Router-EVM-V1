@@ -15,4 +15,5 @@ module.exports = {
     _TYPE_HASH: "",
     _CACHED_CHAIN_ID: 534352,
     nftmarketplace: "0xa7FD99748cE527eAdC0bDAc60cba8a4eF4090f7c",
+    proxyAdmin: "0xc6d8e2e0E5c25ACecff66BE60F257884D0e9DF50"
 }

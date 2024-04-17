@@ -23,6 +23,7 @@ const metis = require('./metis')
 const zeta = require('./zeta')
 const merlin = require('./merlin')
 const sepolia = require('./eth_sepolia')
+const xlayer = require('./xlayer')
 
 let config
 
@@ -72,8 +73,10 @@ if (network.name === 'okc') {
     config = zeta
 } else if (network.name == 'merlin') {
     config = merlin
-}else if (network.name == 'sepolia') {
+} else if (network.name == 'sepolia') {
     config = sepolia
+} else if (network.name == 'xlayer') {
+    config = xlayer
 }
 
 module.exports = config
