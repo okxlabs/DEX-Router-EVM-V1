@@ -6,7 +6,7 @@ module.exports = {
     dexRouter: "0x127a986cE31AA2ea8E1a6a0F0D5b7E5dbaD7b0bE",
     proxyAdmin: "0x3a1078eF3B6E36D1560B15f6e0BFa715567A96bA",
     xbridge: "",
-    investEntrance: "",
+    investEntrance: "0x7251FEbEABB01eC9dE53ECe7a96f1C951F886Dd2",
     limitOrder: "",
     protocolAdmin: "",
     _FF_FACTORY: "0xffb4C8fD3E0053f043D67DDac4eA47693c2a43Dbc60000000000000000000000",
