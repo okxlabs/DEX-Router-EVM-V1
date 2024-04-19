@@ -8,12 +8,13 @@ module.exports = {
     investEntrance: "",
     limitOrder: "",
     protocolAdmin: "0x06C95a3934d94d5ae5bf54731bD2840ceFee6F87",
-    _FF_FACTORY: "",
+    _FF_FACTORY: "0xff70C62C8b8e801124A4Aa81ce07b637A3e83cb9190000000000000000000000",
     _CACHED_DOMAIN_SEPARATOR: "",
     _HASHED_NAME: "",
     _HASHED_VERSION: "",
     _TYPE_HASH: "",
     _CACHED_CHAIN_ID: 534352,
     nftmarketplace: "0xa7FD99748cE527eAdC0bDAc60cba8a4eF4090f7c",
-    proxyAdmin: "0xc6d8e2e0E5c25ACecff66BE60F257884D0e9DF50"
+    proxyAdmin: "0xc6d8e2e0E5c25ACecff66BE60F257884D0e9DF50",
+    newImpl: "0xD58bD6B60d088CB65Df04d3a6D9b0dF30E026a25"
 }
