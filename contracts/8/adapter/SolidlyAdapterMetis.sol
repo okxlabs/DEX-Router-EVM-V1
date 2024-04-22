@@ -6,7 +6,7 @@ import "../interfaces/IERC20.sol";
 import "../interfaces/IWETH.sol";
 import "../libraries/SafeERC20.sol";
 
-contract SolidlyAdapter is IAdapter {
+contract SolidlyAdapterOnMetis is IAdapter {
     IWETH WETH = IWETH(payable(0x75cb093E4D61d2A2e65D8e0BBb01DE8d89b53481));
     address ETH = 0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000;
     // fromToken == token0
