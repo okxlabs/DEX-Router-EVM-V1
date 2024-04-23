@@ -24,6 +24,8 @@ const zeta = require('./zeta')
 const merlin = require('./merlin')
 const sepolia = require('./eth_sepolia')
 const xlayer = require('./xlayer')
+const blast = require('./blast')
+const mode = require('./mode')
 
 let config
 
@@ -77,6 +79,10 @@ if (network.name === 'okc') {
     config = sepolia
 } else if (network.name == 'xlayer') {
     config = xlayer
+} else if (network.name == 'blast') {
+    config = blast
+} else if (network.name == 'mode') {
+    config = mode
 }
 
 module.exports = config

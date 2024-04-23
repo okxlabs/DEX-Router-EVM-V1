@@ -371,6 +371,26 @@ module.exports = {
           runs: 200
         },
       }
+    },
+    blast: {
+      url: 'https://rpc.blast.io',
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
+    },
+    mode: {
+      url: 'https://mainnet.mode.network',
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
     }
   },
   paths: {
