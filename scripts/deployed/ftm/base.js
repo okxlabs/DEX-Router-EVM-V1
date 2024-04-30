@@ -10,6 +10,8 @@ module.exports = {
     limitOrderV2: "0x2ae8947FB81f0AAd5955Baeff9Dcc7779A3e49F2",
     protocolAdmin: "0x06C95a3934d94d5ae5bf54731bD2840ceFee6F87",
     commisson: "0x838A5832eB19CfCe692809f5b2DE44b15380CDA2",
+    _FF_FACTORY: "",
     // p2pTrading: "0xe6C2820Ba3d14d97b9e9A371771ed7A2f28A9c40",
     p2pTrading: "0x0000000017D9a0231430ff2cc3467375a9Af76C7",
+    newImpl: "0x1Da57aFA94200d7D195aB7Bd1da5E6cBC147680d",
 }

@@ -1,5 +1,7 @@
 const { ethers } = require("hardhat");
 const deployed = require('./deployed');
+require('colors');
+const Diff = require('diff');
 
 async function main() {
     console.log(deployed);
@@ -23,12 +25,26 @@ async function main() {
     let proxyAdmin = await ethers.provider.getStorageAt(deployed.base.dexRouter, "0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103");
     proxyAdmin = ethers.utils.getAddress(proxyAdmin.slice(26))
     console.log("proxyAdmin", proxyAdmin)
+    let codeCompare = require("../artifacts/contracts/8/DexRouter.sol/DexRouter.json")['deployedBytecode'].toLowerCase()
+    // console.log(codeCompare)
+    // codeCompare = codeCompare.getCode.toLowerCase()
+    // getDifference(code, codeCompare)
+    const diff = Diff.diffChars(code, codeCompare);
 
+    diff.forEach((part) => {
+        // green for additions, red for deletions
+        let text = part.added ? part.value.bgGreen :
+            part.removed ? part.value.bgRed :
+                part.value;
+        process.stderr.write(text);
+    });
 
-
+    console.log();
 
 
 }
+
+
 
 main()
     .then(() => process.exit(0))

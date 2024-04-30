@@ -88,7 +88,7 @@ function replace_pmm_eip712_contant(EIP712_PATH) {
 function replace_univ3_contant(UnxswapRouterPath) {
   console.log(deployed.base);
 
-  if (deployed.base._FF_FACTORY == null) {
+  if (deployed.base._FF_FACTORY == null || deployed.base._FF_FACTORY == "") {
     console.log("warning: _FF_FACTORY is null!!!!");
     return
   }
@@ -101,8 +101,9 @@ function replace_univ3_contant(UnxswapRouterPath) {
     let context = data.toString();
     // address public constant
     context = context.replace(/_FF_FACTORY\s=\s\w*/, "_FF_FACTORY = " + deployed.base._FF_FACTORY);
-    context = context.replace(/_POOL_INIT_CODE_HASH\s=\s\w*/, "_POOL_INIT_CODE_HASH = " + deployed.base._POOL_INIT_CODE_HASH);
-
+    if (deployed.base._POOL_INIT_CODE_HASH != null || deployed.base._POOL_INIT_CODE_HASH != "") {
+      context = context.replace(/_POOL_INIT_CODE_HASH\s=\s\w*/, "_POOL_INIT_CODE_HASH = " + deployed.base._POOL_INIT_CODE_HASH);
+    }
     fs.writeFile(UnxswapRouterPath, context, (err) => {
       if (err) {
         console.log(err);
@@ -114,6 +115,6 @@ function replace_univ3_contant(UnxswapRouterPath) {
 }
 
 replace_contant(UNXSWAP_ROUTER_PATH);
-replace_pmm_contant(PMMROUTER_PATH);
-replace_pmm_eip712_contant(EIP712_PATH);
+// replace_pmm_contant(PMMROUTER_PATH);
+// replace_pmm_eip712_contant(EIP712_PATH);
 replace_univ3_contant(UNIV3_PATH);
