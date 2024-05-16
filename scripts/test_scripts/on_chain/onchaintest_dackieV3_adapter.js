@@ -1,6 +1,6 @@
 const { ethers } = require("hardhat");
 require("../../tools");
-let { direction, FOREVER } = require("./utils")
+let { direction, FOREVER } = require("../dex_router/utils")
 
 async function main() {
     const dexRouter = await ethers.getContractAt("DexRouter", "0x127a986cE31AA2ea8E1a6a0F0D5b7E5dbaD7b0bE");
@@ -8,8 +8,8 @@ async function main() {
     console.log("DexRouter: " + dexRouter.address);
     const gasPirce = await ethers.provider.getGasPrice();
     console.log("gasPrice: " + gasPirce);
-    const adapter = "0xf18F664bFc8F0AdAeB70f93063b192Cf58627988"
-    let poolAddress = "0xF3b755FB1C3486c3878B1539c594B9e619a51995"; 
+    const adapter = "0x329F0b78D7850Db32a35043c0DA9a63b3672617C"
+    let poolAddress = "0xa5388037b5FEf0EfCdFC9e1d6d7bC6E7e61C7082"; 
     toToken = await ethers.getContractAt(
         "MockERC20",
         "0xe538905cf8410324e03A5A23C1c177a474D59b2b"//WOKB

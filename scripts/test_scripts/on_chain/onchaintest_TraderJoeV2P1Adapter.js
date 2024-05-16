@@ -1,28 +1,28 @@
 const { ethers } = require("hardhat");
 require("../../tools");
-let { direction, FOREVER } = require("./utils")
+let { direction, FOREVER } = require("../dex_router/utils")
 
 async function main() {
-    const dexRouter = await ethers.getContractAt("DexRouter", "0x127a986cE31AA2ea8E1a6a0F0D5b7E5dbaD7b0bE");
-    const tokenApprove = await ethers.getContractAt("TokenApprove", "0x8b773D83bc66Be128c60e07E17C8901f7a64F000");
+    const dexRouter = await ethers.getContractAt("DexRouter", "0x6b2C0c7be2048Daa9b5527982C29f48062B34D58");
+    //const tokenApprove = await ethers.getContractAt("TokenApprove", "0x57df6092665eb6058DE53939612413ff4B09114E");
     console.log("DexRouter: " + dexRouter.address);
     const gasPirce = await ethers.provider.getGasPrice();
     console.log("gasPrice: " + gasPirce);
-    const adapter = "0xe0806b2027cc821F741792eE634ae42b2D519dB0"
-    let poolAddress = "0xd5E29Fc407582d3972Bb4a99dcDBe9B684ab945e"; 
+    const adapter = "0xfAd6a9eEe5b32E9B81bb217BaeF37742B2ca5B83"
+    let poolAddress = "0x7ccD8a769d466340Fff36c6e10fFA8cf9077D988"; 
     fromToken = await ethers.getContractAt(
         "MockERC20",
-        "0xe538905cf8410324e03A5A23C1c177a474D59b2b"//WOKB
+        "0x201EBa5CC46D216Ce6DC03F6a759e8E766e956aE"//USDT
     )
     toToken = await ethers.getContractAt(
         "MockERC20",
-        "0xf782E172A14Ee1c85cD980C15375bA0E87957028"//TCAT
+        "0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34"//USDe
     )
-    let fromTokenAmount = ethers.utils.parseUnits("0.001", 18);
+    let fromTokenAmount = ethers.utils.parseUnits("0.1", 6);
     let minReturnAmount = 0;
     let deadLine = FOREVER;
     let mixAdapter1 = [adapter];
-    let assertTo1 = [adapter];
+    let assertTo1 = [poolAddress];
     let weight1 = Number(10000).toString(16).replace('0x', '');
     let rawData1 = [
         "0x" + 
@@ -31,13 +31,7 @@ async function main() {
         weight1 + 
         poolAddress.replace("0x", "")
     ];
-    let moreInfo =  ethers.utils.defaultAbiCoder.encode(
-        ["address", "address"],
-        [
-            fromToken.address,
-            toToken.address,
-        ]
-    )
+    const moreInfo = "0x";
     let extraData1 = [moreInfo];
     let router1 = [mixAdapter1, assertTo1, rawData1, extraData1, fromToken.address];
     let layer1 = [router1];
@@ -50,19 +44,20 @@ async function main() {
         deadLine,
     ]
     let pmmReq = []
-    //await fromToken.approve(tokenApprove.address, fromTokenAmount);
     await dexRouter.smartSwapByOrderId(
         orderId,
         baseRequest,
         [fromTokenAmount],
         [layer1],
-        pmmReq
+        pmmReq, {
+            "gasLimit": 3109720901
+        }
     );
 }
 
 main()
-  .then(() => process.exit(0))
-  .catch(error => {
+    .then(() => process.exit(0))
+    .catch(error => {
     console.error(error);
     process.exit(1);
-  });
+});

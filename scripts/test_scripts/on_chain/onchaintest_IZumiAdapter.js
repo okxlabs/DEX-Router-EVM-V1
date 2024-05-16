@@ -1,6 +1,6 @@
 const { ethers } = require("hardhat");
 require("../../tools");
-let { direction, FOREVER } = require("./utils")
+let { direction, FOREVER } = require("../dex_router/utils")
 
 async function main() {
     const dexRouter = await ethers.getContractAt("DexRouter", "0x127a986cE31AA2ea8E1a6a0F0D5b7E5dbaD7b0bE");
@@ -8,17 +8,17 @@ async function main() {
     console.log("DexRouter: " + dexRouter.address);
     const gasPirce = await ethers.provider.getGasPrice();
     console.log("gasPrice: " + gasPirce);
-    const adapter = "0x329F0b78D7850Db32a35043c0DA9a63b3672617C"
-    let poolAddress = "0xa5388037b5FEf0EfCdFC9e1d6d7bC6E7e61C7082"; 
-    toToken = await ethers.getContractAt(
+    const adapter = "0xe0806b2027cc821F741792eE634ae42b2D519dB0"
+    let poolAddress = "0xd5E29Fc407582d3972Bb4a99dcDBe9B684ab945e"; 
+    fromToken = await ethers.getContractAt(
         "MockERC20",
         "0xe538905cf8410324e03A5A23C1c177a474D59b2b"//WOKB
     )
-    fromToken = await ethers.getContractAt(
+    toToken = await ethers.getContractAt(
         "MockERC20",
-        "0x1e4a5963abfd975d8c9021ce480b42188849d41d"//USDT
+        "0xf782E172A14Ee1c85cD980C15375bA0E87957028"//TCAT
     )
-    let fromTokenAmount = ethers.utils.parseUnits("0.1", 6);
+    let fromTokenAmount = ethers.utils.parseUnits("0.001", 18);
     let minReturnAmount = 0;
     let deadLine = FOREVER;
     let mixAdapter1 = [adapter];
@@ -31,19 +31,12 @@ async function main() {
         weight1 + 
         poolAddress.replace("0x", "")
     ];
-    const moreInfo = ethers.utils.defaultAbiCoder.encode(
-        ["uint160", "bytes"],
+    let moreInfo =  ethers.utils.defaultAbiCoder.encode(
+        ["address", "address"],
         [
-        0,
-        ethers.utils.defaultAbiCoder.encode(
-            ["address", "address", "uint24"],
-            [
             fromToken.address,
             toToken.address,
-            2500
         ]
-    )
-    ]
     )
     let extraData1 = [moreInfo];
     let router1 = [mixAdapter1, assertTo1, rawData1, extraData1, fromToken.address];
@@ -57,6 +50,7 @@ async function main() {
         deadLine,
     ]
     let pmmReq = []
+    //await fromToken.approve(tokenApprove.address, fromTokenAmount);
     await dexRouter.smartSwapByOrderId(
         orderId,
         baseRequest,
@@ -67,8 +61,8 @@ async function main() {
 }
 
 main()
-    .then(() => process.exit(0))
-    .catch(error => {
+  .then(() => process.exit(0))
+  .catch(error => {
     console.error(error);
     process.exit(1);
-});
+  });
