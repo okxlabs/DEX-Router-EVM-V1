@@ -276,4 +276,24 @@ contract ImplTest is Test {
         require(s);
     }
 
+
+    function test_upgrade_conflux_20240506() public {
+        address dexRouter = 0x0112bc6fDB78345e612B862a6B388FfeB00E2320;
+        address newImpl = 0xfAd6a9eEe5b32E9B81bb217BaeF37742B2ca5B83;
+        vm.createSelectFork("https://conflux-espace.blockpi.network/v1/rpc/public", 95286185 - 1);
+        require(newImpl.code.length > 0, "not work");
+        vm.store(
+            dexRouter,
+            0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc,
+            bytes32(uint256(uint160(newImpl)))
+        );
+        //https://evm.confluxscan.io/tx/0xb71bc8e8ebeedba3af0a2bb1f521f121d5dd1c69341cfef27246acecdd7c2915
+        address user = 0xEA522Fe3A65874bA3CEC38e912220282b7C71E97;
+        bytes
+            memory data = hex"9871efa400000000002e9fd24226b20000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000de0b6b3a764000000000000000000000000000000000000000000000000000003372e19bd05f02b0000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000100000000000000003b74a4600736b3384531cda2f545f5449e84c6c6bcd6f01b";
+        vm.startPrank(user);
+        (bool s, ) = dexRouter.call{value: 1.1 ether}(data);
+        require(s);
+    }
+
 }
