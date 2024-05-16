@@ -10,6 +10,7 @@ import {PMMLib} from "@dex/libraries/PMMLib.sol";
 contract Velocimeter is Test {
     DexRouter dexRouter = DexRouter(payable(0x6b2C0c7be2048Daa9b5527982C29f48062B34D58));
     address tokenApprove = 0x57df6092665eb6058DE53939612413ff4B09114E;
+    address newImpl = 0xFA574f8B3152504E391E53FfF6e55E3Ee56e0889;
 
     address wCanto = 0x826551890Dc65655a0Aceca109aB11AbDbD7a07B; //token0
     address sCanto = 0x9F823D534954Fc119E31257b3dDBa0Db9E2Ff4ed; // token1
@@ -22,6 +23,12 @@ contract Velocimeter is Test {
     function setUp() public {
         vm.createSelectFork(vm.envString("CANTO_RPC_URL"));
         adapter = new SolidlyAdapter();
+        require(newImpl.code.length > 0, "not work");
+        vm.store(
+            0x6b2C0c7be2048Daa9b5527982C29f48062B34D58,
+            0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc,
+            bytes32(uint256(uint160(newImpl)))
+        );
     }
 
     modifier user(address _user) {

@@ -9,7 +9,7 @@ module.exports = {
     investEntrance: "",
     limitOrder: "",
     protocolAdmin: "0x06C95a3934d94d5ae5bf54731bD2840ceFee6F87",
-    _FF_FACTORY: "",
+    _FF_FACTORY: "0xff31FAfd4889FA1269F7a13A66eE0fB458f27D72A90000000000000000000000",
     _CACHED_DOMAIN_SEPARATOR: "",
     _HASHED_NAME: "",
     _HASHED_VERSION: "",
@@ -19,4 +19,5 @@ module.exports = {
     nftmarketplace: "0xa7FD99748cE527eAdC0bDAc60cba8a4eF4090f7c",
     // p2pTrading: "0xe6C2820Ba3d14d97b9e9A371771ed7A2f28A9c40",
     p2pTrading: "0x0000000017D9a0231430ff2cc3467375a9Af76C7",
+    newImpl: "0x62a7b6eb6A5d2DcAa05Bf53C7272afd9dA460a2c",
 }
