@@ -8,4 +8,5 @@ module.exports = {
     _FF_FACTORY: "",
     _POOL_INIT_CODE_HASH: "",
     investEntrance: "",
+    newImpl: "0xFA574f8B3152504E391E53FfF6e55E3Ee56e0889",
 }
