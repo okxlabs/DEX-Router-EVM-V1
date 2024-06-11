@@ -1,5 +1,6 @@
 const { ethers, upgrades } = require("hardhat");
 const deployed = require('./deployed');
+const { dexRouter } = require("./deployed/eth/base");
 
 async function main() {
     console.log(deployed.base);
@@ -8,6 +9,8 @@ async function main() {
     dexRouter = await DexRouter.deploy();
     await dexRouter.deployed();
     console.log("dexRouter: " + dexRouter.address);
+    let tx = await dexRouter.initialize();
+    console.log("dexRouter initialized", tx);
 }
 
 main()
