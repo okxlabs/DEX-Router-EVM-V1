@@ -273,7 +273,7 @@ module.exports = {
       }
     },
     linea: {
-      url: `https://linea-mainnet.infura.io/v3/${INFURA_KEY}`,
+      url: `https://1rpc.io/linea`,
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
