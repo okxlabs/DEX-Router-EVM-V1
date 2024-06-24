@@ -26,6 +26,7 @@ const sepolia = require('./eth_sepolia')
 const xlayer = require('./xlayer')
 const blast = require('./blast')
 const mode = require('./mode')
+const zksync = require('./zksync')
 
 let config
 
@@ -83,6 +84,8 @@ if (network.name === 'okc') {
     config = blast
 } else if (network.name == 'mode') {
     config = mode
+} else if (network.name == 'zksync') {
+    config = zksync
 }
 
 module.exports = config

@@ -272,6 +272,16 @@ module.exports = {
         },
       }
     },
+    zksync: {
+      url: "https://mainnet.era.zksync.io",
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
+    },
     linea: {
       url: `https://1rpc.io/linea`,
       accounts: [`${PRIVATE_KEY}`],
