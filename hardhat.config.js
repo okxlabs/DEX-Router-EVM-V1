@@ -43,7 +43,7 @@ module.exports = {
       // }
     },
     okc: {
-      url: INFSTONES_KEY == '' ? "http://35.72.176.238:26659" : `https://api.infstones.com/okc-archive/mainnet/${INFSTONES_KEY}`,
+      url: INFSTONES_KEY == '' ? "https://exchainrpc.okex.org" : `https://api.infstones.com/okc-archive/mainnet/${INFSTONES_KEY}`,
       chainId: 66,
       accounts: [`${PRIVATE_KEY}`],
       settings: {
@@ -53,7 +53,18 @@ module.exports = {
         },
       },
     },
-    okc_test: {
+    tron: {
+      url: "https://api.trongrid.io",
+      chainId: 65,
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      },
+    },
+    tron: {
       url: "https://exchaintestrpc.okex.org",
       chainId: 65,
       accounts: [`${PRIVATE_KEY}`],

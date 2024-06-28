@@ -26,7 +26,8 @@ const sepolia = require('./eth_sepolia')
 const xlayer = require('./xlayer')
 const blast = require('./blast')
 const mode = require('./mode')
-const zksync = require('./zksync')
+const zksync = require('./zkSyncEra')
+const tron = require('./tron')
 
 let config
 
@@ -86,6 +87,8 @@ if (network.name === 'okc') {
     config = mode
 } else if (network.name == 'zksync') {
     config = zksync
+} else if (network.name == 'tron') {
+    config = tron
 }
 
 module.exports = config
