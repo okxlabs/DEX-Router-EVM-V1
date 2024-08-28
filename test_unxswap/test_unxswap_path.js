@@ -2,7 +2,7 @@ const { ethers, upgrades } = require('hardhat')
 const { BigNumber } = require('ethers')
 const { expect } = require('chai')
 const { getPermitDigest, sign } = require('./signatures')
-const pmm_params = require("../test_pmm/pmm/pmm_params");
+//const pmm_params = require("../test_pmm/pmm/pmm_params");
 
 
 const ethDeployed = require("../scripts/deployed/eth");
@@ -828,7 +828,7 @@ describe("Unxswap swap test", function () {
   }
 
   const initDexRouter = async () => {
-    let _feeRateAndReceiver = "0x000000000000000000000000" + pmm_params.feeTo.slice(2);
+    //let _feeRateAndReceiver = "0x000000000000000000000000" + pmm_params.feeTo.slice(2);
     DexRouter = await ethers.getContractFactory("DexRouter");
     dexRouter = await upgrades.deployProxy(
       DexRouter
