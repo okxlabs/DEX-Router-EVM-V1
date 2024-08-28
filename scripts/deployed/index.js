@@ -28,6 +28,7 @@ const blast = require('./blast')
 const mode = require('./mode')
 const zksync = require('./zkSyncEra')
 const tron = require('./tron')
+const sei = require('./sei')
 
 let config
 
@@ -89,6 +90,8 @@ if (network.name === 'okc') {
     config = zksync
 } else if (network.name == 'tron') {
     config = tron
+} else if (network.name == 'sei') {
+    config = sei
 }
 
 module.exports = config

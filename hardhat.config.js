@@ -412,6 +412,16 @@ module.exports = {
           runs: 200
         },
       }
+    },
+    sei: {
+      url: 'https://evm-rpc.sei-apis.com',
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
     }
   },
   paths: {
