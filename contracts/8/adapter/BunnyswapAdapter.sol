@@ -33,7 +33,9 @@ contract BunnyswapAdapter is IAdapter {
             router,
             amountIn
         );
-        IRabbitRouter(router).swapExactTokensForETH(amountIn, 0, to, block.timestamp + 5 minutes);
+        IRabbitRouter(router).swapExactTokensForETH(amountIn, 0, address(this), block.timestamp);
+        IWETH(WETH).deposit{ value: address(this).balance }();
+        SafeERC20.safeTransfer(IERC20(WETH), to, IERC20(WETH).balanceOf(address(this)));
     }
 
     // fromToken == token1(WETH)
@@ -44,10 +46,10 @@ contract BunnyswapAdapter is IAdapter {
     ) external override {
         uint amountIn = IERC20(WETH).balanceOf(address(this));
         IWETH(WETH).withdraw(amountIn);
-        IRabbitRouter(router).swapExactETHForTokens{ value: amountIn }(0, to, block.timestamp + 5 minutes);
+        IRabbitRouter(router).swapExactETHForTokens{ value: amountIn }(0, to, block.timestamp);
     }
 
     receive() external payable {
-        assert(msg.sender == WETH);
+        assert(msg.sender == WETH || msg.sender == router);
     }
 }
