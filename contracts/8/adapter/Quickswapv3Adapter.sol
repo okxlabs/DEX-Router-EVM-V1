@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import "../interfaces/IAdapter.sol";
 import "../interfaces/IAlgebraSwapCallback.sol";
+import "../interfaces/IUniswapV3SwapCallback.sol";
 import "../interfaces/IQuickV3.sol";
 import "../interfaces/IERC20.sol";
 import "../libraries/UniversalERC20.sol";
@@ -14,7 +15,7 @@ import "../interfaces/IWETH.sol";
 /// @title QuickswapV3Adapter
 /// @notice Explain to an end user what this does
 /// @dev Explain to a developer any extra details
-contract Quickswapv3Adapter is IAdapter, IAlgebraSwapCallback {
+contract Quickswapv3Adapter is IAdapter, IAlgebraSwapCallback, IUniswapV3SwapCallback {
     address constant MATIC_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address public immutable WMATIC;
 
@@ -75,7 +76,7 @@ contract Quickswapv3Adapter is IAdapter, IAlgebraSwapCallback {
         _quickV3Swap(to, pool, limitSqrtPrice, data);
     }
 
-    // for uniV3 callback
+    // for algebra callback
     function algebraSwapCallback(
         int256 amount0Delta,
         int256 amount1Delta,
@@ -83,6 +84,29 @@ contract Quickswapv3Adapter is IAdapter, IAlgebraSwapCallback {
     ) external override {
         require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
         (address tokenIn, address tokenOut) = abi.decode( 
+            _data,
+            (address, address)
+        );
+
+        (bool isExactInput, uint256 amountToPay) = amount0Delta > 0
+            ? (tokenIn < tokenOut, uint256(amount0Delta))
+            : (tokenOut < tokenIn, uint256(amount1Delta));
+        if (isExactInput) {
+            pay(tokenIn, address(this), msg.sender, amountToPay);
+        } else {
+            tokenIn = tokenOut; // swap in/out because exact output swaps are reversed
+            pay(tokenIn, address(this), msg.sender, amountToPay);
+        }
+    }
+
+    // for uniV3 callback
+    function uniswapV3SwapCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes calldata _data
+    ) external override {
+        require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
+        (address tokenIn, address tokenOut) = abi.decode(
             _data,
             (address, address)
         );
