@@ -422,6 +422,16 @@ module.exports = {
           runs: 200
         },
       }
+    },
+    moonbeam: {
+      url: 'https://rpc.ankr.com/moonbeam',
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
     }
   },
   paths: {

@@ -29,6 +29,7 @@ const mode = require('./mode')
 const zksync = require('./zkSyncEra')
 const tron = require('./tron')
 const sei = require('./sei')
+const moonbeam = require('./moonbeam')
 
 let config
 
@@ -92,6 +93,8 @@ if (network.name === 'okc') {
     config = tron
 } else if (network.name == 'sei') {
     config = sei
+} else if (network.name == 'moonbeam') {
+    config = moonbeam
 }
 
 module.exports = config
