@@ -129,7 +129,7 @@ module.exports = {
       },
     },
     eth: {
-      url: ALCHEMY_KEY == '' ? "https://rpc.ankr.com/eth" : `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+      url: ALCHEMY_KEY == '' ? "https://eth.llamarpc.com" : `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {

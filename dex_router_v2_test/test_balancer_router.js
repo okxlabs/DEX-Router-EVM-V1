@@ -32,7 +32,7 @@ describe("curve router", function(){
                     forking: {
                         // jsonRpcUrl: `https://eth-mainnet.alchemyapi.io/v2/4Gs3eLxFQj6r-YYp2gYDn1e2Vzru0Le9`,
                         // jsonRpcUrl: `http://35.75.165.133:8545 `,
-                        jsonRpcUrl: `https://rpc.ankr.com/eth`,
+                        jsonRpcUrl: `https://eth.llamarpc.com`,
                         // jsonRpcUrl: `https://mainnet.infura.io/v3/${INFURA_KEY}`,
                         blockNumber: targetBlockNumber,
                     },
