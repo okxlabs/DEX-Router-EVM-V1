@@ -30,6 +30,7 @@ const zksync = require('./zkSyncEra')
 const tron = require('./tron')
 const sei = require('./sei')
 const moonbeam = require('./moonbeam')
+const apechain = require('./apechain')
 const iotex = require('./iotex')
 
 let config
@@ -96,6 +97,8 @@ if (network.name === 'okc') {
     config = sei
 } else if (network.name == 'moonbeam') {
     config = moonbeam
+} else if (network.name == 'apechain') {
+    config = apechain
 } else if (network.name == 'iotex') {
     config = iotex
 }

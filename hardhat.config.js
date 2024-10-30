@@ -442,6 +442,16 @@ module.exports = {
           runs: 200
         },
       }
+    },
+    apechain: {
+      url: 'https://rpc.apechain.com/http',
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
     }
   },
   paths: {
