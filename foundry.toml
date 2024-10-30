@@ -9,7 +9,7 @@ remappings = [
     "hardhat/=node_modules/hardhat/",
 ]
 
-evm_version = "shanghai"
+evm_version = "cancun"
 fs_permissions = [{access = "read-write", path = "./"}]
 
 [rpc_endpoints]
