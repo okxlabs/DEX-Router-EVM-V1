@@ -20,6 +20,7 @@ import "./libraries/CommissionLib.sol";
 import "./libraries/EthReceiver.sol";
 import "./libraries/WrapETHSwap.sol";
 import "./libraries/CommonUtils.sol";
+import "./storage/PMMRouterStorage.sol";
 
 import "./storage/DexRouterStorage.sol";
 
@@ -35,7 +36,8 @@ contract DexRouter is
     UnxswapV3Router,
     DexRouterStorage,
     WrapETHSwap,
-    CommissionLib
+    CommissionLib,
+    PMMRouterStorage
 {
     using UniversalERC20 for IERC20;
 
