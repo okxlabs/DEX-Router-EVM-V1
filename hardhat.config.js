@@ -432,6 +432,16 @@ module.exports = {
           runs: 200
         },
       }
+    },
+    iotex: {
+      url: 'https://babel-api.fastblocks.io',
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
     }
   },
   paths: {
