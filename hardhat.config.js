@@ -452,6 +452,16 @@ module.exports = {
           runs: 200
         },
       }
+    },
+    taiko: {
+      url: 'https://rpc.mainnet.taiko.xyz',
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
     }
   },
   paths: {

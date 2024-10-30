@@ -32,7 +32,7 @@ const sei = require('./sei')
 const moonbeam = require('./moonbeam')
 const apechain = require('./apechain')
 const iotex = require('./iotex')
-
+const taiko = require('./taiko')
 let config
 
 console.log('current network.name: ', network.name)
@@ -101,6 +101,8 @@ if (network.name === 'okc') {
     config = apechain
 } else if (network.name == 'iotex') {
     config = iotex
+} else if (network.name == 'taiko') {
+    config = taiko
 }
 
 module.exports = config
