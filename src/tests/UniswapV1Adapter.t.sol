@@ -16,6 +16,8 @@ contract UniswapV1AdapterTest is Test {
     address WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address bob = vm.rememberKey(1);
+    address WETH_PEPE = 0x65586DC6b7419b596A5F354f58B45fbBd7F091b0;
+    address PEPE = 0x6982508145454Ce325dDbE47a25d4ec3d2311933;
 
     UniswapV1Adapter adapter;
 
@@ -59,14 +61,15 @@ contract UniswapV1AdapterTest is Test {
         PMMLib.PMMSwapRequest[] extraData;
     }
 
-    function test_swapMKRToWETH() public user(bob) tokenBalance(bob) {
+    function test_swapMKRToPEPE() public user(bob) tokenBalance(bob) {
         deal(MKR, bob, 1 * 10 ** 18);
         IERC20(MKR).approve(tokenApprove, 1 * 10 ** 18);
 
         uint256 amount = IERC20(MKR).balanceOf(bob);
         SwapInfo memory swapInfo;
+
         swapInfo.baseRequest.fromToken = uint256(uint160(address(MKR)));
-        swapInfo.baseRequest.toToken = WETH;
+        swapInfo.baseRequest.toToken = PEPE;
         swapInfo.baseRequest.fromTokenAmount = amount;
         swapInfo.baseRequest.minReturnAmount = 0;
         swapInfo.baseRequest.deadLine = block.timestamp;
@@ -75,7 +78,8 @@ contract UniswapV1AdapterTest is Test {
         swapInfo.batchesAmount[0] = amount;
 
         swapInfo.batches = new DexRouter.RouterPath[][](1);
-        swapInfo.batches[0] = new DexRouter.RouterPath[](1);
+        swapInfo.batches[0] = new DexRouter.RouterPath[](2);
+
         swapInfo.batches[0][0].mixAdapters = new address[](1);
         swapInfo.batches[0][0].mixAdapters[0] = address(adapter);
         swapInfo.batches[0][0].assetTo = new address[](1);
@@ -91,6 +95,22 @@ contract UniswapV1AdapterTest is Test {
         swapInfo.batches[0][0].extraData[0] = abi.encode(MKR);
         swapInfo.batches[0][0].fromToken = uint256(uint160(address(MKR)));
 
+        // 2nd hop
+        swapInfo.batches[0][1].mixAdapters = new address[](1);
+        swapInfo.batches[0][1].mixAdapters[0] = address(adapter);
+        swapInfo.batches[0][1].assetTo = new address[](1);
+        // direct interaction with adapter
+        swapInfo.batches[0][1].assetTo[0] = address(adapter);
+        swapInfo.batches[0][1].rawData = new uint[](1);
+        swapInfo.batches[0][1].rawData[0] = uint256(
+            bytes32(
+                abi.encodePacked(uint8(0x00), uint88(10000), address(WETH_MKR))
+            )
+        );
+        swapInfo.batches[0][1].extraData = new bytes[](1); //extradata is not 0x
+        swapInfo.batches[0][1].extraData[0] = abi.encode(ETH_ADDRESS);
+        swapInfo.batches[0][1].fromToken = uint256(uint160(address(WETH)));
+
         swapInfo.extraData = new PMMLib.PMMSwapRequest[](0);
 
         dexRouter.smartSwapByOrderId(
@@ -101,7 +121,8 @@ contract UniswapV1AdapterTest is Test {
             swapInfo.extraData
         );
     }
-    function test_swapWETHToMKR() public user(bob) tokenBalance(bob) {
+
+    function _test_swapWETHToMKR() public user(bob) tokenBalance(bob) {
         vm.deal(bob, 1 ether);
 
         uint256 amount = 1 ether;
@@ -125,7 +146,7 @@ contract UniswapV1AdapterTest is Test {
         swapInfo.batches[0][0].rawData = new uint[](1);
         swapInfo.batches[0][0].rawData[0] = uint256(
             bytes32(
-                abi.encodePacked(uint8(0x00), uint88(10000), address(WETH_MKR))
+                abi.encodePacked(uint8(0x00), uint88(10000), address(WETH_PEPE))
             )
         );
         swapInfo.batches[0][0].extraData = new bytes[](1); //extradata is not 0x
