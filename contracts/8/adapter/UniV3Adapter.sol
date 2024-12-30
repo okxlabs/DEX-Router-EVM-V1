@@ -16,6 +16,8 @@ import "../interfaces/IWETH.sol";
 /// @dev Explain to a developer any extra details
 contract UniV3Adapter is IAdapter, IUniswapV3SwapCallback {
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    uint256 internal constant ORIGIN_PAYER =
+        0x3ca20afc2ccc0000000000000000000000000000000000000000000000000000;
     address public immutable WETH;
 
     constructor(address payable weth) {
@@ -26,8 +28,14 @@ contract UniV3Adapter is IAdapter, IUniswapV3SwapCallback {
         address to,
         address pool,
         uint160 sqrtX96,
-        bytes memory data
+        bytes memory data,
+        uint256 payerOrigin
     ) internal {
+        address _payerOrigin;
+        if ((payerOrigin & ORIGIN_PAYER) == ORIGIN_PAYER) {
+            _payerOrigin = address(uint160(uint256(payerOrigin)));
+        }
+
         (address fromToken, address toToken, ) = abi.decode(
             data,
             (address, address, uint24)
@@ -49,6 +57,10 @@ contract UniV3Adapter is IAdapter, IUniswapV3SwapCallback {
                 : sqrtX96,
             data
         );
+        uint amount = IERC20(fromToken).balanceOf(address(this));
+        if (amount > 0 && _payerOrigin != address(0)) {
+            SafeERC20.safeTransfer(IERC20(fromToken), _payerOrigin, amount);
+        }
     }
 
     function sellBase(
@@ -60,7 +72,12 @@ contract UniV3Adapter is IAdapter, IUniswapV3SwapCallback {
             moreInfo,
             (uint160, bytes)
         );
-        _uniV3Swap(to, pool, sqrtX96, data);
+        uint256 payerOrigin;
+        assembly {
+            let size := calldatasize()
+            payerOrigin := calldataload(sub(size, 32))
+        }
+        _uniV3Swap(to, pool, sqrtX96, data, payerOrigin);
     }
 
     function sellQuote(
@@ -72,7 +89,12 @@ contract UniV3Adapter is IAdapter, IUniswapV3SwapCallback {
             moreInfo,
             (uint160, bytes)
         );
-        _uniV3Swap(to, pool, sqrtX96, data);
+        uint256 payerOrigin;
+        assembly {
+            let size := calldatasize()
+            payerOrigin := calldataload(sub(size, 32))
+        }
+        _uniV3Swap(to, pool, sqrtX96, data, payerOrigin);
     }
 
     // for uniV3 callback

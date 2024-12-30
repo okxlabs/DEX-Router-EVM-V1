@@ -108,6 +108,7 @@ abstract contract CommissionLib is CommonUtils {
 
     function _doCommissionFromToken(
         CommissionInfo memory commissionInfo,
+        address payer,
         address receiver,
         uint256 inputAmount
     ) internal returns (address, uint256) {
@@ -161,7 +162,7 @@ abstract contract CommissionLib is CommonUtils {
                     0x0a5ea46600000000000000000000000000000000000000000000000000000000
                 ) // claimTokens
                 mstore(add(freePtr, 0x04), token)
-                mstore(add(freePtr, 0x24), caller())
+                mstore(add(freePtr, 0x24), payer)
                 mstore(add(freePtr, 0x44), referer)
                 mstore(add(freePtr, 0x64), amount)
                 let success := call(

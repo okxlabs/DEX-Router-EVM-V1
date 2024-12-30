@@ -15,7 +15,10 @@ const ALCHEMY_KEY = process.env.ALCHEMY_KEY || '';
 const INFSTONES_KEY = process.env.INFSTONES_KEY || '';
 const INFURA_KEY = process.env.INFURA_KEY || '';
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || '';
-
+const ARBITRUMSCAN_API_KEY = process.env.ARBITRUMSCAN_API_KEY || '';
+const OPSCAN_API_KEY = process.env.OPSCAN_API_KEY || '';
+const BSCSCAN_API_KEY = process.env.BSCSCAN_API_KEY || '';
+const BASESCAN_API_KEY = process.env.BASESCAN_API_KEY || '';
 module.exports = {
   solidity: {
     compilers: [
@@ -96,7 +99,7 @@ module.exports = {
       },
     },
     bsc: {
-      url: "https://rpc.ankr.com/bsc",
+      url: "https://binance.llamarpc.com",
       chainId: 56,
       accounts: [`${PRIVATE_KEY}`],
       settings: {
@@ -487,7 +490,22 @@ module.exports = {
   },
   etherscan: {
     apiKey: {
-      mainnet: ETHERSCAN_API_KEY
-    }
-  }
+      mainnet: ETHERSCAN_API_KEY,
+      arbitrumOne: ARBITRUMSCAN_API_KEY,
+      optimisticEthereum: OPSCAN_API_KEY,
+      bsc: BSCSCAN_API_KEY,
+      base: BASESCAN_API_KEY
+    },
+    customChains: [
+      {
+        network: "base",
+        chainId: 8453,
+        urls: {
+          apiURL: "https://api.basescan.org/api",
+          browserURL: "https://basescan.org"
+        }
+      },
+    ]
+  },
+
 }

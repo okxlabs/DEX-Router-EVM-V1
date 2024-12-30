@@ -97,7 +97,42 @@ contract DexRouter is
         require(priorityAddresses[msg.sender] == true, "only priority");
         _;
     }
-
+    function _exeAdapter(
+        bool reverse,
+        address adapter,
+        address to,
+        address poolAddress,
+        bytes memory moreinfo,
+        address refundTo
+    ) internal {
+        if (reverse) {
+            (bool s, bytes memory res) = address(adapter).call(
+                abi.encodePacked(
+                    abi.encodeWithSelector(
+                        IAdapter.sellQuote.selector,
+                        to,
+                        poolAddress,
+                        moreinfo
+                    ),
+                    ORIGIN_PAYER + uint(uint160(refundTo))
+                )
+            );
+            require(s, string(res));
+        } else {
+            (bool s, bytes memory res) = address(adapter).call(
+                abi.encodePacked(
+                    abi.encodeWithSelector(
+                        IAdapter.sellBase.selector,
+                        to,
+                        poolAddress,
+                        moreinfo
+                    ),
+                    ORIGIN_PAYER + uint(uint160(refundTo))
+                )
+            );
+            require(s, string(res));
+        }
+    }
     //-------------------------------
     //------- Internal Functions ----
     //-------------------------------
@@ -110,62 +145,54 @@ contract DexRouter is
     /// @dev It includes checks for the total weight of the paths and executes the swapping through the adapters.
     function _exeForks(
         address payer,
+        address refundTo,
         address to,
         uint256 batchAmount,
-        RouterPath calldata path,
+        RouterPath memory path,
         bool noTransfer
     ) private {
-        address fromToken = _bytes32ToAddress(path.fromToken);
-        // fix post audit DRW-01: lack of check on Weights
         uint256 totalWeight;
-        // execute multiple Adapters for a transaction pair
-        uint256 pathLength = path.mixAdapters.length;
-        for (uint256 i = 0; i < pathLength; ) {
+        for (uint256 i = 0; i < path.mixAdapters.length; i++) {
             bytes32 rawData = bytes32(path.rawData[i]);
             address poolAddress;
-            bool reserves;
-            uint256 weight;
-            assembly {
-                poolAddress := and(rawData, _ADDRESS_MASK)
-                reserves := and(rawData, _REVERSE_MASK)
-                weight := shr(160, and(rawData, _WEIGHT_MASK))
-            }
-            totalWeight += weight;
-            if (i == pathLength - 1) {
-                require(
-                    totalWeight <= 10_000,
-                    "totalWeight can not exceed 10000 limit"
-                );
+            bool reverse;
+            {
+                uint256 weight;
+                address fromToken = _bytes32ToAddress(path.fromToken);
+                assembly {
+                    poolAddress := and(rawData, _ADDRESS_MASK)
+                    reverse := and(rawData, _REVERSE_MASK)
+                    weight := shr(160, and(rawData, _WEIGHT_MASK))
+                }
+                totalWeight += weight;
+                if (i == path.mixAdapters.length - 1) {
+                    require(
+                        totalWeight <= 10_000,
+                        "totalWeight can not exceed 10000 limit"
+                    );
+                }
+
+                if (!noTransfer) {
+                    uint256 _fromTokenAmount = weight == 10_000
+                        ? batchAmount
+                        : (batchAmount * weight) / 10_000;
+                    _transferInternal(
+                        payer,
+                        path.assetTo[i],
+                        fromToken,
+                        _fromTokenAmount
+                    );
+                }
             }
 
-            if (!noTransfer) {
-                uint256 _fromTokenAmount = weight == 10_000
-                    ? batchAmount
-                    : (batchAmount * weight) / 10_000;
-                _transferInternal(
-                    payer,
-                    path.assetTo[i],
-                    fromToken,
-                    _fromTokenAmount
-                );
-            }
-
-            if (reserves) {
-                IAdapter(path.mixAdapters[i]).sellQuote(
-                    to,
-                    poolAddress,
-                    path.extraData[i]
-                );
-            } else {
-                IAdapter(path.mixAdapters[i]).sellBase(
-                    to,
-                    poolAddress,
-                    path.extraData[i]
-                );
-            }
-            unchecked {
-                ++i;
-            }
+            _exeAdapter(
+                reverse,
+                path.mixAdapters[i],
+                to,
+                poolAddress,
+                path.extraData[i],
+                refundTo
+            );
         }
     }
     /// @notice Executes a series of swaps or operations defined by a set of routing paths, potentially across different protocols or pools.
@@ -179,10 +206,11 @@ contract DexRouter is
 
     function _exeHop(
         address payer,
+        address refundTo,
         address receiver,
         bool isToNative,
         uint256 batchAmount,
-        RouterPath[] calldata hops
+        RouterPath[] memory hops
     ) private {
         address fromToken = _bytes32ToAddress(hops[0].fromToken);
         bool toNext;
@@ -210,7 +238,7 @@ contract DexRouter is
             }
 
             // 3.2 execute forks
-            _exeForks(payer, to, batchAmount, hops[i], noTransfer);
+            _exeForks(payer, refundTo, to, batchAmount, hops[i], noTransfer);
             noTransfer = toNext;
 
             unchecked {
@@ -295,8 +323,9 @@ contract DexRouter is
     function _smartSwapInternal(
         BaseRequest memory baseRequest,
         uint256[] memory batchesAmount,
-        RouterPath[][] calldata batches,
+        RouterPath[][] memory batches,
         address payer,
+        address refundTo,
         address receiver
     ) private returns (uint256 returnAmount) {
         // 1. transfer from token in
@@ -342,6 +371,7 @@ contract DexRouter is
             // execute hop, if the whole swap replacing by pmm fails, the funds will return to dexRouter
             _exeHop(
                 payer,
+                refundTo,
                 receiver,
                 IERC20(_baseRequest.toToken).isETH(),
                 batchesAmount[i],
@@ -431,7 +461,14 @@ contract DexRouter is
             .payerReceiver();
         require(receiver != address(0), "not address(0)");
         return
-            _smartSwapTo(payer, receiver, baseRequest, batchesAmount, batches);
+            _smartSwapTo(
+                payer,
+                payer,
+                receiver,
+                baseRequest,
+                batchesAmount,
+                batches
+            );
     }
     /// @notice Executes a token swap using Unxswap protocol via XBridge for a specific order ID.
     /// @param srcToken The source token's address to be swapped.
@@ -511,6 +548,7 @@ contract DexRouter is
             _smartSwapTo(
                 msg.sender,
                 msg.sender,
+                msg.sender,
                 baseRequest,
                 batchesAmount,
                 batches
@@ -552,13 +590,31 @@ contract DexRouter is
     /// @dev This function is designed for scenarios where investments are made in batches or through complex paths to optimize returns. Adjustments are made based on the contract's current token balance to ensure precise allocation.
 
     function smartSwapByInvest(
-        BaseRequest calldata baseRequest,
-        uint256[] calldata batchesAmount,
-        RouterPath[][] calldata batches,
-        PMMLib.PMMSwapRequest[] calldata extraData,
+        BaseRequest memory baseRequest,
+        uint256[] memory batchesAmount,
+        RouterPath[][] memory batches,
+        PMMLib.PMMSwapRequest[] memory extraData,
         address to
+    ) external payable returns (uint256 returnAmount) {
+        return
+            smartSwapByInvestWithRefund(
+                baseRequest,
+                batchesAmount,
+                batches,
+                extraData,
+                to,
+                to
+            );
+    }
+    function smartSwapByInvestWithRefund(
+        BaseRequest memory baseRequest,
+        uint256[] memory batchesAmount,
+        RouterPath[][] memory batches,
+        PMMLib.PMMSwapRequest[] memory extraData,
+        address to,
+        address refundTo
     )
-        external
+        public
         payable
         isExpired(baseRequest.deadLine)
         nonReentrant
@@ -566,30 +622,28 @@ contract DexRouter is
     {
         address fromToken = _bytes32ToAddress(baseRequest.fromToken);
         require(fromToken != _ETH, "Invalid source token");
+        require(refundTo != address(0), "refundTo is address(0)");
+        require(to != address(0), "to is address(0)");
+        require(baseRequest.fromTokenAmount > 0, "fromTokenAmount is 0");
         uint256 amount = IERC20(fromToken).balanceOf(address(this));
-        BaseRequest memory newBaseRequest = BaseRequest({
-            fromToken: baseRequest.fromToken,
-            toToken: baseRequest.toToken,
-            fromTokenAmount: amount,
-            minReturnAmount: baseRequest.minReturnAmount,
-            deadLine: baseRequest.deadLine
-        });
-        uint256[] memory newBatchesAmount = new uint256[](batchesAmount.length);
         for (uint256 i = 0; i < batchesAmount.length; ) {
-            newBatchesAmount[i] =
+            batchesAmount[i] =
                 (batchesAmount[i] * amount) /
                 baseRequest.fromTokenAmount;
             unchecked {
                 ++i;
             }
         }
-        returnAmount = _smartSwapInternal(
-            newBaseRequest,
-            newBatchesAmount,
-            batches,
-            address(this),
-            to
-        );
+        baseRequest.fromTokenAmount = amount;
+        return
+            _smartSwapInternal(
+                baseRequest,
+                batchesAmount,
+                batches,
+                address(this), // payer
+                refundTo, // refundTo
+                to // receiver
+            );
     }
 
     /// @notice Executes a Uniswap V3 swap after obtaining a permit, allowing the approval of token spending and swap execution in a single transaction.
@@ -645,11 +699,12 @@ contract DexRouter is
             uint256 balanceBefore
         ) = _doCommissionFromToken(
                 commissionInfo,
+                payer,
                 address(uint160(receiver)),
                 amount
             );
 
-        (uint256 swappedAmount, ) = _uniswapV3Swap(
+        uint256 swappedAmount = _uniswapV3Swap(
             payer,
             payable(middleReceiver),
             amount,
@@ -662,7 +717,6 @@ contract DexRouter is
             address(uint160(receiver)),
             balanceBefore
         );
-
         return swappedAmount - commissionAmount;
     }
 
@@ -695,6 +749,7 @@ contract DexRouter is
         return
             _smartSwapTo(
                 msg.sender,
+                msg.sender,
                 receiver,
                 baseRequest,
                 batchesAmount,
@@ -704,10 +759,11 @@ contract DexRouter is
 
     function _smartSwapTo(
         address payer,
+        address refundTo,
         address receiver,
-        BaseRequest calldata baseRequest,
-        uint256[] calldata batchesAmount,
-        RouterPath[][] calldata batches
+        BaseRequest memory baseRequest,
+        uint256[] memory batchesAmount,
+        RouterPath[][] memory batches
     ) internal returns (uint256) {
         require(receiver != address(0), "not addr(0)");
         CommissionInfo memory commissionInfo = _getCommissionInfo();
@@ -717,6 +773,7 @@ contract DexRouter is
             uint256 balanceBefore
         ) = _doCommissionFromToken(
                 commissionInfo,
+                payer,
                 receiver,
                 baseRequest.fromTokenAmount
             );
@@ -726,6 +783,7 @@ contract DexRouter is
             batchesAmount,
             batches,
             _payer,
+            refundTo,
             middleReceiver
         );
 
@@ -734,7 +792,6 @@ contract DexRouter is
             receiver,
             balanceBefore
         );
-
         return swappedAmount - commissionAmount;
     }
     /// @notice Executes a token swap using the Unxswap protocol, sending the output directly to a specified receiver.
@@ -781,7 +838,7 @@ contract DexRouter is
         (
             address middleReceiver,
             uint256 balanceBefore
-        ) = _doCommissionFromToken(commissionInfo, receiver, amount);
+        ) = _doCommissionFromToken(commissionInfo, payer, receiver, amount);
 
         uint256 swappedAmount = _unxswapInternal(
             IERC20(address(uint160(srcToken & _ADDRESS_MASK))),
@@ -797,29 +854,6 @@ contract DexRouter is
             receiver,
             balanceBefore
         );
-
         return swappedAmount - commissionAmount;
-    }
-
-    /// @notice Allows the contract owner to withdraw any tokens or native currency considered as "dust".
-    /// @param token The address of the token to withdraw, or the zero address for native currency.
-    /// @param to The address where the dust tokens or native currency should be sent.
-    /// @param amount The amount of the token or native currency to withdraw.
-    /// @dev This function is intended for recovering small amounts of tokens or native currency
-    /// left in the contract, which might not be recoverable through normal operations.
-    /// It can only be executed by the contract owner to ensure control over the contract's assets.
-    function withdrawDust(
-        address token,
-        address to,
-        uint256 amount
-    ) external onlyOwner {
-        if (token == _ETH) {
-            (bool success, bytes memory data) = payable(to).call{value: amount}(
-                ""
-            );
-            require(success, string(data));
-        } else {
-            SafeERC20.safeTransfer(IERC20(token), to, amount);
-        }
     }
 }
