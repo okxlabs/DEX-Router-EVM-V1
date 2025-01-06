@@ -20,9 +20,9 @@ function replace_contant(UnxswapRouterPath) {
 
     let context = data.toString();
     // address public constant
-    context = context.replace(/_WETH\s=\s\w*/, "_WETH = " + deployed.base.wNativeToken)
-    context = context.replace(/_APPROVE_PROXY\s=\s\w*/, "_APPROVE_PROXY = " + deployed.base.tokenApproveProxy)
-    context = context.replace(/_WNATIVE_RELAY\s=\s\w*/, "_WNATIVE_RELAY = " + deployed.base.wNativeRelayer)
+    context = context.replace(/_WETH\s+=\s+0x[0-9a-fA-F]+/, "_WETH = " + deployed.base.wNativeToken)
+    context = context.replace(/_APPROVE_PROXY\s+=\s+0x[0-9a-fA-F]+/, "_APPROVE_PROXY = " + deployed.base.tokenApproveProxy)
+    context = context.replace(/_WNATIVE_RELAY\s+=\s+0x[0-9a-fA-F]+/, "_WNATIVE_RELAY = " + deployed.base.wNativeRelayer)
 
     fs.writeFile(UnxswapRouterPath, context, (err) => {
       if (err) {
@@ -100,10 +100,11 @@ function replace_univ3_contant(UnxswapRouterPath) {
 
     let context = data.toString();
     // address public constant
-    context = context.replace(/_FF_FACTORY\s=\s\w*/, "_FF_FACTORY = " + deployed.base._FF_FACTORY);
-    if (deployed.base._POOL_INIT_CODE_HASH != null || deployed.base._POOL_INIT_CODE_HASH != "") {
-      context = context.replace(/_POOL_INIT_CODE_HASH\s=\s\w*/, "_POOL_INIT_CODE_HASH = " + deployed.base._POOL_INIT_CODE_HASH);
-    }
+    context = context.replace(/_FF_FACTORY\s+=\s+0x[0-9a-fA-F]+/, "_FF_FACTORY = " + deployed.base._FF_FACTORY);
+    // context = context.replace(/_FF_FACTORY\s=\s\w*/, "_FF_FACTORY = " + deployed.base._FF_FACTORY);
+    // if (deployed.base._POOL_INIT_CODE_HASH != null || deployed.base._POOL_INIT_CODE_HASH != "") {
+    //   context = context.replace(/_POOL_INIT_CODE_HASH\s=\s\w*/, "_POOL_INIT_CODE_HASH = " + deployed.base._POOL_INIT_CODE_HASH);
+    // }
     fs.writeFile(UnxswapRouterPath, context, (err) => {
       if (err) {
         console.log(err);

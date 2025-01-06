@@ -30,6 +30,7 @@
     "solidity-coverage": ">=0.7.21 <=0.7.22"
   },
   "dependencies": {
+    "@okxweb3/hardhat-explorer-verify": "^1.6.5",
     "diff": "^5.2.0"
   }
 }

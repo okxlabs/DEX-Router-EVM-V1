@@ -1,5 +1,5 @@
 module.exports = {
-    wNativeToken: "0xe538905cf8410324e03a5a23c1c177a474d59b2b",
+    wNativeToken: "0xe538905cf8410324e03A5A23C1c177a474D59b2b",
     wNativeRelayer: "0x38a342664aBE254Fc2Ca4A98d85eaB7C5aE63c85",
     tokenApprove: "0x8b773D83bc66Be128c60e07E17C8901f7a64F000",
     tokenApproveProxy: "0xfAd6a9eEe5b32E9B81bb217BaeF37742B2ca5B83",
@@ -15,5 +15,5 @@ module.exports = {
     _HASHED_VERSION: "",
     _TYPE_HASH: "",
     nftmarketplace: "",
-    newImpl: "0x16f37072FFcE9A563C59E13759d2fAE47AE52E5a",
+    newImpl: "0x0B8D6949Ab6389bf74baD564007f2D48fBb72c92",
 }

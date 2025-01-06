@@ -8,9 +8,10 @@ require('hardhat-log-remover');
 require("@openzeppelin/hardhat-upgrades");
 require('dotenv').config();
 require("./scripts/multichain.js");
+require('@okxweb3/hardhat-explorer-verify');
 
 // Note: If no private key is configured in the project, the first test account of Hardhat is used by default
-const PRIVATE_KEY = process.env.PRIVATE_KEY || 'ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
+const PRIVATE_KEY = process.env.PRIVATE_KEY_DEPLOYER || 'ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
 const ALCHEMY_KEY = process.env.ALCHEMY_KEY || '';
 const INFSTONES_KEY = process.env.INFSTONES_KEY || '';
 const INFURA_KEY = process.env.INFURA_KEY || '';
@@ -19,6 +20,16 @@ const ARBITRUMSCAN_API_KEY = process.env.ARBITRUMSCAN_API_KEY || '';
 const OPSCAN_API_KEY = process.env.OPSCAN_API_KEY || '';
 const BSCSCAN_API_KEY = process.env.BSCSCAN_API_KEY || '';
 const BASESCAN_API_KEY = process.env.BASESCAN_API_KEY || '';
+const POLYGONSCAN_API_KEY = process.env.POLYGONSCAN_API_KEY || '';
+const OKLINK_API_KEY = process.env.OKLINK_API_KEY || '';
+const LINEASCAN_API_KEY = process.env.LINEASCAN_API_KEY || '';
+const MANTLESCAN_API_KEY = process.env.MANTLESCAN_API_KEY || '';
+const XLAYERSCAN_API_KEY = process.env.XLAYERSCAN_API_KEY || '';
+const MODESCAN_API_KEY = process.env.MODESCAN_API_KEY || '';
+const MANTASCAN_API_KEY = process.env.MANTASCAN_API_KEY || '';
+const SCROLLSCAN_API_KEY = process.env.SCROLLSCAN_API_KEY || '';
+const AVAXSCAN_API_KEY = process.env.AVAXSCAN_API_KEY || '';
+const BLASTSCAN_API_KEY = process.env.BLASTSCAN_API_KEY || '';
 module.exports = {
   solidity: {
     compilers: [
@@ -488,13 +499,27 @@ module.exports = {
   mocha: {
     timeout: 180000000
   },
+  okxweb3explorer: {
+    apiKey: OKLINK_API_KEY ?? "",
+  },
   etherscan: {
     apiKey: {
       mainnet: ETHERSCAN_API_KEY,
       arbitrumOne: ARBITRUMSCAN_API_KEY,
       optimisticEthereum: OPSCAN_API_KEY,
       bsc: BSCSCAN_API_KEY,
-      base: BASESCAN_API_KEY
+      base: BASESCAN_API_KEY,
+      polygon: POLYGONSCAN_API_KEY,
+      linea: LINEASCAN_API_KEY,
+      mantle: MANTLESCAN_API_KEY,
+      xlayer: XLAYERSCAN_API_KEY,
+      mode: MODESCAN_API_KEY,
+      manta: MANTASCAN_API_KEY,
+      scroll: SCROLLSCAN_API_KEY,
+      avalanche: AVAXSCAN_API_KEY,
+      avax: AVAXSCAN_API_KEY,
+      blast: BLASTSCAN_API_KEY,
+      blast_ok: BLASTSCAN_API_KEY
     },
     customChains: [
       {
@@ -505,6 +530,89 @@ module.exports = {
           browserURL: "https://basescan.org"
         }
       },
+      {
+        network: "linea",
+        chainId: 59144,
+        urls: {
+          apiURL: "https://api.lineascan.build/api",
+          browserURL: "https://lineascan.build"
+        }
+      },
+      {
+        network: "mantle",
+        chainId: 5000,
+        urls: {
+          apiURL: "https://api.mantlescan.xyz/api",
+          browserURL: "https://mantlescan.xyz"
+        }
+      },
+      {
+        network: "manta",
+        chainId: 5000,
+        urls: {
+          apiURL: "https://api.w3w.ai/manta-pacific/v1/explorer/command_api/contract",
+          browserURL: "https://manta.socialscan.io/"
+        }
+      },
+      {
+        network: "mode",
+        chainId: 34443,
+        urls: {
+          apiURL: "https://api.routescan.io/v2/network/mainnet/evm/34443/etherscan",
+          browserURL: "https://modescan.io"
+        }
+      },
+      {
+        network: "scroll",
+        chainId: 534352,
+        urls: {
+          apiURL: "https://api.scrollscan.com/api",
+          browserURL: "https://scrollscan.com"
+        }
+      },
+      {
+        network: "blast",
+        chainId: 81457,
+        urls: {
+          apiURL: "https://api.blastscan.io/api",
+          browserURL: "https://blastscan.com"
+        }
+      },
+      {
+        network: "polygon",
+        chainId: 137,
+        urls: { apiURL: "https://www.oklink.com/api/v5/explorer/contract/verify-source-code-plugin/POLYGON", browserURL: "https://www.oklink.com", }
+      },
+      {
+        network: "linea",
+        chainId: 59144,
+        urls: { apiURL: "https://www.oklink.com/api/v5/explorer/contract/verify-source-code-plugin/LINEA", browserURL: "https://www.oklink.com", }
+      },
+      {
+        network: "manta",
+        chainId: 169,
+        urls: { apiURL: "https://www.oklink.com/api/v5/explorer/contract/verify-source-code-plugin/MANTA", browserURL: "https://www.oklink.com", }
+      },
+      {
+        network: "xlayer",
+        chainId: 196,
+        urls: { apiURL: "https://www.oklink.com/api/v5/explorer/contract/verify-source-code-plugin/XLAYER", browserURL: "https://www.oklink.com", }
+      },
+      {
+        network: "scroll",
+        chainId: 534352,
+        urls: { apiURL: "https://www.oklink.com/api/v5/explorer/contract/verify-source-code-plugin/SCROLL", browserURL: "https://www.oklink.com", }
+      },
+      {
+        network: "avax",
+        chainId: 43114,
+        urls: { apiURL: "https://www.oklink.com/api/v5/explorer/contract/verify-source-code-plugin/AVAXC", browserURL: "https://www.oklink.com", }
+      },
+      {
+        network: "blast_ok",
+        chainId: 81457,
+        urls: { apiURL: "https://www.oklink.com/api/v5/explorer/contract/verify-source-code-plugin/BLAST", browserURL: "https://www.oklink.com", }
+      }
     ]
   },
 

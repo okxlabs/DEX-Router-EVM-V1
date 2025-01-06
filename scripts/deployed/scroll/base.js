@@ -16,5 +16,5 @@ module.exports = {
     _CACHED_CHAIN_ID: 534352,
     nftmarketplace: "0xa7FD99748cE527eAdC0bDAc60cba8a4eF4090f7c",
     proxyAdmin: "0xc6d8e2e0E5c25ACecff66BE60F257884D0e9DF50",
-    newImpl: "0xD58bD6B60d088CB65Df04d3a6D9b0dF30E026a25"
+    newImpl: "0x0B8D6949Ab6389bf74baD564007f2D48fBb72c92"
 }
