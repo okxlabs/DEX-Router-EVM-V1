@@ -4,9 +4,16 @@ const deployed = require("../deployed");
 async function main() {
     UniV3Adapter = await ethers.getContractFactory("UniV3Adapter");
     uniV3Adapter = await UniV3Adapter.deploy(deployed.base.wNativeToken);
-    await uniV3Adapter.deployed();
+    let tx = await uniV3Adapter.deployed();
+    console.log(tx);
 
     console.log(`uniV3Adapter deployed: ${uniV3Adapter.address}`);
+
+    // verify
+    await hre.run("verify:verify", {
+        address: uniV3Adapter.address,
+        constructorArguments: [deployed.base.wNativeToken],
+    });
 }
 
 main()
