@@ -5,7 +5,7 @@ import "./CommonUtils.sol";
 /// @title Base contract with common permit handling logics
 
 abstract contract CommissionLib is CommonUtils {
-    uint256 internal constant _COMMISSION_FEE_MASK =
+    uint256 internal constant _COMMISSION_RATE_MASK =
         0x000000000000ffffffffffff0000000000000000000000000000000000000000;
     uint256 internal constant _COMMISSION_FLAG_MASK =
         0xffffffffffff0000000000000000000000000000000000000000000000000000;
@@ -20,7 +20,7 @@ abstract contract CommissionLib is CommonUtils {
 
     event CommissionRecord(uint256 commissionAmount, address referrerAddress);
 
-    // set default vaule. can change when need.
+    // set default value can change when need.
     uint256 public constant commissionRateLimit = 300;
 
     struct CommissionInfo {
@@ -57,7 +57,7 @@ abstract contract CommissionLib is CommonUtils {
             )
             mstore(
                 add(0x40, commissionInfo),
-                shr(160, and(commissionData, _COMMISSION_FEE_MASK))
+                shr(160, and(commissionData, _COMMISSION_RATE_MASK))
             )
             mstore(
                 add(0x60, commissionInfo),
@@ -72,7 +72,7 @@ abstract contract CommissionLib is CommonUtils {
                 let commissionData2 := calldataload(sub(calldatasize(), 0x60))
                 mstore(
                     add(0xa0, commissionInfo),
-                    shr(160, and(commissionData2, _COMMISSION_FEE_MASK))
+                    shr(160, and(commissionData2, _COMMISSION_RATE_MASK))
                 ) //commissionRate2
                 mstore(
                     add(0xc0, commissionInfo),
@@ -111,7 +111,7 @@ abstract contract CommissionLib is CommonUtils {
             }
             switch eq(token, _ETH)
             case 1 {
-                amount := selfbalance()
+                amount := balance(user)
             }
             default {
                 let freePtr := mload(0x40)
@@ -298,8 +298,7 @@ abstract contract CommissionLib is CommonUtils {
             }
             let rate := mload(add(commissionInfo, 0x40))
             let rate2 := mload(add(commissionInfo, 0xa0))
-            let totalRate := add(rate, rate2)
-            if gt(totalRate, commissionRateLimit) {
+            if gt(add(rate, rate2), commissionRateLimit) {
                 _revertWithReason(
                     0x0000001b6572726f7220636f6d6d697373696f6e2072617465206c696d697400,
                     0x5f
@@ -314,7 +313,7 @@ abstract contract CommissionLib is CommonUtils {
             case 1 {
                 if lt(selfbalance(), balanceBefore) {
                     _revertWithReason(
-                        0x0000000a737562206661696c65640000000000000000000000000000000000000,
+                        0x0000000a737562206661696c6564000000000000000000000000000000000000,
                         0x4d
                     ) // sub failed
                 }
@@ -380,8 +379,8 @@ abstract contract CommissionLib is CommonUtils {
                 let success := staticcall(
                     gas(),
                     token,
-                    add(freePtr, 12),
-                    36,
+                    add(freePtr, 0xc),
+                    0x24,
                     0,
                     0x20
                 )
@@ -394,7 +393,7 @@ abstract contract CommissionLib is CommonUtils {
                 let balanceAfter := mload(0x00)
                 if lt(balanceAfter, balanceBefore) {
                     _revertWithReason(
-                        0x0000000a737562206661696c65640000000000000000000000000000000000000,
+                        0x0000000a737562206661696c6564000000000000000000000000000000000000,
                         0x4d
                     ) // sub failed
                 }
@@ -402,7 +401,7 @@ abstract contract CommissionLib is CommonUtils {
                 amount := div(mul(inputAmount, rate), 10000)
                 mstore(add(freePtr, 0x0c), referer)
                 mstore(add(freePtr, 0x2c), amount)
-                success := call(gas(), token, 0, add(freePtr, 8), 0x44, 0, 0)
+                success := call(gas(), token, 0, add(freePtr, 0x8), 0x44, 0, 0)
                 if eq(success, 0) {
                     _revertWithReason(
                         0x0000001b7472616e7366657220746f6b656e2072656665726572206661696c00,
@@ -422,7 +421,7 @@ abstract contract CommissionLib is CommonUtils {
                     amount := add(amount, amount2)
                     mstore(add(freePtr, 0x08), referer2)
                     mstore(add(freePtr, 0x28), amount2)
-                    success := call(gas(), token, 0, add(freePtr, 4), 0x44, 0, 0)
+                    success := call(gas(), token, 0, add(freePtr, 0x4), 0x44, 0, 0)
                     if eq(success, 0) {
                         _revertWithReason(
                             0x0000001b7472616e7366657220746f6b656e2072656665726572206661696c00,
