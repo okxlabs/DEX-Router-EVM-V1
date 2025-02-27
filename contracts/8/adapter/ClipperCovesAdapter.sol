@@ -6,8 +6,9 @@ import "../interfaces/IAdapter.sol";
 import "../interfaces/IClipperCove.sol";
 
 contract ClipperCovesAdapter is IAdapter {
-
-    function _clippeCovesrSwap(
+    // Notes: The current quoting system does not support the exchange of Clipper LP tokens and underlying assets. Please be aware of the risks.
+    // If support for LP token and underlying asset exchange is required, a new adapter will be used.
+    function _clipperCovesSwap(
         address to,
         address pool,
         bytes memory moreInfo
@@ -27,7 +28,7 @@ contract ClipperCovesAdapter is IAdapter {
         address pool,
         bytes memory moreInfo
     ) external override {
-        _clippeCovesrSwap(to, pool, moreInfo);
+        _clipperCovesSwap(to, pool, moreInfo);
     }
 
     function sellQuote(
@@ -35,6 +36,6 @@ contract ClipperCovesAdapter is IAdapter {
         address pool,
         bytes memory moreInfo
     ) external override {
-        _clippeCovesrSwap(to, pool, moreInfo);
+        _clipperCovesSwap(to, pool, moreInfo);
     }
 }
