@@ -2,9 +2,10 @@
 pragma solidity ^0.8.0;
 
 import "./CommonUtils.sol";
+import "../interfaces/AbstractCommissionLib.sol";
 /// @title Base contract with common permit handling logics
 
-abstract contract CommissionLib is CommonUtils {
+abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
     uint256 internal constant _COMMISSION_RATE_MASK =
         0x000000000000ffffffffffff0000000000000000000000000000000000000000;
     uint256 internal constant _COMMISSION_FLAG_MASK =
@@ -18,24 +19,25 @@ abstract contract CommissionLib is CommonUtils {
     uint256 internal constant TO_TOKEN_COMMISSION_DUAL =
         0x22220afc2bbb0000000000000000000000000000000000000000000000000000;
 
-    event CommissionRecord(uint256 commissionAmount, address referrerAddress);
+    event CommissionFromTokenRecord(
+        address fromTokenAddress,
+        uint256 commissionAmount,
+        address referrerAddress
+    );
+
+    event CommissionToTokenRecord(
+        address toTokenAddress,
+        uint256 commissionAmount,
+        address referrerAddress
+    );
 
     // set default value can change when need.
     uint256 public constant commissionRateLimit = 300;
 
-    struct CommissionInfo {
-        bool isFromTokenCommission;
-        bool isToTokenCommission;
-        uint256 commissionRate;
-        address refererAddress;
-        address token;
-        uint256 commissionRate2;
-        address refererAddress2;
-    }
-
     function _getCommissionInfo()
         internal
         pure
+        override
         returns (CommissionInfo memory commissionInfo)
     {
         assembly ("memory-safe") {
@@ -49,11 +51,17 @@ abstract contract CommissionLib is CommonUtils {
             )
             mstore(
                 commissionInfo,
-                or(eq(flag, FROM_TOKEN_COMMISSION), eq(flag, FROM_TOKEN_COMMISSION_DUAL))
+                or(
+                    eq(flag, FROM_TOKEN_COMMISSION),
+                    eq(flag, FROM_TOKEN_COMMISSION_DUAL)
+                )
             ) // isFromTokenCommission
             mstore(
                 add(0x20, commissionInfo),
-                or(eq(flag, TO_TOKEN_COMMISSION), eq(flag, TO_TOKEN_COMMISSION_DUAL))
+                or(
+                    eq(flag, TO_TOKEN_COMMISSION),
+                    eq(flag, TO_TOKEN_COMMISSION_DUAL)
+                )
             )
             mstore(
                 add(0x40, commissionInfo),
@@ -80,14 +88,8 @@ abstract contract CommissionLib is CommonUtils {
                 ) //refererAddress2
             }
             default {
-                mstore(
-                    add(0xa0, commissionInfo), 
-                    0
-                ) //commissionRate2
-                mstore(
-                    add(0xc0, commissionInfo), 
-                    0
-                ) //refererAddress2
+                mstore(add(0xa0, commissionInfo), 0) //commissionRate2
+                mstore(add(0xc0, commissionInfo), 0) //refererAddress2
             }
         }
     }
@@ -135,17 +137,18 @@ abstract contract CommissionLib is CommonUtils {
 
     function _doCommissionFromToken(
         CommissionInfo memory commissionInfo,
+        address srcToken,
         address payer,
         address receiver,
         uint256 inputAmount
-    ) internal returns (address, uint256) {
+    ) internal override returns (address, uint256) {
         if (commissionInfo.isToTokenCommission) {
             return (
                 address(this),
                 _getBalanceOf(commissionInfo.token, address(this))
             );
         }
-        if (!commissionInfo.isFromTokenCommission || commissionInfo.commissionRate == 0) {
+        if (!commissionInfo.isFromTokenCommission) {
             return (receiver, 0);
         }
         assembly ("memory-safe") {
@@ -171,6 +174,16 @@ abstract contract CommissionLib is CommonUtils {
                 ) //"error commission rate limit"
             }
             let token := mload(add(commissionInfo, 0x80))
+
+            if eq(
+                or(eq(token, srcToken), and(eq(token, _ETH), eq(srcToken, 0))),
+                0
+            ) {
+                _revertWithReason(
+                    0x00000017746f6b656e20616e6420737263206e6f74206d617463680000000000,
+                    0x5b
+                ) // "token and src not match"
+            }
             let referer := mload(add(commissionInfo, 0x60))
             let amount := div(mul(inputAmount, rate), sub(10000, totalRate))
             switch eq(token, _ETH)
@@ -211,17 +224,21 @@ abstract contract CommissionLib is CommonUtils {
                 }
             }
             let freePtr := mload(0x40)
-            mstore(0x40, add(freePtr, 0x40))
-            mstore(freePtr, amount)
-            mstore(add(freePtr, 0x20), referer)
+            mstore(0x40, add(freePtr, 0x60))
+            mstore(freePtr, token)
+            mstore(add(freePtr, 0x20), amount)
+            mstore(add(freePtr, 0x40), referer)
             log1(
                 freePtr,
-                0x40,
-                0xffc60ee157a42f4d8edbd1897e6581a96d9ed04e44fb2ab53a47ce1eb8f2775b
-            ) //emit CommissionRecord(commissionAmount, refererAddress);
+                0x60,
+                0x0d3b1268ca3dbb6d3d8a0ea35f44f8f9d58cf578d732680b71b6904fb2733e0d
+            ) //emit CommissionFromTokenRecord(address,uint256,address)
             if gt(rate2, 0) {
                 let referer2 := mload(add(commissionInfo, 0xc0))
-                let amount2 := div(mul(inputAmount, rate2), sub(10000, totalRate))
+                let amount2 := div(
+                    mul(inputAmount, rate2),
+                    sub(10000, totalRate)
+                )
 
                 switch eq(token, _ETH)
                 case 1 {
@@ -245,12 +262,12 @@ abstract contract CommissionLib is CommonUtils {
                     mstore(add(freePtr2, 0x44), referer2)
                     mstore(add(freePtr2, 0x64), amount2)
                     let success := call(
-                        gas(), 
-                        _APPROVE_PROXY, 
-                        0, 
-                        freePtr2, 
-                        0x84, 
-                        0, 
+                        gas(),
+                        _APPROVE_PROXY,
+                        0,
+                        freePtr2,
+                        0x84,
+                        0,
                         0
                     )
                     if eq(success, 0) {
@@ -262,15 +279,16 @@ abstract contract CommissionLib is CommonUtils {
                 }
                 // Emit event for second commission
                 let freePtr2 := mload(0x40)
-                mstore(0x40, add(freePtr2, 0x40))
-                mstore(freePtr2, amount2)
-                mstore(add(freePtr2, 0x20), referer2)
+                mstore(0x40, add(freePtr2, 0x60))
+                mstore(freePtr2, token)
+                mstore(add(freePtr2, 0x20), amount2)
+                mstore(add(freePtr2, 0x40), referer2)
                 log1(
                     freePtr2,
-                    0x40,
-                    0xffc60ee157a42f4d8edbd1897e6581a96d9ed04e44fb2ab53a47ce1eb8f2775b
+                    0x60,
+                    0x0d3b1268ca3dbb6d3d8a0ea35f44f8f9d58cf578d732680b71b6904fb2733e0d
                 )
-            }
+            } //emit CommissionFromTokenRecord(address,uint256,address)
         }
         return (receiver, 0);
     }
@@ -279,8 +297,8 @@ abstract contract CommissionLib is CommonUtils {
         CommissionInfo memory commissionInfo,
         address receiver,
         uint256 balanceBefore
-    ) internal returns (uint256 amount) {
-        if (!commissionInfo.isToTokenCommission || commissionInfo.commissionRate == 0) {
+    ) internal override returns (uint256 amount) {
+        if (!commissionInfo.isToTokenCommission) {
             return 0;
         }
         assembly ("memory-safe") {
@@ -307,7 +325,7 @@ abstract contract CommissionLib is CommonUtils {
             let token := mload(add(commissionInfo, 0x80))
             let referer := mload(add(commissionInfo, 0x60))
             let eventPtr := mload(0x40)
-            mstore(0x40, add(eventPtr, 0x40))
+            mstore(0x40, add(eventPtr, 0x60))
 
             switch eq(token, _ETH)
             case 1 {
@@ -326,14 +344,15 @@ abstract contract CommissionLib is CommonUtils {
                         0x5d
                     ) // transfer eth referer fail
                 }
-                mstore(eventPtr, amount)
-                mstore(add(eventPtr, 0x20), referer)
+                mstore(eventPtr, token)
+                mstore(add(eventPtr, 0x20), amount)
+                mstore(add(eventPtr, 0x40), referer)
                 log1(
                     eventPtr,
-                    0x40,
-                    0xffc60ee157a42f4d8edbd1897e6581a96d9ed04e44fb2ab53a47ce1eb8f2775b
-                ) //emit CommissionRecord(commissionAmount1, refererAddress1);
-                if gt(rate2, 0){
+                    0x60,
+                    0xf171268de859ec269c52bbfac94dcb7715e784de194342abb284bf34fd30b32d
+                ) //emit CommissionToTokenRecord(address,uint256,address)
+                if gt(rate2, 0) {
                     let referer2 := mload(add(commissionInfo, 0xc0))
                     let amount2 := div(mul(inputAmount, rate2), 10000)
                     amount := add(amount, amount2)
@@ -344,13 +363,14 @@ abstract contract CommissionLib is CommonUtils {
                             0x5d
                         ) // transfer eth referer fail
                     }
-                    mstore(eventPtr, amount2)
-                    mstore(add(eventPtr, 0x20), referer2)
+                    mstore(eventPtr, token)
+                    mstore(add(eventPtr, 0x20), amount2)
+                    mstore(add(eventPtr, 0x40), referer2)
                     log1(
                         eventPtr,
-                        0x40,
-                        0xffc60ee157a42f4d8edbd1897e6581a96d9ed04e44fb2ab53a47ce1eb8f2775b
-                    ) //emit CommissionRecord(commissionAmount2, refererAddress2);
+                        0x60,
+                        0xf171268de859ec269c52bbfac94dcb7715e784de194342abb284bf34fd30b32d
+                    ) //emit CommissionToTokenRecord(address,uint256,address)
                 }
                 success := call(
                     gas(),
@@ -408,33 +428,43 @@ abstract contract CommissionLib is CommonUtils {
                         0x5f
                     ) //transfer token referer fail
                 }
-                mstore(eventPtr, amount)
-                mstore(add(eventPtr, 0x20), referer)
+                mstore(eventPtr, token)
+                mstore(add(eventPtr, 0x20), amount)
+                mstore(add(eventPtr, 0x40), referer)
                 log1(
                     eventPtr,
-                    0x40,
-                    0xffc60ee157a42f4d8edbd1897e6581a96d9ed04e44fb2ab53a47ce1eb8f2775b
-                ) //emit CommissionRecord(commissionAmount1, refererAddress1);
-                if gt(rate2, 0){
+                    0x60,
+                    0xf171268de859ec269c52bbfac94dcb7715e784de194342abb284bf34fd30b32d
+                ) //emit CommissionToTokenRecord(address,uint256,address)
+                if gt(rate2, 0) {
                     let referer2 := mload(add(commissionInfo, 0xc0))
                     let amount2 := div(mul(inputAmount, rate2), 10000)
                     amount := add(amount, amount2)
                     mstore(add(freePtr, 0x08), referer2)
                     mstore(add(freePtr, 0x28), amount2)
-                    success := call(gas(), token, 0, add(freePtr, 0x4), 0x44, 0, 0)
+                    success := call(
+                        gas(),
+                        token,
+                        0,
+                        add(freePtr, 0x4),
+                        0x44,
+                        0,
+                        0
+                    )
                     if eq(success, 0) {
                         _revertWithReason(
                             0x0000001b7472616e7366657220746f6b656e2072656665726572206661696c00,
                             0x5f
                         ) //transfer token referer fail
                     }
-                    mstore(eventPtr, amount2)
-                    mstore(add(eventPtr, 0x20), referer2)
+                    mstore(eventPtr, token)
+                    mstore(add(eventPtr, 0x20), amount2)
+                    mstore(add(eventPtr, 0x40), referer2)
                     log1(
                         eventPtr,
-                        0x40,
-                        0xffc60ee157a42f4d8edbd1897e6581a96d9ed04e44fb2ab53a47ce1eb8f2775b
-                    ) //emit CommissionRecord(commissionAmount2, refererAddress2);
+                        0x60,
+                        0xf171268de859ec269c52bbfac94dcb7715e784de194342abb284bf34fd30b32d
+                    ) //emit CommissionToTokenRecord(address,uint256,address)
                 }
                 mstore(add(freePtr, 0x04), receiver)
                 mstore(add(freePtr, 0x24), sub(inputAmount, amount))

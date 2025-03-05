@@ -13,6 +13,7 @@ import "./interfaces/IAdapter.sol";
 import "./interfaces/IApproveProxy.sol";
 import "./interfaces/IWNativeRelayer.sol";
 import "./interfaces/IXBridge.sol";
+import "./interfaces/IUniV3.sol";
 
 import "./libraries/Permitable.sol";
 import "./libraries/PMMLib.sol";
@@ -693,12 +694,29 @@ contract DexRouter is
         uint256[] calldata pools
     ) internal returns (uint256 returnAmount) {
         CommissionInfo memory commissionInfo = _getCommissionInfo();
+        
+        // get token from pool
+        address srcToken;
+        
+        if (msg.value > 0) {
+            srcToken = _ETH;
+        } else {
+            address poolAddr = address(uint160(pools[0] & _ADDRESS_MASK));
+            bool zeroForOne = (pools[0] & _ONE_FOR_ZERO_MASK) == 0;
+            
+            if (zeroForOne) {
+                srcToken = IUniV3(poolAddr).token0();
+            } else {
+                srcToken = IUniV3(poolAddr).token1();
+            }
+        }
 
         (
             address middleReceiver,
             uint256 balanceBefore
         ) = _doCommissionFromToken(
                 commissionInfo,
+                srcToken,
                 payer,
                 address(uint160(receiver)),
                 amount
@@ -773,6 +791,7 @@ contract DexRouter is
             uint256 balanceBefore
         ) = _doCommissionFromToken(
                 commissionInfo,
+                _bytes32ToAddress(baseRequest.fromToken),
                 payer,
                 receiver,
                 baseRequest.fromTokenAmount
@@ -838,7 +857,13 @@ contract DexRouter is
         (
             address middleReceiver,
             uint256 balanceBefore
-        ) = _doCommissionFromToken(commissionInfo, payer, receiver, amount);
+        ) = _doCommissionFromToken(
+                commissionInfo,
+                _bytes32ToAddress(srcToken),
+                payer,
+                receiver,
+                amount
+            );
 
         uint256 swappedAmount = _unxswapInternal(
             IERC20(address(uint160(srcToken & _ADDRESS_MASK))),
