@@ -11,7 +11,7 @@ require("./scripts/multichain.js");
 require('@okxweb3/hardhat-explorer-verify');
 
 // Note: If no private key is configured in the project, the first test account of Hardhat is used by default
-const PRIVATE_KEY = process.env.PRIVATE_KEY_DEPLOYER || 'ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
+const PRIVATE_KEY = process.env.PRIVATE_KEY || 'ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
 const ALCHEMY_KEY = process.env.ALCHEMY_KEY || '';
 const INFSTONES_KEY = process.env.INFSTONES_KEY || '';
 const INFURA_KEY = process.env.INFURA_KEY || '';
@@ -30,6 +30,7 @@ const MANTASCAN_API_KEY = process.env.MANTASCAN_API_KEY || '';
 const SCROLLSCAN_API_KEY = process.env.SCROLLSCAN_API_KEY || '';
 const AVAXSCAN_API_KEY = process.env.AVAXSCAN_API_KEY || '';
 const BLASTSCAN_API_KEY = process.env.BLASTSCAN_API_KEY || '';
+const SONIC_API_KEY = process.env.SONIC_API_KEY || '';
 module.exports = {
   solidity: {
     compilers: [
@@ -476,6 +477,16 @@ module.exports = {
           runs: 200
         },
       }
+    },
+    sonic: {
+      url: 'https://sonic.drpc.org',
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
     }
   },
   paths: {
@@ -519,7 +530,8 @@ module.exports = {
       avalanche: AVAXSCAN_API_KEY,
       avax: AVAXSCAN_API_KEY,
       blast: BLASTSCAN_API_KEY,
-      blast_ok: BLASTSCAN_API_KEY
+      blast_ok: BLASTSCAN_API_KEY,
+      sonic: SONIC_API_KEY,
     },
     customChains: [
       {
@@ -612,6 +624,11 @@ module.exports = {
         network: "blast_ok",
         chainId: 81457,
         urls: { apiURL: "https://www.oklink.com/api/v5/explorer/contract/verify-source-code-plugin/BLAST", browserURL: "https://www.oklink.com", }
+      },
+      {
+        network: "sonic",
+        chainId: 146,
+        urls: { apiURL: "https://api.sonicscan.org/api", browserURL: "https://sonicscan.org", }
       }
     ]
   },
