@@ -10,7 +10,7 @@ const UNIV3_PATH = "./contracts/8/UnxswapV3Router.sol";
 // _WETH, _APPROVE_PROXY_32, _WNATIVE_RELAY_32 Three constant addresses
 // npx hardhat run scripts/tools/ureplace.js [network name, eg: eth]
 function replace_contant(UnxswapRouterPath) {
-  console.log(deployed.base);
+  // console.log(deployed.base);
 
   // Reading the file
   fs.readFile(UnxswapRouterPath, function (err, data) {
@@ -35,7 +35,7 @@ function replace_contant(UnxswapRouterPath) {
 }
 
 function replace_pmm_contant(PMMROUTER_PATH) {
-  console.log(deployed.base);
+  // console.log(deployed.base);
 
   // Reading the file
   fs.readFile(PMMROUTER_PATH, function (err, data) {
@@ -58,7 +58,7 @@ function replace_pmm_contant(PMMROUTER_PATH) {
 }
 
 function replace_pmm_eip712_contant(EIP712_PATH) {
-  console.log(deployed.base);
+  // console.log(deployed.base);
 
   // Reading the file
   fs.readFile(EIP712_PATH, function (err, data) {
@@ -86,7 +86,7 @@ function replace_pmm_eip712_contant(EIP712_PATH) {
 }
 
 function replace_univ3_contant(UnxswapRouterPath) {
-  console.log(deployed.base);
+  // console.log(deployed.base);
 
   if (deployed.base._FF_FACTORY == null || deployed.base._FF_FACTORY == "") {
     console.log("warning: _FF_FACTORY is null!!!!");

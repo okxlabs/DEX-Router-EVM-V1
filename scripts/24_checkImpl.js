@@ -1,50 +1,55 @@
-const { ethers } = require("hardhat");
+const { ethers, network } = require("hardhat");
 const deployed = require('./deployed');
 require('colors');
 const Diff = require('diff');
 
+// For the zeta network specifically, the configuration is in the zeta/base.js file
+const zetaConfig = require('./deployed/zeta/base.js');
+
 async function main() {
-    console.log(deployed);
 
-    let newImpl = deployed.base.newImpl
+    // Get the new implementation code
+    let newImpl = deployed.base.newImpl;
+    if (!newImpl) {
+        console.error("Error: newImpl is not defined in the deployed configuration");
+        process.exit(1);
+    }
+
     let code = await ethers.provider.getCode(newImpl);
-    code = code.toLowerCase()
-    let wNativeToken = deployed.base.wNativeToken.replace("0x", "").toLowerCase()
-    let wNativeRelayer = deployed.base.wNativeRelayer.replace("0x", "").toLowerCase()
-    let tokenApproveProxy = deployed.base.tokenApproveProxy.replace("0x", "").toLowerCase()
-    let _FF_FACTORY = deployed.base._FF_FACTORY.replace("0x", "").toLowerCase()
-    console.log("wNativeToken included", code.includes(wNativeToken));
-    console.log("wNativeRelayer included", code.includes(wNativeRelayer));
-    console.log("tokenApproveProxy included", code.includes(tokenApproveProxy));
-    console.log("FFFactory included ", code.includes(_FF_FACTORY))
+    code = code.toLowerCase();
 
-    let oldImpl = await ethers.provider.getStorageAt(deployed.base.dexRouter, "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc");
-    oldImpl = ethers.utils.getAddress(oldImpl.slice(26))
-    console.log("oldImpl", oldImpl)
+    // Get the compiled contract bytecode for comparison
+    let codeCompare = require("../artifacts/contracts/8/DexRouter.sol/DexRouter.json")['deployedBytecode'].toLowerCase();
 
-    let proxyAdmin = await ethers.provider.getStorageAt(deployed.base.dexRouter, "0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103");
-    proxyAdmin = ethers.utils.getAddress(proxyAdmin.slice(26))
-    console.log("proxyAdmin", proxyAdmin)
-    let codeCompare = require("../artifacts/contracts/8/DexRouter.sol/DexRouter.json")['deployedBytecode'].toLowerCase()
-    // console.log(codeCompare)
-    // codeCompare = codeCompare.getCode.toLowerCase()
-    // getDifference(code, codeCompare)
+
+    // Compare the bytecodes with nullified addresses
     const diff = Diff.diffChars(code, codeCompare);
 
+    console.log("Differences between implementations:");
+
+    let hasDifference = false;
     diff.forEach((part) => {
+        // Check if the part is an addition or removal (indicating a difference)
+        if (part.added || part.removed) {
+            hasDifference = true;
+        }
+
         // green for additions, red for deletions
         let text = part.added ? part.value.bgGreen :
-            part.removed ? part.value.bgRed :
-                part.value;
+            part.removed ? part.value.bgRed : part.value;
         process.stderr.write(text);
     });
 
+    if (!hasDifference) {
+        console.log("\nchain: " + network.name);
+        console.log("\nNo differences found after nullifying the addresses.".green);
+    } else {
+        console.log("\nchain: " + network.name);
+        console.log("\nDifferences found in the implementations even after nullifying addresses.".yellow);
+    }
+
     console.log();
-
-
 }
-
-
 
 main()
     .then(() => process.exit(0))

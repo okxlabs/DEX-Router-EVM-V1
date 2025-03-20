@@ -196,7 +196,7 @@ module.exports = {
       },
     },
     avax: {
-      url: "https://rpc.ankr.com/avalanche",
+      url: "https://api.avax.network/ext/bc/C/rpc",
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
@@ -259,7 +259,7 @@ module.exports = {
       },
     },
     ftm: {
-      url: "https://rpc.ankr.com/fantom",
+      url: "https://fantom-json-rpc.stakely.io",
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {

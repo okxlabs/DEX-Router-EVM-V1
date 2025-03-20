@@ -5,5 +5,5 @@ module.exports = {
     tokenApproveProxy: "0x1b5d39419C268b76Db06DE49e38B010fbFB5e226",
     dexRouter: "0x6b2C0c7be2048Daa9b5527982C29f48062B34D58",
     _FF_FACTORY: "",
-    newImpl: "0xFA574f8B3152504E391E53FfF6e55E3Ee56e0889",
+    newImpl: "0x3170c59430334c4e1e964255de9b9a0f9ad3627c",
 }
