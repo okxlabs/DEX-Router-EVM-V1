@@ -6,5 +6,5 @@ module.exports = {
     dexRouter: "0xf332761c673b59B21fF6dfa8adA44d78c12dEF09",
     xbridge: "0xf956D9FA19656D8e5219fd6fa8bA6cb198094138",
     commisson: "0x838A5832eB19CfCe692809f5b2DE44b15380CDA2",
-    newImpl: "0x3e7d5Aee0631460d4cC2A1AfB0E705C2616A7A90",
+    newImpl: "0x62a5bc584887df6d1aae2110bf62d9230ba5b7c7",
 }
