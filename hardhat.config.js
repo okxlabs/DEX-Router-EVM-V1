@@ -122,6 +122,17 @@ module.exports = {
         },
       },
     },
+    bsc_stg: {
+      url: "https://bsc.blockrazor.xyz",
+      chainId: 56,
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      },
+    },
     bsc_dev: {
       url: "https://rpc.ankr.com/bsc",
       chainId: 56,
@@ -145,6 +156,16 @@ module.exports = {
       },
     },
     eth: {
+      url: ALCHEMY_KEY == '' ? "https://eth.llamarpc.com" : `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
+    },
+    eth_stg: {
       url: ALCHEMY_KEY == '' ? "https://eth.llamarpc.com" : `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
       accounts: [`${PRIVATE_KEY}`],
       settings: {
@@ -249,6 +270,16 @@ module.exports = {
         },
       },
     },
+    arb_stg: {
+      url: "https://arb1.arbitrum.io/rpc",
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      },
+    },
     op: {
       url: "https://optimism-mainnet.public.blastapi.io",
       accounts: [`${PRIVATE_KEY}`],
@@ -330,6 +361,16 @@ module.exports = {
       }
     },
     base: {
+      url: 'https://mainnet.base.org',
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
+    },
+    base_stg: {
       url: 'https://mainnet.base.org',
       accounts: [`${PRIVATE_KEY}`],
       settings: {
