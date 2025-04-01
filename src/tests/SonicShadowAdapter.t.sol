@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 import "forge-std/test.sol";
 import "forge-std/console2.sol";
 import "@dex/adapter/SolidlyseriesAdapter.sol";
-import "@dex/adapter/UniV3Adapter.sol";
+import "@dex/adapter/UniV3Adapter2.sol";
 import "@dex/DexRouter.sol";
 import {PMMLib} from "@dex/libraries/PMMLib.sol";
 
@@ -17,19 +17,21 @@ contract SonicShadowAdapterTest is Test {
     address SHADOW = 0x3333b97138D4b086720b5aE8A7844b1345a33333;
     address USDC = 0x29219dd400f2Bf60E5a23d13Be72B486D4038894; // decimals: 6
     address WETH = 0x50c42dEAcD8Fc9773493ED674b675bE577f2634b;
+    address USDT = 0x6047828dc181963ba44974801FF68e538dA5eaF9;
     address WS_SHADOW = 0xF19748a0E269c6965a84f8C98ca8C47A064D4dd0; // WS<->SHADOW, Legacy
     address USDC_WETH = 0xCfD41dF89D060b72eBDd50d65f9021e4457C477e; // USDC<->WETH, V3
     address WS_WETH = 0xB6d9B069F6B96A507243d501d1a23b3fCCFC85d3; // WS<->WETH, V3
+    address WS_USDT = 0x86Be57b0419407abB4eEecb74BD1E7a919878526;
 
     address arnaud = vm.rememberKey(1);
 
     SolidlyseriesAdapter legacyAdapter;
-    UniV3Adapter v3Adapter;
+    UniV3Adapter2 v3Adapter;
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("SONIC_RPC_URL"), 10705803);
+        vm.createSelectFork(vm.envString("SONIC_RPC_URL"), 12233514);
         legacyAdapter = SolidlyseriesAdapter(payable(0x05A4D69B7e05Fb3C8904ea5158Bd2b7407e2F8e2));
-        v3Adapter = UniV3Adapter(payable(0xF3C793B1821Bb1301F8f79E770Cbf8A7129DdAE2));
+        v3Adapter = new UniV3Adapter2(payable(WS)); // local deployed adapter
     }
 
     modifier user(address _user) {
@@ -330,7 +332,7 @@ contract SonicShadowAdapterTest is Test {
         console2.log(
             "USDC balance after",
             IERC20(USDC).balanceOf(address(arnaud))
-        );
+        );  
         console2.log(
             "WETH balance after",
             IERC20(WETH).balanceOf(address(arnaud))
@@ -452,6 +454,133 @@ contract SonicShadowAdapterTest is Test {
         console2.log(
             "WETH balance after",
             IERC20(WETH).balanceOf(address(arnaud))
+        );
+    }
+
+    // pool with insufficient liquidity, return WS to payer
+    function test_swapStoUSDT_CL() public user(arnaud) {
+        deal(arnaud, 1 ether);
+
+        console2.log(
+            "S balance before",
+            arnaud.balance
+        );
+        console2.log(
+            "WS balance before",
+            IERC20(WS).balanceOf(address(arnaud))
+        );
+        console2.log(
+            "USDT balance before",
+            IERC20(USDT).balanceOf(address(arnaud))
+        );
+
+        uint256 amount = 1 ether;
+        SwapInfo memory swapInfo;
+        swapInfo.baseRequest.fromToken = uint256(uint160(address(S)));
+        swapInfo.baseRequest.toToken = WETH;
+        swapInfo.baseRequest.fromTokenAmount = amount;
+        swapInfo.baseRequest.minReturnAmount = 0;
+        swapInfo.baseRequest.deadLine = block.timestamp;
+
+        swapInfo.batchesAmount = new uint[](1);
+        swapInfo.batchesAmount[0] = amount;
+
+        swapInfo.batches = new DexRouter.RouterPath[][](1);
+        swapInfo.batches[0] = new DexRouter.RouterPath[](1);
+        swapInfo.batches[0][0].mixAdapters = new address[](1);
+        swapInfo.batches[0][0].mixAdapters[0] = address(v3Adapter);
+        swapInfo.batches[0][0].assetTo = new address[](1);
+        // direct interaction with pool
+        swapInfo.batches[0][0].assetTo[0] = address(v3Adapter);
+        swapInfo.batches[0][0].rawData = new uint[](1);
+        swapInfo.batches[0][0].rawData[0] = uint256(bytes32(abi.encodePacked(uint8(0x00), uint88(10000), address(WS_USDT))));
+        swapInfo.batches[0][0].extraData = new bytes[](1);
+        uint160 sqrtX96 = 0;
+        bytes memory data = abi.encode(WS, WETH, uint24(3000));
+        swapInfo.batches[0][0].extraData[0] = abi.encode(sqrtX96, data);
+        swapInfo.batches[0][0].fromToken = uint256(uint160(address(WS)));
+
+        swapInfo.extraData = new PMMLib.PMMSwapRequest[](0);
+
+        dexRouter.smartSwapByOrderId{value: 1 ether}(
+            swapInfo.orderId,
+            swapInfo.baseRequest,
+            swapInfo.batchesAmount,
+            swapInfo.batches,
+            swapInfo.extraData
+        );
+
+        console2.log(
+            "S balance after",
+            arnaud.balance
+        );
+        console2.log(
+            "WS balance after",
+            IERC20(WS).balanceOf(address(arnaud))
+        );
+        console2.log(
+            "USDT balance after",
+            IERC20(USDT).balanceOf(address(arnaud))
+        );
+    }
+
+    // pool with insufficient liquidity, return USDT to payer
+    function test_swapUSDTtoWS_CL() public user(arnaud) {
+        deal(USDT, arnaud, 10000 * 10 ** 6);
+        IERC20(USDT).approve(tokenApprove, 10000 * 10 ** 6);
+
+        console2.log(
+            "USDT balance before",
+            IERC20(USDT).balanceOf(address(arnaud))
+        );
+        console2.log(
+            "WS balance before",
+            IERC20(WS).balanceOf(address(arnaud))
+        );
+
+        uint256 amount = IERC20(USDT).balanceOf(address(arnaud));
+        SwapInfo memory swapInfo;
+        swapInfo.baseRequest.fromToken = uint256(uint160(address(USDT)));
+        swapInfo.baseRequest.toToken = WS;
+        swapInfo.baseRequest.fromTokenAmount = amount;
+        swapInfo.baseRequest.minReturnAmount = 0;
+        swapInfo.baseRequest.deadLine = block.timestamp;
+
+        swapInfo.batchesAmount = new uint[](1);
+        swapInfo.batchesAmount[0] = amount;
+
+        swapInfo.batches = new DexRouter.RouterPath[][](1);
+        swapInfo.batches[0] = new DexRouter.RouterPath[](1);
+        swapInfo.batches[0][0].mixAdapters = new address[](1);
+        swapInfo.batches[0][0].mixAdapters[0] = address(v3Adapter);
+        swapInfo.batches[0][0].assetTo = new address[](1);
+        // direct interaction with pool
+        swapInfo.batches[0][0].assetTo[0] = address(v3Adapter);
+        swapInfo.batches[0][0].rawData = new uint[](1);
+        swapInfo.batches[0][0].rawData[0] = uint256(bytes32(abi.encodePacked(uint8(0x80), uint88(10000), address(WS_USDT))));
+        swapInfo.batches[0][0].extraData = new bytes[](1);
+        uint160 sqrtX96 = 0;
+        bytes memory data = abi.encode(USDT, WS, uint24(3000));
+        swapInfo.batches[0][0].extraData[0] = abi.encode(sqrtX96, data);
+        swapInfo.batches[0][0].fromToken = uint256(uint160(address(USDT)));
+
+        swapInfo.extraData = new PMMLib.PMMSwapRequest[](0);
+
+        dexRouter.smartSwapByOrderId(
+            swapInfo.orderId,
+            swapInfo.baseRequest,
+            swapInfo.batchesAmount,
+            swapInfo.batches,
+            swapInfo.extraData
+        );
+
+        console2.log(
+            "USDT balance after",
+            IERC20(USDT).balanceOf(address(arnaud))
+        );  
+        console2.log(
+            "WS balance after",
+            IERC20(WS).balanceOf(address(arnaud))
         );
     }
 }
