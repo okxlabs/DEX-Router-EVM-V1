@@ -5,14 +5,17 @@ async function main() {
 
     try {
 
-        console.log("Verifying on etherscan...");
+        console.log("Verifying on etherscan...", deployed.base.newImpl);
         await hre.run("verify:verify", {
             address: deployed.base.newImpl,
             constructorArguments: [], // Adjust if your contract has constructor arguments
             contract: "contracts/8/DexRouter.sol:DexRouter"
         });
         console.log("Verification on etherscan completed!");
-
+    } catch (error) {
+        console.error("Verification failed:", error);
+    }
+    try {
         // Verify on Oklink
         console.log("Verifying on Oklink...");
         await hre.run("okverify", {

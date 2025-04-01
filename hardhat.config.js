@@ -9,9 +9,10 @@ require("@openzeppelin/hardhat-upgrades");
 require('dotenv').config();
 require("./scripts/multichain.js");
 require('@okxweb3/hardhat-explorer-verify');
+require("./tasks/deploy-upgrade");
 
 // Note: If no private key is configured in the project, the first test account of Hardhat is used by default
-const PRIVATE_KEY = process.env.PRIVATE_KEY || 'ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
+const PRIVATE_KEY = process.env.PRIVATE_KEY_DEPLOYER || 'ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
 const ALCHEMY_KEY = process.env.ALCHEMY_KEY || '';
 const INFSTONES_KEY = process.env.INFSTONES_KEY || '';
 const INFURA_KEY = process.env.INFURA_KEY || '';
@@ -218,7 +219,7 @@ module.exports = {
       },
     },
     polygon: {
-      url: ALCHEMY_KEY == '' ? "https://1rpc.io/matic" : `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+      url: "https://polygon-pokt.nodies.app",
       accounts: [`${PRIVATE_KEY}`],
       gasPrice: 250000000000,
       settings: {
