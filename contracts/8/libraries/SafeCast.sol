@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.0;
 
+import {CustomRevert} from "./CustomRevert.sol";
+
 /**
  * @dev Wrappers over Solidity's uintXX/intXX casting operators with added overflow
  * checks.
@@ -18,6 +20,8 @@ pragma solidity ^0.8.0;
  * all math on `uint256` and `int256` and then downcasting.
  */
 library SafeCast {
+    error SafeCastOverflow();
+    using CustomRevert for bytes4;
     /**
      * @dev Returns the downcasted uint248 from uint256, reverting on
      * overflow (when the input is greater than largest uint248).
@@ -288,6 +292,14 @@ library SafeCast {
     function toUint128(uint256 value) internal pure returns (uint128) {
         require(value <= type(uint128).max, "SafeCast: value doesn't fit in 128 bits");
         return uint128(value);
+    }
+
+    /// @notice Cast a int128 to a uint128, revert on overflow or underflow
+    /// @param x The int128 to be casted
+    /// @return y The casted integer, now type uint128
+    function toUint128(int128 x) internal pure returns (uint128 y) {
+        if (x < 0) SafeCastOverflow.selector.revertWith();
+        y = uint128(x);
     }
 
     /**
