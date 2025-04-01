@@ -7,7 +7,7 @@ async function main() {
 
   console.log("##set tokenApproveProxy owner begin");
 
-  const newOwner = "0x06C95a3934d94d5ae5bf54731bD2840ceFee6F87";
+  const newOwner = "0xE1C7Db7575BABF0d3369835678ec9b7F15c0886B";
   const tokenApproveProxy = await ethers.getContractAt(
     "TokenApproveProxy",
     deployed.base.tokenApproveProxy
@@ -18,7 +18,7 @@ async function main() {
 
   assert.equal(owner, newOwner);
 
-  //await tokenApproveProxy.transferOwnership(newOwner);
+  // await tokenApproveProxy.transferOwnership(newOwner);
   console.log("##set tokenApproveProxy owner finish");
 }
 

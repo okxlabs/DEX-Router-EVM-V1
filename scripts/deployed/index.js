@@ -33,6 +33,7 @@ const moonbeam = require('./moonbeam')
 const apechain = require('./apechain')
 const iotex = require('./iotex')
 const taiko = require('./taiko')
+const story = require('./story')
 const sonic = require('./sonic')
 let config
 
@@ -104,6 +105,8 @@ if (network.name === 'okc') {
     config = iotex
 } else if (network.name == 'taiko') {
     config = taiko
+} else if (network.name == 'story') {
+    config = story
 } else if (network.name == 'sonic') {
     config = sonic
 }

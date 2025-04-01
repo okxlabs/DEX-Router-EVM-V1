@@ -478,6 +478,16 @@ module.exports = {
         },
       }
     },
+    story: {
+      url: 'https://homer.storyrpc.io',
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
+    },
     sonic: {
       url: 'https://sonic.drpc.org',
       accounts: [`${PRIVATE_KEY}`],
@@ -531,6 +541,7 @@ module.exports = {
       avax: AVAXSCAN_API_KEY,
       blast: BLASTSCAN_API_KEY,
       blast_ok: BLASTSCAN_API_KEY,
+      story: 'empty',
       sonic: SONIC_API_KEY,
     },
     customChains: [
@@ -591,6 +602,14 @@ module.exports = {
         }
       },
       {
+        network: "story",
+        chainId: 1514,
+        urls: {
+          apiURL: "https://www.storyscan.xyz/api",
+          browserURL: "https://www.storyscan.xyz"
+        }
+      },
+      {
         network: "polygon",
         chainId: 137,
         urls: { apiURL: "https://www.oklink.com/api/v5/explorer/contract/verify-source-code-plugin/POLYGON", browserURL: "https://www.oklink.com", }
@@ -624,6 +643,11 @@ module.exports = {
         network: "blast_ok",
         chainId: 81457,
         urls: { apiURL: "https://www.oklink.com/api/v5/explorer/contract/verify-source-code-plugin/BLAST", browserURL: "https://www.oklink.com", }
+      },
+      {
+        network: "story",
+        chainId: 1514,
+        urls: { apiURL: "https://www.oklink.com/api/v5/explorer/contract/verify-source-code-plugin/STORY", browserURL: "https://www.oklink.com", }
       },
       {
         network: "sonic",
