@@ -497,6 +497,16 @@ module.exports = {
           runs: 200
         },
       }
+    },
+    berachain: {
+      url: 'https://rpc.berachain-apis.com',
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
     }
   },
   paths: {

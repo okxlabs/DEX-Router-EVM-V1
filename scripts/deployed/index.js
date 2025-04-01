@@ -35,6 +35,7 @@ const iotex = require('./iotex')
 const taiko = require('./taiko')
 const story = require('./story')
 const sonic = require('./sonic')
+const berachain = require('./berachain')
 let config
 
 console.log('current network.name: ', network.name)
@@ -109,6 +110,8 @@ if (network.name === 'okc') {
     config = story
 } else if (network.name == 'sonic') {
     config = sonic
+} else if (network.name == 'berachain') {
+    config = berachain
 }
 
 module.exports = config
