@@ -10,8 +10,13 @@ const NomiswapFactory = {
   address: '0xd6715A8be3944ec72738F0BFDC739d48C3c29349',
 }
 
+const _DODO_SELL_HELPER_ = {
+  address: "0x0F859706AeE7FcF61D5A8939E8CB9dBB6c1EDA33"
+}
+
 module.exports = {
   BalancerVault,
   NomiswapStableFactory,
   NomiswapFactory,
+  _DODO_SELL_HELPER_
 }

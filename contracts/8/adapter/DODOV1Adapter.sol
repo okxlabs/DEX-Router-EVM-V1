@@ -36,13 +36,23 @@ contract DODOV1Adapter is IAdapter, OwnableUpgradeable {
             maxPayQuote
         );
 
+        uint256 payQuote = IDODOV1(pool).queryBuyBaseToken(canBuyBaseAmount);
+
+        /**
+         * Considering the gap of the query results between DODOPool and DODOSellHelper,
+         * we calculate a safeBuyAmount to ensure the transaction can be executed
+         */
+        uint256 safeBuyAmount = 
+            maxPayQuote > payQuote?
+            canBuyBaseAmount : canBuyBaseAmount * maxPayQuote / payQuote - 1;
+        
         SafeERC20.safeApprove(IERC20(curQuote), pool, maxPayQuote);
-        IDODOV1(pool).buyBaseToken(canBuyBaseAmount, maxPayQuote, "");
+        IDODOV1(pool).buyBaseToken(safeBuyAmount, maxPayQuote, "");
         SafeERC20.safeApprove(IERC20(curQuote), pool, 0);
 
         if(to != address(this)) {
             address curBase = IDODOV1(pool)._BASE_TOKEN_();
-            SafeERC20.safeTransfer(IERC20(curBase), to, canBuyBaseAmount);
+            SafeERC20.safeTransfer(IERC20(curBase), to, safeBuyAmount);
         }
     }
     
