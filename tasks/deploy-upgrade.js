@@ -75,5 +75,5 @@ task("deploy-upgrade", "Deploys and upgrades the DEX contract")
       console.log("\nDeployment and upgrade process completed successfully!");
     } catch (error) {
       console.error("Error during deployment:", error);
-
-    });
+    }
+  });
