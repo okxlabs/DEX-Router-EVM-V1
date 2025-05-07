@@ -11,6 +11,8 @@ require("./scripts/multichain.js");
 require('@okxweb3/hardhat-explorer-verify');
 require("./tasks/deploy-upgrade");
 
+require("@zetachain/toolkit/tasks");
+
 // Note: If no private key is configured in the project, the first test account of Hardhat is used by default
 const PRIVATE_KEY = process.env.PRIVATE_KEY_DEPLOYER || 'ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
 const ALCHEMY_KEY = process.env.ALCHEMY_KEY || '';
@@ -32,6 +34,7 @@ const SCROLLSCAN_API_KEY = process.env.SCROLLSCAN_API_KEY || '';
 const AVAXSCAN_API_KEY = process.env.AVAXSCAN_API_KEY || '';
 const BLASTSCAN_API_KEY = process.env.BLASTSCAN_API_KEY || '';
 const SONIC_API_KEY = process.env.SONIC_API_KEY || '';
+const ZETA_API_KEY = process.env.ZETA_API_KEY || '123';
 module.exports = {
   solidity: {
     compilers: [
@@ -92,7 +95,7 @@ module.exports = {
       },
     },
     zeta: {
-      url: 'https://zetachain-evm.blockpi.network/v1/rpc/public',
+      url: 'https://zetachain-mainnet.public.blastapi.io',
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
@@ -196,7 +199,7 @@ module.exports = {
       },
     },
     cro: {
-      url: "https://evm-cronos.crypto.org",
+      url: "https://cronos.drpc.org",
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
@@ -240,7 +243,7 @@ module.exports = {
       },
     },
     polygon: {
-      url: "https://polygon-pokt.nodies.app",
+      url: "https://rpc-mainnet.matic.quiknode.pro",
       accounts: [`${PRIVATE_KEY}`],
       gasPrice: 250000000000,
       settings: {
@@ -431,7 +434,7 @@ module.exports = {
       }
     },
     merlin: {
-      url: 'https://rpc.merlinchain.io',
+      url: 'https://endpoints.omniatech.io/v1/merlin/mainnet/public',
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
@@ -595,6 +598,7 @@ module.exports = {
       blast_ok: BLASTSCAN_API_KEY,
       story: 'empty',
       sonic: SONIC_API_KEY,
+      zeta: ZETA_API_KEY
     },
     customChains: [
       {
@@ -619,6 +623,14 @@ module.exports = {
         urls: {
           apiURL: "https://api.mantlescan.xyz/api",
           browserURL: "https://mantlescan.xyz"
+        }
+      },
+      {
+        network: "zeta",
+        chainId: 7000,
+        urls: {
+          apiURL: "https://explorer.zetachain.com.",
+          browserURL: "https://zetachain.blockscout.com"
         }
       },
       {

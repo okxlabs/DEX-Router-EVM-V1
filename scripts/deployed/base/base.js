@@ -14,6 +14,7 @@ module.exports = {
     nftmarketplace: "0xa7FD99748cE527eAdC0bDAc60cba8a4eF4090f7c",
     //p2pTrading: "0xe6C2820Ba3d14d97b9e9A371771ed7A2f28A9c40",
     p2pTrading: "0x0000000017D9a0231430ff2cc3467375a9Af76C7",
-
-    newImpl: "0x571eacf92d6383c4b3371a3c01c6c480e3a736fe",
+    feeVaultUs: "0x2059839AA4408122A708c6B086ACe5cc5eCeAd72",
+    feeVaultNonUs: "0xFAca0D13796498Ab33faa2557F4badDA949a2706",
+    newImpl: "0x3D98f6F05E7940c056788Ff8492A943A0904240D",
 }

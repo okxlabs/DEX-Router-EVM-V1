@@ -40,6 +40,7 @@ contract DexRouter is
     CommissionLib,
     PMMRouterStorage
 {
+    string public constant version = "v1.0.1-before_stop";
     using UniversalERC20 for IERC20;
 
     struct BaseRequest {
@@ -694,16 +695,16 @@ contract DexRouter is
         uint256[] calldata pools
     ) internal returns (uint256 returnAmount) {
         CommissionInfo memory commissionInfo = _getCommissionInfo();
-        
+
         // get token from pool
         address srcToken;
-        
+
         if (msg.value > 0) {
             srcToken = _ETH;
         } else {
             address poolAddr = address(uint160(pools[0] & _ADDRESS_MASK));
             bool zeroForOne = (pools[0] & _ONE_FOR_ZERO_MASK) == 0;
-            
+
             if (zeroForOne) {
                 srcToken = IUniV3(poolAddr).token0();
             } else {

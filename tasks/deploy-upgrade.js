@@ -60,13 +60,24 @@ task("deploy-upgrade", "Deploys and upgrades the DEX contract")
       fs.writeFileSync(baseBasePath, baseContent);
       console.log(`Updated newImpl address to: ${newDexRouterAddress}`);
 
-      // Step 5: Verify contracts
-      console.log("\nStep 5: Verifying contracts...");
+      if (network === 'zeta') {
+        // step 5: verify contract for zeta
+        console.log("\nStep 5: verifying contract for zeta")
+        await hre.run("run", {
+          script: "scripts/verify_zeta.js",
+          network: network
+        })
+      } else {
+        // Step 5: Verify contracts
+        console.log("\nStep 5: Verifying contracts...");
+        await hre.run("run", {
+          script: "scripts/verify_etherscan_oklink.js",
+          network: network
+        });
+      }
 
-      await hre.run("run", {
-        script: "scripts/verify_etherscan_oklink.js",
-        network: network
-      });
+
+
 
       // Step 6: Restore original files
       console.log("\nStep 6: Restoring original files...");
@@ -75,5 +86,7 @@ task("deploy-upgrade", "Deploys and upgrades the DEX contract")
       console.log("\nDeployment and upgrade process completed successfully!");
     } catch (error) {
       console.error("Error during deployment:", error);
+
     }
-  });
+  })
+

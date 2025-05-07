@@ -17,5 +17,5 @@ module.exports = {
     nftmarketplace: "0xa7FD99748cE527eAdC0bDAc60cba8a4eF4090f7c",
     proxyAdmin: "0xc6d8e2e0E5c25ACecff66BE60F257884D0e9DF50",
 
-    newImpl: "0x7b7d82c6a11f8ca724e5e0d3b003c5d3db520706"
+    newImpl: "0x88EDbF47032fB84E45D6CD6d8199F28C7aa77076"
 }

@@ -17,5 +17,5 @@ module.exports = {
     p2pTrading: "0x0000000017D9a0231430ff2cc3467375a9Af76C7",
     nftmarketplace: "0xa7FD99748cE527eAdC0bDAc60cba8a4eF4090f7c",
 
-    newImpl: "0x6536b604eb20e457af8de8fde54d330c7c69e895",
+    newImpl: "0x5E8DF5b010D57e525562791717011D496676552A",
 }

@@ -5,7 +5,7 @@ module.exports = {
     tokenApprove: "0x5fD2Dc91FF1dE7FF4AEB1CACeF8E9911bAAECa68",
     tokenApproveProxy: "0xaa6fB20894554d57319c39BCC2468F72af099ea0",
     dexRouter: "0x2E86f54943faFD2cB62958c3deed36C879e3E944",
-    xbridge: "",
+    xbridge: "0xf956d9fa19656d8e5219fd6fa8ba6cb198094138",
     //nftmarket: "",
     investEntrance: "0x7251FEbEABB01eC9dE53ECe7a96f1C951F886Dd2",
     limitOrder: "",
@@ -17,5 +17,5 @@ module.exports = {
     p2pTrading: "",
     proxyAdmin: "0xF7Dd3E6daB6aaf8a1e853bA00a3e57F60B79527b",
 
-    newImpl: "0x7b7d82c6a11f8ca724e5e0d3b003c5d3db520706",
+    newImpl: "0x411d2C093e4c2e69Bf0D8E94be1bF13DaDD879c6",
 }

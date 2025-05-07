@@ -8,6 +8,6 @@ module.exports = {
     _FF_FACTORY: "",
     _POOL_INIT_CODE_HASH: "",
     investEntrance: "0x7251FEbEABB01eC9dE53ECe7a96f1C951F886Dd2",
-    newImpl: "0xa615De0E6e48257a3bfB6CAa995A66c7Cd4Fc048",
+    newImpl: "0x7A7AD9aa93cd0A2D0255326E5Fb145CEc14997FF",
     proxyAdmin: "0xc6d8e2e0E5c25ACecff66BE60F257884D0e9DF50",
 }

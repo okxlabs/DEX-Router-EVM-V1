@@ -149,7 +149,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
             );
         }
         if (!commissionInfo.isFromTokenCommission) {
-            return (receiver, 0);
+            return (address(receiver), 0);
         }
         assembly ("memory-safe") {
             function _revertWithReason(m, len) {
@@ -290,7 +290,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 )
             } //emit CommissionFromTokenRecord(address,uint256,address)
         }
-        return (receiver, 0);
+        return (address(receiver), 0);
     }
 
     function _doCommissionToToken(
@@ -372,9 +372,13 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                         0xf171268de859ec269c52bbfac94dcb7715e784de194342abb284bf34fd30b32d
                     ) //emit CommissionToTokenRecord(address,uint256,address)
                 }
+                // The purpose of using shr(96, shl(96, receiver)) is to handle an edge case where the original order ID combined with the receiver address might be passed into this call. This combined value would be longer than a standard address length, which could cause the transfer to fail. The bit-shifting operations ensure we extract only the proper address portion by:
+                // First shifting left by 96 bits (shl(96, receiver)) to align the address
+                // Then shifting right by 96 bits (shr(96, ...)) to isolate the correct address value
+                // This prevents potential failures by enforcing the correct address length.
                 success := call(
                     gas(),
-                    receiver,
+                    shr(96, shl(96, receiver)),
                     sub(inputAmount, amount),
                     0,
                     0,
@@ -466,7 +470,11 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                         0xf171268de859ec269c52bbfac94dcb7715e784de194342abb284bf34fd30b32d
                     ) //emit CommissionToTokenRecord(address,uint256,address)
                 }
-                mstore(add(freePtr, 0x04), receiver)
+                // The purpose of using shr(96, shl(96, receiver)) is to handle an edge case where the original order ID combined with the receiver address might be passed into this call. This combined value would be longer than a standard address length, which could cause the transfer to fail. The bit-shifting operations ensure we extract only the proper address portion by:
+                // First shifting left by 96 bits (shl(96, receiver)) to align the address
+                // Then shifting right by 96 bits (shr(96, ...)) to isolate the correct address value
+                // This prevents potential failures by enforcing the correct address length.
+                mstore(add(freePtr, 0x04), shr(96, shl(96, receiver)))
                 mstore(add(freePtr, 0x24), sub(inputAmount, amount))
                 success := call(gas(), token, 0, freePtr, 0x44, 0, 0)
                 if eq(success, 0) {

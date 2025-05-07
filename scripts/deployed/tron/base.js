@@ -4,11 +4,11 @@ module.exports = {
     tokenApprove: "0x51b160bb02261c822b33e61c6b947f275144545e",
     tokenApproveProxy: "0xEbEE8FAa7909dFB1dF0bC4B797672D30eA30b568",
     dexRouter: "0x24B3471Ff199D4E23F286a541e9dde82dFa5C5Ab",
-    xbridge: "",
+    xbridge: "0xd716521da2c3993F46F4eD7Cf3566C59e59BB20F",
     //nftmarket: "",
     investEntrance: "",
     marketMaker: "",
     pmmAdapter: "",
     protocolAdmin: "",
-    newImpl: "",
+    newImpl: "TXZQ9Mzd1jf21rLc9o3JiyUAQorWDzMSNB",
 }

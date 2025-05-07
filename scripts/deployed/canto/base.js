@@ -6,5 +6,5 @@ module.exports = {
     dexRouter: "0x6b2C0c7be2048Daa9b5527982C29f48062B34D58",
     _FF_FACTORY: "",
 
-    newImpl: "0x7b7d82c6a11f8ca724e5e0d3b003c5d3db520706",
+    newImpl: "0x9b9efa5Efa731EA9Bbb0369E91fA17Abf249CFD4",
 }
