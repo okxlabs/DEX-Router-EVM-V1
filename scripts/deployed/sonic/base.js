@@ -17,5 +17,5 @@ module.exports = {
     _FF_FACTORY: "",
     commisson: "",
     p2pTrading: "",
-    newImpl: "0xC4617b5c33B588AA07Bc6f8E1Bcaa222378312Ca",
+    newImpl: "0x9b9efa5Efa731EA9Bbb0369E91fA17Abf249CFD4",
 }

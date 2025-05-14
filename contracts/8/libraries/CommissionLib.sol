@@ -32,7 +32,8 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
     );
 
     // set default value can change when need.
-    uint256 public constant commissionRateLimit = 300;
+    uint256 public constant commissionRateLimit = 30000000;
+    uint public constant DENOMINATOR = 10 ** 9;
 
     function _getCommissionInfo()
         internal
@@ -185,7 +186,10 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 ) // "token and src not match"
             }
             let referer := mload(add(commissionInfo, 0x60))
-            let amount := div(mul(inputAmount, rate), sub(10000, totalRate))
+            let amount := div(
+                mul(inputAmount, rate),
+                sub(DENOMINATOR, totalRate)
+            )
             switch eq(token, _ETH)
             case 1 {
                 let success := call(gas(), referer, amount, 0, 0, 0, 0)
@@ -237,7 +241,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 let referer2 := mload(add(commissionInfo, 0xc0))
                 let amount2 := div(
                     mul(inputAmount, rate2),
-                    sub(10000, totalRate)
+                    sub(DENOMINATOR, totalRate)
                 )
 
                 switch eq(token, _ETH)
@@ -336,7 +340,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                     ) // sub failed
                 }
                 let inputAmount := sub(selfbalance(), balanceBefore)
-                amount := div(mul(inputAmount, rate), 10000)
+                amount := div(mul(inputAmount, rate), DENOMINATOR)
                 let success := call(gas(), referer, amount, 0, 0, 0, 0)
                 if eq(success, 0) {
                     _revertWithReason(
@@ -354,7 +358,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 ) //emit CommissionToTokenRecord(address,uint256,address)
                 if gt(rate2, 0) {
                     let referer2 := mload(add(commissionInfo, 0xc0))
-                    let amount2 := div(mul(inputAmount, rate2), 10000)
+                    let amount2 := div(mul(inputAmount, rate2), DENOMINATOR)
                     amount := add(amount, amount2)
                     let success2 := call(gas(), referer2, amount2, 0, 0, 0, 0)
                     if eq(success2, 0) {
@@ -422,7 +426,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                     ) // sub failed
                 }
                 let inputAmount := sub(balanceAfter, balanceBefore)
-                amount := div(mul(inputAmount, rate), 10000)
+                amount := div(mul(inputAmount, rate), DENOMINATOR)
                 mstore(add(freePtr, 0x0c), referer)
                 mstore(add(freePtr, 0x2c), amount)
                 success := call(gas(), token, 0, add(freePtr, 0x8), 0x44, 0, 0)
@@ -442,7 +446,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 ) //emit CommissionToTokenRecord(address,uint256,address)
                 if gt(rate2, 0) {
                     let referer2 := mload(add(commissionInfo, 0xc0))
-                    let amount2 := div(mul(inputAmount, rate2), 10000)
+                    let amount2 := div(mul(inputAmount, rate2), DENOMINATOR)
                     amount := add(amount, amount2)
                     mstore(add(freePtr, 0x08), referer2)
                     mstore(add(freePtr, 0x28), amount2)

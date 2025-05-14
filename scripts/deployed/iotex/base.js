@@ -20,5 +20,5 @@ module.exports = {
     // p2pTrading: "",
     p2pTrading: "",
 
-    newImpl: "0x7A7AD9aa93cd0A2D0255326E5Fb145CEc14997FF",
+    newImpl: "0x06f183D52D92c13a5f2B989B8710BA7F00bd6f87",
 }
