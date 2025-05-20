@@ -40,7 +40,7 @@ contract DexRouter is
     CommissionLib,
     PMMRouterStorage
 {
-    string public constant version = "v1.0.1-before_stop";
+    string public constant version = "v1.0.3-decimal9";
     using UniversalERC20 for IERC20;
 
     struct BaseRequest {
