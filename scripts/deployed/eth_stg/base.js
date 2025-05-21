@@ -11,5 +11,5 @@ module.exports = {
     marketMaker: "",
     pmmAdapter: "",
     uniV2Factory: "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
-    impl: "0x9e7481C8F8D9c4E07f11AbaDB2e00A917CDB1e5f"
+    newImpl: "0x61F376E43772C21dE2B8DF510a1f133ED3bb0DDb"
 }
