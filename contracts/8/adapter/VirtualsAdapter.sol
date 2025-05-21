@@ -8,6 +8,8 @@ import "../interfaces/IVirtuals.sol";
 //virtuals internal trading
 contract VirtualsAdapter is IAdapter {
 
+    uint256 constant MINRETURN = 0;
+
     address public immutable BONDING;//0xf66dea7b3e897cd44a5a231c61b6b4423d613259
     address public immutable VIRTUALTOKEN;//0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b
     address public immutable FROUTER;//0x8292B43aB73EfAC11FAF357419C38ACF448202C5
@@ -28,21 +30,21 @@ contract VirtualsAdapter is IAdapter {
     ) private {
         uint256 amountIn;
         uint256 amountOut;
-        (address tokenAddress, bool buyMeme) = abi.decode(
+        (address tokenAddress, bool buyMeme, uint256 deadline) = abi.decode(
             moreInfo,
-            (address, bool)
+            (address, bool, uint256)
         );
 
         if (buyMeme) {
             amountIn = IERC20(VIRTUALTOKEN).balanceOf(address(this));
             IERC20(VIRTUALTOKEN).approve(FROUTER, amountIn);
-            IBonding(BONDING).buy(amountIn, tokenAddress);
+            IBonding(BONDING).buy(amountIn, tokenAddress, MINRETURN, deadline);
             amountOut = IERC20(tokenAddress).balanceOf(address(this));
             IERC20(tokenAddress).transfer(to, amountOut);
         } else {
             amountIn = IERC20(tokenAddress).balanceOf(address(this));
             IERC20(tokenAddress).approve(FROUTER, amountIn);
-            IBonding(BONDING).sell(amountIn, tokenAddress);
+            IBonding(BONDING).sell(amountIn, tokenAddress, MINRETURN, deadline);
             amountOut = IERC20(VIRTUALTOKEN).balanceOf(address(this));
             IERC20(VIRTUALTOKEN).transfer(to, amountOut);
         }

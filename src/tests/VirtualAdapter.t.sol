@@ -39,7 +39,7 @@ contract VirtualTest is Test {
 
     function test_virtual_buy() public user(bob) {
         
-        DexRouter dexRouter = DexRouter(payable(0x6b2C0c7be2048Daa9b5527982C29f48062B34D58));
+        DexRouter dexRouter = DexRouter(payable(0x9b9efa5Efa731EA9Bbb0369E91fA17Abf249CFD4));
         address tokenApprove = 0x57df6092665eb6058DE53939612413ff4B09114E;
 
         //swap virtualToken to memeToken
@@ -48,7 +48,7 @@ contract VirtualTest is Test {
         address memeToken = 0x8cCA61B50443f8997654bfc578fA1CbA3Eac2CDF;//name: fun AI COACH
         address FRouter = 0x8292B43aB73EfAC11FAF357419C38ACF448202C5;
 
-        vm.createSelectFork(vm.envString("BASE_RPC_URL"), 24972889);
+        vm.createSelectFork(vm.envString("BASE_RPC_URL"), 30508146);//old 24972889 buy 包含2个参数 ； new 30508146 buy 包含4个参数
         //https://basescan.org/tx/0x24dac92c6b5312aaf8205532417fddd3f66905b24d4bc509842b55638c468419
         //https://basescan.org/tx/0xacbe1db17b1cf1457c07a7f6e116ea823ab4dd9c399acd03e185a937d5f8de5e
         
@@ -78,7 +78,7 @@ contract VirtualTest is Test {
         swapInfo.batches[0][0].rawData = new uint[](1);
         swapInfo.batches[0][0].rawData[0] = uint256(bytes32(abi.encodePacked(uint8(0x00), uint88(10000), address(0))));
         swapInfo.batches[0][0].extraData = new bytes[](1);
-        swapInfo.batches[0][0].extraData[0] = abi.encode(memeToken, true);
+        swapInfo.batches[0][0].extraData[0] = abi.encode(memeToken, true, block.timestamp);
         swapInfo.batches[0][0].fromToken = uint256(uint160(address(virtualToken)));
 
         swapInfo.extraData = new PMMLib.PMMSwapRequest[](0);
@@ -96,7 +96,7 @@ contract VirtualTest is Test {
 
     function test_virtual_sell() public user(bob) {
 
-        DexRouter dexRouter = DexRouter(payable(0x6b2C0c7be2048Daa9b5527982C29f48062B34D58));
+        DexRouter dexRouter = DexRouter(payable(0x9b9efa5Efa731EA9Bbb0369E91fA17Abf249CFD4));
         address tokenApprove = 0x57df6092665eb6058DE53939612413ff4B09114E;
 
         //swap memeToken to virtualToken
@@ -105,7 +105,7 @@ contract VirtualTest is Test {
         address memeToken = 0x8cCA61B50443f8997654bfc578fA1CbA3Eac2CDF;//name: fun AI COACH
         address FRouter = 0x8292B43aB73EfAC11FAF357419C38ACF448202C5;
 
-        vm.createSelectFork(vm.envString("BASE_RPC_URL"), 24972889);
+        vm.createSelectFork(vm.envString("BASE_RPC_URL"), 30508146);//old 24972889 buy 包含2个参数 ； new 30508146 buy 包含4个参数
         //https://basescan.org/tx/0x24dac92c6b5312aaf8205532417fddd3f66905b24d4bc509842b55638c468419
         //https://basescan.org/tx/0xacbe1db17b1cf1457c07a7f6e116ea823ab4dd9c399acd03e185a937d5f8de5e
         
@@ -135,7 +135,7 @@ contract VirtualTest is Test {
         swapInfo.batches[0][0].rawData = new uint[](1);
         swapInfo.batches[0][0].rawData[0] = uint256(bytes32(abi.encodePacked(uint8(0x00), uint88(10000), address(0))));
         swapInfo.batches[0][0].extraData = new bytes[](1);
-        swapInfo.batches[0][0].extraData[0] = abi.encode(memeToken, false);
+        swapInfo.batches[0][0].extraData[0] = abi.encode(memeToken, false, block.timestamp);
         swapInfo.batches[0][0].fromToken = uint256(uint160(address(memeToken)));
 
         swapInfo.extraData = new PMMLib.PMMSwapRequest[](0);

@@ -9,8 +9,23 @@ interface IBonding {
         address tokenAddress
     ) external payable returns (bool) ;
 
+    function buy(
+        uint256 amountIn,
+        address tokenAddress,
+        uint256 amountOutMin,
+        uint256 deadline
+    ) external payable returns (bool) ;
+
     function sell(
         uint256 amountIn,
         address tokenAddress
     ) external returns (bool) ;
+
+    function sell(
+        uint256 amountIn,
+        address tokenAddress,
+        uint256 amountOutMin,
+        uint256 deadline
+    ) external returns (bool) ;
+    
 }
