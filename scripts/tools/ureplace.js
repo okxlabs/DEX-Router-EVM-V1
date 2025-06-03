@@ -5,6 +5,7 @@ const UNXSWAP_ROUTER_PATH = "./contracts/8/libraries/CommonUtils.sol";
 const PMMROUTER_PATH = "./contracts/8/PMMRouter.sol";
 const EIP712_PATH = "./contracts/8/libraries/draft-EIP712Upgradable.sol";
 const UNIV3_PATH = "./contracts/8/UnxswapV3Router.sol";
+const UNIV3_EXACTOUT_PATH = "./contracts/8/UnxswapV3ExactOutRouter.sol";
 
 // Replaces the contract address in the constant part of the UnxswapRouter file
 // _WETH, _APPROVE_PROXY_32, _WNATIVE_RELAY_32 Three constant addresses
@@ -115,7 +116,38 @@ function replace_univ3_contant(UnxswapRouterPath) {
   });
 }
 
+function replace_univ3_exactout_contant(UnxswapRouterPath) {
+  // console.log(deployed.base);
+
+  if (deployed.base._FF_FACTORY == null || deployed.base._FF_FACTORY == "") {
+    console.log("warning: _FF_FACTORY is null!!!!");
+    return
+  }
+  // Reading the file
+  fs.readFile(UnxswapRouterPath, function (err, data) {
+    if (err) {
+      return console.error(err);
+    }
+
+    let context = data.toString();
+    // address public constant
+    context = context.replace(/_FF_FACTORY_ADDRESS\s+=\s+address\(0x[0-9a-fA-F]+\)/, "_FF_FACTORY_ADDRESS = address(" +  deployed.base._FF_FACTORY.replace("0xff", "0x").slice(0, 42) + ")");
+    // context = context.replace(/_FF_FACTORY\s=\s\w*/, "_FF_FACTORY = " + deployed.base._FF_FACTORY);
+    // if (deployed.base._POOL_INIT_CODE_HASH != null || deployed.base._POOL_INIT_CODE_HASH != "") {
+    //   context = context.replace(/_POOL_INIT_CODE_HASH\s=\s\w*/, "_POOL_INIT_CODE_HASH = " + deployed.base._POOL_INIT_CODE_HASH);
+    // }
+    fs.writeFile(UnxswapRouterPath, context, (err) => {
+      if (err) {
+        console.log(err);
+      }
+    });
+
+    console.log("replace finish !")
+  });
+}
+
 replace_contant(UNXSWAP_ROUTER_PATH);
 // replace_pmm_contant(PMMROUTER_PATH);
 // replace_pmm_eip712_contant(EIP712_PATH);
 replace_univ3_contant(UNIV3_PATH);
+replace_univ3_exactout_contant(UNIV3_EXACTOUT_PATH);

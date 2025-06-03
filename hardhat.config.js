@@ -115,7 +115,7 @@ module.exports = {
       },
     },
     bsc: {
-      url: "https://binance.llamarpc.com",
+      url: "https://bsc-dataseed1.defibit.io",
       chainId: 56,
       accounts: [`${PRIVATE_KEY}`],
       settings: {
@@ -364,7 +364,7 @@ module.exports = {
       }
     },
     base: {
-      url: 'https://mainnet.base.org',
+      url: 'https://base-mainnet.public.blastapi.io',
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {

@@ -26,4 +26,9 @@ src/tests/calculate.ipynb
 src/tests/Dexrouter.t.sol
 .gas-snapshot
 coverage.json
+
 artifacts/
+.qodo
+requirement
+.cursor
+

@@ -14,5 +14,7 @@ module.exports = {
     nftmarketplace: "",
     //p2pTrading: "0xe6C2820Ba3d14d97b9e9A371771ed7A2f28A9c40",
     p2pTrading: "",
+    exactoutImpl: "0x374D7938c26C25B06abd00f247FAaac21c0F073e",
+    preDexRouterExactOut: "0x974d1cF6FFA4fCE5a4d62955AFc02F45aAC29f35",
     newImpl: "0x8392784b30af7c0E51d5349eFac23B021Ef0d454",
 }

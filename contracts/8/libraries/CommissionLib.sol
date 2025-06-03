@@ -284,6 +284,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 // Emit event for second commission
                 let freePtr2 := mload(0x40)
                 mstore(0x40, add(freePtr2, 0x60))
+                /// @notice emit ETH address is from commissionInfo.token, so it is 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
                 mstore(freePtr2, token)
                 mstore(add(freePtr2, 0x20), amount2)
                 mstore(add(freePtr2, 0x40), referer2)
@@ -465,6 +466,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                             0x5f
                         ) //transfer token referer fail
                     }
+                    /// @notice emit ETH address is from commissionInfo.token, so it is 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
                     mstore(eventPtr, token)
                     mstore(add(eventPtr, 0x20), amount2)
                     mstore(add(eventPtr, 0x40), referer2)
