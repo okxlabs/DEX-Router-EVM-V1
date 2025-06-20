@@ -69,7 +69,7 @@ contract AspectaAdapterTest is Test {
         swapInfo1.batches[0][0].assetTo[0] = address(adapter);
         swapInfo1.batches[0][0].rawData = new uint[](1);
         swapInfo1.batches[0][0].rawData[0] = uint256(
-            bytes32(abi.encodePacked(uint8(0x80), uint88(10000), address(pool))) // true -> sellQuote -> buy
+            bytes32(abi.encodePacked(uint8(0x00), uint88(10000), address(pool))) // false -> sellBase -> buy 
         );
         swapInfo1.batches[0][0].extraData = new bytes[](1);
         swapInfo1.batches[0][0].extraData[0] = abi.encode(amount);
@@ -109,7 +109,7 @@ contract AspectaAdapterTest is Test {
         swapInfo2.batches[0][0].assetTo[0] = address(adapter);
         swapInfo2.batches[0][0].rawData = new uint[](1);
         swapInfo2.batches[0][0].rawData[0] = uint256(
-            bytes32(abi.encodePacked(uint8(0x00), uint88(10000), address(pool))) // false -> sellBase -> buy 
+            bytes32(abi.encodePacked(uint8(0x80), uint88(10000), address(pool))) // true -> sellQuote -> buy
         );
         swapInfo2.batches[0][0].extraData = new bytes[](1);
         swapInfo2.batches[0][0].extraData[0] = abi.encode(amount, 0, 0, address(0));
