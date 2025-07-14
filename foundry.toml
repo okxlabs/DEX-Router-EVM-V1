@@ -1,6 +1,7 @@
 [profile.default]
-src = "src"
+src = "contracts/8"
 out = "artifacts"
+test = "src/test2"
 libs = ["node_modules", "lib"]
 remappings = [
     "@ensdomains/=node_modules/@ensdomains/",

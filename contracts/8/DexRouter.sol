@@ -1,9 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
-pragma abicoder v2;
-
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+pragma solidity 0.8.17;
 
 import "./UnxswapRouter.sol";
 import "./UnxswapV3Router.sol";
@@ -12,35 +8,25 @@ import "./interfaces/IWETH.sol";
 import "./interfaces/IAdapter.sol";
 import "./interfaces/IApproveProxy.sol";
 import "./interfaces/IWNativeRelayer.sol";
-import "./interfaces/IXBridge.sol";
 import "./interfaces/IUniV3.sol";
 
-import "./libraries/Permitable.sol";
 import "./libraries/PMMLib.sol";
 import "./libraries/CommissionLib.sol";
 import "./libraries/EthReceiver.sol";
 import "./libraries/WrapETHSwap.sol";
 import "./libraries/CommonUtils.sol";
-import "./storage/PMMRouterStorage.sol";
-
-import "./storage/DexRouterStorage.sol";
 
 /// @title DexRouterV1
 /// @notice Entrance of Split trading in Dex platform
 /// @dev Entrance of Split trading in Dex platform
 contract DexRouter is
-    OwnableUpgradeable,
-    ReentrancyGuardUpgradeable,
-    Permitable,
     EthReceiver,
     UnxswapRouter,
     UnxswapV3Router,
-    DexRouterStorage,
     WrapETHSwap,
-    CommissionLib,
-    PMMRouterStorage
+    CommissionLib
 {
-    string public constant version = "v1.0.3-decimal9";
+    string public constant version = "v1.0.4-toB-commission";
     using UniversalERC20 for IERC20;
 
     struct BaseRequest {
@@ -58,30 +44,6 @@ contract DexRouter is
         bytes[] extraData;
         uint256 fromToken;
     }
-    /// @notice Initializes the contract with necessary setup for ownership and reentrancy protection.
-    /// @dev This function serves as a constructor for upgradeable contracts and should be called
-    /// through a proxy during the initial deployment. It initializes inherited contracts
-    /// such as `OwnableUpgradeable` and `ReentrancyGuardUpgradeable` to set up the contract's owner
-    /// and reentrancy guard.
-
-    function initialize() public initializer {
-        __Ownable_init();
-        __ReentrancyGuard_init();
-    }
-
-    //-------------------------------
-    //------- Events ----------------
-    //-------------------------------
-
-    /// @notice Emitted when a priority address status is updated.
-    /// @param priorityAddress The address whose priority status has been changed.
-    /// @param valid A boolean indicating the new status of the priority address.
-    /// True means the address is now considered a priority address, and false means it is not.
-    event PriorityAddressChanged(address priorityAddress, bool valid);
-
-    /// @notice Emitted when the admin address of the contract is changed.
-    /// @param newAdmin The address of the new admin.
-    event AdminChanged(address newAdmin);
 
     //-------------------------------
     //------- Modifier --------------
@@ -95,10 +57,6 @@ contract DexRouter is
     /// @notice Restricts function access to addresses marked as priority.
     /// Ensures that only addresses designated with specific privileges can execute the function.
 
-    modifier onlyPriorityAddress() {
-        require(priorityAddresses[msg.sender] == true, "only priority");
-        _;
-    }
     function _exeAdapter(
         bool reverse,
         address adapter,
@@ -407,121 +365,9 @@ contract DexRouter is
     }
 
     //-------------------------------
-    //------- Admin functions -------
-    //-------------------------------
-
-    /// @notice Updates the priority status of an address, allowing or disallowing it from performing certain actions.
-    /// @param _priorityAddress The address whose priority status is to be updated.
-    /// @param valid A boolean indicating whether the address should be marked as a priority (true) or not (false).
-    /// @dev This function can only be called by the contract owner or another authorized entity.
-    /// It is typically used to grant or revoke special permissions to certain addresses.
-    function setPriorityAddress(address _priorityAddress, bool valid) external {
-        require(msg.sender == admin || msg.sender == owner(), "na");
-        priorityAddresses[_priorityAddress] = valid;
-        emit PriorityAddressChanged(_priorityAddress, valid);
-    }
-    /// @notice Assigns a new admin address for the protocol.
-    /// @param _newAdmin The address to be granted admin privileges.
-    /// @dev Only the current owner or existing admin can assign a new admin, ensuring secure management of protocol permissions.
-    /// Changing the admin address is a critical operation that should be performed with caution.
-
-    function setProtocolAdmin(address _newAdmin) external {
-        require(msg.sender == admin || msg.sender == owner(), "na");
-        admin = _newAdmin;
-        emit AdminChanged(_newAdmin);
-    }
-
-    //-------------------------------
     //------- Users Functions -------
     //-------------------------------
 
-    /// @notice Executes a smart swap operation through the XBridge, identified by a specific order ID.
-    /// @param orderId The unique identifier for the swap order, facilitating tracking and reference.
-    /// @param baseRequest Contains essential parameters for the swap, such as source and destination tokens, amount, minimum return, and deadline.
-    /// @param batchesAmount Array of amounts for each batch in the swap, allowing for split operations across different routes or pools.
-    /// @param batches Detailed paths for each swap batch, including adapters and target assets.
-    /// @param extraData Additional data required for executing the swap, which may include specific instructions or parameters for adapters.
-    /// @return returnAmount The total amount of the destination token received from the swap.
-    /// @dev This function allows for complex swap operations across different liquidity sources or protocols, initiated via the XBridge.
-    /// It's designed to be called by authorized addresses, ensuring that the swap meets predefined criteria and security measures.
-    function smartSwapByOrderIdByXBridge(
-        uint256 orderId,
-        BaseRequest calldata baseRequest,
-        uint256[] calldata batchesAmount,
-        RouterPath[][] calldata batches,
-        PMMLib.PMMSwapRequest[] calldata extraData
-    )
-        external
-        payable
-        isExpired(baseRequest.deadLine)
-        nonReentrant
-        onlyPriorityAddress
-        returns (uint256 returnAmount)
-    {
-        emit SwapOrderId(orderId);
-        (address payer, address receiver) = IXBridge(msg.sender)
-            .payerReceiver();
-        require(receiver != address(0), "not address(0)");
-        return
-            _smartSwapTo(
-                payer,
-                payer,
-                receiver,
-                baseRequest,
-                batchesAmount,
-                batches
-            );
-    }
-    /// @notice Executes a token swap using Unxswap protocol via XBridge for a specific order ID.
-    /// @param srcToken The source token's address to be swapped.
-    /// @param amount The amount of the source token to be swapped.
-    /// @param minReturn The minimum acceptable return amount of destination tokens to ensure the swap is executed within acceptable slippage.
-    /// @param pools Pool identifiers used for the swap, allowing for route optimization.
-    /// @return returnAmount The amount of destination tokens received from the swap.
-    /// @dev This function is designed to facilitate cross-protocol swaps through the XBridge,
-    /// enabling swaps that adhere to specific routing paths defined by the pools parameter.
-    /// It is accessible only to priority addresses, ensuring controlled access and execution.
-
-    function unxswapByOrderIdByXBridge(
-        uint256 srcToken,
-        uint256 amount,
-        uint256 minReturn,
-        // solhint-disable-next-line no-unused-vars
-        bytes32[] calldata pools
-    ) external payable onlyPriorityAddress returns (uint256 returnAmount) {
-        emit SwapOrderId((srcToken & _ORDER_ID_MASK) >> 160);
-        (address payer, address receiver) = IXBridge(msg.sender)
-            .payerReceiver();
-        require(receiver != address(0), "not address(0)");
-        return _unxswapTo(srcToken, amount, minReturn, payer, receiver, pools);
-    }
-    /// @notice Executes a token swap using the Uniswap V3 protocol through the XBridge, specifically catering to priority addresses.
-    /// @param receiver The address that will receive the swap funds.
-    /// @param amount The amount of the source token to be swapped.
-    /// @param minReturn The minimum acceptable amount of tokens to be received from the swap. This parameter ensures the swap does not proceed if the return is below the specified threshold, guarding against excessive slippage.
-    /// @param pools An array of pool identifiers used to define the swap route in the Uniswap V3 pools.
-    /// @return returnAmount The amount of tokens received from the swap.
-    /// @dev This function is exclusively accessible to priority addresses and is responsible for executing swaps on Uniswap V3 through the XBridge interface. It ensures that the swap meets the criteria set by the parameters and utilizes the _uniswapV3Swap internal function to perform the actual swap.
-
-    function uniswapV3SwapToByXBridge(
-        uint256 receiver,
-        uint256 amount,
-        uint256 minReturn,
-        uint256[] calldata pools
-    ) external payable onlyPriorityAddress returns (uint256 returnAmount) {
-        emit SwapOrderId((receiver & _ORDER_ID_MASK) >> 160);
-        (address payer, address receiver_) = IXBridge(msg.sender)
-            .payerReceiver();
-        require(receiver_ != address(0), "not address(0)");
-        return
-            _uniswapV3SwapTo(
-                payer,
-                uint160(receiver_),
-                amount,
-                minReturn,
-                pools
-            );
-    }
     /// @notice Executes a smart swap based on the given order ID, supporting complex multi-path swaps.
     /// @param orderId The unique identifier for the swap order, facilitating tracking and reference.
     /// @param baseRequest Struct containing the base parameters for the swap, including the source and destination tokens, amount, minimum return, and deadline.
@@ -542,7 +388,6 @@ contract DexRouter is
         external
         payable
         isExpired(baseRequest.deadLine)
-        nonReentrant
         returns (uint256 returnAmount)
     {
         emit SwapOrderId(orderId);
@@ -619,7 +464,6 @@ contract DexRouter is
         public
         payable
         isExpired(baseRequest.deadLine)
-        nonReentrant
         returns (uint256 returnAmount)
     {
         address fromToken = _bytes32ToAddress(baseRequest.fromToken);
@@ -646,28 +490,6 @@ contract DexRouter is
                 refundTo, // refundTo
                 to // receiver
             );
-    }
-
-    /// @notice Executes a Uniswap V3 swap after obtaining a permit, allowing the approval of token spending and swap execution in a single transaction.
-    /// @param receiver The address that will receive the funds from the swap.
-    /// @param srcToken The token that will be swapped.
-    /// @param amount The amount of source tokens to be swapped.
-    /// @param minReturn The minimum acceptable amount of tokens to receive from the swap, guarding against slippage.
-    /// @param pools An array of Uniswap V3 pool identifiers, specifying the pools to be used for the swap.
-    /// @param permit A signed permit message that allows the router to spend the source tokens without requiring a separate `approve` transaction.
-    /// @return returnAmount The amount of tokens received from the swap.
-    /// @dev This function first utilizes the `_permit` function to approve token spending, then proceeds to execute the swap through `_uniswapV3Swap`. It's designed to streamline transactions by combining token approval and swap execution into a single operation.
-    function uniswapV3SwapToWithPermit(
-        uint256 receiver,
-        IERC20 srcToken,
-        uint256 amount,
-        uint256 minReturn,
-        uint256[] calldata pools,
-        bytes calldata permit
-    ) external returns (uint256 returnAmount) {
-        emit SwapOrderId((receiver & _ORDER_ID_MASK) >> 160);
-        _permit(address(srcToken), permit);
-        return _uniswapV3SwapTo(msg.sender, receiver, amount, minReturn, pools);
     }
 
     /// @notice Executes a swap using the Uniswap V3 protocol.
@@ -761,7 +583,6 @@ contract DexRouter is
         external
         payable
         isExpired(baseRequest.deadLine)
-        nonReentrant
         returns (uint256 returnAmount)
     {
         emit SwapOrderId(orderId);

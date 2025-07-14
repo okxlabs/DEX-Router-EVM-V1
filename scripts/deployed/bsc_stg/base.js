@@ -25,6 +25,6 @@ module.exports = {
     exactoutImpl: "0xfFb8322DEEeADF0d61589211493Fb2Dc668D3CC0",
     preDexRouterExactOut: "0x5f73fafF23dD542BD4Ef4ec67D7849f31B6662eB",
 
-    newImpl: "0x9d5746CB1873C14bc5fC42d1251c99A76f22dbfA",
+    newImpl: "0x668f534D8f93D7f39D7a2676Aa74d1a4e40dD4e5",
 
 }

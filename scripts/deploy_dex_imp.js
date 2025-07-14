@@ -8,10 +8,10 @@ async function main() {
     dexRouter = await DexRouter.deploy();
     await dexRouter.deployed();
     console.log("dexRouter: " + dexRouter.address);
-    let tx = await dexRouter.initialize();
-    console.log("dexRouter initialized", tx);
-    await tx.wait();
-    console.log("dexRouter initialized");
+    // let tx = await dexRouter.initialize();
+    // console.log("dexRouter initialized", tx);
+    // await tx.wait();
+    // console.log("dexRouter initialized");
     // tx2 = await dexRouter.transferOwnership("0xace2b3e7c752d5debca72210141d464371b3b9b1")
     // console.log("dexRouter transferOwnership", tx2);
     // await tx2.wait();
