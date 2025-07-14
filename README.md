@@ -268,13 +268,6 @@ DEX-Router-EVM/
 - **Gas Optimization**: Efficient routing algorithms to minimize transaction costs
 - **Extensible Architecture**: Modular adapter system for easy protocol integration
 
-## Installation
-
-```bash
-npm install
-npx hardhat compile
-npx hardhat test
-```
 
 ## License
 
