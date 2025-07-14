@@ -290,6 +290,3 @@ We welcome contributions! Please see our [Discord community](https://discord.gg/
 - Update documentation as needed
 - Add a changelog entry describing your changes
 
-## Security
-
-For security concerns, please see our [bug bounty program](https://hackerone.com/okg/policy_scopes?type=team) or contact the team directly.
