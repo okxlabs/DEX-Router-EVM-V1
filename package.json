@@ -1,0 +1,37 @@
+{
+  "name": "web3-trade",
+  "repository": "git@github.com:OKX-Web3/sor_smartcontract_dev.git",
+  "license": "MIT",
+  "description": "Swap Contract for DEX Aggregator",
+  "scripts": {
+    "compile": "npx hardhat --config hardhat.config.js compile",
+    "compile5": "npx hardhat --config hardhat.config.5.js compile",
+    "size": "hardhat size-contracts",
+    "prettier:solidity": "./node_modules/.bin/prettier --write contracts/**/**/*.sol",
+    "removelogs": "yarn run hardhat remove-logs"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-etherscan": "^3.0.3",
+    "@nomiclabs/hardhat-solhint": "^2.0.0",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@openzeppelin/contracts": "^4.5.0",
+    "@openzeppelin/contracts-upgradeable": "^4.7.0",
+    "@openzeppelin/hardhat-upgrades": "^1.19.0",
+    "chai": "^4.3.4",
+    "dotenv": "^8.2.0",
+    "ethereum-waffle": "^3.4.0",
+    "hardhat": ">=2.12.2 <=2.15.0",
+    "hardhat-abi-exporter": "^2.2.1",
+    "hardhat-contract-sizer": "^2.4.0",
+    "hardhat-gas-reporter": "^1.0.7",
+    "hardhat-log-remover": "^2.0.2",
+    "prettier-plugin-solidity": "^1.0.0-beta.19",
+    "solidity-coverage": ">=0.7.21 <=0.7.22"
+  },
+  "dependencies": {
+    "@okxweb3/hardhat-explorer-verify": "^1.6.5",
+    "@zetachain/toolkit": "^12.0.0",
+    "diff": "^5.2.0"
+  }
+}
