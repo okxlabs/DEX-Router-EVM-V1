@@ -1,0 +1,26 @@
+name: test
+on: [push]
+jobs:
+  test-job:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+      - run: npm config set registry https://registry.npmjs.org/
+      - run: npm cache clean --force
+      - run: npm install
+      - run: npx hardhat --config hardhat.config.js compile
+      - run: npx hardhat --config hardhat.config.5.js compile
+      # - run: npx hardhat test test_pmm/test_market_maker.js
+      - run: npx hardhat test test_unxswap/test_unxswap_path.js --network eth
+      - run: npx hardhat test test_unxswapV3/test_unxswap_v3_path.js
+      - run: npx hardhat test test_sor/test_dex_sor_path.js
+      - run: npx hardhat test test_unxswap/test_unxswap_path_commission.js
+      - run: npx hardhat test test_unxswapV3/test_unxswap_v3_path_commission.js
+      - run: npx hardhat test test_sor/test_dex_sor_path_commission.js
+      - run: npx hardhat test test_unxswap/test_unxswap_path_commission_to.js
+      - run: npx hardhat test test_unxswapV3/test_unxswap_v3_path_commission_to.js
+      - run: npx hardhat test test_sor/test_dex_sor_path_commission_to.js
+
