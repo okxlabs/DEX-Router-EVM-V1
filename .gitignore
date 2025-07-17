@@ -1,8 +1,5 @@
 node_modules
-lib/
-lib/forge-std/
 broadcast
-#Hardhat files
 cache
 artifacts
 .env
@@ -16,21 +13,11 @@ abi/
 coverage.json
 coverage/
 
-.openzeppelin/unknown-31337.json
-test_sor/.openzeppelin/unknown-31337.json
-test_unxswap/.openzeppelin/unknown-31337.json
-test_unxswapV3/.openzeppelin/unknown-31337.json
-test_pmm/.openzeppelin/unknown-31337.json
-dex_router_v2_test/.openzeppelin/unknown-31337.json
-src/tests/calculate.ipynb
-src/tests/Dexrouter.t.sol
 .gas-snapshot
 coverage.json
-
 artifacts/
 .qodo
 requirement
 .cursor
-.openzeppelin
 scripts/
 .openzeppelin/

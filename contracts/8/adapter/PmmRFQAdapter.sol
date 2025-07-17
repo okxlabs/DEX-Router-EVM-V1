@@ -7,7 +7,6 @@ import "../interfaces/IERC20.sol";
 import "../libraries/SafeMath.sol";
 import "../libraries/UniversalERC20.sol";
 import "../libraries/SafeERC20.sol";
-import "hardhat/console.sol";
 
 contract PmmRFQAdapter is IAdapter {
     uint256 private constant _SIGNER_SMART_CONTRACT_HINT = 1 << 254;

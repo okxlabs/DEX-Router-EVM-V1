@@ -4,10 +4,6 @@
 
 This repository contains the core smart contracts for the Dex Router. The router enables efficient token swaps across multiple liquidity sources and protocols through a unified interface.
 
-## Bug bounty
-
-This repository is subject to the OKX bug bounty program. Learn more and get started at [HackerOne](https://hackerone.com/okg/policy_scopes?type=team).
-
 ## Local Development
 
 In order to deploy this code to a local testnet, you should install the dependencies and compile the contracts:

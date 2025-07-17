@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "../interfaces/IAdapter.sol";
 import "../interfaces/IERC20.sol";
 import "../interfaces/IFraxswap.sol";
-import "hardhat/console.sol";
 
 /// @title FraxswapAdapter
 /// @notice Explain to an end user what this does
