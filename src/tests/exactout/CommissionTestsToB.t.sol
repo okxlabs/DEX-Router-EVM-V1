@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../common/BaseTestSetup.t.sol";
 
-contract CommissionTests is BaseTestSetup {
+contract CommissionToBTests is BaseTestSetup {
 
     // V2测试
     // 测试单跳ERC20-ERC20，目标代币分佣
@@ -42,7 +42,7 @@ contract CommissionTests is BaseTestSetup {
             refererAddress,
             0, // 不存在双分佣
             address(0), // 不存在双分佣
-            false
+            true
         );
         
         // 输出生成的佣金信息
@@ -110,7 +110,7 @@ contract CommissionTests is BaseTestSetup {
             refererAddress,
             0,
             address(0),
-            false
+            true
         );
         
         console2.log("Commission from source token:");
@@ -176,7 +176,7 @@ contract CommissionTests is BaseTestSetup {
             refererAddress,
             0,
             address(0),
-            false
+            true
         );
         
         console2.log("Commission to target token:");
@@ -243,7 +243,7 @@ contract CommissionTests is BaseTestSetup {
             refererAddress,
             0,
             address(0),
-            false
+            true
         );
         
         console2.log("referer commission:", refererAddress.balance);
@@ -313,7 +313,7 @@ contract CommissionTests is BaseTestSetup {
             refererAddress,
             0,
             address(0),
-            false
+            true
         );
         
         console2.log("Commission from source token (ETH):");
@@ -378,7 +378,7 @@ contract CommissionTests is BaseTestSetup {
             refererAddress,
             0,
             address(0),
-            false
+            true
         );
         
         console2.log("Commission from source token:");
@@ -462,7 +462,7 @@ contract CommissionTests is BaseTestSetup {
                         refererAddress,
                         0,
                         address(0),
-                        false
+                        true
                     )
                 )
             );
@@ -525,7 +525,7 @@ contract CommissionTests is BaseTestSetup {
                         refererAddress,
                         0,
                         address(0),
-                        false
+                        true
                     )
                 )
             );
@@ -587,7 +587,7 @@ contract CommissionTests is BaseTestSetup {
                         refererAddress,
                         0,
                         address(0),
-                        false
+                        true
                     )
                 )
             );
@@ -650,7 +650,7 @@ contract CommissionTests is BaseTestSetup {
                         refererAddress,
                         0,
                         address(0),
-                        false
+                        true
                     )
                 )
             );
@@ -715,7 +715,7 @@ contract CommissionTests is BaseTestSetup {
                         refererAddress,
                         0,
                         address(0),
-                        false
+                        true
                     )
                 )
             );
@@ -780,7 +780,7 @@ contract CommissionTests is BaseTestSetup {
                         refererAddress,
                         0,
                         address(0),
-                        false
+                        true
                     )
                 )
             );
@@ -832,7 +832,7 @@ contract CommissionTests is BaseTestSetup {
                         address(0x123),
                         0,
                         address(0),
-                        false
+                        true
                     )
                 )
             );
@@ -883,7 +883,7 @@ contract CommissionTests is BaseTestSetup {
                         address(0x123),
                         0,
                         address(0),
-                        false
+                        true
                     )
                 )
             );
@@ -933,7 +933,7 @@ contract CommissionTests is BaseTestSetup {
             refererAddress,
             0,
             address(0),
-            false
+            true
         );
         
         console2.log("Commission to target token:");
@@ -1001,7 +1001,7 @@ contract CommissionTests is BaseTestSetup {
             refererAddress,
             0,
             address(0),
-            false
+            true
         );
         
         console2.log("Commission to target token (ETH):");
@@ -1070,7 +1070,7 @@ contract CommissionTests is BaseTestSetup {
             refererAddress,
             0,
             address(0),
-            false
+            true
         );
         
         console2.log("Commission from source token (ETH):");
@@ -1136,7 +1136,7 @@ contract CommissionTests is BaseTestSetup {
             refererAddress,
             0,
             address(0),
-            false
+            true
         );
         
         console2.log("Commission from source token:");
@@ -1207,7 +1207,7 @@ contract CommissionTests is BaseTestSetup {
                         address(0x123),
                         0,
                         address(0),
-                        false
+                        true
                     )
                 )
             );
@@ -1259,7 +1259,7 @@ contract CommissionTests is BaseTestSetup {
                         address(0x123),
                         0,
                         address(0),
-                        false
+                        true
                     )
                 )
             );
@@ -1310,7 +1310,7 @@ contract CommissionTests is BaseTestSetup {
                         address(0x123),
                         0,
                         address(0),
-                        false
+                        true
                     )
                 )
             );
@@ -1361,7 +1361,7 @@ contract CommissionTests is BaseTestSetup {
                         address(0x123),
                         0,
                         address(0),
-                        false
+                        true
                     )
                 )
             );
@@ -1412,7 +1412,7 @@ contract CommissionTests is BaseTestSetup {
                         address(0x123),
                         0,
                         address(0),
-                        false
+                        true
                     )
                 )
             );
@@ -1463,7 +1463,7 @@ contract CommissionTests is BaseTestSetup {
                         address(0x123),
                         0,
                         address(0),
-                        false
+                        true
                     )
                 )
             );

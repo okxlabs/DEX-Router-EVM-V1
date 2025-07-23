@@ -22,7 +22,7 @@ module.exports = {
     //p2pTrading: "0xe6C2820Ba3d14d97b9e9A371771ed7A2f28A9c40",
     p2pTrading: "",
     nftmarketplace: "",
-    exactoutImpl: "0xfFb8322DEEeADF0d61589211493Fb2Dc668D3CC0",
+    newExactOutImpl: "0xEe4199FC21Df7F6c09FD7Bbf598016b3C2bBf635",
     preDexRouterExactOut: "0x5f73fafF23dD542BD4Ef4ec67D7849f31B6662eB",
 
     newImpl: "0x668f534D8f93D7f39D7a2676Aa74d1a4e40dD4e5",

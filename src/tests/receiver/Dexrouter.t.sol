@@ -5,7 +5,7 @@ pragma abicoder v2;
 import "forge-std/console2.sol";
 import "forge-std/test.sol";
 import "@dex/DexRouter.sol";
-import {CustomERC20} from "@dex/mock/MeMeERC20.sol";
+import {CustomERC20} from "../common/mock/MeMeERC20.sol";
 import "@dex/interfaces/IUnswapRouter02.sol";
 import "@dex/interfaces/IUni.sol";
 import "@dex/interfaces/IUniswapV2Factory.sol";

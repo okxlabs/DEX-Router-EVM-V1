@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../common/BaseTestSetup.t.sol";
 
-contract CommissionDualTests is BaseTestSetup {
+contract CommissionDualToBTests is BaseTestSetup {
     // V2测试
     // 测试单跳ERC20-ERC20，目标代币分佣
     function testCommissionToToken() public {
@@ -47,7 +47,7 @@ contract CommissionDualTests is BaseTestSetup {
             refererAddress,
             100, // 0.1%，对应十六进制0x012c
             refererAddress2, // 存在双分佣
-            false
+            true
         );
 
         // 输出生成的佣金信息
@@ -147,7 +147,7 @@ contract CommissionDualTests is BaseTestSetup {
             refererAddress,
             100,
             refererAddress2,
-            false
+            true
         );
 
         console2.log("Commission from source token:");
@@ -238,7 +238,7 @@ contract CommissionDualTests is BaseTestSetup {
             refererAddress,
             100,
             refererAddress2,
-            false
+            true
         );
 
         console2.log("Commission to target token:");
@@ -321,7 +321,7 @@ contract CommissionDualTests is BaseTestSetup {
             refererAddress,
             100,
             refererAddress2,
-            false
+            true
         );
 
         console2.log("Commission to target token (ETH):");
@@ -404,7 +404,7 @@ contract CommissionDualTests is BaseTestSetup {
             refererAddress,
             100,
             refererAddress2,
-            false
+            true
         );
 
         console2.log("Commission from source token (ETH):");
@@ -479,7 +479,7 @@ contract CommissionDualTests is BaseTestSetup {
             refererAddress,
             100,
             refererAddress2,
-            false
+            true
         );
 
         console2.log("Commission from source token:");
@@ -597,7 +597,7 @@ contract CommissionDualTests is BaseTestSetup {
                     refererAddress,
                     100,
                     refererAddress2,
-                    false
+                    true
                 )
             )
         );
@@ -697,7 +697,7 @@ contract CommissionDualTests is BaseTestSetup {
                     refererAddress,
                     100,
                     refererAddress2,
-                    false
+                    true
                 )
             )
         );
@@ -790,7 +790,7 @@ contract CommissionDualTests is BaseTestSetup {
                     refererAddress,
                     100,
                     refererAddress2,
-                    false
+                    true
                 )
             )
         );
@@ -878,7 +878,7 @@ contract CommissionDualTests is BaseTestSetup {
                     refererAddress,
                     100,
                     refererAddress2,
-                    false
+                    true
                 )
             )
         );
@@ -968,7 +968,7 @@ contract CommissionDualTests is BaseTestSetup {
                     refererAddress,
                     100,
                     refererAddress2,
-                    false
+                    true
                 )
             )
         );
@@ -1061,7 +1061,7 @@ contract CommissionDualTests is BaseTestSetup {
                     refererAddress,
                     100,
                     refererAddress2,
-                    false
+                    true
                 )
             )
         );
@@ -1135,7 +1135,7 @@ contract CommissionDualTests is BaseTestSetup {
                     refererAddress,
                     100,
                     refererAddress2,
-                    false
+                    true
                 )
             )
         );
@@ -1202,7 +1202,7 @@ contract CommissionDualTests is BaseTestSetup {
                     refererAddress,
                     100,
                     refererAddress2,
-                    false
+                    true
                 )
             )
         );
@@ -1259,7 +1259,7 @@ contract CommissionDualTests is BaseTestSetup {
             refererAddress,
             100,
             refererAddress2,
-            false
+            true
         );
 
         console2.log("Commission to target token:");
@@ -1343,7 +1343,7 @@ contract CommissionDualTests is BaseTestSetup {
             refererAddress,
             100,
             refererAddress2,
-            false
+            true
         );
 
         console2.log("Commission to target token (ETH):");
@@ -1426,7 +1426,7 @@ contract CommissionDualTests is BaseTestSetup {
             refererAddress,
             100,
             refererAddress2,
-            false
+            true
         );
 
         console2.log("Commission from source token (ETH):");
@@ -1502,7 +1502,7 @@ contract CommissionDualTests is BaseTestSetup {
             refererAddress,
             100,
             refererAddress2,
-            false
+            true
         );
 
         console2.log("Commission from source token:");
@@ -1599,7 +1599,7 @@ contract CommissionDualTests is BaseTestSetup {
                     refererAddress,
                     100,
                     refererAddress2,
-                    false
+                    true
                 )
             )
         );
@@ -1671,7 +1671,7 @@ contract CommissionDualTests is BaseTestSetup {
                     refererAddress,
                     100,
                     refererAddress2,
-                    false
+                    true
                 )
             )
         );
@@ -1742,7 +1742,7 @@ contract CommissionDualTests is BaseTestSetup {
                     refererAddress,
                     100,
                     refererAddress2,
-                    false
+                    true
                 )
             )
         );
@@ -1813,7 +1813,7 @@ contract CommissionDualTests is BaseTestSetup {
                     refererAddress,
                     100,
                     refererAddress2,
-                    false
+                    true
                 )
             )
         );
@@ -1886,7 +1886,7 @@ contract CommissionDualTests is BaseTestSetup {
                     refererAddress,
                     100,
                     refererAddress2,
-                    false
+                    true
                 )
             )
         );
@@ -1959,7 +1959,7 @@ contract CommissionDualTests is BaseTestSetup {
                     refererAddress,
                     100,
                     refererAddress2,
-                    false
+                    true
                 )
             )
         );

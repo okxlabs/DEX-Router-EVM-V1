@@ -10,8 +10,9 @@ module.exports = {
     xbridgeProxyAdmin: "",
     marketMaker: "",
     pmmAdapter: "",
+    _FF_FACTORY: "0xff1F98431c8aD98523631AE4a59f267346ea31F9840000000000000000000000",
     uniV2Factory: "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
-    exactoutImpl: "0x9e7481C8F8D9c4E07f11AbaDB2e00A917CDB1e5f",
+    newExactOutImpl: "0x6490ea3f5f1889f576c6ebba6ac169b551d40a7b",
     preDexRouterExactOut: "0x38823A826eA5b9257f35b5A838A84a1c4afE478F",
     newImpl: "0x61F376E43772C21dE2B8DF510a1f133ED3bb0DDb"
 }
