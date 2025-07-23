@@ -98,8 +98,8 @@ contract Commission2BTest is Test {
         vm.startPrank(user);
         bytes memory data = bytes.concat(
             usdt_usdc_smartswap,
-            // _getCommissionInfo(true, true, true, USDT)
-            _getCommissionInfo(true, true, false, USDC)
+            _getCommissionInfo(true, true, true, USDT)
+            // _getCommissionInfo(true, true, false, USDC)
         );
         (bool s, bytes memory res) = dexRouter.call(data);
         require(s, string(res));
