@@ -7,6 +7,8 @@ const EIP712_PATH = "./contracts/8/libraries/draft-EIP712Upgradable.sol";
 const UNIV3_PATH = "./contracts/8/UnxswapV3Router.sol";
 const UNIV3_EXACTOUT_PATH = "./contracts/8/UnxswapV3ExactOutRouter.sol";
 
+const EMPTY_FF_FACTORY = "0x0000000000000000000000000000000000000000000000000000000000000000" // 32bytes
+
 // Replaces the contract address in the constant part of the UnxswapRouter file
 // _WETH, _APPROVE_PROXY_32, _WNATIVE_RELAY_32 Three constant addresses
 // npx hardhat run scripts/tools/ureplace.js [network name, eg: eth]
@@ -89,9 +91,11 @@ function replace_pmm_eip712_contant(EIP712_PATH) {
 function replace_univ3_contant(UnxswapRouterPath) {
   // console.log(deployed.base);
 
-  if (deployed.base._FF_FACTORY == null || deployed.base._FF_FACTORY == "") {
-    console.log("warning: _FF_FACTORY is null!!!!");
-    return
+  // 如果 _FF_FACTORY 不存在或为空，使用 0x00 地址
+  let factoryAddress = deployed.base._FF_FACTORY;
+  if (factoryAddress == null || factoryAddress == "") {
+    console.log("warning: _FF_FACTORY is null or empty, using 0x00 address");
+    factoryAddress = EMPTY_FF_FACTORY;
   }
   // Reading the file
   fs.readFile(UnxswapRouterPath, function (err, data) {
@@ -101,8 +105,8 @@ function replace_univ3_contant(UnxswapRouterPath) {
 
     let context = data.toString();
     // address public constant
-    context = context.replace(/_FF_FACTORY\s+=\s+0x[0-9a-fA-F]+/, "_FF_FACTORY = " + deployed.base._FF_FACTORY);
-    // context = context.replace(/_FF_FACTORY\s=\s\w*/, "_FF_FACTORY = " + deployed.base._FF_FACTORY);
+    context = context.replace(/_FF_FACTORY\s+=\s+0x[0-9a-fA-F]+/, "_FF_FACTORY = " + factoryAddress);
+    // context = context.replace(/_FF_FACTORY\s=\s\w*/, "_FF_FACTORY = " + factoryAddress);
     // if (deployed.base._POOL_INIT_CODE_HASH != null || deployed.base._POOL_INIT_CODE_HASH != "") {
     //   context = context.replace(/_POOL_INIT_CODE_HASH\s=\s\w*/, "_POOL_INIT_CODE_HASH = " + deployed.base._POOL_INIT_CODE_HASH);
     // }
@@ -119,9 +123,11 @@ function replace_univ3_contant(UnxswapRouterPath) {
 function replace_univ3_exactout_contant(UnxswapRouterPath) {
   // console.log(deployed.base);
 
-  if (deployed.base._FF_FACTORY == null || deployed.base._FF_FACTORY == "") {
-    console.log("warning: _FF_FACTORY is null!!!!");
-    return
+  // 如果 _FF_FACTORY 不存在或为空，使用 0x00 地址
+  let factoryAddress = deployed.base._FF_FACTORY;
+  if (factoryAddress == null || factoryAddress == "") {
+    console.log("warning: _FF_FACTORY is null or empty, using 0x00 address");
+    factoryAddress = EMPTY_FF_FACTORY;
   }
   // Reading the file
   fs.readFile(UnxswapRouterPath, function (err, data) {
@@ -131,8 +137,8 @@ function replace_univ3_exactout_contant(UnxswapRouterPath) {
 
     let context = data.toString();
     // address public constant
-    context = context.replace(/_FF_FACTORY_ADDRESS\s+=\s+address\(0x[0-9a-fA-F]+\)/, "_FF_FACTORY_ADDRESS = address(" +  deployed.base._FF_FACTORY.replace("0xff", "0x").slice(0, 42) + ")");
-    // context = context.replace(/_FF_FACTORY\s=\s\w*/, "_FF_FACTORY = " + deployed.base._FF_FACTORY);
+    context = context.replace(/_FF_FACTORY_ADDRESS\s+=\s+address\(0x[0-9a-fA-F]+\)/, "_FF_FACTORY_ADDRESS = address(" + factoryAddress.replace("0xff", "0x").slice(0, 42) + ")");
+    // context = context.replace(/_FF_FACTORY\s=\s\w*/, "_FF_FACTORY = " + factoryAddress);
     // if (deployed.base._POOL_INIT_CODE_HASH != null || deployed.base._POOL_INIT_CODE_HASH != "") {
     //   context = context.replace(/_POOL_INIT_CODE_HASH\s=\s\w*/, "_POOL_INIT_CODE_HASH = " + deployed.base._POOL_INIT_CODE_HASH);
     // }
