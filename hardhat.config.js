@@ -199,7 +199,7 @@ module.exports = {
       },
     },
     cro: {
-      url: "https://cronos.drpc.org",
+      url: "https://evm.cronos.org",
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
@@ -534,7 +534,8 @@ module.exports = {
       }
     },
     sonic: {
-      url: 'https://sonic.drpc.org',
+      url: 'https://sonic-rpc.publicnode.com',
+      chainId: 146,
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
@@ -545,6 +546,16 @@ module.exports = {
     },
     berachain: {
       url: 'https://rpc.berachain-apis.com',
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
+    },
+    unichain: {
+      url: 'https://unichain.drpc.org',
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
