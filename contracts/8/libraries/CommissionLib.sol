@@ -45,11 +45,11 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
         returns (CommissionInfo memory commissionInfo)
     {
         assembly ("memory-safe") {
-            let freePtr := mload(0x40)
-            mstore(0x40, add(freePtr, 0x100))
+            // let freePtr := mload(0x40)
+            // mstore(0x40, add(freePtr, 0x100))
             let commissionData := calldataload(sub(calldatasize(), 0x20))
             let flag := and(commissionData, _COMMISSION_FLAG_MASK)
-            let isDualReferrers := or(
+            let isDualreferrers := or(
                 eq(flag, FROM_TOKEN_COMMISSION_DUAL),
                 eq(flag, TO_TOKEN_COMMISSION_DUAL)
             )
@@ -74,7 +74,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
             mstore(
                 add(0x60, commissionInfo),
                 and(commissionData, _ADDRESS_MASK)
-            ) //refererAddress1
+            ) //referrerAddress1
             commissionData := calldataload(sub(calldatasize(), 0x40))
             mstore(
                 add(0xe0, commissionInfo),
@@ -84,7 +84,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 add(0x80, commissionInfo),
                 and(commissionData, _ADDRESS_MASK) //token
             )
-            switch eq(isDualReferrers, 1)
+            switch eq(isDualreferrers, 1)
             case 1 {
                 let commissionData2 := calldataload(sub(calldatasize(), 0x60))
                 mstore(
@@ -94,11 +94,11 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 mstore(
                     add(0xc0, commissionInfo),
                     and(commissionData2, _ADDRESS_MASK)
-                ) //refererAddress2
+                ) //referrerAddress2
             }
             default {
                 mstore(add(0xa0, commissionInfo), 0) //commissionRate2
-                mstore(add(0xc0, commissionInfo), 0) //refererAddress2
+                mstore(add(0xc0, commissionInfo), 0) //referrerAddress2
             }
         }
     }
@@ -171,6 +171,13 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                     revert(0x1c, 0x04)
                 }
                 z := div(z, d)
+            }
+            function _safeSub(x, y) -> z {
+                if lt(x, y) {
+                    mstore(0x00, 0x46e72d03) // `SafeSubFailed()`.
+                    revert(0x1c, 0x04)
+                }
+                z := sub(x, y)
             }
             // a << 8 | b << 4 | c => 0xabc
             function _getStatus(token, isToB, hasNextRefer) -> d {
@@ -259,7 +266,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                     _mulDiv(amount1, WAD, amountTotal),
                     balanceAfter,
                     WAD
-                ) // WARNING: Potential overflow issues!!! Precision issues may also exist!! However, from a business perspective, the loss after overflow is controllable.
+                ) // WARNING: Precision issues may also exist!!
                 if gt(amount1Scaled, balanceAfter) {
                     _revertWithReason(
                         0x00000015696e76616c696420616d6f756e74315363616c656400000000000000,
@@ -268,34 +275,60 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 }
                 mstore(add(freePtr, 0x08), to1)
                 mstore(add(freePtr, 0x28), amount1Scaled)
-                success := call(gas(), token, 0, add(freePtr, 0x4), 0x44, 0, 0)
+                success := call(
+                    gas(),
+                    token,
+                    0,
+                    add(freePtr, 0x4),
+                    0x44,
+                    0,
+                    0x20
+                )
+                // https://github.com/transmissions11/solmate/blob/e5e0ed64c75e74974151780884e59071d026d84e/src/utils/SafeTransferLib.sol#L54
+                if and(
+                    iszero(and(eq(mload(0), 1), gt(returndatasize(), 31))),
+                    success
+                ) {
+                    success := iszero(
+                        or(iszero(extcodesize(token)), returndatasize())
+                    )
+                }
                 if eq(success, 0) {
                     _revertWithReason(
                         0x0000001b7472616e7366657220746f6b656e2072656665726572206661696c00,
                         0x5f
-                    ) //transfer token referer fail
+                    ) //transfer token referrer fail
                 }
 
                 if gt(to2, 0) {
-                    // leaving 1 wei in contract to save gas
-                    amount2Scaled := sub(sub(balanceAfter, amount1Scaled), 1)
+                    amount2Scaled := _safeSub(balanceAfter, amount1Scaled)
+
                     mstore(add(freePtr, 0x04), to2)
                     mstore(add(freePtr, 0x24), amount2Scaled)
-                    success := call(gas(), token, 0, freePtr, 0x44, 0, 0)
+                    success := call(gas(), token, 0, freePtr, 0x44, 0, 0x20)
+                    // https://github.com/transmissions11/solmate/blob/e5e0ed64c75e74974151780884e59071d026d84e/src/utils/SafeTransferLib.sol#L54
+                    if and(
+                        iszero(and(eq(mload(0), 1), gt(returndatasize(), 31))),
+                        success
+                    ) {
+                        success := iszero(
+                            or(iszero(extcodesize(token)), returndatasize())
+                        )
+                    }
                     if eq(success, 0) {
                         _revertWithReason(
                             0x0000001b7472616e7366657220746f6b656e2072656665726572206661696c00,
                             0x5f
-                        ) //transfer token referer fail
+                        ) //transfer token referrer fail
                     }
                 }
             }
-            function _emitCommissionFromToken(token, amount, referer) {
+            function _emitCommissionFromToken(token, amount, referrer) {
                 let freePtr := mload(0x40)
                 mstore(0x40, add(freePtr, 0x60))
                 mstore(freePtr, token)
                 mstore(add(freePtr, 0x20), amount)
-                mstore(add(freePtr, 0x40), referer)
+                mstore(add(freePtr, 0x40), referrer)
                 log1(
                     freePtr,
                     0x60,
@@ -322,7 +355,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 }
                 status := _getStatus(token, isToB, hasNextRefer)
             }
-            let referer1, referer2, amount1, amount2
+            let referrer1, referrer2, amount1, amount2
             {
                 let rate1 := mload(add(commissionInfo, 0x40))
                 let rate2 := mload(add(commissionInfo, 0xa0))
@@ -333,12 +366,12 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                         0x5f
                     ) //"error commission rate limit"
                 }
-                referer1 := mload(add(commissionInfo, 0x60))
+                referrer1 := mload(add(commissionInfo, 0x60))
                 amount1 := div(
                     mul(inputAmount, rate1),
                     sub(DENOMINATOR, add(rate1, rate2))
                 )
-                referer2 := mload(add(commissionInfo, 0xc0))
+                referrer2 := mload(add(commissionInfo, 0xc0))
                 amount2 := div(
                     mul(inputAmount, rate2),
                     sub(DENOMINATOR, add(rate1, rate2))
@@ -347,34 +380,34 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
 
             switch status
             case 0x100 {
-                _sendETH(referer1, amount1)
-                _emitCommissionFromToken(_ETH, amount1, referer1)
+                _sendETH(referrer1, amount1)
+                _emitCommissionFromToken(_ETH, amount1, referrer1)
             }
             case 0x101 {
-                _sendETH(referer1, amount1)
-                _emitCommissionFromToken(_ETH, amount1, referer1)
-                _sendETH(referer2, amount2)
-                _emitCommissionFromToken(_ETH, amount2, referer2)
+                _sendETH(referrer1, amount1)
+                _emitCommissionFromToken(_ETH, amount1, referrer1)
+                _sendETH(referrer2, amount2)
+                _emitCommissionFromToken(_ETH, amount2, referrer2)
             }
             case 0x110 {
-                _sendETH(referer1, amount1)
-                _emitCommissionFromToken(_ETH, amount1, referer1)
+                _sendETH(referrer1, amount1)
+                _emitCommissionFromToken(_ETH, amount1, referrer1)
             }
             case 0x111 {
-                _sendETH(referer1, amount1)
-                _emitCommissionFromToken(_ETH, amount1, referer1)
-                _sendETH(referer2, amount2)
-                _emitCommissionFromToken(_ETH, amount2, referer2)
+                _sendETH(referrer1, amount1)
+                _emitCommissionFromToken(_ETH, amount1, referrer1)
+                _sendETH(referrer2, amount2)
+                _emitCommissionFromToken(_ETH, amount2, referrer2)
             }
             case 0x000 {
-                _claimToken(token, payer, referer1, amount1)
-                _emitCommissionFromToken(token, amount1, referer1)
+                _claimToken(token, payer, referrer1, amount1)
+                _emitCommissionFromToken(token, amount1, referrer1)
             }
             case 0x001 {
-                _claimToken(token, payer, referer1, amount1)
-                _emitCommissionFromToken(token, amount1, referer1)
-                _claimToken(token, payer, referer2, amount2)
-                _emitCommissionFromToken(token, amount2, referer2)
+                _claimToken(token, payer, referrer1, amount1)
+                _emitCommissionFromToken(token, amount1, referrer1)
+                _claimToken(token, payer, referrer2, amount2)
+                _emitCommissionFromToken(token, amount2, referrer2)
             }
             case 0x010 {
                 _claimToken(token, payer, address(), amount1)
@@ -382,12 +415,12 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 // scaled amount accordingly
                 let amount1Scaled, amount2Scaled := _sendTokenWithinBalance(
                     token,
-                    referer1,
+                    referrer1,
                     amount1,
                     0,
                     0
                 )
-                _emitCommissionFromToken(token, amount1Scaled, referer1)
+                _emitCommissionFromToken(token, amount1Scaled, referrer1)
             }
             case 0x011 {
                 _claimToken(token, payer, address(), add(amount1, amount2))
@@ -395,18 +428,18 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 // scaled amount accordingly
                 let amount1Scaled, amount2Scaled := _sendTokenWithinBalance(
                     token,
-                    referer1,
+                    referrer1,
                     amount1,
-                    referer2,
+                    referrer2,
                     amount2
                 )
-                _emitCommissionFromToken(token, amount1Scaled, referer1)
-                _emitCommissionFromToken(token, amount2Scaled, referer2)
+                _emitCommissionFromToken(token, amount1Scaled, referrer1)
+                _emitCommissionFromToken(token, amount2Scaled, referrer2)
             }
             default {
                 _revertWithReason(
-                    0x000000e696e76616c696420737461747573000000000000000000000000000000,
-                    0x51
+                    0x0000000e696e76616c6964207374617475730000000000000000000000000000,
+                    0x52
                 ) // invalid status
             }
         }
@@ -443,7 +476,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 ) //"error commission rate limit"
             }
             let token := mload(add(commissionInfo, 0x80))
-            let referer := mload(add(commissionInfo, 0x60))
+            let referrer := mload(add(commissionInfo, 0x60))
             let eventPtr := mload(0x40)
             mstore(0x40, add(eventPtr, 0x60))
 
@@ -457,35 +490,35 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 }
                 let inputAmount := sub(selfbalance(), balanceBefore)
                 amount := div(mul(inputAmount, rate), DENOMINATOR)
-                let success := call(gas(), referer, amount, 0, 0, 0, 0)
+                let success := call(gas(), referrer, amount, 0, 0, 0, 0)
                 if eq(success, 0) {
                     _revertWithReason(
                         0x000000197472616e73666572206574682072656665726572206661696c000000,
                         0x5d
-                    ) // transfer eth referer fail
+                    ) // transfer eth referrer fail
                 }
                 mstore(eventPtr, token)
                 mstore(add(eventPtr, 0x20), amount)
-                mstore(add(eventPtr, 0x40), referer)
+                mstore(add(eventPtr, 0x40), referrer)
                 log1(
                     eventPtr,
                     0x60,
                     0xf171268de859ec269c52bbfac94dcb7715e784de194342abb284bf34fd30b32d
                 ) //emit CommissionToTokenRecord(address,uint256,address)
                 if gt(rate2, 0) {
-                    let referer2 := mload(add(commissionInfo, 0xc0))
+                    let referrer2 := mload(add(commissionInfo, 0xc0))
                     let amount2 := div(mul(inputAmount, rate2), DENOMINATOR)
                     amount := add(amount, amount2)
-                    let success2 := call(gas(), referer2, amount2, 0, 0, 0, 0)
+                    let success2 := call(gas(), referrer2, amount2, 0, 0, 0, 0)
                     if eq(success2, 0) {
                         _revertWithReason(
                             0x000000197472616e73666572206574682072656665726572206661696c000000,
                             0x5d
-                        ) // transfer eth referer fail
+                        ) // transfer eth referrer fail
                     }
                     mstore(eventPtr, token)
                     mstore(add(eventPtr, 0x20), amount2)
-                    mstore(add(eventPtr, 0x40), referer2)
+                    mstore(add(eventPtr, 0x40), referrer2)
                     log1(
                         eventPtr,
                         0x60,
@@ -543,28 +576,44 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 }
                 let inputAmount := sub(balanceAfter, balanceBefore)
                 amount := div(mul(inputAmount, rate), DENOMINATOR)
-                mstore(add(freePtr, 0x0c), referer)
+                mstore(add(freePtr, 0x0c), referrer)
                 mstore(add(freePtr, 0x2c), amount)
-                success := call(gas(), token, 0, add(freePtr, 0x8), 0x44, 0, 0)
+                success := call(
+                    gas(),
+                    token,
+                    0,
+                    add(freePtr, 0x8),
+                    0x44,
+                    0,
+                    0x20
+                )
+                if and(
+                    iszero(and(eq(mload(0), 1), gt(returndatasize(), 31))),
+                    success
+                ) {
+                    success := iszero(
+                        or(iszero(extcodesize(token)), returndatasize())
+                    )
+                }
                 if eq(success, 0) {
                     _revertWithReason(
                         0x0000001b7472616e7366657220746f6b656e2072656665726572206661696c00,
                         0x5f
-                    ) //transfer token referer fail
+                    ) //transfer token referrer fail
                 }
                 mstore(eventPtr, token)
                 mstore(add(eventPtr, 0x20), amount)
-                mstore(add(eventPtr, 0x40), referer)
+                mstore(add(eventPtr, 0x40), referrer)
                 log1(
                     eventPtr,
                     0x60,
                     0xf171268de859ec269c52bbfac94dcb7715e784de194342abb284bf34fd30b32d
                 ) //emit CommissionToTokenRecord(address,uint256,address)
                 if gt(rate2, 0) {
-                    let referer2 := mload(add(commissionInfo, 0xc0))
+                    let referrer2 := mload(add(commissionInfo, 0xc0))
                     let amount2 := div(mul(inputAmount, rate2), DENOMINATOR)
                     amount := add(amount, amount2)
-                    mstore(add(freePtr, 0x08), referer2)
+                    mstore(add(freePtr, 0x08), referrer2)
                     mstore(add(freePtr, 0x28), amount2)
                     success := call(
                         gas(),
@@ -573,18 +622,26 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                         add(freePtr, 0x4),
                         0x44,
                         0,
-                        0
+                        0x20
                     )
+                    if and(
+                        iszero(and(eq(mload(0), 1), gt(returndatasize(), 31))),
+                        success
+                    ) {
+                        success := iszero(
+                            or(iszero(extcodesize(token)), returndatasize())
+                        )
+                    }
                     if eq(success, 0) {
                         _revertWithReason(
                             0x0000001b7472616e7366657220746f6b656e2072656665726572206661696c00,
                             0x5f
-                        ) //transfer token referer fail
+                        ) //transfer token referrer fail
                     }
                     /// @notice emit ETH address is from commissionInfo.token, so it is 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
                     mstore(eventPtr, token)
                     mstore(add(eventPtr, 0x20), amount2)
-                    mstore(add(eventPtr, 0x40), referer2)
+                    mstore(add(eventPtr, 0x40), referrer2)
                     log1(
                         eventPtr,
                         0x60,
@@ -597,7 +654,15 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 // This prevents potential failures by enforcing the correct address length.
                 mstore(add(freePtr, 0x04), shr(96, shl(96, receiver)))
                 mstore(add(freePtr, 0x24), sub(inputAmount, amount))
-                success := call(gas(), token, 0, freePtr, 0x44, 0, 0)
+                success := call(gas(), token, 0, freePtr, 0x44, 0, 0x20)
+                if and(
+                    iszero(and(eq(mload(0), 1), gt(returndatasize(), 31))),
+                    success
+                ) {
+                    success := iszero(
+                        or(iszero(extcodesize(token)), returndatasize())
+                    )
+                }
                 if eq(success, 0) {
                     _revertWithReason(
                         0x0000001c7472616e7366657220746f6b656e207265636569766572206661696c,

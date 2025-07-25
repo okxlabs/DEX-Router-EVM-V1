@@ -77,7 +77,9 @@ contract DexRouter is
                     ORIGIN_PAYER + uint(uint160(refundTo))
                 )
             );
-            require(s, string(res));
+            if (!s) {
+                _revert(res);
+            }
         } else {
             (bool s, bytes memory res) = address(adapter).call(
                 abi.encodePacked(
@@ -90,7 +92,9 @@ contract DexRouter is
                     ORIGIN_PAYER + uint(uint160(refundTo))
                 )
             );
-            require(s, string(res));
+            if (!s) {
+                _revert(res);
+            }
         }
     }
     //-------------------------------
@@ -702,5 +706,21 @@ contract DexRouter is
             balanceBefore
         );
         return swappedAmount - commissionAmount;
+    }
+
+    /**
+     * @dev Reverts with returndata if present. Otherwise reverts with "FailedCall".
+     * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/c64a1edb67b6e3f4a15cca8909c9482ad33a02b0/contracts/utils/Address.sol#L135-L149
+     */
+    function _revert(bytes memory returndata) private pure {
+        // Look for revert reason and bubble it up if present
+        if (returndata.length > 0) {
+            // The easiest way to bubble the revert reason is using memory via assembly
+            assembly ("memory-safe") {
+                revert(add(returndata, 0x20), mload(returndata))
+            }
+        } else {
+            revert("adaptor call failed");
+        }
     }
 }
