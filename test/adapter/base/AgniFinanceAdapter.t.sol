@@ -45,6 +45,7 @@ contract AgniFinanceAdapterTest is AbstractAdapterTest {
             amount: 0.415 * 10**18, // 0.415 WMNT
             expectedOutput: 0.504974 * 10**6,
             sellBase: true,
+            expectRevert: false,
             description: "WMNT to USDT on Mantle",
             moreInfo: abi.encode(uint160(0), abi.encode(WMNT, USDT))
         });
@@ -59,6 +60,7 @@ contract AgniFinanceAdapterTest is AbstractAdapterTest {
             amount: 1000000, // 1 USDT (6 decimals)
             expectedOutput: 0,
             sellBase: false, // USDT is quote token
+            expectRevert: false,
             description: "USDT to WMNT on Mantle",
             moreInfo: abi.encode(uint160(0), abi.encode(USDT, WMNT))
         });
@@ -73,6 +75,7 @@ contract AgniFinanceAdapterTest is AbstractAdapterTest {
             amount: 1 ether, // 1 WETH
             expectedOutput: 0,
             sellBase: true,
+            expectRevert: false,
             description: "WETH to USDT on Mantle",
             moreInfo: abi.encode(uint160(0), abi.encode(WETH, USDT))
         });
@@ -87,6 +90,7 @@ contract AgniFinanceAdapterTest is AbstractAdapterTest {
             amount: 3000 * 10**6, // 3000 USDT
             expectedOutput: 0,
             sellBase: false,
+            expectRevert: false,
             description: "USDT to WETH on Mantle",
             moreInfo: abi.encode(uint160(0), abi.encode(USDT, WETH))
         });

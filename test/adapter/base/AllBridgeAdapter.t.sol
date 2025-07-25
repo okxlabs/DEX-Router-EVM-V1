@@ -43,6 +43,7 @@ contract AllBridgeAdapterTest is AbstractAdapterTest {
             amount: 1 * 10**6, // 1 USDC (6 decimals)
             expectedOutput: 0, // Dynamic
             sellBase: true, // USDC as base
+            expectRevert: false,
             description: "USDC to USDT via AllBridge on ETH",
             moreInfo: abi.encode(bytes32(uint256(uint160(USDC))), bytes32(uint256(uint160(USDT))))
         });
@@ -57,6 +58,7 @@ contract AllBridgeAdapterTest is AbstractAdapterTest {
             amount: 1 * 10**6, // 1 USDT (6 decimals)
             expectedOutput: 0,
             sellBase: false, // USDT as quote
+            expectRevert: false,
             description: "USDT to USDC via AllBridge on ETH",
             moreInfo: abi.encode(bytes32(uint256(uint160(USDT))), bytes32(uint256(uint160(USDC))))
         });

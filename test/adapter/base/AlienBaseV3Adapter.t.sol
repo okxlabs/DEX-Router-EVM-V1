@@ -43,6 +43,7 @@ contract AlienBaseV3AdapterTest is AbstractAdapterTest {
             amount: 0.046502901914085561 * 10**18, // ~0.046502 WETH
             expectedOutput: 121.605458 * 10**6, // actual output is 121.788068 USDC, but we can't get the exact output because of the rounding error
             sellBase: false, // WETH is quote in this context
+            expectRevert: false,
             description: "WETH to USDC on Base", 
             moreInfo: abi.encode(uint160(0), abi.encode(WETH, USDC, uint24(0)))
         });
@@ -57,6 +58,7 @@ contract AlienBaseV3AdapterTest is AbstractAdapterTest {
             amount: 121788068, // 121.788068 USDC (6 decimals)
             expectedOutput: 0, // Dynamic
             sellBase: true, // USDC is base in this context
+            expectRevert: false,
             description: "USDC to WETH on Base",
             moreInfo: abi.encode(uint160(0), abi.encode(USDC, WETH, uint24(0)))
         });

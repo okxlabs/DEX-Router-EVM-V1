@@ -40,6 +40,7 @@ contract AaveV3StaticATokenAdapterTest is AbstractAdapterTest {
             amount: 1000000, // 1 USDT (6 decimals)
             expectedOutput: 0, // Dynamic
             sellBase: true,
+            expectRevert: false,
             description: "stataETHUSDT to USDT on ETH",
             moreInfo: abi.encode(STATA_ETH_USDT, ETH_USDT)
         });
@@ -54,6 +55,7 @@ contract AaveV3StaticATokenAdapterTest is AbstractAdapterTest {
             amount: 1000000,
             expectedOutput: 0,
             sellBase: true,
+            expectRevert: false,
             description: "stataETHUSDT to aETHUSDT on ETH",
             moreInfo: abi.encode(STATA_ETH_USDT, AETH_USDT)
         });
@@ -68,6 +70,7 @@ contract AaveV3StaticATokenAdapterTest is AbstractAdapterTest {
             amount: 1000000,
             expectedOutput: 0,
             sellBase: false, // Use sellQuote for variety
+            expectRevert: false,
             description: "USDT to stataETHUSDT on ETH",
             moreInfo: abi.encode(ETH_USDT, STATA_ETH_USDT)
         });
@@ -82,6 +85,7 @@ contract AaveV3StaticATokenAdapterTest is AbstractAdapterTest {
             amount: 1000000,
             expectedOutput: 0,
             sellBase: false,
+            expectRevert: false,
             description: "aETHUSDT to stataETHUSDT on ETH",
             moreInfo: abi.encode(AETH_USDT, STATA_ETH_USDT)
         });

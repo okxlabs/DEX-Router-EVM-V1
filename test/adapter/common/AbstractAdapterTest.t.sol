@@ -23,6 +23,7 @@ abstract contract AbstractAdapterTest is Test {
         uint256 amount;
         uint256 expectedOutput; // expected output (0 for dynamic)
         bool sellBase;
+        bool expectRevert; // true if this test case is expected to revert
         string description;
         bytes moreInfo; // adapter-specific data
     }
@@ -130,6 +131,10 @@ abstract contract AbstractAdapterTest is Test {
         // Execute swap
         bool success;
         bytes memory returnData;
+
+        if (testCase.expectRevert) {
+            vm.expectRevert();
+        }
         
         if (testCase.sellBase) {
             (success, returnData) = customAdapter.call(
@@ -159,15 +164,22 @@ abstract contract AbstractAdapterTest is Test {
         
         uint256 outputReceived = finalToBalance - initialToBalance;
         
-        // Check expected output if specified
-        if (testCase.expectedOutput > 0) {
-            require(outputReceived == testCase.expectedOutput, "Output amount mismatch");
+        if (testCase.expectRevert) {
+            // For expected reverts, verify no state changes occurred
+            require(finalFromBalance == initialFromBalance, "From token balance should be unchanged after revert");
+            require(outputReceived == 0, "No output tokens should be received after revert");
+        } else {
+            // For successful swaps, validate normal success conditions
+            // Check expected output if specified
+            if (testCase.expectedOutput > 0) {
+                require(outputReceived == testCase.expectedOutput, "Output amount mismatch");
+            }
+            // Check from token balance
+            require(finalFromBalance == initialFromBalance - testCase.amount, "From token balance mismatch");
+                    
+            // Verify we received output tokens
+            require(outputReceived > 0, "No output tokens received");
         }
-        // Check from token balance
-        require(finalFromBalance == initialFromBalance - testCase.amount, "From token balance mismatch");
-                
-        // Verify we received output tokens
-        require(outputReceived > 0, "No output tokens received");
     }
     
     /**
