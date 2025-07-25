@@ -40,7 +40,7 @@ contract DexRouterExactOut is
     CommissionLib,
     PMMRouterStorage
 {
-    string public constant version = "v1.0.1";
+    string public constant version = "v1.0.4-toB-commission";
     using UniversalERC20 for IERC20;
 
     struct AfterSwapParams {
@@ -61,7 +61,6 @@ contract DexRouterExactOut is
         __Ownable_init();
         __Pausable_init();
         __ReentrancyGuard_init();
-        admin = msg.sender;
     }
 
     //-------------------------------
@@ -73,10 +72,6 @@ contract DexRouterExactOut is
     /// @param valid A boolean indicating the new status of the priority address.
     /// True means the address is now considered a priority address, and false means it is not.
     event PriorityAddressChanged(address priorityAddress, bool valid);
-
-    /// @notice Emitted when the admin address of the contract is changed.
-    /// @param newAdmin The address of the new admin.
-    event AdminChanged(address newAdmin);
 
     /// @notice Executes an exact output swap using the Unxswap protocol, including commission handling.
     /// @param srcToken The source token as a uint256 (address encoded with order ID mask).
@@ -177,7 +172,9 @@ contract DexRouterExactOut is
                 commissionInfo: commissionInfo,
                 consumeAmount: consumeAmount,
                 targetTokenBefore: targetTokenBefore,
-                srcToken: srcTokenAddress == address(0) ? _ETH : srcTokenAddress,
+                srcToken: srcTokenAddress == address(0)
+                    ? _ETH
+                    : srcTokenAddress,
                 receiver: receiver,
                 payer: payer
             })
