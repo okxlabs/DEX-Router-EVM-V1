@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 // solhint-disable
 pragma solidity ^0.8.0;
-import {BaseUniversalUniswapV3Adaptor} from "./BaseUniversalUniswapV3Adaptor.sol";
+import {BaseUniversalUniswapV3Adapter} from "./BaseUniversalUniswapV3Adapter.sol";
 
 /**
- * @title UniversalUniswapV3Adaptor
+ * @title UniversalUniswapV3Adapter
  * @notice Base contract for Universal Uniswap V3 Adapter implementation
  * @dev This contract serves as the foundation for adapting various Uniswap V3-like DEX protocols
  *
@@ -31,12 +31,12 @@ import {BaseUniversalUniswapV3Adaptor} from "./BaseUniversalUniswapV3Adaptor.sol
  *
  * @custom:security-contact security@yourprotocol.com
  */
-contract UniversalUniswapV3Adaptor is BaseUniversalUniswapV3Adaptor {
+contract UniversalUniswapV3Adapter is BaseUniversalUniswapV3Adapter {
     constructor(
         address weth,
         uint160 minSqrtRatio,
         uint160 maxSqrtRatio
-    ) BaseUniversalUniswapV3Adaptor(weth, minSqrtRatio, maxSqrtRatio) {}
+    ) BaseUniversalUniswapV3Adapter(weth, minSqrtRatio, maxSqrtRatio) {}
 
     // Uniswap V3 callback(
     // Sheepdex,

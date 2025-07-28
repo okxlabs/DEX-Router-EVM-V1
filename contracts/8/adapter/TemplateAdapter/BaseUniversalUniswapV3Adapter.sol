@@ -11,7 +11,7 @@ import {IUniV3} from "../../interfaces/IUniV3.sol";
 uint256 constant ORIGIN_PAYER = 0x3ca20afc2ccc0000000000000000000000000000000000000000000000000000;
 uint256 constant ADDRESS_MASK = 0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff;
 
-abstract contract BaseUniversalUniswapV3Adaptor is IAdapter {
+abstract contract BaseUniversalUniswapV3Adapter is IAdapter {
     address public immutable WETH;
     uint160 public immutable MIN_SQRT_RATIO;
     uint160 public immutable MAX_SQRT_RATIO;

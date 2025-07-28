@@ -10,8 +10,8 @@ async function main() {
     const [signer] = await ethers.getSigners();
     console.log("signer address:", signer.address);
 
-    UniversalUniswapV3Adaptor = await ethers.getContractFactory("UniversalUniswapV3Adaptor");
-    universalAdapter = await UniversalUniswapV3Adaptor.deploy(deployed.base.wNativeToken, MIN_SQRT_RATIO, MAX_SQRT_RATIO);
+    UniversalUniswapV3Adapter = await ethers.getContractFactory("UniversalUniswapV3Adapter");
+    universalAdapter = await UniversalUniswapV3Adapter.deploy(deployed.base.wNativeToken, MIN_SQRT_RATIO, MAX_SQRT_RATIO);
     let tx = await universalAdapter.deployed();
     console.log("tx:", tx);
 
