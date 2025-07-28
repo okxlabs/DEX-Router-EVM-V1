@@ -19,8 +19,9 @@ contract AspectaAdapterTest is Test {
     AspectaAdapter adapter;
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("BSC_RPC_URL"), 51137569);
+        vm.createSelectFork(vm.envString("BSC_RPC_URL"), 54313660);
         adapter = new AspectaAdapter(payable(WBNB)); // local deployed adapter
+        adapter.setDexRouter(address(dexRouter), true);
     }
 
     modifier user(address _user) {
