@@ -8,7 +8,7 @@ contract ImplTest is Test {
     function test_upgrade_polyzkevm_20240418() public {
         address dexRouter = 0x6b2C0c7be2048Daa9b5527982C29f48062B34D58;
         address newImpl = 0xE8c25c536550221a52472d50bBaBd2B88353DcE8;
-        vm.createSelectFork("https://1rpc.io/polygon/zkevm", 11702672);
+        vm.createSelectFork("https://pacific-rpc.manta.network/http", 11702672);
         vm.store(
             dexRouter,
             0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc,
