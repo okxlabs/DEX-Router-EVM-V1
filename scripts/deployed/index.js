@@ -40,6 +40,7 @@ const taiko = require('./taiko')
 const story = require('./story')
 const sonic = require('./sonic')
 const berachain = require('./berachain')
+const unichain = require('./unichain')
 let config
 
 console.log('current network.name: ', network.name)
@@ -124,6 +125,8 @@ if (network.name === 'okc') {
     config = sonic
 } else if (network.name == 'berachain') {
     config = berachain
+} else if (network.name == 'unichain') {
+    config = unichain
 }
 
 module.exports = config

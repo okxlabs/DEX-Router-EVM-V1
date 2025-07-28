@@ -434,7 +434,7 @@ module.exports = {
       }
     },
     merlin: {
-      url: 'https://endpoints.omniatech.io/v1/merlin/mainnet/public',
+      url: 'https://rpc.merlinchain.io',
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {

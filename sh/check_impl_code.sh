@@ -3,7 +3,7 @@
 NETWORK=${1}
 
 # Files that will be modified by ureplace.js
-FILES_TO_TRACK="contracts/8/libraries/CommonUtils.sol contracts/8/UnxswapV3Router.sol"
+FILES_TO_TRACK="contracts/8/libraries/CommonUtils.sol contracts/8/UnxswapV3Router.sol contracts/8/UnxswapV3ExactOutRouter.sol"
 
 echo "Saving file states before modifications..."
 # Save the current state of files that will be modified

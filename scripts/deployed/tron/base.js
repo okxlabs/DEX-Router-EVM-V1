@@ -1,5 +1,5 @@
 module.exports = {
-    wNativeToken: "",
+    wNativeToken: "0x891cdb91d149f23B1a45D9c5Ca78a88d0cB44C18",
     wNativeRelayer: "0xE2c927B0B939AadB945668b012ec3BB6cdD722EA",
     tokenApprove: "0x51b160bb02261c822b33e61c6b947f275144545e",
     tokenApproveProxy: "0xEbEE8FAa7909dFB1dF0bC4B797672D30eA30b568",
@@ -10,5 +10,5 @@ module.exports = {
     marketMaker: "",
     pmmAdapter: "",
     protocolAdmin: "",
-    newImpl: "TXZQ9Mzd1jf21rLc9o3JiyUAQorWDzMSNB",
+    newImpl: "TLKfCET238boU5D978DNosBpP8sB9QA6uQ",
 }
