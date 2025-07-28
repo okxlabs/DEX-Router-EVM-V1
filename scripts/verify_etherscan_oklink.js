@@ -28,6 +28,32 @@ async function main() {
     } catch (error) {
         console.error("Verification failed:", error);
     }
+
+    // try {
+
+    //     console.log("Verifying on etherscan...", deployed.base.newExactOutImpl);
+    //     await hre.run("verify:verify", {
+    //         address: deployed.base.newExactOutImpl,
+    //         constructorArguments: [], // Adjust if your contract has constructor arguments
+    //         contract: "contracts/8/DexRouterExactOut.sol:DexRouterExactOut"
+    //     });
+    //     console.log("Verification on etherscan completed!");
+    // } catch (error) {
+    //     console.error("Verification failed:", error);
+    // }
+    // try {
+    //     // Verify on Oklink
+    //     console.log("Verifying on Oklink...");
+    //     await hre.run("okverify", {
+    //         address: deployed.base.newExactOutImpl,
+    //         constructorArguments: [], // Adjust if your contract has constructor arguments
+    //         contract: "contracts/8/DexRouterExactOut.sol:DexRouterExactOut"
+    //     });
+    //     console.log("Verification on Oklink completed!");
+
+    // } catch (error) {
+    //     console.error("Verification failed:", error);
+    // }
 }
 
 main()
