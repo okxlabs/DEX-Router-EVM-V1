@@ -23,7 +23,7 @@ contract Deploy is Script {
         address virtualToken = 0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b;
         address FRouter = 0x8292B43aB73EfAC11FAF357419C38ACF448202C5;
         address adapter = address(new VirtualsAdapter(BONDING, virtualToken, FRouter));
-        console2.log("VirtualAdapter deployed on ARB: %s", adapter);
+        console2.log("VirtualAdapter deployed on BASE: %s", adapter);
 
         vm.stopBroadcast();
     }
