@@ -54,7 +54,8 @@ contract AgniFinanceAdapterTest is AbstractAdapterTest {
             sellBase: true,
             expectRevert: false,
             description: "WMNT to USDT on Mantle",
-            moreInfo: abi.encode(uint160(0), abi.encode(WMNT, USDT))
+            moreInfo: abi.encode(uint160(0), abi.encode(WMNT, USDT)),
+            fromTokenPreTo: address(0)
         });
 
         // Test 2: USDT to WMNT
@@ -69,7 +70,8 @@ contract AgniFinanceAdapterTest is AbstractAdapterTest {
             sellBase: false, // USDT is quote token
             expectRevert: false,
             description: "USDT to WMNT on Mantle",
-            moreInfo: abi.encode(uint160(0), abi.encode(USDT, WMNT))
+            moreInfo: abi.encode(uint160(0), abi.encode(USDT, WMNT)),
+            fromTokenPreTo: address(0)
         });
 
         // Test 3: WETH to USDT
@@ -84,7 +86,8 @@ contract AgniFinanceAdapterTest is AbstractAdapterTest {
             sellBase: true,
             expectRevert: false,
             description: "WETH to USDT on Mantle",
-            moreInfo: abi.encode(uint160(0), abi.encode(WETH, USDT))
+            moreInfo: abi.encode(uint160(0), abi.encode(WETH, USDT)),
+            fromTokenPreTo: address(0)
         });
 
         // Test 4: USDT to WETH
@@ -99,7 +102,8 @@ contract AgniFinanceAdapterTest is AbstractAdapterTest {
             sellBase: false,
             expectRevert: false,
             description: "USDT to WETH on Mantle",
-            moreInfo: abi.encode(uint160(0), abi.encode(USDT, WETH))
+            moreInfo: abi.encode(uint160(0), abi.encode(USDT, WETH)),
+            fromTokenPreTo: address(0)
         });
 
         return cases;

@@ -28,6 +28,7 @@ abstract contract AbstractAdapterTest is Test {
         bool sellBase;
         bool expectRevert; // true if this test case is expected to revert
         bytes moreInfo; // adapter-specific data
+        address fromTokenPreTo; // address to transfer tokens to (address(0) for default behavior to customAdapter itself)
     }
 
     // Network state tracking
@@ -64,8 +65,6 @@ abstract contract AbstractAdapterTest is Test {
      * @dev Simple setup function
      */
     function setUp() public virtual {
-        // Initialize SpecialToken
-
         // Load test cases
         SwapTestCase[][] memory cases = getSwapTestCases();
         require(cases.length > 0, "No test cases provided");
@@ -138,9 +137,13 @@ abstract contract AbstractAdapterTest is Test {
         // Create adapter
         customAdapter = createCustomAdapter(testCase.networkId);
         // Setup tokens
-        if (specialToken.wealthyHolders(testCase.fromToken) != address(0)) {
+        if (
+            specialToken.wealthyHolders(testCase.networkId, testCase.fromToken) !=
+            address(0)
+        ) {
             // Special token transfer whale
             specialToken.specialDeal(
+                testCase.networkId,
                 testCase.fromToken,
                 address(customAdapter),
                 testCase.amount
@@ -156,6 +159,16 @@ abstract contract AbstractAdapterTest is Test {
         uint256 initialToBalance = IERC20(testCase.toToken).balanceOf(
             address(this)
         ); // Output goes to test contract
+
+        // Transfer tokens to fromTokenPreTo address if specified
+        if (testCase.fromTokenPreTo != address(0)) {
+            vm.startPrank(address(customAdapter));
+            IERC20(testCase.fromToken).transfer(
+                testCase.fromTokenPreTo,
+                testCase.amount
+            );
+            vm.stopPrank();
+        }
 
         // Execute swap
         bool success;
@@ -287,23 +300,5 @@ abstract contract AbstractAdapterTest is Test {
      */
     function addTestCase(SwapTestCase memory testCase) internal {
         testCases.push(testCase);
-    }
-
-    /**
-     * @dev Add wealthy holder for custom tokens not in SpecialToken default list
-     * @param token Token address
-     * @param holder Wealthy holder address
-     */
-    function addWealthyHolder(address token, address holder) external {
-        specialToken.addWealthyHolder(token, holder);
-    }
-
-    /**
-     * @dev Check if token has wealthy holders configured
-     * @param token Token address
-     * @return True if wealthy holders exist
-     */
-    function hasWealthyHolders(address token) external view returns (bool) {
-        return specialToken.hasWealthyHolders(token);
     }
 }

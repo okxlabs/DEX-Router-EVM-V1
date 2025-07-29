@@ -50,7 +50,8 @@ contract AaveV3StaticATokenAdapterTest is AbstractAdapterTest {
             sellBase: true,
             expectRevert: false,
             description: "stataETHUSDT to USDT on ETH",
-            moreInfo: abi.encode(STATA_ETH_USDT, ETH_USDT)
+            moreInfo: abi.encode(STATA_ETH_USDT, ETH_USDT),
+            fromTokenPreTo: address(0)
         });
 
         // Test 2: Static aToken to aToken (stataETHUSDT → aETHUSDT)
@@ -65,7 +66,8 @@ contract AaveV3StaticATokenAdapterTest is AbstractAdapterTest {
             sellBase: true,
             expectRevert: false,
             description: "stataETHUSDT to aETHUSDT on ETH",
-            moreInfo: abi.encode(STATA_ETH_USDT, AETH_USDT)
+            moreInfo: abi.encode(STATA_ETH_USDT, AETH_USDT),
+            fromTokenPreTo: address(0)
         });
 
         // Test 3: Underlying token to Static aToken (USDT → stataETHUSDT)
@@ -80,7 +82,8 @@ contract AaveV3StaticATokenAdapterTest is AbstractAdapterTest {
             sellBase: false, // Use sellQuote for variety
             expectRevert: false,
             description: "USDT to stataETHUSDT on ETH",
-            moreInfo: abi.encode(ETH_USDT, STATA_ETH_USDT)
+            moreInfo: abi.encode(ETH_USDT, STATA_ETH_USDT),
+            fromTokenPreTo: address(0)
         });
 
         // Test 4: aToken to Static aToken (aETHUSDT → stataETHUSDT)
@@ -95,7 +98,8 @@ contract AaveV3StaticATokenAdapterTest is AbstractAdapterTest {
             sellBase: false,
             expectRevert: false,
             description: "aETHUSDT to stataETHUSDT on ETH",
-            moreInfo: abi.encode(AETH_USDT, STATA_ETH_USDT)
+            moreInfo: abi.encode(AETH_USDT, STATA_ETH_USDT),
+            fromTokenPreTo: address(0)
         });
 
         return cases;

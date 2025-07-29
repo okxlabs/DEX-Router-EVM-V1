@@ -11,7 +11,7 @@ import {IERC20} from "@dex/interfaces/IERC20.sol";
  */
 contract SpecialToken is Test {
     // 1 to 1 mapping of token address to wealthy holder address
-    mapping(address => address) public wealthyHolders;
+    mapping(string => mapping(address => address)) public wealthyHolders;
 
     constructor() {
         _setupWealthyHolders();
@@ -22,26 +22,7 @@ contract SpecialToken is Test {
      */
     function _setupWealthyHolders() internal {
         // Aave aUSDT
-        address AETH_USDT = 0x23878914EFE38d27C4D67Ab83ed1b93A74D4086a;
-        wealthyHolders[AETH_USDT] = 0x18709E89BD403F470088aBDAcEbE86CC60dda12e; // Aave Collector
-    }
-
-    /**
-     * @dev Add wealthy holder for a token
-     * @param token The token address
-     * @param holder The wealthy holder address
-     */
-    function addWealthyHolder(address token, address holder) external {
-        wealthyHolders[token] = holder;
-    }
-
-    /**
-     * @dev Check if a token has a wealthy holder configured
-     * @param token The token address
-     * @return true if the token has a wealthy holder
-     */
-    function hasWealthyHolders(address token) external view returns (bool) {
-        return wealthyHolders[token] != address(0);
+        wealthyHolders["eth"][0x23878914EFE38d27C4D67Ab83ed1b93A74D4086a] = 0x18709E89BD403F470088aBDAcEbE86CC60dda12e; // Aave Collector
     }
 
     /**
@@ -50,8 +31,13 @@ contract SpecialToken is Test {
      * @param to The recipient address
      * @param amount The amount to transfer
      */
-    function specialDeal(address token, address to, uint256 amount) external {
-        address holder = wealthyHolders[token];
+    function specialDeal(
+        string memory networkId,
+        address token,
+        address to,
+        uint256 amount
+    ) external {
+        address holder = wealthyHolders[networkId][token];
         uint256 balance = IERC20(token).balanceOf(holder);
 
         if (balance >= amount) {

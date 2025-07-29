@@ -14,38 +14,32 @@ contract UniversalUniswapV3AdapterTest is AbstractAdapterTest {
     uint160 internal constant MAX_SQRT_RATIO =
         1461446703485210103287273052203988822378723970342;
 
+    // Mapping of network IDs to their native wrapped tokens
+    mapping(string => address) internal nativeWrappedTokens;
+    
     /**
-     * @dev Create UniversalUniswapV3Adapter
+     * @dev Create UniversalUniswapV3 adapter for the specified network
+     * @param networkId The network identifier (e.g. "bsc", "mantle")
      */
-    function createCustomAdapter(
-        string memory networkId
-    ) internal override returns (address) {
-        address nativeWrappedToken = _getNativeWrappedToken(networkId);
-        return
-            address(
-                new UniversalUniswapV3Adapter(
-                    payable(nativeWrappedToken),
-                    MIN_SQRT_RATIO,
-                    MAX_SQRT_RATIO
-                )
-            );
-    }
+    function createCustomAdapter(string memory networkId) internal override returns (address) {
+        // Native wrapped token addresses per network
+        nativeWrappedTokens["bsc"] = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c; // BSC_WBNB
+        nativeWrappedTokens["mantle"] = 0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8; // MANTLE_WMNT
 
-    function _getNativeWrappedToken(
-        string memory networkId
-    ) internal pure returns (address) {
-        bytes32 id = keccak256(bytes(networkId));
-        if (id == keccak256("bsc")) {
-            return 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
-        } else if (id == keccak256("mantle")) {
-            return 0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8;
-        } else {
-            revert("Invalid network");
-        }
+        address nativeWrappedToken = nativeWrappedTokens[networkId];
+        require(nativeWrappedToken != address(0), "Unsupported network");
+        
+        return address(
+            new UniversalUniswapV3Adapter(
+                payable(nativeWrappedToken),
+                MIN_SQRT_RATIO,
+                MAX_SQRT_RATIO
+            )
+        );
     }
 
     /**
-     * @dev Define test cases for UniversalUniswapV3Adapter swaps
+     * @dev Define test cases for Thena V3 swaps
      */
     function getSwapTestCases()
         internal
@@ -85,7 +79,8 @@ contract UniversalUniswapV3AdapterTest is AbstractAdapterTest {
             sellBase: false,
             expectRevert: false,
             description: "WBNB to ETH on Thena V3",
-            moreInfo: abi.encode(uint160(0), abi.encode(WBNB, ETH, uint24(0)))
+            moreInfo: abi.encode(uint160(0), abi.encode(WBNB, ETH, uint24(0))),
+            fromTokenPreTo: address(0)
         });
 
         // Test 2: ETH to WBNB
@@ -100,7 +95,8 @@ contract UniversalUniswapV3AdapterTest is AbstractAdapterTest {
             sellBase: true,
             expectRevert: false,
             description: "ETH to WBNB on Thena V3",
-            moreInfo: abi.encode(uint160(0), abi.encode(ETH, WBNB, uint24(0)))
+            moreInfo: abi.encode(uint160(0), abi.encode(ETH, WBNB, uint24(0))),
+            fromTokenPreTo: address(0)
         });
 
         return cases;
@@ -135,7 +131,8 @@ contract UniversalUniswapV3AdapterTest is AbstractAdapterTest {
             sellBase: true,
             expectRevert: false,
             description: "WMNT to USDT on Mantle",
-            moreInfo: abi.encode(uint160(0), abi.encode(WMNT, USDT))
+            moreInfo: abi.encode(uint160(0), abi.encode(WMNT, USDT)),
+            fromTokenPreTo: address(0)
         });
 
         // Test 2: USDT to WMNT
@@ -150,7 +147,8 @@ contract UniversalUniswapV3AdapterTest is AbstractAdapterTest {
             sellBase: false, // USDT is quote token
             expectRevert: false,
             description: "USDT to WMNT on Mantle",
-            moreInfo: abi.encode(uint160(0), abi.encode(USDT, WMNT))
+            moreInfo: abi.encode(uint160(0), abi.encode(USDT, WMNT)),
+            fromTokenPreTo: address(0)
         });
 
         // Test 3: WETH to USDT
@@ -165,7 +163,8 @@ contract UniversalUniswapV3AdapterTest is AbstractAdapterTest {
             sellBase: true,
             expectRevert: false,
             description: "WETH to USDT on Mantle",
-            moreInfo: abi.encode(uint160(0), abi.encode(WETH, USDT))
+            moreInfo: abi.encode(uint160(0), abi.encode(WETH, USDT)),
+            fromTokenPreTo: address(0)
         });
 
         // Test 4: USDT to WETH
@@ -180,7 +179,8 @@ contract UniversalUniswapV3AdapterTest is AbstractAdapterTest {
             sellBase: false,
             expectRevert: false,
             description: "USDT to WETH on Mantle",
-            moreInfo: abi.encode(uint160(0), abi.encode(USDT, WETH))
+            moreInfo: abi.encode(uint160(0), abi.encode(USDT, WETH)),
+            fromTokenPreTo: address(0)
         });
 
         return cases;

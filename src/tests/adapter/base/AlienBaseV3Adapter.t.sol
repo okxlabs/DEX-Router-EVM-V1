@@ -52,7 +52,8 @@ contract AlienBaseV3AdapterTest is AbstractAdapterTest {
             sellBase: false, // WETH is quote in this context
             expectRevert: false,
             description: "WETH to USDC on Base",
-            moreInfo: abi.encode(uint160(0), abi.encode(WETH, USDC, uint24(0)))
+            moreInfo: abi.encode(uint160(0), abi.encode(WETH, USDC, uint24(0))),
+            fromTokenPreTo: address(0)
         });
 
         // Test 2: USDC to WETH (based on original test)
@@ -67,7 +68,8 @@ contract AlienBaseV3AdapterTest is AbstractAdapterTest {
             sellBase: true, // USDC is base in this context
             expectRevert: false,
             description: "USDC to WETH on Base",
-            moreInfo: abi.encode(uint160(0), abi.encode(USDC, WETH, uint24(0)))
+            moreInfo: abi.encode(uint160(0), abi.encode(USDC, WETH, uint24(0))),
+            fromTokenPreTo: address(0)
         });
 
         return cases;

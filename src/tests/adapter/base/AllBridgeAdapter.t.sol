@@ -56,7 +56,8 @@ contract AllBridgeAdapterTest is AbstractAdapterTest {
             moreInfo: abi.encode(
                 bytes32(uint256(uint160(USDC))),
                 bytes32(uint256(uint160(USDT)))
-            )
+            ),
+            fromTokenPreTo: address(0)
         });
 
         // Test 2: USDT to USDC
@@ -74,7 +75,8 @@ contract AllBridgeAdapterTest is AbstractAdapterTest {
             moreInfo: abi.encode(
                 bytes32(uint256(uint160(USDT))),
                 bytes32(uint256(uint160(USDC)))
-            )
+            ),
+            fromTokenPreTo: address(0)
         });
 
         return cases;
