@@ -16,6 +16,10 @@ abstract contract CommonUtils {
     uint256 internal constant _CALL_GAS_LIMIT = 5000;
     uint256 internal constant ORIGIN_PAYER =
         0x3ca20afc2ccc0000000000000000000000000000000000000000000000000000;
+    uint256 internal constant _INPUT_INDEX_MASK =
+        0x0000000000000000ff0000000000000000000000000000000000000000000000;
+    uint256 internal constant _OUTPUT_INDEX_MASK =
+        0x000000000000000000ff00000000000000000000000000000000000000000000;
 
     /// @dev WETH address is network-specific and needs to be changed before deployment.
     /// It can not be moved to immutable as immutables are not supported in assembly
