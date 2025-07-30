@@ -4,7 +4,7 @@ const { assert } = require("chai");
 
 async function main() {
     // console.log(deployed);
-    const dexRouter = deployed.base.newImpl
+    const dexRouter = deployed.base.newExactOutImpl
     // check wnative relayer
     const WNativeRelayer = await ethers.getContractAt(
         "WNativeRelayer",
@@ -28,17 +28,17 @@ async function main() {
     let res2 = await TokenApproveProxy.allowedApprove(dexRouter)
     console.log("token approve proxy", res2)
     // check owner
-    // const DexRouter = await ethers.getContractAt("contracts/8/DexRouter.sol:DexRouter", dexRouter)
-    // let owner = await DexRouter.owner()
-    // console.log("dexrouter owner", owner)
+    const DexRouter = await ethers.getContractAt("contracts/8/DexRouterExactOut.sol:DexRouterExactOut", dexRouter)
+    let owner = await DexRouter.owner()
+    console.log("dexrouter owner", owner)
     // check initialized
-    // let res___ = await ethers.provider.getStorageAt(deployed.base.newImpl, 0)
-    // console.log(res___)
-    // const decodedInitialized____ = ethers.utils.defaultAbiCoder.decode(
-    //     ["uint"], // 
-    //     // res___ // The raw storage slot data
-    // )[0]; // Take the first (and only) decoded value
-    // console.log("initialized", decodedInitialized____.toString() === ethers.BigNumber.from(1).toString());
+    let res___ = await ethers.provider.getStorageAt(deployed.base.newExactOutImpl, 0)
+    console.log(res___)
+    const decodedInitialized____ = ethers.utils.defaultAbiCoder.decode(
+        ["uint"], // 
+        res___ // The raw storage slot data
+    )[0]; // Take the first (and only) decoded value
+    console.log("initialized", decodedInitialized____.toString() === ethers.BigNumber.from(1).toString());
     // check xbridge
 
 
