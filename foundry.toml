@@ -5,6 +5,7 @@ test = "test"
 
 evm_version = "cancun"
 fs_permissions = [{access = "read-write", path = "./"}]
+libs = ["node_modules", "lib"]
 
 [rpc_endpoints]
 arb = "https://arb1.arbitrum.io/rpc"
