@@ -143,6 +143,28 @@ contract DexRouterDagExecutor is
         }
     }
 
+    /**
+     * @dev Reverts with returndata if present. Otherwise reverts with "FailedCall".
+     * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/c64a1edb67b6e3f4a15cca8909c9482ad33a02b0/contracts/utils/Address.sol#L135-L149
+     */
+    function _revert(bytes memory returndata) private pure {
+        // Look for revert reason and bubble it up if present
+        if (returndata.length > 0) {
+            // The easiest way to bubble the revert reason is using memory via assembly
+            assembly ("memory-safe") {
+                revert(add(returndata, 0x20), mload(returndata))
+            }
+        } else {
+            revert("adaptor call failed");
+        }
+    }
+
+    /// @notice Executes a single node in the DAG
+    /// @param receiver Address receiving the swapped tokens
+    /// @param refundTo Address receiving the refunded tokens
+    /// @param isToNative Whether the output should be native token
+    /// @param paths Detailed routing information for executing the swap across different paths or protocols.
+    /// @param state The current state of the DAG execution
     function _exeNode(
         address receiver,
         address refundTo,
@@ -176,8 +198,8 @@ contract DexRouterDagExecutor is
                     require(inputIndex == nodeInputIndex, "node inputIndex inconsistent");
                     require(!state.processed[outputIndex], "output node processed");
                 }
-                require(inputIndex < state.nodeNum && outputIndex <= state.nodeNum, "node index out of range");
                 require(inputIndex < outputIndex, "inputIndex gte outputIndex");
+                require(inputIndex < state.nodeNum && outputIndex <= state.nodeNum, "node index out of range"); // @notice this also constraints that only one node has no output edge
                 totalWeight += weight;
                 if (i == paths.length - 1) {
                     require(
@@ -218,6 +240,10 @@ contract DexRouterDagExecutor is
     }
 
     /// @notice The executor holds all the potential input tokens before _exeDagSwap.
+    /// @param receiver Address receiving the swapped tokens
+    /// @param refundTo Address receiving the refunded tokens
+    /// @param isToNative Whether the output should be native token
+    /// @param paths Detailed routing information for executing the swap across different paths or protocols.
     function _exeDagSwap(
         address receiver,
         address refundTo,
@@ -403,21 +429,5 @@ contract DexRouterDagExecutor is
         returns (uint256 returnAmount)
     {
         return _swapInternal(baseRequest, paths, refundTo, receiver);
-    }
-
-    /**
-     * @dev Reverts with returndata if present. Otherwise reverts with "FailedCall".
-     * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/c64a1edb67b6e3f4a15cca8909c9482ad33a02b0/contracts/utils/Address.sol#L135-L149
-     */
-    function _revert(bytes memory returndata) private pure {
-        // Look for revert reason and bubble it up if present
-        if (returndata.length > 0) {
-            // The easiest way to bubble the revert reason is using memory via assembly
-            assembly ("memory-safe") {
-                revert(add(returndata, 0x20), mload(returndata))
-            }
-        } else {
-            revert("adaptor call failed");
-        }
     }
 }
