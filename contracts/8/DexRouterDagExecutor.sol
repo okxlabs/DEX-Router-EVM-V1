@@ -84,7 +84,7 @@ contract DexRouterDagExecutor is
     /// @return state The initialized swap state
     function _initSwapState(
         uint256 _nodeNum
-    ) private returns (SwapState memory state) {
+    ) private pure returns (SwapState memory state) {
         state.nodeNum = _nodeNum;
         state.nodeTokens = new address[](_nodeNum);
         state.processed = new bool[](_nodeNum);
@@ -93,29 +93,31 @@ contract DexRouterDagExecutor is
     }
 
     /// @notice Executes a swap through an adapter contract
-    /// @param reverse Whether to call sellQuote (true) or sellBase (false)
-    /// @param adapter Address of the adapter contract
+    /// @param path RouterPath struct containing adapter, to, and extra data
     /// @param to Address to receive the swapped tokens
-    /// @param poolAddress Address of the liquidity pool
-    /// @param moreinfo Additional data for the adapter
     /// @param refundTo Address to receive refunded tokens
     /// @dev Makes a low-level call to the adapter with encoded parameters
     function _exeAdapter(
-        bool reverse,
-        address adapter,
+        RouterPath memory path,
         address to,
-        address poolAddress,
-        bytes memory moreinfo,
         address refundTo
     ) private {
+        bool reverse;
+        address poolAddress;
+        uint256 rawData = path.rawData;
+        assembly {
+            poolAddress := and(rawData, _ADDRESS_MASK)
+            reverse := and(rawData, _REVERSE_MASK)
+        }
+
         if (reverse) {
-            (bool s, bytes memory res) = address(adapter).call(
+            (bool s, bytes memory res) = address(path.mixAdapter).call(
                 abi.encodePacked(
                     abi.encodeWithSelector(
                         IAdapter.sellQuote.selector,
                         to,
                         poolAddress,
-                        moreinfo
+                        path.extraData
                     ),
                     ORIGIN_PAYER + uint(uint160(refundTo))
                 )
@@ -124,13 +126,13 @@ contract DexRouterDagExecutor is
                 _revert(res);
             }
         } else {
-            (bool s, bytes memory res) = address(adapter).call(
+            (bool s, bytes memory res) = address(path.mixAdapter).call(
                 abi.encodePacked(
                     abi.encodeWithSelector(
                         IAdapter.sellBase.selector,
                         to,
                         poolAddress,
-                        moreinfo
+                        path.extraData
                     ),
                     ORIGIN_PAYER + uint(uint160(refundTo))
                 )
@@ -149,24 +151,19 @@ contract DexRouterDagExecutor is
         SwapState memory state
     ) private {
         address fromToken = _bytes32ToAddress(paths[0].fromToken);
-        uint256 batchAmount = IERC20(fromToken).balanceOf(address(this));
-        require(batchAmount > 0, "node balance must be greater than 0");
+        uint256 nodeBalance = IERC20(fromToken).balanceOf(address(this));
+        require(nodeBalance > 0, "node balance must be greater than 0");
 
         uint256 nodeInputIndex;
         uint256 totalWeight;
         for (uint256 i = 0; i < paths.length; i++) {
             bytes32 rawData = bytes32(paths[i].rawData);
-            // TODO 抽成一个 _validateEdge 函数
-            address poolAddress;
-            bool reverse;
             uint256 inputIndex;
             uint256 outputIndex;
             {
                 uint256 weight;
 
                 assembly {
-                    poolAddress := and(rawData, _ADDRESS_MASK)
-                    reverse := and(rawData, _REVERSE_MASK)
                     weight := shr(160, and(rawData, _WEIGHT_MASK))
                     inputIndex := shr(184, and(rawData, _INPUT_INDEX_MASK))
                     outputIndex := shr(176, and(rawData, _OUTPUT_INDEX_MASK))
@@ -179,7 +176,8 @@ contract DexRouterDagExecutor is
                     require(inputIndex == nodeInputIndex, "node inputIndex inconsistent");
                     require(!state.processed[outputIndex], "output node processed");
                 }
-                require(inputIndex <= state.nodeNum && outputIndex <= state.nodeNum, "node index out of range");
+                require(inputIndex < state.nodeNum && outputIndex <= state.nodeNum, "node index out of range");
+                require(inputIndex < outputIndex, "inputIndex gte outputIndex");
                 totalWeight += weight;
                 if (i == paths.length - 1) {
                     require(
@@ -190,8 +188,8 @@ contract DexRouterDagExecutor is
 
                 if (!state.noTransfer[inputIndex]) {
                     uint256 _fromTokenAmount = weight == 10_000
-                        ? batchAmount
-                        : (batchAmount * weight) / 10_000;
+                        ? nodeBalance
+                        : (nodeBalance * weight) / 10_000;
                     SafeERC20.safeTransfer(
                         IERC20(fromToken),
                         paths[i].assetTo,
@@ -208,11 +206,8 @@ contract DexRouterDagExecutor is
             }
 
             _exeAdapter(
-                reverse,
-                paths[i].mixAdapter,
+                paths[i],
                 to,
-                poolAddress,
-                paths[i].extraData,
                 refundTo
             );
         }
@@ -220,12 +215,6 @@ contract DexRouterDagExecutor is
 
         state.nodeTokens[nodeInputIndex] = fromToken;
         state.processed[nodeInputIndex] = true;
-    }
-
-    function _validateEdge(
-
-    ) private {
-
     }
 
     /// @notice The executor holds all the potential input tokens before _exeDagSwap.
@@ -257,7 +246,7 @@ contract DexRouterDagExecutor is
                 state.assetTo[inputIndex] = paths[i][0].assetTo;
             }
 
-            // TODO check paths[i].fromToken != paths[i+1].fromToken
+            // !!!notice: check paths[i].fromToken != paths[i+1].fromToken cann't resolve node balance conflict
 
             unchecked {
                 ++i;
@@ -273,7 +262,17 @@ contract DexRouterDagExecutor is
             }
         }
 
-        // TODO check address(this) node token balance == 0
+        // ensure no tokens remain
+        for (uint256 i = 0; i < nodeNum;) {
+            require(
+                state.nodeTokens[i] == address(0)
+                    && IERC20(state.nodeTokens[i]).balanceOf(address(this)) == 0,
+                "node token remains"
+            );
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     /// @notice Transfers the specified token to the user.
