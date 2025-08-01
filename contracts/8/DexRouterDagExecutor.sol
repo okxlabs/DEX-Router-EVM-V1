@@ -62,6 +62,8 @@ contract DexRouterDagExecutor is
         bool[] processed;
         /// @notice node index -> noTransfer flag, to identify whether need to transfer token to assetTo when execute the node
         bool[] noTransfer;
+        /// @notice node index -> assetTo address, to record the assetTo address of each node which only has one output edge
+        address[] assetTo;
     }
 
     //-------------------------------
@@ -87,6 +89,7 @@ contract DexRouterDagExecutor is
         state.nodeTokens = new address[](_nodeNum);
         state.processed = new bool[](_nodeNum);
         state.noTransfer = new bool[](_nodeNum);
+        state.assetTo = new address[](_nodeNum);
     }
 
     /// @notice Executes a swap through an adapter contract
@@ -143,7 +146,7 @@ contract DexRouterDagExecutor is
         address refundTo,
         bool isToNative,
         RouterPath[] memory paths,
-        SwapState memory state,
+        SwapState memory state
     ) private {
         address fromToken = _bytes32ToAddress(paths[0].fromToken);
         uint256 batchAmount = IERC20(fromToken).balanceOf(address(this));
@@ -153,7 +156,7 @@ contract DexRouterDagExecutor is
         uint256 totalWeight;
         for (uint256 i = 0; i < paths.length; i++) {
             bytes32 rawData = bytes32(paths[i].rawData);
-            // TODO 把 index 相关的索引校验都抽成一个_validateEdgeIndex函数
+            // TODO 抽成一个 _validateEdge 函数
             address poolAddress;
             bool reverse;
             uint256 inputIndex;
@@ -185,8 +188,7 @@ contract DexRouterDagExecutor is
                     );
                 }
 
-                // TODO corrent transfer logic
-                if (!noTransfer) {
+                if (!state.noTransfer[inputIndex]) {
                     uint256 _fromTokenAmount = weight == 10_000
                         ? batchAmount
                         : (batchAmount * weight) / 10_000;
@@ -196,6 +198,13 @@ contract DexRouterDagExecutor is
                         _fromTokenAmount
                     );
                 }
+            }
+
+            address to = address(this);
+            if (outputIndex == state.nodeNum && !isToNative) {
+                to = receiver;
+            } else if (outputIndex < state.nodeNum && state.noTransfer[outputIndex]) {
+                to = state.assetTo[outputIndex];
             }
 
             _exeAdapter(
@@ -211,6 +220,12 @@ contract DexRouterDagExecutor is
 
         state.nodeTokens[nodeInputIndex] = fromToken;
         state.processed[nodeInputIndex] = true;
+    }
+
+    function _validateEdge(
+
+    ) private {
+
     }
 
     /// @notice The executor holds all the potential input tokens before _exeDagSwap.
@@ -236,7 +251,11 @@ contract DexRouterDagExecutor is
             assembly {
                 inputIndex := shr(184, and(rawData, _INPUT_INDEX_MASK))
             }
-            state.noTransfer[inputIndex] = paths[i].length == 1;
+            bool noTransfer = paths[i].length == 1;
+            state.noTransfer[inputIndex] = noTransfer;
+            if (noTransfer) {
+                state.assetTo[inputIndex] = paths[i][0].assetTo;
+            }
 
             // TODO check paths[i].fromToken != paths[i+1].fromToken
 
