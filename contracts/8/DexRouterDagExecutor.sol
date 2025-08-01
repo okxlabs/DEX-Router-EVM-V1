@@ -54,10 +54,14 @@ contract DexRouterDagExecutor is
     /// @notice Core DAG algorithm data structure
     /// @dev Maintains the state of the DAG during execution
     struct SwapState {
-        /// @notice Node tokens: node index -> token address
+        /// @notice the number of nodes need to be processed
+        uint256 nodeNum;
+        /// @notice node index -> token address, to record the token address of each node
         address[] nodeTokens;
-        /// @notice Node processed: node index -> processed flag
+        /// @notice node index -> processed flag, to record the processed status of each node
         bool[] processed;
+        /// @notice node index -> noTransfer flag, to identify whether need to transfer token to assetTo when execute the node
+        bool[] noTransfer;
     }
 
     //-------------------------------
@@ -74,13 +78,15 @@ contract DexRouterDagExecutor is
     //------- Internal Functions ----
     //-------------------------------
     /// @notice Initializes the swap state for the DAG execution
-    /// @param nodeCount The number of nodes in the DAG
+    /// @param _nodeNum The number of nodes in the DAG
     /// @return state The initialized swap state
     function _initSwapState(
-        uint256 nodeCount
+        uint256 _nodeNum
     ) private returns (SwapState memory state) {
-        state.nodeTokens = new address[](nodeCount);
-        state.processed = new bool[](nodeCount);
+        state.nodeNum = _nodeNum;
+        state.nodeTokens = new address[](_nodeNum);
+        state.processed = new bool[](_nodeNum);
+        state.noTransfer = new bool[](_nodeNum);
     }
 
     /// @notice Executes a swap through an adapter contract
@@ -133,14 +139,12 @@ contract DexRouterDagExecutor is
     }
 
     function _exeNode(
+        address receiver,
         address refundTo,
-        address to,
-        SwapState memory state,
+        bool isToNative,
         RouterPath[] memory paths,
-        bool noTransfer
+        SwapState memory state,
     ) private {
-        require(paths.length > 0, "paths must be greater than 0");
-
         address fromToken = _bytes32ToAddress(paths[0].fromToken);
         uint256 batchAmount = IERC20(fromToken).balanceOf(address(this));
         require(batchAmount > 0, "node balance must be greater than 0");
@@ -149,6 +153,7 @@ contract DexRouterDagExecutor is
         uint256 totalWeight;
         for (uint256 i = 0; i < paths.length; i++) {
             bytes32 rawData = bytes32(paths[i].rawData);
+            // TODO 把 index 相关的索引校验都抽成一个_validateEdgeIndex函数
             address poolAddress;
             bool reverse;
             uint256 inputIndex;
@@ -167,11 +172,11 @@ contract DexRouterDagExecutor is
                 if (i == 0) {
                     nodeInputIndex = inputIndex;
                 } else {
-                    require(fromToken == _bytes32ToAddress(paths[i].fromToken), "node fromToken mismatch");
-                    require(inputIndex == nodeInputIndex, "node inputIndex mismatch");
-                    require(!state.processed[inputIndex] && !state.processed[outputIndex], "node processed");
+                    require(fromToken == _bytes32ToAddress(paths[i].fromToken), "node fromToken inconsistent");
+                    require(inputIndex == nodeInputIndex, "node inputIndex inconsistent");
+                    require(!state.processed[outputIndex], "output node processed");
                 }
-
+                require(inputIndex <= state.nodeNum && outputIndex <= state.nodeNum, "node index out of range");
                 totalWeight += weight;
                 if (i == paths.length - 1) {
                     require(
@@ -180,6 +185,7 @@ contract DexRouterDagExecutor is
                     );
                 }
 
+                // TODO corrent transfer logic
                 if (!noTransfer) {
                     uint256 _fromTokenAmount = weight == 10_000
                         ? batchAmount
@@ -201,6 +207,7 @@ contract DexRouterDagExecutor is
                 refundTo
             );
         }
+        require(!state.processed[nodeInputIndex], "input node processed");
 
         state.nodeTokens[nodeInputIndex] = fromToken;
         state.processed[nodeInputIndex] = true;
@@ -209,35 +216,45 @@ contract DexRouterDagExecutor is
     /// @notice The executor holds all the potential input tokens before _exeDagSwap.
     function _exeDagSwap(
         address receiver,
+        address refundTo,
         bool isToNative,
         RouterPath[][] memory paths
     ) private {
-        SwapState memory state = _initSwapState(paths.length);
+        uint256 nodeNum = paths.length;
+        SwapState memory state = _initSwapState(nodeNum);
 
-        bool toNext;
-        bool noTransfer;
-
-        // execute hop
-        uint256 pathsLength = paths.length;
-        for (uint256 i = 0; i < pathsLength; ) {
-            address to = address(this);
-            if (i == pathsLength - 1 && !isToNative) {
-                to = receiver;
-            } else if (i < pathsLength - 1 && paths[i + 1].length == 1) {
-                to = paths[i + 1][0].assetTo;
-                toNext = true;
-            } else {
-                toNext = false;
+        // init state.noTransfer, inputIndex consistency is guaranteed by _exeNode
+        // noTransfer[i]==true means:
+        // 1. when execute the input edge of node i, the to address need to be the assetTo of output edge of node i.
+        // 2. when execute the output edge of node i, the token is no need to transfer to assetTo.
+        uint256 inputIndex;
+        bytes32 rawData;
+        for (uint256 i = 0; i < nodeNum;) {
+            // init state.noTransfer
+            require(paths[i].length > 0, "paths must be greater than 0");
+            rawData = bytes32(paths[i][0].rawData);
+            assembly {
+                inputIndex := shr(184, and(rawData, _INPUT_INDEX_MASK))
             }
+            state.noTransfer[inputIndex] = paths[i].length == 1;
 
-            // 3.2 execute forks
-            _exeNode(receiver, to, state, paths[i], noTransfer);
-            noTransfer = toNext;
+            // TODO check paths[i].fromToken != paths[i+1].fromToken
 
             unchecked {
                 ++i;
             }
         }
+
+        // execute DAG swap
+        for (uint256 i = 0; i < nodeNum;) {
+            _exeNode(receiver, refundTo, isToNative, paths[i], state);
+
+            unchecked {
+                ++i;
+            }
+        }
+
+        // TODO check address(this) node token balance == 0
     }
 
     /// @notice Transfers the specified token to the user.
@@ -318,10 +335,12 @@ contract DexRouterDagExecutor is
             IWETH(address(uint160(_WETH))).deposit{
                 value: _baseRequest.fromTokenAmount
             }();
+        } else {
+            require(msg.value == 0, "msg.value must be 0");
         }
 
         // execute DAG swap
-        _exeDagSwap(receiver, IERC20(_baseRequest.toToken).isETH(), paths);
+        _exeDagSwap(receiver, refundTo, IERC20(_baseRequest.toToken).isETH(), paths);
 
         // transfer tokens to user, if the toToken is ETH, the WETH will be converted to ETH.
         _transferTokenToUser(_baseRequest.toToken, receiver);
