@@ -3,10 +3,8 @@ pragma solidity 0.8.17;
 
 import "./interfaces/IWETH.sol";
 import "./interfaces/IAdapter.sol";
-import "./interfaces/IApproveProxy.sol";
 import "./interfaces/IWNativeRelayer.sol";
 
-import "./libraries/CommissionLib.sol";
 import "./libraries/EthReceiver.sol";
 import "./libraries/CommonUtils.sol";
 import "./libraries/UniversalERC20.sol";
@@ -17,8 +15,8 @@ import "./libraries/UniversalERC20.sol";
 /// the minReturnAmount and return the to token to receiver eventually. Since the router paths are passed in as a DAG and
 // the token amounts are get from the balance of node tokens, the executor supports the multi input token swap natively.
 contract DexRouterDagExecutor is
-    EthReceiver,
-    CommissionLib
+    CommonUtils,
+    EthReceiver
 {
     string public constant version = "v1.0.0-dag";
     using UniversalERC20 for IERC20;
@@ -186,10 +184,9 @@ contract DexRouterDagExecutor is
                     uint256 _fromTokenAmount = weight == 10_000
                         ? batchAmount
                         : (batchAmount * weight) / 10_000;
-                    _transferInternal(
-                        address(this),
+                    SafeERC20.safeTransfer(
+                        IERC20(fromToken),
                         paths[i].assetTo,
-                        fromToken,
                         _fromTokenAmount
                     );
                 }
@@ -243,29 +240,10 @@ contract DexRouterDagExecutor is
         }
     }
 
-    /// @notice Transfers tokens internally within the contract.
-    /// @param payer The address of the payer.
-    /// @param to The address of the receiver.
-    /// @param token The address of the token to be transferred.
-    /// @param amount The amount of tokens to be transferred.
-    /// @dev Handles the transfer of ERC20 tokens or native tokens within the contract.
-    function _transferInternal(
-        address payer,
-        address to,
-        address token,
-        uint256 amount
-    ) private {
-        if (payer == address(this)) {
-            SafeERC20.safeTransfer(IERC20(token), to, amount);
-        } else {
-            IApproveProxy(_APPROVE_PROXY).claimTokens(token, payer, to, amount);
-        }
-    }
     /// @notice Transfers the specified token to the user.
     /// @param token The address of the token to be transferred.
     /// @param to The address of the receiver.
     /// @dev Handles the withdrawal of tokens to the user, converting WETH to ETH if necessary.
-
     function _transferTokenToUser(address token, address to) private {
         if ((IERC20(token).isETH())) {
             uint256 wethBal = IERC20(address(uint160(_WETH))).balanceOf(
@@ -300,7 +278,6 @@ contract DexRouterDagExecutor is
     /// @return result The address obtained from the conversion.
     /// @dev This function is used to extract an address from a uint256,
     /// typically used when dealing with low-level data operations or when addresses are packed into larger data types.
-
     function _bytes32ToAddress(
         uint256 param
     ) private pure returns (address result) {
@@ -308,16 +285,16 @@ contract DexRouterDagExecutor is
             result := and(param, _ADDRESS_MASK)
         }
     }
+
     /// @notice Executes a complex swap based on provided parameters and paths.
     /// @param baseRequest Basic swap details including tokens, amounts, and deadline.
     /// @param paths Detailed swap paths for execution.
-    /// @param payer Address providing the tokens.
+    /// @param refundTo Address receiving the refunded tokens.
     /// @param receiver Address receiving the swapped tokens.
     /// @return returnAmount Total received tokens from the swap.
-    function _smartSwapInternal(
+    function _swapInternal(
         BaseRequest memory baseRequest,
         RouterPath[][] memory paths,
-        address payer,
         address refundTo,
         address receiver
     ) private returns (uint256 returnAmount) {
@@ -328,6 +305,9 @@ contract DexRouterDagExecutor is
             "Route: fromTokenAmount must be > 0"
         );
         address fromToken = _bytes32ToAddress(_baseRequest.fromToken);
+        uint256 fromTokenBalance = IERC20(fromToken).balanceOf(address(this));
+        require(_baseRequest.fromTokenAmount >= fromTokenBalance, "fromTokenAmount must be >= fromTokenBalance");
+
         returnAmount = IERC20(_baseRequest.toToken).universalBalanceOf(
             receiver
         );
@@ -338,13 +318,12 @@ contract DexRouterDagExecutor is
             IWETH(address(uint160(_WETH))).deposit{
                 value: _baseRequest.fromTokenAmount
             }();
-            payer = address(this);
         }
 
         // execute DAG swap
         _exeDagSwap(receiver, IERC20(_baseRequest.toToken).isETH(), paths);
 
-        // transfer tokens to user
+        // transfer tokens to user, if the toToken is ETH, the WETH will be converted to ETH.
         _transferTokenToUser(_baseRequest.toToken, receiver);
 
         // check minReturnAmount
@@ -369,16 +348,15 @@ contract DexRouterDagExecutor is
     //-------------------------------
     //------- Users Functions -------
     //-------------------------------
-
-    /// @notice Executes a smart swap directly to a specified receiver address.
-    /// @param receiver Address to receive the output tokens from the swap.
+    /// @notice Executes DAG swap router paths. As a router executor, this function only executes the DAG swap and does not handle the commission.
+    /// @param receiver Address receiving the swapped tokens.
+    /// @param refundTo Address receiving the refunded tokens.
     /// @param baseRequest Basic swap details including tokens, amounts, and deadline.
     /// @param paths Detailed routing information for executing the swap across different paths or protocols.
     /// @return returnAmount The total amount of destination tokens received from the swap.
-    /// @dev This function enables users to perform token swaps with complex routing directly to a specified address,
-    /// optimizing for best returns and accommodating specific trading strategies.
-    function smartSwapTo(
+    function swapTo(
         address receiver,
+        address refundTo,
         BaseRequest calldata baseRequest,
         RouterPath[][] calldata paths
     )
@@ -387,51 +365,7 @@ contract DexRouterDagExecutor is
         isExpired(baseRequest.deadLine)
         returns (uint256 returnAmount)
     {
-        return
-            _smartSwapTo(
-                msg.sender,
-                receiver,
-                receiver,
-                baseRequest,
-                paths
-            );
-    }
-
-    function _smartSwapTo(
-        address payer,
-        address refundTo,
-        address receiver,
-        BaseRequest memory baseRequest,
-        RouterPath[][] memory paths
-    ) internal returns (uint256) {
-        require(receiver != address(0), "not addr(0)");
-        CommissionInfo memory commissionInfo = _getCommissionInfo();
-
-        (
-            address middleReceiver,
-            uint256 balanceBefore
-        ) = _doCommissionFromToken(
-                commissionInfo,
-                _bytes32ToAddress(baseRequest.fromToken),
-                payer,
-                receiver,
-                baseRequest.fromTokenAmount
-            );
-        address _payer = payer; // avoid stack too deep
-        uint256 swappedAmount = _smartSwapInternal(
-            baseRequest,
-            paths,
-            _payer,
-            refundTo,
-            middleReceiver
-        );
-
-        uint256 commissionAmount = _doCommissionToToken(
-            commissionInfo,
-            receiver,
-            balanceBefore
-        );
-        return swappedAmount - commissionAmount;
+        return _swapInternal(baseRequest, paths, refundTo, receiver);
     }
 
     /**
