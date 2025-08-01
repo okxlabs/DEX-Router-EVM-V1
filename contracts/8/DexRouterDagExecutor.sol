@@ -267,7 +267,7 @@ contract DexRouterDagExecutor is
                 inputIndex := shr(184, and(rawData, _INPUT_INDEX_MASK))
             }
             bool noTransfer = paths[i].length == 1;
-            state.noTransfer[inputIndex] = noTransfer;
+            state.noTransfer[inputIndex] = inputIndex == 0 ? false : noTransfer;
             if (noTransfer) {
                 state.assetTo[inputIndex] = paths[i][0].assetTo;
             }
@@ -291,7 +291,7 @@ contract DexRouterDagExecutor is
         // ensure no tokens remain
         for (uint256 i = 0; i < nodeNum;) {
             require(
-                state.nodeTokens[i] == address(0)
+                state.nodeTokens[i] != address(0)
                     && IERC20(state.nodeTokens[i]).balanceOf(address(this)) == 0,
                 "node token remains"
             );
