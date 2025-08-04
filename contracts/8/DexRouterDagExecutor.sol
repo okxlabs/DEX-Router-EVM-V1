@@ -172,15 +172,16 @@ contract DexRouterDagExecutor is
         RouterPath[] memory paths,
         SwapState memory state
     ) private {
-        uint256 nodeBalance;
         address fromToken;
         uint256 nodeIndex;
         uint256 totalWeight;
+        uint256 nodeBalance;
+        uint256 accAmount;
         for (uint256 i = 0; i < paths.length; i++) {
-            bytes32 rawData = bytes32(paths[i].rawData);
             uint256 inputIndex;
             uint256 outputIndex;
             {
+                bytes32 rawData = bytes32(paths[i].rawData);
                 uint256 weight;
 
                 assembly {
@@ -189,6 +190,7 @@ contract DexRouterDagExecutor is
                     outputIndex := shr(176, and(rawData, _OUTPUT_INDEX_MASK))
                 }
 
+                // check dag consistency
                 if (i == 0) {
                     fromToken = _bytes32ToAddress(paths[i].fromToken);
                     nodeIndex = inputIndex;
@@ -207,15 +209,23 @@ contract DexRouterDagExecutor is
                     );
                 }
 
-                if (i == 0 && (nodeIndex == 0 || !state.onlyOneOutput[nodeIndex])) {
+                // handle transfer
+                bool needTransfer = nodeIndex == 0 || !state.onlyOneOutput[nodeIndex];
+                if (i == 0 && needTransfer) {
                     nodeBalance = IERC20(fromToken).balanceOf(address(this));
                     require(nodeBalance > 0, "node balance must be greater than 0");
                 }
 
-                if (nodeIndex == 0 || !state.onlyOneOutput[nodeIndex]) {
-                    uint256 _fromTokenAmount = weight == 10_000 // TODO for last edge, use the share balance
-                        ? nodeBalance
-                        : (nodeBalance * weight) / 10_000;
+                if (needTransfer) {
+                    uint256 _fromTokenAmount;
+                    if (i == paths.length - 1) {
+                        _fromTokenAmount = nodeBalance - accAmount;
+                    } else {
+                        _fromTokenAmount = weight == 10_000
+                            ? nodeBalance
+                            : (nodeBalance * weight) / 10_000;
+                        accAmount += _fromTokenAmount;
+                    }
                     SafeERC20.safeTransfer(
                         IERC20(fromToken),
                         paths[i].assetTo,
@@ -368,6 +378,8 @@ contract DexRouterDagExecutor is
             "Route: fromTokenAmount must be > 0"
         );
         address fromToken = _bytes32ToAddress(_baseRequest.fromToken);
+        address fromTokenFromPaths = _bytes32ToAddress(paths[0][0].fromToken);
+        require(fromToken == fromTokenFromPaths, "fromToken inconsistent");
         uint256 fromTokenBalance = IERC20(fromToken).balanceOf(address(this));
         require(_baseRequest.fromTokenAmount >= fromTokenBalance, "fromTokenAmount must be >= fromTokenBalance");
 
