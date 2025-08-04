@@ -60,8 +60,8 @@ contract DexRouterDagExecutor is
         address[] nodeTokens;
         /// @notice node index -> processed flag, to record the processed status of each node
         bool[] processed;
-        /// @notice node index -> noTransfer flag, to identify whether need to transfer token to assetTo when execute the node
-        bool[] noTransfer;
+        /// @notice node index -> onlyOneOutput flag, to identify whether the node has only one output edge
+        bool[] onlyOneOutput;
         /// @notice node index -> assetTo address, to record the assetTo address of each node which only has one output edge
         address[] assetTo;
     }
@@ -88,7 +88,7 @@ contract DexRouterDagExecutor is
         state.nodeNum = _nodeNum;
         state.nodeTokens = new address[](_nodeNum);
         state.processed = new bool[](_nodeNum);
-        state.noTransfer = new bool[](_nodeNum);
+        state.onlyOneOutput = new bool[](_nodeNum);
         state.assetTo = new address[](_nodeNum);
     }
 
@@ -172,11 +172,9 @@ contract DexRouterDagExecutor is
         RouterPath[] memory paths,
         SwapState memory state
     ) private {
-        address fromToken = _bytes32ToAddress(paths[0].fromToken);
-        uint256 nodeBalance = IERC20(fromToken).balanceOf(address(this));
-        require(nodeBalance > 0, "node balance must be greater than 0");
-
-        uint256 nodeInputIndex;
+        uint256 nodeBalance;
+        address fromToken;
+        uint256 nodeIndex;
         uint256 totalWeight;
         for (uint256 i = 0; i < paths.length; i++) {
             bytes32 rawData = bytes32(paths[i].rawData);
@@ -192,10 +190,11 @@ contract DexRouterDagExecutor is
                 }
 
                 if (i == 0) {
-                    nodeInputIndex = inputIndex;
+                    fromToken = _bytes32ToAddress(paths[i].fromToken);
+                    nodeIndex = inputIndex;
                 } else {
                     require(fromToken == _bytes32ToAddress(paths[i].fromToken), "node fromToken inconsistent");
-                    require(inputIndex == nodeInputIndex, "node inputIndex inconsistent");
+                    require(inputIndex == nodeIndex, "node inputIndex inconsistent");
                     require(!state.processed[outputIndex], "output node processed");
                 }
                 require(inputIndex < outputIndex, "inputIndex gte outputIndex");
@@ -208,8 +207,13 @@ contract DexRouterDagExecutor is
                     );
                 }
 
-                if (!state.noTransfer[inputIndex]) {
-                    uint256 _fromTokenAmount = weight == 10_000
+                if (i == 0 && (nodeIndex == 0 || !state.onlyOneOutput[nodeIndex])) {
+                    nodeBalance = IERC20(fromToken).balanceOf(address(this));
+                    require(nodeBalance > 0, "node balance must be greater than 0");
+                }
+
+                if (nodeIndex == 0 || !state.onlyOneOutput[nodeIndex]) {
+                    uint256 _fromTokenAmount = weight == 10_000 // TODO for last edge, use the share balance
                         ? nodeBalance
                         : (nodeBalance * weight) / 10_000;
                     SafeERC20.safeTransfer(
@@ -221,10 +225,10 @@ contract DexRouterDagExecutor is
             }
 
             address to = address(this);
-            if (outputIndex == state.nodeNum && !isToNative) {
-                to = receiver;
-            } else if (outputIndex < state.nodeNum && state.noTransfer[outputIndex]) {
+            if (outputIndex < state.nodeNum && state.onlyOneOutput[outputIndex]) {
                 to = state.assetTo[outputIndex];
+            } else if (outputIndex == state.nodeNum && !isToNative) {
+                to = receiver;
             }
 
             _exeAdapter(
@@ -233,10 +237,10 @@ contract DexRouterDagExecutor is
                 refundTo
             );
         }
-        require(!state.processed[nodeInputIndex], "input node processed");
+        require(!state.processed[nodeIndex], "input node processed");
 
-        state.nodeTokens[nodeInputIndex] = fromToken;
-        state.processed[nodeInputIndex] = true;
+        state.nodeTokens[nodeIndex] = fromToken;
+        state.processed[nodeIndex] = true;
     }
 
     /// @notice The executor holds all the potential input tokens before _exeDagSwap.
@@ -253,10 +257,10 @@ contract DexRouterDagExecutor is
         uint256 nodeNum = paths.length;
         SwapState memory state = _initSwapState(nodeNum);
 
-        // init state.noTransfer, inputIndex consistency is guaranteed by _exeNode
-        // noTransfer[i]==true means:
+        // init state.onlyOneOutput, inputIndex consistency is guaranteed by _exeNode
+        // onlyOneOutput[i]==true means:
         // 1. when execute the input edge of node i, the to address need to be the assetTo of output edge of node i.
-        // 2. when execute the output edge of node i, the token is no need to transfer to assetTo.
+        // 2. when execute the output edge of node i, the token is no need to transfer to assetTo (if i != 0).
         uint256 inputIndex;
         bytes32 rawData;
         for (uint256 i = 0; i < nodeNum;) {
@@ -266,13 +270,11 @@ contract DexRouterDagExecutor is
             assembly {
                 inputIndex := shr(184, and(rawData, _INPUT_INDEX_MASK))
             }
-            bool noTransfer = paths[i].length == 1;
-            state.noTransfer[inputIndex] = inputIndex == 0 ? false : noTransfer;
-            if (noTransfer) {
+            bool onlyOneOutput = paths[i].length == 1;
+            state.onlyOneOutput[inputIndex] = onlyOneOutput;
+            if (onlyOneOutput) {
                 state.assetTo[inputIndex] = paths[i][0].assetTo;
             }
-
-            // !!!notice: check paths[i].fromToken != paths[i+1].fromToken cann't resolve node balance conflict
 
             unchecked {
                 ++i;

@@ -187,7 +187,7 @@ contract DexRouterDagExecutorPoc is Test {
         DexRouterDagExecutor.RouterPath[][] memory paths = new DexRouterDagExecutor.RouterPath[][](3);
         paths[0] = new DexRouterDagExecutor.RouterPath[](2);
         paths[0][0] = _generateRouterPath(tokens[0], tokens[3], UniVersion.UniV2, 0, 3, 4000);
-        paths[0][1] = _generateRouterPath(tokens[0], tokens[1], UniVersion.UniV2, 0, 2, 6000);
+        paths[0][1] = _generateRouterPath(tokens[0], tokens[1], UniVersion.UniV2, 0, 1, 6000);
         paths[1] = new DexRouterDagExecutor.RouterPath[](2);
         paths[1][0] = _generateRouterPath(tokens[1], tokens[3], UniVersion.UniV2, 1, 3, 2000);
         paths[1][1] = _generateRouterPath(tokens[1], tokens[2], UniVersion.UniV3, 1, 2, 8000);
