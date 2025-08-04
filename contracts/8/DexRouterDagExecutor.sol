@@ -87,7 +87,7 @@ contract DexRouterDagExecutor is
     ) private pure returns (SwapState memory state) {
         state.nodeNum = _nodeNum;
         state.nodeTokens = new address[](_nodeNum);
-        state.processed = new bool[](_nodeNum);
+        state.processed = new bool[](_nodeNum + 1);
         state.onlyOneOutput = new bool[](_nodeNum);
         state.assetTo = new address[](_nodeNum);
     }
@@ -195,8 +195,8 @@ contract DexRouterDagExecutor is
                 } else {
                     require(fromToken == _bytes32ToAddress(paths[i].fromToken), "node fromToken inconsistent");
                     require(inputIndex == nodeIndex, "node inputIndex inconsistent");
-                    require(!state.processed[outputIndex], "output node processed");
                 }
+                require(!state.processed[outputIndex], "output node processed");
                 require(inputIndex < outputIndex, "inputIndex gte outputIndex");
                 require(inputIndex < state.nodeNum && outputIndex <= state.nodeNum, "node index out of range"); // @notice this also constraints that only one node has no output edge
                 totalWeight += weight;
