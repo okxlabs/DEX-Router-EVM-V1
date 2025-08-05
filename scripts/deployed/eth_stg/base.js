@@ -14,5 +14,5 @@ module.exports = {
     uniV2Factory: "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
     newExactOutImpl: "0x6490ea3f5f1889f576c6ebba6ac169b551d40a7b",
     preDexRouterExactOut: "0x38823A826eA5b9257f35b5A838A84a1c4afE478F",
-    newImpl: "0x61F376E43772C21dE2B8DF510a1f133ED3bb0DDb"
+    newImpl: "0x1599CF99B177E844dD182809D7A8F55E39972987"
 }

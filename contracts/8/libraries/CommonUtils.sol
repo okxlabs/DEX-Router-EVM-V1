@@ -16,6 +16,12 @@ abstract contract CommonUtils {
     uint256 internal constant _CALL_GAS_LIMIT = 5000;
     uint256 internal constant ORIGIN_PAYER =
         0x3ca20afc2ccc0000000000000000000000000000000000000000000000000000;
+    uint256 internal constant SWAP_AMOUNT =
+        0x00000000000000000000000000000000ffffffffffffffffffffffffffffffff;
+    uint256 internal constant _WETH_MASK =
+        0x4000000000000000000000000000000000000000000000000000000000000000;
+    uint256 internal constant _ONE_FOR_ZERO_MASK = 1 << 255; // Mask for identifying if the swap is one-for-zero
+    uint256 internal constant _WETH_UNWRAP_MASK = 1 << 253; // Mask for identifying if WETH should be unwrapped to ETH
 
     /// @dev WETH address is network-specific and needs to be changed before deployment.
     /// It can not be moved to immutable as immutables are not supported in assembly

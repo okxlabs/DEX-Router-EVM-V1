@@ -16,5 +16,5 @@ module.exports = {
     p2pTrading: "",
     newExactOutImpl: "0xb3382c52b408570a82948c63ada1b6FA745A86f8",
     preDexRouterExactOut: "0x974d1cF6FFA4fCE5a4d62955AFc02F45aAC29f35",
-    newImpl: "0x8392784b30af7c0E51d5349eFac23B021Ef0d454",
+    newImpl: "0xC589a4eD6A9fc3354d7eeF88bA87b51AFC272783",
 }

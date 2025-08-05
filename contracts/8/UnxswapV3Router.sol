@@ -14,8 +14,6 @@ import "./libraries/SafeCast.sol";
 contract UnxswapV3Router is IUniswapV3SwapCallback, CommonUtils {
     using Address for address payable;
 
-    uint256 internal constant _ONE_FOR_ZERO_MASK = 1 << 255; // Mask for identifying if the swap is one-for-zero
-    uint256 private constant _WETH_UNWRAP_MASK = 1 << 253; // Mask for identifying if WETH should be unwrapped to ETH
     bytes32 private constant _POOL_INIT_CODE_HASH =
         0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54; // Pool init code hash
     bytes32 private constant _FF_FACTORY = 0xff1F98431c8aD98523631AE4a59f267346ea31F9840000000000000000000000; // Factory address

@@ -8,13 +8,11 @@ import "./interfaces/IWETH.sol";
 import "./interfaces/IAdapter.sol";
 import "./interfaces/IApproveProxy.sol";
 import "./interfaces/IWNativeRelayer.sol";
-import "./interfaces/IUniV3.sol";
 
 import "./libraries/PMMLib.sol";
 import "./libraries/CommissionLib.sol";
 import "./libraries/EthReceiver.sol";
-import "./libraries/WrapETHSwap.sol";
-import "./libraries/CommonUtils.sol";
+import "./libraries/UniswapTokenInfoHelper.sol";
 
 /// @title DexRouterV1
 /// @notice Entrance of Split trading in Dex platform
@@ -23,10 +21,10 @@ contract DexRouter is
     EthReceiver,
     UnxswapRouter,
     UnxswapV3Router,
-    WrapETHSwap,
-    CommissionLib
+    CommissionLib,
+    UniswapTokenInfoHelper
 {
-    string public constant version = "v1.0.4-toB-commission";
+    string public constant version = "v1.0.5-tee";
     using UniversalERC20 for IERC20;
 
     struct BaseRequest {
@@ -54,8 +52,6 @@ contract DexRouter is
         require(deadLine >= block.timestamp, "Route: expired");
         _;
     }
-    /// @notice Restricts function access to addresses marked as priority.
-    /// Ensures that only addresses designated with specific privileges can execute the function.
 
     function _exeAdapter(
         bool reverse,
@@ -372,12 +368,11 @@ contract DexRouter is
     //------- Users Functions -------
     //-------------------------------
 
-    /// @notice Executes a smart swap based on the given order ID, supporting complex multi-path swaps.
+    /// @notice Executes a smart swap based on the given order ID, supporting complex multi-path swaps. For smartSwap, if fromToken or toToken is ETH, the address needs to be 0xEeee.
     /// @param orderId The unique identifier for the swap order, facilitating tracking and reference.
     /// @param baseRequest Struct containing the base parameters for the swap, including the source and destination tokens, amount, minimum return, and deadline.
     /// @param batchesAmount An array specifying the amount to be swapped in each batch, allowing for split operations.
     /// @param batches An array of RouterPath structs defining the routing paths for each batch, enabling swaps through multiple protocols or liquidity pools.
-    /// @param extraData Additional data required for some swaps, accommodating special instructions or parameters necessary for executing the swap.
     /// @return returnAmount The total amount of destination tokens received from executing the swap.
     /// @dev This function orchestrates a swap operation that may involve multiple steps, routes, or protocols based on the provided parameters.
     /// It's designed to ensure flexibility and efficiency in finding the best swap paths.
@@ -387,7 +382,7 @@ contract DexRouter is
         BaseRequest calldata baseRequest,
         uint256[] calldata batchesAmount,
         RouterPath[][] calldata batches,
-        PMMLib.PMMSwapRequest[] calldata extraData
+        PMMLib.PMMSwapRequest[] calldata // extraData
     )
         external
         payable
@@ -420,18 +415,15 @@ contract DexRouter is
         // solhint-disable-next-line no-unused-vars
         bytes32[] calldata pools
     ) external payable returns (uint256 returnAmount) {
-        emit SwapOrderId((srcToken & _ORDER_ID_MASK) >> 160);
-        return
-            _unxswapTo(
-                srcToken,
-                amount,
-                minReturn,
-                msg.sender,
-                msg.sender,
-                pools
-            );
+        return unxswapTo(
+            srcToken,
+            amount,
+            minReturn,
+            msg.sender,
+            pools
+        );
     }
-    /// @notice Executes a swap tailored for investment purposes, adjusting swap amounts based on the contract's balance.
+    /// @notice Executes a swap tailored for investment purposes, adjusting swap amounts based on the contract's balance. For smartSwap, if fromToken or toToken is ETH, the address needs to be 0xEeee.
     /// @param baseRequest Struct containing essential swap parameters like source and destination tokens, amounts, and deadline.
     /// @param batchesAmount Array indicating how much of the source token to swap in each batch, facilitating diversified investments.
     /// @param batches Detailed routing information for executing the swap across different paths or protocols.
@@ -461,7 +453,7 @@ contract DexRouter is
         BaseRequest memory baseRequest,
         uint256[] memory batchesAmount,
         RouterPath[][] memory batches,
-        PMMLib.PMMSwapRequest[] memory extraData,
+        PMMLib.PMMSwapRequest[] memory, // extraData
         address to,
         address refundTo
     )
@@ -510,40 +502,37 @@ contract DexRouter is
         uint256[] calldata pools
     ) external payable returns (uint256 returnAmount) {
         emit SwapOrderId((receiver & _ORDER_ID_MASK) >> 160);
-        return _uniswapV3SwapTo(msg.sender, receiver, amount, minReturn, pools);
+        (address srcToken, address toToken) = _getUniswapV3TokenInfo(msg.value > 0, pools);
+        return
+            _uniswapV3SwapTo(
+                msg.sender,
+                receiver,
+                srcToken,
+                toToken,
+                amount,
+                minReturn,
+                pools
+            );
     }
 
+    /// @notice If srcToken or toToken is ETH, the address needs to be 0xEeee. And for commission validation, ETH needs to be 0xEeee.
     function _uniswapV3SwapTo(
         address payer,
         uint256 receiver,
+        address srcToken,
+        address toToken,
         uint256 amount,
         uint256 minReturn,
         uint256[] calldata pools
     ) internal returns (uint256 returnAmount) {
         CommissionInfo memory commissionInfo = _getCommissionInfo();
-
-        // get token from pool
-        address srcToken;
-
-        if (msg.value > 0) {
-            srcToken = _ETH;
-        } else {
-            address poolAddr = address(uint160(pools[0] & _ADDRESS_MASK));
-            bool zeroForOne = (pools[0] & _ONE_FOR_ZERO_MASK) == 0;
-
-            if (zeroForOne) {
-                srcToken = IUniV3(poolAddr).token0();
-            } else {
-                srcToken = IUniV3(poolAddr).token1();
-            }
-        }
+        _validateCommissionInfo(commissionInfo, srcToken, toToken);
 
         (
             address middleReceiver,
             uint256 balanceBefore
         ) = _doCommissionFromToken(
                 commissionInfo,
-                srcToken,
                 payer,
                 address(uint160(receiver)),
                 amount
@@ -571,7 +560,6 @@ contract DexRouter is
     /// @param baseRequest Contains essential parameters for the swap such as source and destination tokens, amounts, and deadline.
     /// @param batchesAmount Array indicating amounts for each batch in the swap, allowing for split operations.
     /// @param batches Detailed routing information for executing the swap across different paths or protocols.
-    /// @param extraData Additional data required for certain swaps, accommodating specific protocol needs.
     /// @return returnAmount The total amount of destination tokens received from the swap.
     /// @dev This function enables users to perform token swaps with complex routing directly to a specified address,
     /// optimizing for best returns and accommodating specific trading strategies.
@@ -582,7 +570,7 @@ contract DexRouter is
         BaseRequest calldata baseRequest,
         uint256[] calldata batchesAmount,
         RouterPath[][] calldata batches,
-        PMMLib.PMMSwapRequest[] calldata extraData
+        PMMLib.PMMSwapRequest[] calldata // extraData
     )
         external
         payable
@@ -601,6 +589,7 @@ contract DexRouter is
             );
     }
 
+    /// @notice If fromToken or toToken is ETH, the address needs to be 0xEeee. And for commission validation, ETH needs to be 0xEeee.
     function _smartSwapTo(
         address payer,
         address refundTo,
@@ -612,12 +601,13 @@ contract DexRouter is
         require(receiver != address(0), "not addr(0)");
         CommissionInfo memory commissionInfo = _getCommissionInfo();
 
+        _validateCommissionInfo(commissionInfo, _bytes32ToAddress(baseRequest.fromToken), baseRequest.toToken);
+
         (
             address middleReceiver,
             uint256 balanceBefore
         ) = _doCommissionFromToken(
                 commissionInfo,
-                _bytes32ToAddress(baseRequest.fromToken),
                 payer,
                 receiver,
                 baseRequest.fromTokenAmount
@@ -639,7 +629,7 @@ contract DexRouter is
         );
         return swappedAmount - commissionAmount;
     }
-    /// @notice Executes a token swap using the Unxswap protocol, sending the output directly to a specified receiver.
+    /// @notice Executes a token swap using the Unxswap protocol, sending the output directly to a specified receiver. For unxswap, if srcToken is ETH, srcToken needs to be address(0).
     /// @param srcToken The source token to be swapped.
     /// @param amount The amount of the source token to be swapped.
     /// @param minReturn The minimum amount of destination tokens expected from the swap, ensuring the trade does not proceed under unfavorable conditions.
@@ -647,7 +637,6 @@ contract DexRouter is
     /// @param pools An array of pool identifiers to specify the swap route, optimizing for best rates.
     /// @return returnAmount The total amount of destination tokens received from the swap.
     /// @dev This function facilitates direct swaps using Unxswap, allowing users to specify custom swap routes and ensuring that the output is sent to a predetermined address. It is designed for scenarios where the user wants to directly receive the tokens in their wallet or another contract.
-
     function unxswapTo(
         uint256 srcToken,
         uint256 amount,
@@ -655,11 +644,21 @@ contract DexRouter is
         address receiver,
         // solhint-disable-next-line no-unused-vars
         bytes32[] calldata pools
-    ) external payable returns (uint256 returnAmount) {
+    ) public payable returns (uint256 returnAmount) {
         emit SwapOrderId((srcToken & _ORDER_ID_MASK) >> 160);
+
+        // validate token info
+        (address fromToken, address toToken) = _getUnxswapTokenInfo(msg.value > 0, pools);
+        address srcTokenAddr = _bytes32ToAddress(srcToken);
+        require(
+            (srcTokenAddr == fromToken && fromToken != _ETH) || (srcTokenAddr == address(0) && fromToken == _ETH),
+            "unxswap: token mismatch"
+        );
+        
         return
             _unxswapTo(
-                srcToken,
+                fromToken,
+                toToken,
                 amount,
                 minReturn,
                 msg.sender,
@@ -668,8 +667,10 @@ contract DexRouter is
             );
     }
 
+    /// @notice If srcToken is ETH, srcToken needs to be 0xEeee. And for commission validation, ETH needs to be 0xEeee. But _unxswapInternal needs srcToken to be address(0) if srcToken is ETH.
     function _unxswapTo(
-        uint256 srcToken,
+        address srcToken,
+        address toToken,
         uint256 amount,
         uint256 minReturn,
         address payer,
@@ -680,19 +681,20 @@ contract DexRouter is
         require(receiver != address(0), "not addr(0)");
         CommissionInfo memory commissionInfo = _getCommissionInfo();
 
+        _validateCommissionInfo(commissionInfo, srcToken, toToken);
+
         (
             address middleReceiver,
             uint256 balanceBefore
         ) = _doCommissionFromToken(
                 commissionInfo,
-                _bytes32ToAddress(srcToken),
                 payer,
                 receiver,
                 amount
             );
 
         uint256 swappedAmount = _unxswapInternal(
-            IERC20(address(uint160(srcToken & _ADDRESS_MASK))),
+            srcToken == _ETH ? IERC20(address(0)) : IERC20(srcToken),
             amount,
             minReturn,
             pools,
@@ -706,6 +708,199 @@ contract DexRouter is
             balanceBefore
         );
         return swappedAmount - commissionAmount;
+    }
+
+    /// @notice Executes a Uniswap V3 token swap to a specified receiver using structured base request parameters. For uniswapV3, if fromToken or toToken is ETH, the address needs to be 0xEeee.
+    /// @param orderId Unique identifier for the swap order, facilitating tracking and reference.
+    /// @param receiver The address that will receive the swapped tokens.
+    /// @param baseRequest Struct containing essential swap parameters including source token, destination token, amount, minimum return, and deadline.
+    /// @param pools An array of pool identifiers defining the Uniswap V3 swap route, with encoded swap direction and unwrap flags.
+    /// @return returnAmount The total amount of destination tokens received from the swap.
+    /// @dev This function validates token compatibility with the provided pool route and ensures proper swap execution.
+    /// It supports both ETH and ERC20 token swaps, with automatic WETH wrapping/unwrapping as needed.
+    /// The function verifies that fromToken matches the first pool and toToken matches the last pool in the route.
+    function uniswapV3SwapToWithBaseRequest(
+        uint256 orderId,
+        address receiver,
+        BaseRequest calldata baseRequest,
+        uint256[] calldata pools
+    )
+        external
+        payable
+        isExpired(baseRequest.deadLine)
+        returns (uint256 returnAmount)
+    {
+        emit SwapOrderId(orderId);
+
+        (address srcToken, address toToken) = _getUniswapV3TokenInfo(msg.value > 0, pools);
+
+        // validate fromToken and toToken from baseRequest
+        require(
+            _bytes32ToAddress(baseRequest.fromToken) == srcToken && baseRequest.toToken == toToken,
+            "uniswapV3: token mismatch"
+        );
+
+        return
+            _uniswapV3SwapTo(
+                msg.sender,
+                uint256(uint160(receiver)),
+                srcToken,
+                toToken,
+                baseRequest.fromTokenAmount,
+                baseRequest.minReturnAmount,
+                pools
+            );
+    }
+
+    /// @notice Executes a Unxswap token swap to a specified receiver using structured base request parameters. For unxswap, if fromToken or toToken is ETH, the address needs to be address(0).
+    /// @param orderId Unique identifier for the swap order, facilitating tracking and reference.
+    /// @param receiver The address that will receive the swapped tokens.
+    /// @param baseRequest Struct containing essential swap parameters including source token, destination token, amount, minimum return, and deadline.
+    /// @param pools An array of pool identifiers defining the Unxswap route, with encoded swap direction and WETH unwrap flags.
+    /// @return returnAmount The total amount of destination tokens received from the swap.
+    /// @dev This function validates token compatibility with the provided pool route and ensures proper swap execution.
+    /// It supports both ETH and ERC20 token swaps, with automatic WETH wrapping/unwrapping as needed.
+    /// The function verifies that toToken matches the expected output token from the last pool in the route.
+    function unxswapToWithBaseRequest(
+        uint256 orderId,
+        address receiver,
+        BaseRequest calldata baseRequest,
+        bytes32[] calldata pools
+    )
+        external
+        payable
+        isExpired(baseRequest.deadLine)
+        returns (uint256 returnAmount)
+    {
+        emit SwapOrderId(orderId);
+
+        (address fromToken, address toToken) = _getUnxswapTokenInfo(msg.value > 0, pools);
+
+        // validate fromToken and toToken from baseRequest
+        address fromTokenAddr = _bytes32ToAddress(baseRequest.fromToken);
+        require((fromTokenAddr == fromToken && fromToken != _ETH) || (fromTokenAddr == address(0) && fromToken == _ETH), "unxswap: fromToken mismatch");
+        require((baseRequest.toToken == toToken && toToken != _ETH) || (baseRequest.toToken == address(0) && toToken == _ETH), "unxswap: toToken mismatch");
+
+        return
+            _unxswapTo(
+                fromToken,
+                toToken,
+                baseRequest.fromTokenAmount,
+                baseRequest.minReturnAmount,
+                msg.sender,
+                receiver,
+                pools
+            );
+    }
+
+    /// @notice For commission validation, ETH needs to be 0xEeee.
+    function _swapWrap(
+        uint256 orderId,
+        address receiver,
+        bool reversed,
+        uint256 amount
+    ) internal {
+        require(amount > 0, "amount must be > 0");
+
+        CommissionInfo memory commissionInfo = _getCommissionInfo();
+
+        address srcToken = reversed ? _WETH : _ETH;
+        address toToken = reversed ? _ETH : _WETH;
+
+        _validateCommissionInfo(commissionInfo, srcToken, toToken);
+
+        (
+            address middleReceiver,
+            uint256 balanceBefore
+        ) = _doCommissionFromToken(
+                commissionInfo,
+                msg.sender,
+                receiver,
+                amount
+            );
+
+        if (reversed) {
+            IApproveProxy(_APPROVE_PROXY).claimTokens(
+                _WETH,
+                msg.sender,
+                _WNATIVE_RELAY,
+                amount
+            );
+            IWNativeRelayer(_WNATIVE_RELAY).withdraw(amount);
+            if (middleReceiver != address(this)) {
+                (bool success, ) = payable(middleReceiver).call{
+                    value: address(this).balance
+                }("");
+                require(success, "transfer native token failed");
+            }
+        } else {
+            if (!commissionInfo.isFromTokenCommission) {
+                require(msg.value == amount, "value not equal amount");
+            }
+            IWETH(_WETH).deposit{value: amount}();
+            if (middleReceiver != address(this)) {
+                SafeERC20.safeTransfer(IERC20(_WETH), middleReceiver, amount);
+            }
+        }
+
+        _doCommissionToToken(
+            commissionInfo,
+            receiver,
+            balanceBefore
+        );
+
+        emit SwapOrderId(orderId);
+        emit OrderRecord(
+            srcToken,
+            toToken,
+            tx.origin,
+            amount,
+            amount
+        );
+    }
+
+    /// @notice Executes a simple swap between ETH and WETH using encoded parameters.
+    /// @param orderId Unique identifier for the swap order, facilitating tracking and reference.
+    /// @param rawdata Encoded data containing swap direction and amount information using bit masks.
+    /// @dev This function supports bidirectional swaps between ETH and WETH with minimal gas overhead.
+    /// The rawdata parameter encodes both the direction (reversed flag) and amount using bit operations.
+    /// When reversed=false: ETH -> WETH, when reversed=true: WETH -> ETH.
+    function swapWrap(uint256 orderId, uint256 rawdata) external payable {
+        bool reversed;
+        uint128 amount;
+        assembly {
+            reversed := and(rawdata, _REVERSE_MASK)
+            amount := and(rawdata, SWAP_AMOUNT)
+        }
+        _swapWrap(orderId, msg.sender, reversed, amount);
+    }
+
+    /// @notice Executes a swap between ETH and WETH using structured base request parameters to a specified receiver.
+    /// @param orderId Unique identifier for the swap order, facilitating tracking and reference.
+    /// @param receiver The address that will receive the swapped tokens.
+    /// @param baseRequest Struct containing essential swap parameters including source token, destination token, amount, minimum return, and deadline.
+    /// @dev This function validates that the token pair is either ETH->WETH or WETH->ETH and executes the swap accordingly.
+    /// It extracts the amount from the baseRequest and determines the swap direction based on the token addresses.
+    function swapWrapToWithBaseRequest(
+        uint256 orderId,
+        address receiver,
+        BaseRequest calldata baseRequest
+    )
+        external
+        payable
+        isExpired(baseRequest.deadLine)
+    {
+        bool reversed;
+        address fromTokenAddr = address(uint160(baseRequest.fromToken));
+        if (fromTokenAddr == _ETH && baseRequest.toToken == _WETH) {
+            reversed = false;
+        } else if (fromTokenAddr == _WETH && baseRequest.toToken == _ETH) {
+            reversed = true;
+        } else {
+            revert("SwapWrap: invalid token pair");
+        }
+
+        _swapWrap(orderId, receiver, reversed, baseRequest.fromTokenAmount);
     }
 
     /**
