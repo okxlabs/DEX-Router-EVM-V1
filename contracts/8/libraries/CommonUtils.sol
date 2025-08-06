@@ -16,6 +16,12 @@ abstract contract CommonUtils {
     uint256 internal constant _CALL_GAS_LIMIT = 5000;
     uint256 internal constant ORIGIN_PAYER =
         0x3ca20afc2ccc0000000000000000000000000000000000000000000000000000;
+    uint256 internal constant SWAP_AMOUNT =
+        0x00000000000000000000000000000000ffffffffffffffffffffffffffffffff;
+    uint256 internal constant _WETH_MASK =
+        0x4000000000000000000000000000000000000000000000000000000000000000;
+    uint256 internal constant _ONE_FOR_ZERO_MASK = 1 << 255; // Mask for identifying if the swap is one-for-zero
+    uint256 internal constant _WETH_UNWRAP_MASK = 1 << 253; // Mask for identifying if WETH should be unwrapped to ETH
 
     /// @dev WETH address is network-specific and needs to be changed before deployment.
     /// It can not be moved to immutable as immutables are not supported in assembly
@@ -32,7 +38,7 @@ abstract contract CommonUtils {
     // CRO:     5C7F8A570d578ED84E63fdFA7b1eE72dEae1AE23
     // CFX:     14b2D3bC65e74DAE1030EAFd8ac30c533c976A9b
     // POLYZK   4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9
-    address public constant _WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address public constant _WETH = 0x7Bf88d2c0e32dE92CdaF2D43CcDc23e8Edfd5990;
     // address public constant _WETH = 0x5FbDB2315678afecb367f032d93F642f64180aa3;    // hardhat1
     // address public constant _WETH = 0x707531c9999AaeF9232C8FEfBA31FBa4cB78d84a;    // hardhat2
 
@@ -67,7 +73,7 @@ abstract contract CommonUtils {
     // CRO:     40aA958dd87FC8305b97f2BA922CDdCa374bcD7f
     // CFX:     40aA958dd87FC8305b97f2BA922CDdCa374bcD7f
     // POLYZK   d2F0aC2012C8433F235c8e5e97F2368197DD06C7
-    address public constant _WNATIVE_RELAY = 0x5703B683c7F928b721CA95Da988d73a3299d4757;
+    address public constant _WNATIVE_RELAY = 0x4D8d82F269A2704867b6cAf58d6e8389e3066eC9;
     // address public constant _WNATIVE_RELAY = 0x0B306BF915C4d645ff596e518fAf3F9669b97016;   // hardhat1
     // address public constant _WNATIVE_RELAY = 0x6A47346e722937B60Df7a1149168c0E76DD6520f;   // hardhat2
 

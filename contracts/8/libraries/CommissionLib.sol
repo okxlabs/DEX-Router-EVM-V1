@@ -146,7 +146,6 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
 
     function _doCommissionFromToken(
         CommissionInfo memory commissionInfo,
-        address srcToken,
         address payer,
         address receiver,
         uint256 inputAmount
@@ -341,18 +340,6 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 token := mload(add(commissionInfo, 0x80))
                 let isToB := mload(add(commissionInfo, 0xe0))
                 let hasNextRefer := gt(mload(add(commissionInfo, 0xa0)), 0)
-                if eq(
-                    or(
-                        eq(token, srcToken),
-                        and(eq(token, _ETH), eq(srcToken, 0))
-                    ),
-                    0
-                ) {
-                    _revertWithReason(
-                        0x00000017746f6b656e20616e6420737263206e6f74206d617463680000000000,
-                        0x5b
-                    ) // "token and src not match"
-                }
                 status := _getStatus(token, isToB, hasNextRefer)
             }
             let referrer1, referrer2, amount1, amount2
@@ -671,5 +658,18 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 }
             }
         }
+    }
+
+    function _validateCommissionInfo(
+        CommissionInfo memory commissionInfo,
+        address fromToken,
+        address toToken
+    ) internal pure override {
+        require(
+            (commissionInfo.isFromTokenCommission && commissionInfo.token == fromToken)
+                || (commissionInfo.isToTokenCommission && commissionInfo.token == toToken)
+                || (!commissionInfo.isFromTokenCommission && !commissionInfo.isToTokenCommission),
+            "Invalid commission info"
+        );
     }
 }
