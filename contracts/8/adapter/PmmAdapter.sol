@@ -29,6 +29,7 @@ contract PMMAdapter {
     using Strings for uint256;
     uint256 internal constant ORIGIN_PAYER =
         0x3ca20afc2ccc0000000000000000000000000000000000000000000000000000;
+    uint256 constant ADDRESS_MASK = 0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff;
 
     enum SignatureType {
         EIP712,
@@ -69,7 +70,7 @@ contract PMMAdapter {
 
         address _payerOrigin;
         if ((payerOrigin & ORIGIN_PAYER) == ORIGIN_PAYER) {
-            _payerOrigin = address(uint160(uint256(payerOrigin)));
+            _payerOrigin = address(uint160(uint256(payerOrigin) & ADDRESS_MASK));
         }
         uint256 amountLeft = IERC20(order.takerAsset).balanceOf(address(this));
         if (amountLeft > 0 && _payerOrigin != address(0)) {
