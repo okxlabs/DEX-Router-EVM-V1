@@ -2,7 +2,7 @@
 src = "contracts/8"
 out = "artifacts"
 
-test = "src/test2/"
+test = "src/tests/adapter/"
 
 libs = ["node_modules", "lib"]
 remappings = [

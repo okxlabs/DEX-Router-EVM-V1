@@ -10,11 +10,12 @@ import "../libraries/SafeERC20.sol";
 
 /// @title FluidLiteAdapter
 /// @notice FluidLiteAdapter is a contract that allows to swap between any token pair, including ETH.
-/// @dev The tokenIn needs to be held by adapter if it is not ETH. The FluidDexLite contract will call
-/// back the adapter to pay the ERC20 tokenIn. And for ETH, just use the msg.value. If the tokenOut is
-/// ETH, the ETH will directly be sent to the recipient. So the adapter needs to wrap the ETH to WETH if
-/// the tokenOut is WETH. The dexKey specifies the token pair, so whether the tokenIn is ETH or WETH,
-/// the adapter receives the WETH but will wrap it to ETH if the tokenIn in dexKey is ETH.
+/// @dev The tokenIn needs to be held before swap by adapter if it is not ETH. The FluidDexLite contract
+/// will call back the adapter to pay the ERC20 tokenIn. And for ETH, just use the value to pay. If the
+/// tokenOut is ETH, the ETH will directly be sent to the recipient. So the adapter needs to wrap the
+/// ETH to WETH and send the WETH to `to` address if the tokenOut is ETH. The dexKey specifies the token
+/// pair, so whether the tokenIn is ETH or WETH, the adapter receives the WETH but will wrap it to ETH
+/// if the tokenIn in dexKey is ETH.
 contract FluidLiteAdapter is IAdapter, IFluidDexLiteCallback {
     /// @dev specific flag for refund logic, "0x3ca20afc" is flexible and also used for commission, "ccc" mean refund
     uint256 constant ORIGIN_PAYER = 0x3ca20afc2ccc0000000000000000000000000000000000000000000000000000;
