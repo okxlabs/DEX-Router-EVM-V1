@@ -19,6 +19,7 @@ contract NativeV3Adapter is IAdapter, INativeV3SwapCallback {
     uint256 internal constant ORIGIN_PAYER =
         0x3ca20afc2ccc0000000000000000000000000000000000000000000000000000;
     address public immutable CREDIT_VAULT;
+    uint256 constant ADDRESS_MASK = 0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff;
 
     constructor(address creditVault) {
         CREDIT_VAULT = creditVault;
@@ -35,7 +36,7 @@ contract NativeV3Adapter is IAdapter, INativeV3SwapCallback {
 
         address _payerOrigin;
         if ((payerOrigin & ORIGIN_PAYER) == ORIGIN_PAYER) {
-            _payerOrigin = address(uint160(uint256(payerOrigin)));
+            _payerOrigin = address(uint160(uint256(payerOrigin) & ADDRESS_MASK));
         }
 
         // the fromToken and toToken in data are the underlying tokens
