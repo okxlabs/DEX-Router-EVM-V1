@@ -28,69 +28,20 @@ async function main() {
     let res2 = await TokenApproveProxy.allowedApprove(dexRouter)
     console.log("token approve proxy", res2)
     // check owner
-    const DexRouter = await ethers.getContractAt("DexRouter", dexRouter)
-    let owner = await DexRouter.owner()
-    console.log("dexrouter owner", owner)
+    // const DexRouter = await ethers.getContractAt("contracts/8/DexRouter.sol:DexRouter", dexRouter)
+    // let owner = await DexRouter.owner()
+    // console.log("dexrouter owner", owner)
     // check initialized
-    let res___ = await ethers.provider.getStorageAt(deployed.base.newImpl, 0)
-    console.log(res___)
-    const decodedInitialized____ = ethers.utils.defaultAbiCoder.decode(
-        ["uint"], // 
-        res___ // The raw storage slot data
-    )[0]; // Take the first (and only) decoded value
-    console.log("initialized", decodedInitialized____.toString() === ethers.BigNumber.from(1).toString());
+    // let res___ = await ethers.provider.getStorageAt(deployed.base.newImpl, 0)
+    // console.log(res___)
+    // const decodedInitialized____ = ethers.utils.defaultAbiCoder.decode(
+    //     ["uint"], // 
+    //     // res___ // The raw storage slot data
+    // )[0]; // Take the first (and only) decoded value
+    // console.log("initialized", decodedInitialized____.toString() === ethers.BigNumber.from(1).toString());
     // check xbridge
-    if (deployed.base.xbridge !== '') {
-        let xbridge = await DexRouter.priorityAddresses(deployed.base.xbridge)
-        console.log("xbridge priority set", xbridge)
-        let res = await ethers.provider.getStorageAt(deployed.base.xbridge, 203)
-        const decodedAddr_ = ethers.utils.defaultAbiCoder.decode(
-            ["address"], // The type we expect ("bool")
-            res // The raw storage slot data
-        )[0]; // Take the first (and only) decoded value
 
-        console.log("xbridge set dexrouter", decodedAddr_.toString().toLowerCase() == deployed.base.newImpl.toString().toLowerCase());
-    } else {
-        console.log("xbridge not support")
-    }
 
-    if (deployed.base.feeVaultUs && deployed.base.feeVaultUs !== '') {
-        const packedData_ = ethers.utils.solidityPack(
-            ['uint256', 'uint256'],
-            [dexRouter, 202]
-        );
-        let slot_ = ethers.utils.keccak256(packedData_);
-        let res_ = await ethers.provider.getStorageAt(deployed.base.feeVaultUs, slot_)
-        const decodedBool_ = ethers.utils.defaultAbiCoder.decode(
-            ["bool"], // The type we expect ("bool")
-            res_ // The raw storage slot data
-        )[0]; // Take the first (and only) decoded value
-        console.log("fee vault us set dexrotuer", decodedBool_)
-        let res2_ = await ethers.provider.getStorageAt(deployed.base.feeVaultNonUs, slot_)
-        const decodedBool2_ = ethers.utils.defaultAbiCoder.decode(
-            ["bool"], // The type we expect ("bool")
-            res2_ // The raw storage slot data
-        )[0]; // Take the first (and only) decoded value
-        console.log("fee vault non us set dexrotuer", decodedBool2_)
-
-        const packedData__ = ethers.utils.solidityPack(
-            ['uint256', 'uint256'],
-            [deployed.base.xbridge, 202]
-        );
-        let slot__ = ethers.utils.keccak256(packedData__);
-        let res__ = await ethers.provider.getStorageAt(deployed.base.feeVaultUs, slot__)
-        const decodedBool__ = ethers.utils.defaultAbiCoder.decode(
-            ["bool"], // The type we expect ("bool")
-            res__ // The raw storage slot data
-        )[0]; // Take the first (and only) decoded value
-        console.log("fee vault us set xbridge", decodedBool__)
-        let res2__ = await ethers.provider.getStorageAt(deployed.base.feeVaultNonUs, slot__)
-        const decodedBool2__ = ethers.utils.defaultAbiCoder.decode(
-            ["bool"], // The type we expect ("bool")
-            res2__ // The raw storage slot data
-        )[0]; // Take the first (and only) decoded value
-        console.log("fee vault non us set xbridge", decodedBool2__)
-    }
 
 }
 

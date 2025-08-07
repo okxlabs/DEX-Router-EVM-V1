@@ -17,7 +17,7 @@ fs_permissions = [{access = "read-write", path = "./"}]
 arb = "https://arb1.arbitrum.io/rpc"
 avax = "https://rpc.ankr.com/avalanche"
 base = "https://mainnet.base.org"
-bsc = "https://bsc-dataseed.bnbchain.org"
+bsc = "https://bnb-mainnet.g.alchemy.com/public"
 conflux = "https://evm.confluxrpc.com"
 cro = "https://evm-cronos.crypto.org"
 eth = "https://eth-mainnet.g.alchemy.com/v2/aMbWrR8EcmCGpF6rCSNk0P24wTZbbG7R"

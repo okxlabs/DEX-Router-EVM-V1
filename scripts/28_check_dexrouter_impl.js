@@ -4,7 +4,6 @@ const assert = require('assert');
 
 async function main() {
     // console.log(deployed);
-    console.log(await ethers.provider.getNetwork())
     let dexRouter = deployed.base.newImpl
     dexRouter = await ethers.getContractAt("DexRouter", dexRouter)
     let weth = await dexRouter._WETH()

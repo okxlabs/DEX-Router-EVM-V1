@@ -24,6 +24,8 @@ contract ThenaAdapterFix is IAdapter {
         uint256 reserve1;
         uint256 reserveIn;
         uint256 reserveOut;
+        address tokenIn;
+        address tokenOut;
     }
 
     struct SearchResult {
@@ -89,18 +91,21 @@ contract ThenaAdapterFix is IAdapter {
             reserve0: 0,
             reserve1: 0,
             reserveIn: 0,
-            reserveOut: 0
+            reserveOut: 0,
+            tokenIn: address(0),
+            tokenOut: address(0)
         });
         poolInfo.token0 = IPair(pool).token0();
         poolInfo.token1 = IPair(pool).token1();
         (poolInfo.reserve0, poolInfo.reserve1,) = IPair(pool).getReserves();
-        address tokenIn = zeroForOne ? poolInfo.token0 : poolInfo.token1;
+        poolInfo.tokenIn = zeroForOne ? poolInfo.token0 : poolInfo.token1;
+        poolInfo.tokenOut = zeroForOne ? poolInfo.token1 : poolInfo.token0;
         poolInfo.reserveIn = zeroForOne ? poolInfo.reserve0 : poolInfo.reserve1;
         poolInfo.reserveOut = zeroForOne ? poolInfo.reserve1 : poolInfo.reserve0;
-        uint256 amountIn = IERC20(tokenIn).balanceOf(pool) - poolInfo.reserveIn;
+        uint256 amountIn = IERC20(poolInfo.tokenIn).balanceOf(pool) - poolInfo.reserveIn;
         uint256 amountOut = IPair(pool).getAmountOut(
             amountIn,
-            tokenIn
+            poolInfo.tokenIn
         );
 
         if (!isStable) {
@@ -109,8 +114,8 @@ contract ThenaAdapterFix is IAdapter {
         } else {
             // stable pair
             SearchResult memory searchResult = _binarySearchSafeAmount(
-                poolInfo.token0,
-                poolInfo.token1,
+                poolInfo.tokenIn,
+                poolInfo.tokenOut,
                 poolInfo.reserveIn,
                 poolInfo.reserveOut,
                 amountIn,
@@ -138,16 +143,16 @@ contract ThenaAdapterFix is IAdapter {
     }
 
     function _binarySearchSafeAmount(
-        address token0,
-        address token1,
+        address tokenIn,
+        address tokenOut,
         uint256 reserveIn,
         uint256 reserveOut,
         uint256 amountIn,
         uint256 fee,
         uint256 originalAmountOut
     ) internal view returns (SearchResult memory) {
-        uint256 decimals0 = 10 ** IERC20(token0).decimals();
-        uint256 decimals1 = 10 ** IERC20(token1).decimals();
+        uint256 decimals0 = 10 ** IERC20(tokenIn).decimals();
+        uint256 decimals1 = 10 ** IERC20(tokenOut).decimals();
 
         uint256 kBefore = _calculateKWithDecimals(
             reserveIn,
