@@ -17,5 +17,5 @@ module.exports = {
     p2pTrading: "",
     proxyAdmin: "0xF7Dd3E6daB6aaf8a1e853bA00a3e57F60B79527b",
 
-    newImpl: "0x6733Eb2E75B1625F1Fe5f18aD2cB2BaBDA510d19",
+    newImpl: "0x69C236E021F5775B0D0328ded5EaC708E3B869DF",
 }
