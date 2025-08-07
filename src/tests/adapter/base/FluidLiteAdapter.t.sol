@@ -59,7 +59,7 @@ contract FluidLiteAdapterTest is AbstractAdapterTest {
         // tx: https://etherscan.io/tx/0xf0694745f7e58efff933f281ec97783177980891db8389e6288467a3c8a7b3b9
         cases[0] = SwapTestCase({
             networkId: "eth",
-            forkBlock: 23087438,
+            forkBlock: 23087442,
             fromToken: USDC,
             toToken: USDT,
             pool: FluidDexLite,
