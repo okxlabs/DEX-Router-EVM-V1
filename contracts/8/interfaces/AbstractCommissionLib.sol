@@ -27,7 +27,6 @@ abstract contract AbstractCommissionLib {
 
     function _doCommissionFromToken(
         CommissionInfo memory commissionInfo,
-        address srcToken,
         address payer,
         address receiver,
         uint256 inputAmount
@@ -38,4 +37,10 @@ abstract contract AbstractCommissionLib {
         address receiver,
         uint256 balanceBefore
     ) internal virtual returns (uint256);
+
+    function _validateCommissionInfo(
+        CommissionInfo memory commissionInfo,
+        address fromToken,
+        address toToken
+    ) internal pure virtual;
 }
