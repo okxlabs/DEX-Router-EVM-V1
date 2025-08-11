@@ -126,7 +126,7 @@ abstract contract DagRouter is CommonLib {
             }
         }
 
-        // ensure no token
+        // ensure no token residue
         for (uint256 i = 0; i < nodeNum;) {
             address token = _bytes32ToAddress(paths[i].fromToken);
             require(IERC20(token).balanceOf(address(this)) == 0, "token remains");
@@ -164,6 +164,12 @@ abstract contract DagRouter is CommonLib {
         uint256 totalWeight;
         swapState.accAmount = 0;
         address fromToken = _bytes32ToAddress(path.fromToken);
+        require(
+            path.mixAdapters.length == path.rawData.length &&
+            path.mixAdapters.length == path.extraData.length &&
+            path.mixAdapters.length == path.assetTo.length,
+            "path length mismatch"
+        );
         for (uint256 i = 0; i < path.mixAdapters.length; i++) {
             uint256 inputIndex;
             uint256 outputIndex;
