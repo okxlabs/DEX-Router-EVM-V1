@@ -245,7 +245,8 @@ abstract contract AbstractAdapterTest is Test {
             }
             // Check from token balance
             require(
-                finalFromBalance == initialFromBalance - testCase.amount,
+                finalFromBalance == initialFromBalance - testCase.amount || // Normal case
+                finalFromBalance - 1 == initialFromBalance - testCase.amount, // Adapter may leave for 1 wei for reduce gas cost
                 "From token balance mismatch"
             );
         }
