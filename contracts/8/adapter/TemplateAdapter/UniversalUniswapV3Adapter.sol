@@ -12,6 +12,7 @@ import {BaseUniversalUniswapV3Adapter} from "./BaseUniversalUniswapV3Adapter.sol
  * 1. Uniswap V3 Family:
  *    - Uniswap V3
  *    - Sheepdex
+ *    - Etherex
  *
  * 2. Algebra Family:
  *    - CamelotV3
