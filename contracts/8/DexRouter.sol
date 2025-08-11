@@ -5,7 +5,6 @@ import "./UnxswapRouter.sol";
 import "./UnxswapV3Router.sol";
 
 import "./interfaces/IWETH.sol";
-import "./interfaces/IAdapter.sol";
 import "./interfaces/IApproveProxy.sol";
 import "./interfaces/IWNativeRelayer.sol";
 
@@ -13,6 +12,7 @@ import "./libraries/PMMLib.sol";
 import "./libraries/CommissionLib.sol";
 import "./libraries/EthReceiver.sol";
 import "./libraries/UniswapTokenInfoHelper.sol";
+import "./DagRouter.sol";
 
 /// @title DexRouterV1
 /// @notice Entrance of Split trading in Dex platform
@@ -22,26 +22,11 @@ contract DexRouter is
     UnxswapRouter,
     UnxswapV3Router,
     CommissionLib,
-    UniswapTokenInfoHelper
+    UniswapTokenInfoHelper,
+    DagRouter
 {
     string public constant version = "v1.0.5-tee";
     using UniversalERC20 for IERC20;
-
-    struct BaseRequest {
-        uint256 fromToken;
-        address toToken;
-        uint256 fromTokenAmount;
-        uint256 minReturnAmount;
-        uint256 deadLine;
-    }
-
-    struct RouterPath {
-        address[] mixAdapters;
-        address[] assetTo;
-        uint256[] rawData;
-        bytes[] extraData;
-        uint256 fromToken;
-    }
 
     //-------------------------------
     //------- Modifier --------------
@@ -53,46 +38,6 @@ contract DexRouter is
         _;
     }
 
-    function _exeAdapter(
-        bool reverse,
-        address adapter,
-        address to,
-        address poolAddress,
-        bytes memory moreinfo,
-        address refundTo
-    ) internal {
-        if (reverse) {
-            (bool s, bytes memory res) = address(adapter).call(
-                abi.encodePacked(
-                    abi.encodeWithSelector(
-                        IAdapter.sellQuote.selector,
-                        to,
-                        poolAddress,
-                        moreinfo
-                    ),
-                    ORIGIN_PAYER + uint(uint160(refundTo))
-                )
-            );
-            if (!s) {
-                _revert(res);
-            }
-        } else {
-            (bool s, bytes memory res) = address(adapter).call(
-                abi.encodePacked(
-                    abi.encodeWithSelector(
-                        IAdapter.sellBase.selector,
-                        to,
-                        poolAddress,
-                        moreinfo
-                    ),
-                    ORIGIN_PAYER + uint(uint160(refundTo))
-                )
-            );
-            if (!s) {
-                _revert(res);
-            }
-        }
-    }
     //-------------------------------
     //------- Internal Functions ----
     //-------------------------------
@@ -207,71 +152,6 @@ contract DexRouter is
         }
     }
 
-    /// @notice Transfers tokens internally within the contract.
-    /// @param payer The address of the payer.
-    /// @param to The address of the receiver.
-    /// @param token The address of the token to be transferred.
-    /// @param amount The amount of tokens to be transferred.
-    /// @dev Handles the transfer of ERC20 tokens or native tokens within the contract.
-    function _transferInternal(
-        address payer,
-        address to,
-        address token,
-        uint256 amount
-    ) private {
-        if (payer == address(this)) {
-            SafeERC20.safeTransfer(IERC20(token), to, amount);
-        } else {
-            IApproveProxy(_APPROVE_PROXY).claimTokens(token, payer, to, amount);
-        }
-    }
-    /// @notice Transfers the specified token to the user.
-    /// @param token The address of the token to be transferred.
-    /// @param to The address of the receiver.
-    /// @dev Handles the withdrawal of tokens to the user, converting WETH to ETH if necessary.
-
-    function _transferTokenToUser(address token, address to) private {
-        if ((IERC20(token).isETH())) {
-            uint256 wethBal = IERC20(address(uint160(_WETH))).balanceOf(
-                address(this)
-            );
-            if (wethBal > 0) {
-                IWETH(address(uint160(_WETH))).transfer(
-                    _WNATIVE_RELAY,
-                    wethBal
-                );
-                IWNativeRelayer(_WNATIVE_RELAY).withdraw(wethBal);
-            }
-            if (to != address(this)) {
-                uint256 ethBal = address(this).balance;
-                if (ethBal > 0) {
-                    (bool success, ) = payable(to).call{value: ethBal}("");
-                    require(success, "transfer native token failed");
-                }
-            }
-        } else {
-            if (to != address(this)) {
-                uint256 bal = IERC20(token).balanceOf(address(this));
-                if (bal > 0) {
-                    SafeERC20.safeTransfer(IERC20(token), to, bal);
-                }
-            }
-        }
-    }
-
-    /// @notice Converts a uint256 value into an address.
-    /// @param param The uint256 value to be converted.
-    /// @return result The address obtained from the conversion.
-    /// @dev This function is used to extract an address from a uint256,
-    /// typically used when dealing with low-level data operations or when addresses are packed into larger data types.
-
-    function _bytes32ToAddress(
-        uint256 param
-    ) private pure returns (address result) {
-        assembly {
-            result := and(param, _ADDRESS_MASK)
-        }
-    }
     /// @notice Executes a complex swap based on provided parameters and paths.
     /// @param baseRequest Basic swap details including tokens, amounts, and deadline.
     /// @param batchesAmount Amounts for each swap batch.
@@ -903,19 +783,54 @@ contract DexRouter is
         _swapWrap(orderId, receiver, reversed, baseRequest.fromTokenAmount);
     }
 
-    /**
-     * @dev Reverts with returndata if present. Otherwise reverts with "FailedCall".
-     * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/c64a1edb67b6e3f4a15cca8909c9482ad33a02b0/contracts/utils/Address.sol#L135-L149
-     */
-    function _revert(bytes memory returndata) private pure {
-        // Look for revert reason and bubble it up if present
-        if (returndata.length > 0) {
-            // The easiest way to bubble the revert reason is using memory via assembly
-            assembly ("memory-safe") {
-                revert(add(returndata, 0x20), mload(returndata))
-            }
-        } else {
-            revert("adaptor call failed");
-        }
+    /// @notice Executes a DAG swap to a specified receiver using structured base request parameters.
+    /// @param orderId Unique identifier for the swap order, facilitating tracking and reference.
+    /// @param receiver The address that will receive the swapped tokens.
+    /// @param baseRequest Struct containing essential swap parameters including source token, destination token, amount, minimum return, and deadline.
+    /// @param paths An array of RouterPath structs defining the DAG swap route.
+    /// @return returnAmount The total amount of destination tokens received from the swap.
+    /// @dev This function validates token compatibility with the provided pool route and ensures proper swap execution.
+    function dagSwapTo(
+        uint256 orderId,
+        address receiver,
+        BaseRequest calldata baseRequest,
+        RouterPath[] calldata paths
+    )
+        external
+        payable
+        isExpired(baseRequest.deadLine)
+        returns (uint256 returnAmount)
+    {
+        emit SwapOrderId(orderId);
+
+        require(receiver != address(0), "not addr(0)");
+
+        CommissionInfo memory commissionInfo = _getCommissionInfo();
+        _validateCommissionInfo(commissionInfo, _bytes32ToAddress(baseRequest.fromToken), baseRequest.toToken);
+
+        (
+            address middleReceiver,
+            uint256 balanceBefore
+        ) = _doCommissionFromToken(
+                commissionInfo,
+                msg.sender,
+                receiver,
+                baseRequest.fromTokenAmount
+            );
+        uint256 swappedAmount = _dagSwapInternal(
+            baseRequest,
+            paths,
+            msg.sender,
+            msg.sender,
+            middleReceiver
+        );
+
+        uint256 commissionAmount = _doCommissionToToken(
+            commissionInfo,
+            receiver,
+            balanceBefore
+        );
+        return swappedAmount - commissionAmount;
+
     }
 }
