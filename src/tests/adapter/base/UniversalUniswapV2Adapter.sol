@@ -24,9 +24,10 @@ contract UniversalUniswapV2AdapterTest is AbstractAdapterTest {
         override
         returns (SwapTestCase[][] memory)
     {
-        SwapTestCase[][] memory cases = new SwapTestCase[][](2);
+        SwapTestCase[][] memory cases = new SwapTestCase[][](3);
         cases[0] = getApeSwapV2TestCases();
         cases[1] = getRDexV2TestCases();
+        cases[2] = getLynexTestCases();
 
         return cases;
     }
@@ -76,7 +77,7 @@ contract UniversalUniswapV2AdapterTest is AbstractAdapterTest {
     
         SwapTestCase[] memory cases = new SwapTestCase[](1);
         
-        // RDX uses 0.2% fee (998/1000)
+        // RDX uses 0.5% fee (995/1000)
         bytes memory rdxFee = abi.encode(995, 1000);
         
         // Test 1: RAC to BUSD
@@ -95,6 +96,35 @@ contract UniversalUniswapV2AdapterTest is AbstractAdapterTest {
             expectRevert: false,
             description: "RAC to BUSD on BSC",
             moreInfo: rdxFee,
+            fromTokenPreTo: address(0)
+        });
+        
+        return cases;
+    }
+
+    function getLynexTestCases() internal pure returns (SwapTestCase[] memory) {
+        address LYNX = 0x1a51b19CE03dbE0Cb44C1528E34a7EDD7771E9Af;
+        address USDC = 0x176211869cA2b568f2A7D4EE941E073a821EE1ff;
+
+        address LYNX_USDC_POOL = 0x3E78c1F766D7FE2c3dceF6aFe6609966540B6391;
+
+        // Lynex uses 0.5% fee (995/1000)
+        bytes memory lynexFee = abi.encode(995, 1000);
+        SwapTestCase[] memory cases = new SwapTestCase[](1);
+        
+        // https://lineascan.build/tx/0xc1de66fb17508e61d5c9e4925bae20b53ec809d837d5409260f08e88f241faf3
+        cases[0] = SwapTestCase({
+            networkId: "linea",
+            forkBlock: 21889650 - 1,
+            fromToken: USDC,
+            toToken: LYNX,
+            pool: LYNX_USDC_POOL,
+            amount: 1.748546 * 10 ** 6 + 1, // Add 1 wei cause adapter will leave 1 wei for reduce gas cost
+            expectedOutput: 156.966805548135144944 * 10 ** 18,
+            sellBase: true,
+            expectRevert: false,
+            description: "USDC to LYNX on Linea",
+            moreInfo: lynexFee,
             fromTokenPreTo: address(0)
         });
         

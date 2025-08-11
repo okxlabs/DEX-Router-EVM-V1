@@ -239,7 +239,8 @@ abstract contract AbstractAdapterTest is Test {
             // Check expected output if specified
             if (testCase.expectedOutput > 0) {
                 require(
-                    outputReceived == testCase.expectedOutput,
+                    outputReceived == testCase.expectedOutput || // Normal case
+                    outputReceived - 1 == testCase.expectedOutput, // Adapter may leave for 1 wei for reduce gas cost
                     "Output amount mismatch"
                 );
             }

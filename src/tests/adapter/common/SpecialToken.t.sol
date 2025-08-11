@@ -23,6 +23,8 @@ contract SpecialToken is Test {
     function _setupWealthyHolders() internal {
         // Aave aUSDT
         wealthyHolders["eth"][0x23878914EFE38d27C4D67Ab83ed1b93A74D4086a] = 0x18709E89BD403F470088aBDAcEbE86CC60dda12e; // Aave Collector
+        // linea LYNX
+        wealthyHolders["linea"][0x1a51b19CE03dbE0Cb44C1528E34a7EDD7771E9Af] = 0x20c9b776445c11e91F46aa048d57Dd9C2F4F6Fdb; // user
     }
 
     /**
