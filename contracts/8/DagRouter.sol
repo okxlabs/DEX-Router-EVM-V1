@@ -30,14 +30,15 @@ abstract contract DagRouter is CommonLib {
         BaseRequest calldata baseRequest,
         RouterPath[] calldata paths,
         address payer,
+        uint256 amount,
         address refundTo,
         address receiver
     ) internal returns (uint256 returnAmount) {
         // 1. transfer from token in
         BaseRequest memory _baseRequest = baseRequest;
         require(
-            _baseRequest.fromTokenAmount > 0,
-            "Route: fromTokenAmount must be > 0"
+            amount > 0,
+            "fromTokenAmount must be > 0"
         );
         address fromToken = _bytes32ToAddress(_baseRequest.fromToken);
         returnAmount = IERC20(_baseRequest.toToken).universalBalanceOf(
@@ -48,16 +49,23 @@ abstract contract DagRouter is CommonLib {
         // we do not need to judge according to fromToken.
         if (UniversalERC20.isETH(IERC20(fromToken))) {
             IWETH(address(uint160(_WETH))).deposit{
-                value: _baseRequest.fromTokenAmount
+                value: amount
             }();
             payer = address(this);
         }
 
         // 2. check and execute dag swap
-        require(paths.length > 0, "paths must be > 0");
-        address firstNodeToken = _bytes32ToAddress(paths[0].fromToken);
-        require(fromToken == firstNodeToken || (fromToken == _ETH && firstNodeToken == _WETH), "fromToken mismatch");
-        _exeDagSwap(payer, receiver, refundTo, _baseRequest.fromTokenAmount, IERC20(_baseRequest.toToken).isETH(), paths);
+        {
+            require(paths.length > 0, "paths must be > 0");
+            address firstNodeToken = _bytes32ToAddress(paths[0].fromToken);
+            require(fromToken == firstNodeToken || (fromToken == _ETH && firstNodeToken == _WETH), "fromToken mismatch");
+            uint256 firstNodeIndex = paths[0].rawData[0];
+            assembly {
+                firstNodeIndex := shr(184, and(firstNodeIndex, _INPUT_INDEX_MASK))
+            }
+            require(firstNodeIndex == 0, "first node index must be 0");
+        }
+        _exeDagSwap(payer, receiver, refundTo, amount, IERC20(_baseRequest.toToken).isETH(), paths);
 
         // 3. transfer tokens to receiver
         _transferTokenToUser(_baseRequest.toToken, receiver);
@@ -165,6 +173,7 @@ abstract contract DagRouter is CommonLib {
         uint256 totalWeight;
         swapState.accAmount = 0;
         address fromToken = _bytes32ToAddress(path.fromToken);
+        require(path.mixAdapters.length > 0, "edge length must be > 0");
         require(
             path.mixAdapters.length == path.rawData.length &&
             path.mixAdapters.length == path.extraData.length &&
@@ -192,7 +201,7 @@ abstract contract DagRouter is CommonLib {
                 }
                 require(!swapState.processed[outputIndex], "node processed");
                 require(inputIndex < outputIndex, "inputIndex gte outputIndex");
-                require(inputIndex < swapState.nodeNum && outputIndex <= swapState.nodeNum, "node index out of range"); // @notice this also constraints that only one node has no output edge
+                require(outputIndex <= swapState.nodeNum, "node index out of range"); // this also constraints that only one node has no output edge
                 totalWeight += weight;
                 if (i == path.mixAdapters.length - 1) {
                     require(

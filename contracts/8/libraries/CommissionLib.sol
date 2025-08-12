@@ -672,4 +672,23 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
             "Invalid commission info"
         );
     }
+
+    function _calculateCommissionAmount(
+        CommissionInfo memory commissionInfo,
+        uint256 inputAmount
+    ) internal pure override returns (uint256 commissionAmount) {
+        assembly ("memory-safe") {
+            let rate1 := mload(add(commissionInfo, 0x40))
+            let rate2 := mload(add(commissionInfo, 0xa0))
+            let amount1 := div(
+                mul(inputAmount, rate1),
+                sub(DENOMINATOR, add(rate1, rate2))
+            )
+            let amount2 := div(
+                mul(inputAmount, rate2),
+                sub(DENOMINATOR, add(rate1, rate2))
+            )
+            commissionAmount := add(amount1, amount2)
+        }
+    }
 }

@@ -8,7 +8,7 @@ import "@dex/TokenApproveProxy.sol";
 import "@dex/utils/WNativeRelayer.sol";
 import "@dex/libraries/SafeERC20.sol";
 
-contract DagRouterBaseTest is Test {
+contract DagRouterTestBase is Test {
     enum UniVersion {
         UniV2,
         UniV3

@@ -817,10 +817,17 @@ contract DexRouter is
                 receiver,
                 baseRequest.fromTokenAmount
             );
+
+        // calculate actual fromTokenAmount and swap
+        uint256 fromTokenCommissionAmount;
+        if (commissionInfo.isFromTokenCommission) {
+            fromTokenCommissionAmount = _calculateCommissionAmount(commissionInfo, baseRequest.fromTokenAmount);
+        }
         uint256 swappedAmount = _dagSwapInternal(
             baseRequest,
             paths,
             msg.sender,
+            baseRequest.fromTokenAmount - fromTokenCommissionAmount,
             msg.sender,
             middleReceiver
         );

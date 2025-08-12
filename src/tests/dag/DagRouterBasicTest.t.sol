@@ -2,9 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "./DagRouterBaseTest.t.sol";
+import "./DagRouterTestBase.t.sol";
 
-contract DagRouterTest is DagRouterBaseTest {
+contract DagRouterBasicTest is DagRouterTestBase {
 
     /*
      *  100% A(WETH) → B(DAI)
