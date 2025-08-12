@@ -6,6 +6,7 @@ import "@dex/DexRouter.sol";
 import "@dex/TokenApprove.sol";
 import "@dex/TokenApproveProxy.sol";
 import "@dex/utils/WNativeRelayer.sol";
+import "@dex/libraries/SafeERC20.sol";
 
 contract DagRouterBaseTest is Test {
     enum UniVersion {
@@ -73,7 +74,7 @@ contract DagRouterBaseTest is Test {
             );
         } else {
             deal(_token0, _user, _amount);
-            IERC20(_token0).approve(address(tokenApprove), _amount);
+            SafeERC20.safeApprove(IERC20(_token0), address(tokenApprove), _amount);
             console2.log(
                 "%s balance begin: %d",
                 IERC20(_token0).symbol(),
@@ -556,5 +557,252 @@ contract DagRouterBaseTest is Test {
             weight: 10000
         });
         paths[0] = _generateRouterPath(node0);
+    }
+
+    /*
+     *  10% A(USDC) → D(WETH)
+     *  40% A(USDC) → C(USDT)
+     *  50% A(USDC) → B(DAI) → C(USDT)
+     *          ↳ 100% C(USDT) → D(WETH)  
+    */
+    function _generatePathCase2_USDC2WETH() internal view returns (DexRouter.RouterPath[] memory paths) {
+        paths = new DexRouter.RouterPath[](3);
+        RouterPathParam[] memory node0 = new RouterPathParam[](3);
+        node0[0] = RouterPathParam({
+            fromToken: tokens[3],
+            toToken: tokens[0],
+            uniVersion: UniVersion.UniV2,
+            inputIndex: 0,
+            outputIndex: 3,
+            weight: 1000
+        });
+        node0[1] = RouterPathParam({
+            fromToken: tokens[3],
+            toToken: tokens[2],
+            uniVersion: UniVersion.UniV2,
+            inputIndex: 0,
+            outputIndex: 2,
+            weight: 4000
+        });
+        node0[2] = RouterPathParam({
+            fromToken: tokens[3],
+            toToken: tokens[1],
+            uniVersion: UniVersion.UniV2,
+            inputIndex: 0,
+            outputIndex: 1,
+            weight: 5000
+        });
+        paths[0] = _generateRouterPath(node0);
+        RouterPathParam[] memory node1 = new RouterPathParam[](1);
+        node1[0] = RouterPathParam({
+            fromToken: tokens[1],
+            toToken: tokens[2],
+            uniVersion: UniVersion.UniV3,
+            inputIndex: 1,
+            outputIndex: 2,
+            weight: 10000
+        });
+        paths[1] = _generateRouterPath(node1);
+        RouterPathParam[] memory node2 = new RouterPathParam[](1);
+        node2[0] = RouterPathParam({
+            fromToken: tokens[2],
+            toToken: tokens[0],
+            uniVersion: UniVersion.UniV2,
+            inputIndex: 2,
+            outputIndex: 3,
+            weight: 10000
+        });
+        paths[2] = _generateRouterPath(node2);
+    }
+
+    /*
+     *  40% A(USDC) → D(WETH)  
+     *  60% A(USDC) → B(DAI)  
+     *      ↳ 20% B(DAI) → D(WETH)  
+     *      ↳ 80% B(DAI) → C(USDT) → D(WETH)
+    */
+    function _generatePathCase3_USDC2WETH() internal view returns (DexRouter.RouterPath[] memory paths) {
+        paths = new DexRouter.RouterPath[](3);
+        RouterPathParam[] memory node0 = new RouterPathParam[](2);
+        node0[0] = RouterPathParam({
+            fromToken: tokens[3],
+            toToken: tokens[0],
+            uniVersion: UniVersion.UniV2,
+            inputIndex: 0,
+            outputIndex: 3,
+            weight: 4000
+        });
+        node0[1] = RouterPathParam({
+            fromToken: tokens[3],
+            toToken: tokens[1],
+            uniVersion: UniVersion.UniV2,
+            inputIndex: 0,
+            outputIndex: 1,
+            weight: 6000
+        });
+        paths[0] = _generateRouterPath(node0);
+        RouterPathParam[] memory node1 = new RouterPathParam[](2);
+        node1[0] = RouterPathParam({
+            fromToken: tokens[1],
+            toToken: tokens[0],
+            uniVersion: UniVersion.UniV2,
+            inputIndex: 1,
+            outputIndex: 3,
+            weight: 2000
+        });
+        node1[1] = RouterPathParam({
+            fromToken: tokens[1],
+            toToken: tokens[2],
+            uniVersion: UniVersion.UniV3,
+            inputIndex: 1,
+            outputIndex: 2,
+            weight: 8000
+        });
+        paths[1] = _generateRouterPath(node1);
+        RouterPathParam[] memory node2 = new RouterPathParam[](1);
+        node2[0] = RouterPathParam({
+            fromToken: tokens[2],
+            toToken: tokens[0],
+            uniVersion: UniVersion.UniV2,
+            inputIndex: 2,
+            outputIndex: 3,
+            weight: 10000
+        });
+        paths[2] = _generateRouterPath(node2);
+    }
+
+    /*
+     *  90% A(WBTC) → B(USDT)  
+     *      ↳ 100% B(USDT) → C(USDC)  
+     *  10% A(WBTC) → C(USDC)  
+     *      ↳ 25% C(USDC) → D(DAI) → E(WETH)  
+     *      ↳ 75% C(USDC) → E(WETH)
+    */
+    function _generatePathCase4_WBTC2WETH() internal view returns (DexRouter.RouterPath[] memory paths) {
+        paths = new DexRouter.RouterPath[](4);
+        RouterPathParam[] memory node0 = new RouterPathParam[](2);
+        node0[0] = RouterPathParam({
+            fromToken: tokens[4],
+            toToken: tokens[2],
+            uniVersion: UniVersion.UniV3,
+            inputIndex: 0,
+            outputIndex: 1,
+            weight: 9000
+        });
+        node0[1] = RouterPathParam({
+            fromToken: tokens[4],
+            toToken: tokens[3],
+            uniVersion: UniVersion.UniV3,
+            inputIndex: 0,
+            outputIndex: 2,
+            weight: 1000
+        });
+        paths[0] = _generateRouterPath(node0);
+        RouterPathParam[] memory node1 = new RouterPathParam[](1);
+        node1[0] = RouterPathParam({
+            fromToken: tokens[2],
+            toToken: tokens[3],
+            uniVersion: UniVersion.UniV2,
+            inputIndex: 1,
+            outputIndex: 2,
+            weight: 10000
+        });
+        paths[1] = _generateRouterPath(node1);
+        RouterPathParam[] memory node2 = new RouterPathParam[](2);
+        node2[0] = RouterPathParam({
+            fromToken: tokens[3],
+            toToken: tokens[1],
+            uniVersion: UniVersion.UniV2,
+            inputIndex: 2,
+            outputIndex: 3,
+            weight: 2500
+        });
+        node2[1] = RouterPathParam({
+            fromToken: tokens[3],
+            toToken: tokens[0],
+            uniVersion: UniVersion.UniV2,
+            inputIndex: 2,
+            outputIndex: 4,
+            weight: 7500
+        });
+        paths[2] = _generateRouterPath(node2);
+        RouterPathParam[] memory node3 = new RouterPathParam[](1);
+        node3[0] = RouterPathParam({
+            fromToken: tokens[1],
+            toToken: tokens[0],
+            uniVersion: UniVersion.UniV2,
+            inputIndex: 3,
+            outputIndex: 4,
+            weight: 10000
+        });
+        paths[3] = _generateRouterPath(node3);
+    }
+
+    /*
+     *  B1 and B2 are same token at different nodes
+     *  90% A(USDT) → B1(DAI)  
+     *      ↳ 100% B1(DAI) → C(USDC)  
+     *  10% A(USDT) → C(USDC)  
+     *      ↳ 25% C(USDC) → B2(DAI) → D(WETH)
+     *      ↳ 75% C(USDC) → D(WETH)
+    */
+    function _generatePathCase5_USDT2WETH() internal view returns (DexRouter.RouterPath[] memory paths) {
+        paths = new DexRouter.RouterPath[](4);
+        RouterPathParam[] memory node0 = new RouterPathParam[](2);
+        node0[0] = RouterPathParam({
+            fromToken: tokens[2],
+            toToken: tokens[1],
+            uniVersion: UniVersion.UniV3,
+            inputIndex: 0,
+            outputIndex: 1,
+            weight: 9000
+        });
+        node0[1] = RouterPathParam({
+            fromToken: tokens[2],
+            toToken: tokens[3],
+            uniVersion: UniVersion.UniV2,
+            inputIndex: 0,
+            outputIndex: 2,
+            weight: 1000
+        });
+        paths[0] = _generateRouterPath(node0);
+        RouterPathParam[] memory node1 = new RouterPathParam[](1);
+        node1[0] = RouterPathParam({
+            fromToken: tokens[1],
+            toToken: tokens[3],
+            uniVersion: UniVersion.UniV3,
+            inputIndex: 1,
+            outputIndex: 2,
+            weight: 10000
+        });
+        paths[1] = _generateRouterPath(node1);
+        RouterPathParam[] memory node2 = new RouterPathParam[](2);
+        node2[0] = RouterPathParam({
+            fromToken: tokens[3],
+            toToken: tokens[1],
+            uniVersion: UniVersion.UniV2,
+            inputIndex: 2,
+            outputIndex: 3,
+            weight: 2500
+        });
+        node2[1] = RouterPathParam({
+            fromToken: tokens[3],
+            toToken: tokens[0],
+            uniVersion: UniVersion.UniV3,
+            inputIndex: 2,
+            outputIndex: 4,
+            weight: 7500
+        });
+        paths[2] = _generateRouterPath(node2);
+        RouterPathParam[] memory node3 = new RouterPathParam[](1);
+        node3[0] = RouterPathParam({
+            fromToken: tokens[1],
+            toToken: tokens[0],
+            uniVersion: UniVersion.UniV3,
+            inputIndex: 3,
+            outputIndex: 4,
+            weight: 10000
+        });
+        paths[3] = _generateRouterPath(node3);
     }
 }
