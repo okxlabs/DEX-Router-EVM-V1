@@ -17,14 +17,14 @@ contract DagRouterBaseTest is Test {
         address fromToken;
         address toToken;
         UniVersion uniVersion;
-        uint8 inputIndex,
-        uint8 outputIndex,
-        uint16 weight
+        uint8 inputIndex;
+        uint8 outputIndex;
+        uint16 weight;
     }
 
     // tokens
     address constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    address[] tokens = [
+    address[] public tokens = [
         0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2, // WETH, decimals=18
         0x6B175474E89094C44Da98b954EedeAC495271d0F, // DAI, decimals=18
         0xdAC17F958D2ee523a2206206994597C13D831ec7, // USDT, decimals=6
@@ -32,7 +32,7 @@ contract DagRouterBaseTest is Test {
         0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599  // WBTC, decimals=8
     ];
     // pools
-    address[] pools = [
+    address[] public pools = [
         0xA478c2975Ab1Ea89e8196811F51A7B7Ade33eB11, // WETH<>DAI, UniV2, token0 = DAI, token1 = WETH
         0xC2e9F25Be6257c210d7Adf0D4Cd6E3E881ba25f8, // WETH<>DAI, UniV3
         0x0d4a11d5EEaaC28EC3F61d100daF4d40471f1852, // WETH<>USDT, UniV2, token0 = WETH, token1 = USDT
@@ -48,7 +48,7 @@ contract DagRouterBaseTest is Test {
         0x99ac8cA7087fA4A2A1FB6357269965A2014ABc35  // USDC<>WBTC, UniV3
     ];
 
-    DexRouter dexRouter;
+    DexRouter public dexRouter;
     TokenApprove tokenApprove = TokenApprove(0x40aA958dd87FC8305b97f2BA922CDdCa374bcD7f); // ETH
     TokenApproveProxy tokenApproveProxy = TokenApproveProxy(0x70cBb871E8f30Fc8Ce23609E9E0Ea87B6b222F58); // ETH
     WNativeRelayer wNativeRelayer = WNativeRelayer(payable(0x5703B683c7F928b721CA95Da988d73a3299d4757)); // ETH
@@ -56,10 +56,10 @@ contract DagRouterBaseTest is Test {
     address UniversalUniV3Adapter = 0x6747BcaF9bD5a5F0758Cbe08903490E45DdfACB5;
     address UniV2Adapter = 0xc837BbEa8C7b0caC0e8928f797ceB04A34c9c06e;
 
-    address admin = vm.rememberKey(1);
-    address arnaud = vm.rememberKey(11111111);
+    address public admin = vm.rememberKey(1);
+    address public arnaud = vm.rememberKey(11111111);
 
-    uint256 oneEther = 1 * 10 ** 18;
+    uint256 public oneEther = 1 * 10 ** 18;
 
     // modifier to log fromToken and toToken balance of user
     modifier userWithToken(address _user, address _token0, address _token1, uint256 _amount) {
@@ -129,7 +129,7 @@ contract DagRouterBaseTest is Test {
         _;
         
         // Check ETH balance
-        uint256 ethBalance = address(dagExecutor).balance;
+        uint256 ethBalance = address(dexRouter).balance;
         if (ethBalance > 0) {
             console2.log("DexRouter ETH balance: %d", ethBalance);
         }
@@ -137,7 +137,7 @@ contract DagRouterBaseTest is Test {
         // Check ERC20 token balances
         for (uint256 i = 0; i < tokens.length; i++) {
             address token = tokens[i];
-            uint256 balance = IERC20(token).balanceOf(address(dagExecutor));
+            uint256 balance = IERC20(token).balanceOf(address(dexRouter));
             if (balance > 0) {
                 console2.log("DexRouter %s balance: %d", IERC20(token).symbol(), balance);
             }
@@ -163,7 +163,7 @@ contract DagRouterBaseTest is Test {
         address _fromToken,
         address _toToken,
         uint256 _amount
-    ) internal view returns (DexRouterDagExecutor.BaseRequest memory baseRequest) {
+    ) internal view returns (DexRouter.BaseRequest memory baseRequest) {
         baseRequest.fromToken = uint256(uint160(_fromToken));
         baseRequest.toToken = _toToken;
         baseRequest.fromTokenAmount = _amount;
@@ -181,7 +181,7 @@ contract DagRouterBaseTest is Test {
         path.extraData = new bytes[](length);
         path.fromToken = uint256(uint160(params[0].fromToken));
         for (uint256 i = 0; i < length; i++) {
-            path.rawData = uint256(bytes32(abi.encodePacked(uint64(0x00), uint8(params[i].inputIndex), uint8(params[i].outputIndex), uint16(params[i].weight), address(0))));
+            path.rawData[i] = uint256(bytes32(abi.encodePacked(uint64(0x00), uint8(params[i].inputIndex), uint8(params[i].outputIndex), uint16(params[i].weight), address(0))));
             if (params[i].uniVersion == UniVersion.UniV2) {
                 path.mixAdapters[i] = UniV2Adapter;
             } else if (params[i].uniVersion == UniVersion.UniV3) {

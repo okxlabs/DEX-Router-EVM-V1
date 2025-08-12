@@ -12,7 +12,7 @@ contract DagRouterTest is DagRouterBaseTest {
     function test_DagRouter_noETH_case1() public userWithToken(arnaud, tokens[0], tokens[1], oneEther) noResidue {
         DexRouter.BaseRequest memory baseRequest = _generateBaseRequest(tokens[0], tokens[1], oneEther);
         DexRouter.RouterPath[] memory paths = _generatePathCase1();
-        dexRouter.dagSwapTo(arnaud, arnaud, baseRequest, paths);
+        dexRouter.dagSwapTo(0, arnaud, baseRequest, paths);
     }
 
     /*
@@ -24,7 +24,7 @@ contract DagRouterTest is DagRouterBaseTest {
     function test_DagRouter_noETH_case2() public userWithToken(arnaud, tokens[0], tokens[3], oneEther) noResidue {
         DexRouter.BaseRequest memory baseRequest = _generateBaseRequest(tokens[0], tokens[3], oneEther);
         DexRouter.RouterPath[] memory paths = _generatePathCase2();
-        dexRouter.dagSwapTo(arnaud, arnaud, baseRequest, paths);
+        dexRouter.dagSwapTo(0, arnaud, baseRequest, paths);
     }
 
     /*
@@ -36,7 +36,7 @@ contract DagRouterTest is DagRouterBaseTest {
     function test_DagRouter_noETH_case3() public userWithToken(arnaud, tokens[0], tokens[3], oneEther) noResidue {
         DexRouter.BaseRequest memory baseRequest = _generateBaseRequest(tokens[0], tokens[3], oneEther);
         DexRouter.RouterPath[] memory paths = _generatePathCase3();
-        dexRouter.dagSwapTo(arnaud, arnaud, baseRequest, paths);
+        dexRouter.dagSwapTo(0, arnaud, baseRequest, paths);
     }
 
     /*
@@ -49,7 +49,7 @@ contract DagRouterTest is DagRouterBaseTest {
     function test_DagRouter_noETH_case4() public userWithToken(arnaud, tokens[0], tokens[4], oneEther) noResidue {
         DexRouter.BaseRequest memory baseRequest = _generateBaseRequest(tokens[0], tokens[4], oneEther);
         DexRouter.RouterPath[] memory paths = _generatePathCase4();
-        dexRouter.dagSwapTo(arnaud, arnaud, baseRequest, paths);
+        dexRouter.dagSwapTo(0, arnaud, baseRequest, paths);
     }
 
     /*
@@ -63,6 +63,6 @@ contract DagRouterTest is DagRouterBaseTest {
     function test_DagRouter_noETH_case5() public userWithToken(arnaud, tokens[0], tokens[2], oneEther) noResidue {
         DexRouter.BaseRequest memory baseRequest = _generateBaseRequest(tokens[0], tokens[2], oneEther);
         DexRouter.RouterPath[] memory paths = _generatePathCase5();
-        dexRouter.dagSwapTo(arnaud, arnaud, baseRequest, paths);
+        dexRouter.dagSwapTo(0, arnaud, baseRequest, paths);
     }
 }
