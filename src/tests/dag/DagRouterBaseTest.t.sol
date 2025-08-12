@@ -279,7 +279,7 @@ contract DagRouterBaseTest is Test {
     /*
      *  100% A(WETH) → B(DAI)
     */
-    function _generatePathCase1() internal view returns (DexRouter.RouterPath[] memory paths) {
+    function _generatePathCase1_WETH2DAI() internal view returns (DexRouter.RouterPath[] memory paths) {
         paths = new DexRouter.RouterPath[](1);
         RouterPathParam[] memory node0 = new RouterPathParam[](1);
         node0[0] = RouterPathParam({
@@ -299,7 +299,7 @@ contract DagRouterBaseTest is Test {
      *  50% A(WETH) → B(DAI) → C(USDT)
      *          ↳ 100% C(USDT) → D(USDC)  
     */
-    function _generatePathCase2() internal view returns (DexRouter.RouterPath[] memory paths) {
+    function _generatePathCase2_WETH2USDC() internal view returns (DexRouter.RouterPath[] memory paths) {
         paths = new DexRouter.RouterPath[](3);
         RouterPathParam[] memory node0 = new RouterPathParam[](3);
         node0[0] = RouterPathParam({
@@ -355,7 +355,7 @@ contract DagRouterBaseTest is Test {
      *      ↳ 20% B(DAI) → D(USDC)  
      *      ↳ 80% B(DAI) → C(USDT) → D(USDC)
     */
-    function _generatePathCase3() internal view returns (DexRouter.RouterPath[] memory paths) {
+    function _generatePathCase3_WETH2USDC() internal view returns (DexRouter.RouterPath[] memory paths) {
         paths = new DexRouter.RouterPath[](3);
         RouterPathParam[] memory node0 = new RouterPathParam[](2);
         node0[0] = RouterPathParam({
@@ -413,7 +413,7 @@ contract DagRouterBaseTest is Test {
      *      ↳ 25% C(USDT) → D(USDC) → E(WBTC)  
      *      ↳ 75% C(USDT) → E(WBTC)
     */
-    function _generatePathCase4() internal view returns (DexRouter.RouterPath[] memory paths) {
+    function _generatePathCase4_WETH2WBTC() internal view returns (DexRouter.RouterPath[] memory paths) {
         paths = new DexRouter.RouterPath[](4);
         RouterPathParam[] memory node0 = new RouterPathParam[](2);
         node0[0] = RouterPathParam({
@@ -481,7 +481,7 @@ contract DagRouterBaseTest is Test {
      *      ↳ 25% C(USDC) → B2(DAI) → D(USDT)
      *      ↳ 75% C(USDC) → D(USDT)
     */
-    function _generatePathCase5() internal view returns (DexRouter.RouterPath[] memory paths) {
+    function _generatePathCase5_WETH2USDT() internal view returns (DexRouter.RouterPath[] memory paths) {
         paths = new DexRouter.RouterPath[](4);
         RouterPathParam[] memory node0 = new RouterPathParam[](2);
         node0[0] = RouterPathParam({
@@ -539,5 +539,22 @@ contract DagRouterBaseTest is Test {
             weight: 10000
         });
         paths[3] = _generateRouterPath(node3);
+    }
+
+    /*
+     *  100% A(DAI) → B(WETH)
+    */
+    function _generatePathCase1_DAI2WETH() internal view returns (DexRouter.RouterPath[] memory paths) {
+        paths = new DexRouter.RouterPath[](1);
+        RouterPathParam[] memory node0 = new RouterPathParam[](1);
+        node0[0] = RouterPathParam({
+            fromToken: tokens[1],
+            toToken: tokens[0],
+            uniVersion: UniVersion.UniV2,
+            inputIndex: 0,
+            outputIndex: 1,
+            weight: 10000
+        });
+        paths[0] = _generateRouterPath(node0);
     }
 }

@@ -55,7 +55,8 @@ abstract contract DagRouter is CommonLib {
 
         // 2. check and execute dag swap
         require(paths.length > 0, "paths must be > 0");
-        require(fromToken == _bytes32ToAddress(paths[0].fromToken), "fromToken mismatch");
+        address firstNodeToken = _bytes32ToAddress(paths[0].fromToken);
+        require(fromToken == firstNodeToken || (fromToken == _ETH && firstNodeToken == _WETH), "fromToken mismatch");
         _exeDagSwap(payer, receiver, refundTo, _baseRequest.fromTokenAmount, IERC20(_baseRequest.toToken).isETH(), paths);
 
         // 3. transfer tokens to receiver
