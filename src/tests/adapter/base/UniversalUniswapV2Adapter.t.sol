@@ -77,8 +77,8 @@ contract UniversalUniswapV2AdapterTest is AbstractAdapterTest {
     
         SwapTestCase[] memory cases = new SwapTestCase[](1);
         
-        // RDX uses 0.5% fee (995/1000)
-        bytes memory rdxFee = abi.encode(995, 1000);
+        // RDX uses 0.3% fee (997/1000)
+        bytes memory rdxFee = abi.encode(997, 1000);
         
         // Test 1: RAC to BUSD
         // Using latest block (0) to avoid archive node requirement
@@ -91,7 +91,7 @@ contract UniversalUniswapV2AdapterTest is AbstractAdapterTest {
             toToken: BUSD,
             pool: RAC_BUSD_POOL,
             amount: 1000 * 10 ** 18,
-            expectedOutput: 0, // Dynamic
+            expectedOutput: 21.220422771913875190 * 10 ** 18,
             sellBase: true,
             expectRevert: false,
             description: "RAC to BUSD on BSC",

@@ -29,6 +29,8 @@ import {IUniswapV2Pair} from "@dex/interfaces/IUniswapV2Pair.sol";
  *   7. Netswap on Metis (likely 0.3% fee: 997/1000)
  *   8. Camelot V2 (if standard AMM: 997/1000)
  *   9. Rebase tokens (0.3% fee: 997/1000, may need sync)
+ *   10. RDex V2 (0.3% fee: 997/1000)
+ *   11. Lynex (0.5% fee: 995/1000)
  * 
  * Usage Examples:
  * ```solidity
