@@ -94,7 +94,7 @@ abstract contract DagRouter is CommonLib {
         address payer,
         address receiver,
         address refundTo,
-        uint256 fromTokenAmount,
+        uint256 firstNodeBalance,
         bool isToNative,
         RouterPath[] calldata paths
     ) private {
@@ -124,7 +124,7 @@ abstract contract DagRouter is CommonLib {
         }
 
         // execute nodes
-        uint256 nodeBalance = fromTokenAmount;
+        uint256 nodeBalance = firstNodeBalance;
         for (uint256 i = 0; i < nodeNum;) {
             _exeNode(payer, receiver, nodeBalance, isToNative, paths[i], swapState);
             payer = address(this); // payer need to be reset to address(this) for non-first node
@@ -180,7 +180,7 @@ abstract contract DagRouter is CommonLib {
             path.mixAdapters.length == path.assetTo.length,
             "path length mismatch"
         );
-        for (uint256 i = 0; i < path.mixAdapters.length; i++) {
+        for (uint256 i = 0; i < path.mixAdapters.length;) {
             uint256 inputIndex;
             uint256 outputIndex;
             uint256 weight;
@@ -254,6 +254,10 @@ abstract contract DagRouter is CommonLib {
                 to,
                 swapState.refundTo
             );
+
+            unchecked {
+                ++i;
+            }
         }
         require(!swapState.processed[nodeIndex], "input node processed");
 
