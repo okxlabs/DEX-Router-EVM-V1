@@ -85,9 +85,13 @@ contract UniV2ExactOutExecutor is IExecutor, CommonUtils {
         bytes32[] memory pools
     ) internal returns (AmountInfo[] memory amountInfos) {
         amountInfos = new AmountInfo[](pools.length);
-        for (uint256 i = pools.length - 1; i > 0; i--) {
-            uint256 amountOut = i == pools.length - 1 ? toTokenExpectedAmount : amountInfos[i + 1].amountIn;
-            amountInfos[i] = _getAmountInfo(pools[i], amountOut);
+        uint256 currentAmountOut = toTokenExpectedAmount;
+        
+        // Calculate backwards from the last pool to the first
+        for (uint256 i = pools.length; i > 0; i--) {
+            uint256 poolIndex = i - 1;
+            amountInfos[poolIndex] = _getAmountInfo(pools[poolIndex], currentAmountOut);
+            currentAmountOut = amountInfos[poolIndex].amountIn;
         }
         return amountInfos;
     }
