@@ -8,6 +8,7 @@ import "./interfaces/IWETH.sol";
 import "./interfaces/IAdapter.sol";
 import "./interfaces/IApproveProxy.sol";
 import "./interfaces/IWNativeRelayer.sol";
+import "./interfaces/IExecutor.sol";
 
 import "./libraries/PMMLib.sol";
 import "./libraries/CommissionLib.sol";
@@ -18,6 +19,7 @@ import "./libraries/UniswapTokenInfoHelper.sol";
 /// @notice Entrance of Split trading in Dex platform
 /// @dev Entrance of Split trading in Dex platform
 contract DexRouter is
+    IDexRouter,
     EthReceiver,
     UnxswapRouter,
     UnxswapV3Router,
@@ -27,21 +29,6 @@ contract DexRouter is
     string public constant version = "v1.0.5-tee";
     using UniversalERC20 for IERC20;
 
-    struct BaseRequest {
-        uint256 fromToken;
-        address toToken;
-        uint256 fromTokenAmount;
-        uint256 minReturnAmount;
-        uint256 deadLine;
-    }
-
-    struct RouterPath {
-        address[] mixAdapters;
-        address[] assetTo;
-        uint256[] rawData;
-        bytes[] extraData;
-        uint256 fromToken;
-    }
 
     //-------------------------------
     //------- Modifier --------------
@@ -52,6 +39,89 @@ contract DexRouter is
         require(deadLine >= block.timestamp, "Route: expired");
         _;
     }
+
+    function executeWithBaseRequest(
+        uint256 orderId,
+        address receiver,
+        BaseRequest memory baseRequest,
+        address assetTo,
+        uint256 toTokenExpectedAmount,
+        uint256 maxConsumeAmount,
+        address executor,
+        bytes memory executorData
+    ) external payable returns (uint256) {
+        emit SwapOrderId(orderId);
+        address fromToken = _bytes32ToAddress(baseRequest.fromToken);
+        
+        _validateExecuteRequest(fromToken, maxConsumeAmount, baseRequest.fromTokenAmount);
+        
+        CommissionInfo memory commissionInfo = _getCommissionInfo();
+        _validateCommissionInfo(commissionInfo, fromToken, baseRequest.toToken);
+
+        baseRequest.fromTokenAmount = IExecutor(executor).preview(baseRequest, toTokenExpectedAmount, executorData);
+        require(baseRequest.fromTokenAmount <= maxConsumeAmount, "consumeAmount > maxConsumeAmount");
+        
+        (address middleReceiver, uint256 balanceBefore) = _doCommissionFromToken(
+            commissionInfo,
+            msg.sender,
+            address(uint160(receiver)),
+            baseRequest.fromTokenAmount
+        );
+        
+        _handleTokenTransfer(fromToken, assetTo, baseRequest.fromTokenAmount);
+
+        uint256 toTokenBalanceBefore = _getBalanceOf(baseRequest.toToken, receiver);
+
+        // WETH in, ETH/WETH out
+        // asset already in assetTo address
+        uint256 swappedAmount = IExecutor(executor).execute(msg.sender, middleReceiver, baseRequest, toTokenExpectedAmount, maxConsumeAmount, executorData);
+
+        uint256 commissionAmount = _doCommissionToToken(commissionInfo, receiver, balanceBefore);
+
+        uint256 toTokenBalanceAfter = _getBalanceOf(baseRequest.toToken, receiver);
+        require(toTokenBalanceAfter >= toTokenBalanceBefore + baseRequest.minReturnAmount, "minReturn not reached");
+        
+        if (_bytes32ToAddress(baseRequest.fromToken) == _ETH && address(this).balance > 0) {
+            payable(msg.sender).transfer(address(this).balance);
+        }
+        
+        emit OrderRecord(
+            fromToken,
+            baseRequest.toToken,
+            tx.origin,
+            baseRequest.fromTokenAmount,
+            swappedAmount
+        );
+
+        return swappedAmount - commissionAmount;
+    }
+
+    function _validateExecuteRequest(
+        address fromToken,
+        uint256 maxConsumeAmount,
+        uint256 fromTokenAmount
+    ) internal view {
+        require(
+            (fromToken == _ETH && msg.value >= maxConsumeAmount && maxConsumeAmount >= fromTokenAmount) ||
+            (fromToken != _ETH && maxConsumeAmount >= fromTokenAmount && msg.value == 0),
+            "maxConsumeAmount > msg.value || maxConsumeAmount < baseRequest.fromTokenAmount"
+        );
+    }
+
+
+    function _handleTokenTransfer(
+        address fromToken,
+        address assetTo,
+        uint256 amount
+    ) internal {
+        if (fromToken == _ETH) {
+            IWETH(_WETH).deposit{value: amount}();
+            _transferInternal(msg.sender, assetTo, _WETH, amount);
+        } else {
+            _transferInternal(msg.sender, assetTo, fromToken, amount);
+        }
+    }
+
 
     function _exeAdapter(
         bool reverse,

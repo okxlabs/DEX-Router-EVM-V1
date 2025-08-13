@@ -1,8 +1,8 @@
 /// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-
+import "../interfaces/IDexRouter.sol";
 /// @title Base contract with common permit handling logics
-abstract contract CommonUtils {
+abstract contract CommonUtils is IDexRouter {
     address internal constant _ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     uint256 internal constant _ADDRESS_MASK =
@@ -76,13 +76,4 @@ abstract contract CommonUtils {
     address public constant _WNATIVE_RELAY = 0x5703B683c7F928b721CA95Da988d73a3299d4757;
     // address public constant _WNATIVE_RELAY = 0x0B306BF915C4d645ff596e518fAf3F9669b97016;   // hardhat1
     // address public constant _WNATIVE_RELAY = 0x6A47346e722937B60Df7a1149168c0E76DD6520f;   // hardhat2
-
-    event OrderRecord(
-        address fromToken,
-        address toToken,
-        address sender,
-        uint256 fromAmount,
-        uint256 returnAmount
-    );
-    event SwapOrderId(uint256 id);
 }
