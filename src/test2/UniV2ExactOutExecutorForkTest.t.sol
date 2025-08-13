@@ -553,6 +553,10 @@ contract UniV2ExactOutExecutorForkTest is Test {
         // Approve tokens
         USDT.approve(address(tokenApprove), maxConsumeAmount);
         
+        // First test the preview function
+        uint256 requiredUSDT = executor.preview(baseRequest, amountOut, executorData);
+        console2.log("Required USDT amount:", requiredUSDT);
+        
         // Execute swap through DexRouter
         uint256 returnAmount = dexRouter.executeWithBaseRequest(
             orderId,
