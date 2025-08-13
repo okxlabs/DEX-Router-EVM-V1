@@ -43,9 +43,4 @@ abstract contract AbstractCommissionLib {
         address fromToken,
         address toToken
     ) internal pure virtual;
-
-    function _calculateCommissionAmount(
-        CommissionInfo memory commissionInfo,
-        uint256 inputAmount
-    ) internal pure virtual returns (uint256);
 }

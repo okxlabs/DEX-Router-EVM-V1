@@ -30,14 +30,13 @@ abstract contract DagRouter is CommonLib {
         BaseRequest calldata baseRequest,
         RouterPath[] calldata paths,
         address payer,
-        uint256 amount,
         address refundTo,
         address receiver
     ) internal returns (uint256 returnAmount) {
         // 1. transfer from token in
         BaseRequest memory _baseRequest = baseRequest;
         require(
-            amount > 0,
+            _baseRequest.fromTokenAmount > 0,
             "fromTokenAmount must be > 0"
         );
         address fromToken = _bytes32ToAddress(_baseRequest.fromToken);
@@ -49,7 +48,7 @@ abstract contract DagRouter is CommonLib {
         // we do not need to judge according to fromToken.
         if (UniversalERC20.isETH(IERC20(fromToken))) {
             IWETH(address(uint160(_WETH))).deposit{
-                value: amount
+                value: _baseRequest.fromTokenAmount
             }();
             payer = address(this);
         }
@@ -65,7 +64,7 @@ abstract contract DagRouter is CommonLib {
             }
             require(firstNodeIndex == 0, "first node index must be 0");
         }
-        _exeDagSwap(payer, receiver, refundTo, amount, IERC20(_baseRequest.toToken).isETH(), paths);
+        _exeDagSwap(payer, receiver, refundTo, _baseRequest.fromTokenAmount, IERC20(_baseRequest.toToken).isETH(), paths);
 
         // 3. transfer tokens to receiver
         _transferTokenToUser(_baseRequest.toToken, receiver);
