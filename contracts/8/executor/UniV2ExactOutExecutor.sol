@@ -123,4 +123,6 @@ contract UniV2ExactOutExecutor is IExecutor, CommonUtils {
     {
         return (amountOut * reserveIn * _DENOMINATOR) / ((reserveOut - amountOut) * numerator) + 1;
     }
+
+    receive() external payable {}
 }

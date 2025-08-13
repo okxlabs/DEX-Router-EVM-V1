@@ -31,7 +31,7 @@ contract UniV2ExactOutExecutorForkTest is Test {
     IUniswapV2Factory constant UNISWAP_V2_FACTORY = IUniswapV2Factory(0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f);
     
     // Test addresses
-    address constant ETH = address(0);
+    address constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address constant COMMISSION_ETH = address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     address whale = makeAddr("whale");
     address user = makeAddr("user");
@@ -269,7 +269,6 @@ contract UniV2ExactOutExecutorForkTest is Test {
     function testExecuteWithBaseRequest_ETH_to_USDC() public {
         uint256 orderId = 3;
         uint256 amountOut = 2000 * 1e6; // 2000 USDC
-        uint256 maxConsumeAmount = 1 ether; // Max 1 ETH
         
         // Build pool data for ETH -> USDC swap (ETH gets wrapped to WETH)
         bytes32 poolData = _buildPool(address(WETH), address(USDC), WETH_USDC_PAIR, false);
@@ -286,17 +285,27 @@ contract UniV2ExactOutExecutorForkTest is Test {
             deadLine: block.timestamp + 300
         });
         
+        // First get the required ETH amount via preview
+        uint256 requiredETH = executor.preview(baseRequest, amountOut, executorData);
+        uint256 maxConsumeAmount = requiredETH + (requiredETH * 10 / 100); // Add 10% buffer
+        
+        // Ensure msg.value is slightly higher than maxConsumeAmount for validation
+        uint256 msgValue = maxConsumeAmount + 1000; // Add small buffer
+        
         // Record initial balances
         uint256 initialETHBalance = user.balance;
         uint256 initialUSDCBalance = USDC.balanceOf(user);
         
         console2.log("Initial ETH balance:", initialETHBalance);
         console2.log("Initial USDC balance:", initialUSDCBalance);
+        console2.log("Required ETH amount:", requiredETH);
+        console2.log("Max consume amount:", maxConsumeAmount);
+        console2.log("Msg value:", msgValue);
         
         vm.startPrank(user);
         
         // Execute swap through DexRouter with ETH value
-        uint256 returnAmount = dexRouter.executeWithBaseRequest{value: maxConsumeAmount}(
+        uint256 returnAmount = dexRouter.executeWithBaseRequest{value: msgValue}(
             orderId,
             user, // receiver
             baseRequest,
