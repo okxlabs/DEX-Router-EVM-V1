@@ -15,7 +15,7 @@ contract DagRouterCommissionTest is DagRouterTestBase, CommissionHelper {
     address public referrer1 = vm.rememberKey(2222222222);
     address public referrer2 = vm.rememberKey(333333333);
 
-    function test_DagRouter_fromTokenCommission() public userWithToken(arnaud, tokens[0], tokens[3], oneEther) noResidue {
+    function test_DagRouter_fromTokenCommission() public userWithToken(arnaud, tokens[0], tokens[3], 2 * oneEther) noResidue {
         address fromToken = tokens[0]; // WETH
         address toToken = tokens[3]; // USDC
         DexRouter.BaseRequest memory baseRequest = _generateBaseRequest(fromToken, toToken, oneEther);
@@ -44,7 +44,7 @@ contract DagRouterCommissionTest is DagRouterTestBase, CommissionHelper {
         require(success, "call failed");
     }
 
-    function test_DagRouter_fromTokenCommissionDual() public userWithToken(arnaud, tokens[0], tokens[3], oneEther) noResidue {
+    function test_DagRouter_fromTokenCommissionDual() public userWithToken(arnaud, tokens[0], tokens[3], 2 * oneEther) noResidue {
         address fromToken = tokens[0]; // WETH
         address toToken = tokens[3]; // USDC
         DexRouter.BaseRequest memory baseRequest = _generateBaseRequest(fromToken, toToken, oneEther);
@@ -75,7 +75,7 @@ contract DagRouterCommissionTest is DagRouterTestBase, CommissionHelper {
         require(success, "call failed");
     }
 
-    function test_DagRouter_fromTokenCommissionDualToB() public userWithToken(arnaud, tokens[0], tokens[3], oneEther) noResidue {
+    function test_DagRouter_fromTokenCommissionDualToB() public userWithToken(arnaud, tokens[0], tokens[3], 2 * oneEther) noResidue {
         address fromToken = tokens[0]; // WETH
         address toToken = tokens[3]; // USDC
         DexRouter.BaseRequest memory baseRequest = _generateBaseRequest(fromToken, toToken, oneEther);
@@ -106,7 +106,7 @@ contract DagRouterCommissionTest is DagRouterTestBase, CommissionHelper {
         require(success, "call failed");
     }
 
-    function test_DagRouter_fromETHCommission() public userWithToken(arnaud, ETH, tokens[3], oneEther) noResidue {
+    function test_DagRouter_fromETHCommission() public userWithToken(arnaud, ETH, tokens[3], 2 * oneEther) noResidue {
         address fromToken = ETH;
         address toToken = tokens[3]; // USDC
         DexRouter.BaseRequest memory baseRequest = _generateBaseRequest(fromToken, toToken, oneEther);
@@ -130,12 +130,12 @@ contract DagRouterCommissionTest is DagRouterTestBase, CommissionHelper {
         );
         bytes memory data = bytes.concat(preData, commissionInfo);
         console2.log("referrer1 ETH balance before:", referrer1.balance);
-        (bool success, ) = address(dexRouter).call{value: oneEther}(data);
+        (bool success, ) = address(dexRouter).call{value: 2 * oneEther}(data);
         console2.log("referrer1 ETH balance after:", referrer1.balance);
         require(success, "call failed");
     }
 
-    function test_DagRouter_fromETHCommissionDual() public userWithToken(arnaud, ETH, tokens[3], oneEther) noResidue {
+    function test_DagRouter_fromETHCommissionDual() public userWithToken(arnaud, ETH, tokens[3], 2 * oneEther) noResidue {
         address fromToken = ETH;
         address toToken = tokens[3]; // USDC
         DexRouter.BaseRequest memory baseRequest = _generateBaseRequest(fromToken, toToken, oneEther);
@@ -160,13 +160,13 @@ contract DagRouterCommissionTest is DagRouterTestBase, CommissionHelper {
         bytes memory data = bytes.concat(preData, commissionInfo);
         console2.log("referrer1 ETH balance before:", referrer1.balance);
         console2.log("referrer2 ETH balance before:", referrer2.balance);
-        (bool success, ) = address(dexRouter).call{value: oneEther}(data);
+        (bool success, ) = address(dexRouter).call{value: 2 * oneEther}(data);
         console2.log("referrer1 ETH balance after:", referrer1.balance);
         console2.log("referrer2 ETH balance after:", referrer2.balance);
         require(success, "call failed");
     }
 
-    function test_DagRouter_fromETHCommissionDualToB() public userWithToken(arnaud, ETH, tokens[3], oneEther) noResidue {
+    function test_DagRouter_fromETHCommissionDualToB() public userWithToken(arnaud, ETH, tokens[3], 2 * oneEther) noResidue {
         address fromToken = ETH;
         address toToken = tokens[3]; // USDC
         DexRouter.BaseRequest memory baseRequest = _generateBaseRequest(fromToken, toToken, oneEther);
@@ -191,7 +191,7 @@ contract DagRouterCommissionTest is DagRouterTestBase, CommissionHelper {
         bytes memory data = bytes.concat(preData, commissionInfo);
         console2.log("referrer1 ETH balance before:", referrer1.balance);
         console2.log("referrer2 ETH balance before:", referrer2.balance);
-        (bool success, ) = address(dexRouter).call{value: oneEther}(data);
+        (bool success, ) = address(dexRouter).call{value: 2 * oneEther}(data);
         console2.log("referrer1 ETH balance after:", referrer1.balance);
         console2.log("referrer2 ETH balance after:", referrer2.balance);
         require(success, "call failed");

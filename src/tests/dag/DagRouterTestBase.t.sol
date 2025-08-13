@@ -131,17 +131,13 @@ contract DagRouterTestBase is Test {
         
         // Check ETH balance
         uint256 ethBalance = address(dexRouter).balance;
-        if (ethBalance > 0) {
-            console2.log("DexRouter ETH balance: %d", ethBalance);
-        }
+        require(ethBalance == 0, "DexRouter ETH balance must be 0");
         
         // Check ERC20 token balances
         for (uint256 i = 0; i < tokens.length; i++) {
             address token = tokens[i];
             uint256 balance = IERC20(token).balanceOf(address(dexRouter));
-            if (balance > 0) {
-                console2.log("DexRouter %s balance: %d", IERC20(token).symbol(), balance);
-            }
+            require(balance == 0, "DexRouter %s balance must be 0");
         }
     }
 
