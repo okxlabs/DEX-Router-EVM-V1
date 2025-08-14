@@ -14,12 +14,6 @@ abstract contract DagRouter is CommonLib {
     struct SwapState {
         /// @notice the number of nodes need to be processed
         uint256 nodeNum;
-        /// @notice
-        address[] nodeToken;
-        /// @notice to record the balance of each node
-        uint256[] nodeBalance;
-        /// @notice
-        uint256[] tmpBalance;
         /// @notice to record the refundTo address of the DAG
         address refundTo;
     }
@@ -88,6 +82,7 @@ abstract contract DagRouter is CommonLib {
         return returnAmount;
     }
 
+    /// @notice the core logic to execute the DAG swap
     function _exeDagSwap(
         address payer,
         address receiver,
@@ -97,20 +92,11 @@ abstract contract DagRouter is CommonLib {
         RouterPath[] calldata paths
     ) private {
         uint256 nodeNum = paths.length;
-        SwapState memory swapState = _initSwapState(nodeNum, firstNodeBalance, refundTo);
-
-        // init tmpBalance and nodeToken
-        for (uint256 i = 1; i < nodeNum;) {
-            swapState.tmpBalance[i] = IERC20(_bytes32ToAddress(paths[i].fromToken)).balanceOf(address(this));
-            swapState.nodeToken[i] = _bytes32ToAddress(paths[i].fromToken);
-            unchecked {
-                ++i;
-            }
-        }
+        SwapState memory swapState = _initSwapState(nodeNum, refundTo);
 
         // execute nodes
         for (uint256 i = 0; i < nodeNum;) {
-            _exeNode(payer, receiver, i, isToNative, paths[i], swapState);
+            _exeNode(payer, receiver, firstNodeBalance, i, isToNative, paths[i], swapState);
             if (i == 0) { // reset payer for non-first node
                 payer = address(this);
             }
@@ -121,36 +107,29 @@ abstract contract DagRouter is CommonLib {
         }
     }
 
-    /// @notice Initializes the swap state for the DAG execution
-    /// @param _nodeNum The number of nodes in the DAG
-    /// @param _refundTo The refundTo address of the DAG
-    /// @return state The initialized swap state
+    /// @notice initialize the swap state for the DAG execution
     function _initSwapState(
         uint256 _nodeNum,
-        uint256 _firstNodeBalance,
         address _refundTo
     ) private pure returns (SwapState memory state) {
         state.nodeNum = _nodeNum;
-        state.nodeToken = new address[](_nodeNum);
-        state.nodeBalance = new uint256[](_nodeNum);
-        state.nodeBalance[0] = _firstNodeBalance;
-        state.tmpBalance = new uint256[](_nodeNum);
         state.refundTo = _refundTo;
     }
 
+    /// @notice the core logic to execute the each node
     function _exeNode(
         address payer,
         address receiver,
+        uint256 nodeBalance,
         uint256 nodeIndex,
         bool isToNative,
         RouterPath calldata path,
         SwapState memory swapState
     ) private {
-        uint256 nodeBalance = swapState.nodeBalance[nodeIndex];
-        require(nodeBalance > 0, "node balance must be > 0");
         uint256 totalWeight;
         uint256 accAmount;
         address fromToken = _bytes32ToAddress(path.fromToken);
+
         require(path.mixAdapters.length > 0, "edge length must be > 0");
         require(
             path.mixAdapters.length == path.rawData.length &&
@@ -158,6 +137,12 @@ abstract contract DagRouter is CommonLib {
             path.mixAdapters.length == path.assetTo.length,
             "path length mismatch"
         );
+
+        // to get the nodeBalance for non-first node, the balance of the first node is the original passed value
+        if (nodeIndex != 0) {
+            nodeBalance = IERC20(fromToken).balanceOf(address(this));
+            require(nodeBalance > 0, "node balance must be > 0");
+        }
 
         // execute edges
         for (uint256 i = 0; i < path.mixAdapters.length;) {
@@ -175,8 +160,8 @@ abstract contract DagRouter is CommonLib {
                 }
 
                 require(inputIndex == nodeIndex, "node inputIndex inconsistent");
-                require(inputIndex < outputIndex, "inputIndex gte outputIndex");
-                require(outputIndex <= swapState.nodeNum, "node index out of range"); // this also constraints that only one node has no output edge
+                require(inputIndex < outputIndex && outputIndex <= swapState.nodeNum, "node index out of range");
+
                 totalWeight += weight;
                 if (i == path.mixAdapters.length - 1) {
                     require(
@@ -216,13 +201,6 @@ abstract contract DagRouter is CommonLib {
                     to,
                     swapState.refundTo
                 );
-            }
-
-            // 4. update nodeBalance
-            if (outputIndex < swapState.nodeNum) {
-                uint256 newOutputBalance = IERC20(swapState.nodeToken[outputIndex]).balanceOf(address(this));
-                swapState.nodeBalance[outputIndex] += newOutputBalance - swapState.tmpBalance[outputIndex];
-                swapState.tmpBalance[outputIndex] = newOutputBalance;
             }
 
             unchecked {
