@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.17;
+pragma solidity ^0.8.17;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -241,6 +241,20 @@ contract PMMAdapter {
             revert(
                 string(
                     abi.encodePacked("RFQ_SafePermitBadLength ", rfqId.toString())
+                )
+            );
+        } else if (selector == 0xc6f643b2) {
+            // RFQ_AmountTooLarge(uint256 rfqId);
+            revert(
+                string(
+                    abi.encodePacked("RFQ_AmountTooLarge ", rfqId.toString())
+                )
+            );
+        } else if (selector == 0xa1475d7b) {
+            // RFQ_SettlementAmountTooSmall(uint256 rfqId);
+            revert(
+                string(
+                    abi.encodePacked("RFQ_SettlementAmountTooSmall ", rfqId.toString())
                 )
             );
         } else {
