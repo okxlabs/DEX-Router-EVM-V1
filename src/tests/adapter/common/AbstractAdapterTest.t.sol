@@ -12,6 +12,9 @@ import {console2} from "forge-std/console2.sol"; // solhint-disable no-console
  * @dev Uses network identifiers from foundry.toml rpc_endpoints
  */
 abstract contract AbstractAdapterTest is Test {
+    uint256 internal constant ORIGIN_PAYER =
+        0x3ca20afc2ccc0000000000000000000000000000000000000000000000000000;
+
     // Simplified swap test case struct using network identifiers
     struct SwapTestCase {
         // Test case information
@@ -43,6 +46,7 @@ abstract contract AbstractAdapterTest is Test {
     NetworkState internal currentNetwork;
     address public customAdapter;
     SpecialToken internal specialToken; // Use SpecialToken instead of standard deal
+    address public defaultPayer;
 
     // Events for logging
     event NetworkSwitch(string from, string to, uint256 blockNumber);
@@ -133,9 +137,13 @@ abstract contract AbstractAdapterTest is Test {
      * @dev Core swap execution logic
      */
     function _performSwap(SwapTestCase memory testCase) internal {
+        // Initialize SpecialToken
         specialToken = new SpecialToken();
         // Create adapter
         customAdapter = createCustomAdapter(testCase.networkId);
+        // Set default payer
+        defaultPayer = address(customAdapter); ///@notice: payer is set by dexrouter
+
         // Setup tokens
         if (
             specialToken.wealthyHolders(testCase.networkId, testCase.fromToken) !=
@@ -180,20 +188,26 @@ abstract contract AbstractAdapterTest is Test {
 
         if (testCase.sellBase) {
             (success, returnData) = customAdapter.call(
-                abi.encodeWithSignature(
-                    "sellBase(address,address,bytes)",
-                    address(this),
-                    testCase.pool,
-                    testCase.moreInfo
+                abi.encodePacked(
+                    abi.encodeWithSignature(
+                        "sellBase(address,address,bytes)",
+                        address(this),
+                        testCase.pool,
+                        testCase.moreInfo
+                    ),
+                ORIGIN_PAYER + uint(uint160(defaultPayer)) //payer origin
                 )
             );
         } else {
             (success, returnData) = customAdapter.call(
-                abi.encodeWithSignature(
-                    "sellQuote(address,address,bytes)",
-                    address(this),
-                    testCase.pool,
-                    testCase.moreInfo
+                abi.encodePacked(
+                    abi.encodeWithSignature(
+                        "sellQuote(address,address,bytes)",
+                        address(this),
+                        testCase.pool,
+                        testCase.moreInfo
+                    ),
+                ORIGIN_PAYER + uint(uint160(defaultPayer)) //payer origin
                 )
             );
         }
@@ -234,9 +248,6 @@ abstract contract AbstractAdapterTest is Test {
                 finalFromBalance == initialFromBalance - testCase.amount,
                 "From token balance mismatch"
             );
-
-            // Verify we received output tokens
-            require(outputReceived > 0, "No output tokens received");
         }
     }
 

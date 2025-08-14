@@ -48,7 +48,9 @@ async function main() {
         console.log("\nDifferences found in the implementations even after nullifying addresses.".yellow);
     }
 
-    console.log();
+    console.log("--------------------------------");
+    console.log("address: " + newImpl);
+    console.log("--------------------------------");
 }
 
 main()

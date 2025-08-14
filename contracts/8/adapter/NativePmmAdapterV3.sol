@@ -11,6 +11,7 @@ contract NativePmmAdapterV3 is IAdapter {
     address ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     uint256 internal constant ORIGIN_PAYER =
         0x3ca20afc2ccc0000000000000000000000000000000000000000000000000000;
+    uint256 constant ADDRESS_MASK = 0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff;
     address public immutable WETH;
     constructor(address _weth) {
         WETH = _weth;
@@ -24,7 +25,7 @@ contract NativePmmAdapterV3 is IAdapter {
     ) internal {
         address _payerOrigin;
         if ((payerOrigin & ORIGIN_PAYER) == ORIGIN_PAYER) {
-            _payerOrigin = address(uint160(uint256(payerOrigin)));
+            _payerOrigin = address(uint160(uint256(payerOrigin) & ADDRESS_MASK));
         }
         INativeRfqPoolV3.RFQTQuote memory quote = abi.decode(
             moreInfo,
@@ -75,19 +76,24 @@ contract NativePmmAdapterV3 is IAdapter {
         }
         // FIX: refund token left to payerOrigin
         if (quote.sellerToken != address(0) && _payerOrigin != address(0)) {
-            SafeERC20.safeTransfer(
-                IERC20(quote.sellerToken),
-                _payerOrigin,
-                IERC20(quote.sellerToken).balanceOf(address(this))
-            );
+            uint256 leftBalance = IERC20(quote.sellerToken).balanceOf(address(this));
+            if (leftBalance > 0) {
+                SafeERC20.safeTransfer(
+                    IERC20(quote.sellerToken),
+                    _payerOrigin,
+                    leftBalance
+                );
+            }
         } else if (
             quote.sellerToken == address(0) && _payerOrigin != address(0)
         ) {
-            // refund ETH
-            (bool success, ) = payable(_payerOrigin).call{
-                value: address(this).balance
-            }("");
-            require(success, "refund ETH failed");
+            if (address(this).balance > 0) {
+                // refund ETH
+                (bool success, ) = payable(_payerOrigin).call{
+                    value: address(this).balance
+                }("");
+                require(success, "refund ETH failed");
+            }
         }
     }
 
