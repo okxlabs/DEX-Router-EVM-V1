@@ -513,11 +513,11 @@ contract UniV2ExactOutExecutorForkTest is Test {
         uint256 maxConsumeAmount = 300 * 1e6; // Max 300 USDT
         
         // Build pool data for USDT -> USDC -> WETH -> DAI swap (3 pools)
-        // Pool 1: USDT -> USDC
+        // Pool 1: USDT -> USDC (token1 -> token0, so isZeroForOne = false)
         bytes32 poolData1 = _buildPool(address(USDT), address(USDC), USDC_USDT_PAIR, false);
-        // Pool 2: USDC -> WETH
-        bytes32 poolData2 = _buildPool(address(USDC), address(WETH), WETH_USDC_PAIR, false);
-        // Pool 3: WETH -> DAI
+        // Pool 2: USDC -> WETH (token0 -> token1, so isZeroForOne = true)
+        bytes32 poolData2 = _buildPool(address(USDC), address(WETH), WETH_USDC_PAIR, true);
+        // Pool 3: WETH -> DAI (token1 -> token0, so isZeroForOne = false)
         bytes32 poolData3 = _buildPool(address(WETH), address(DAI), WETH_DAI_PAIR, false);
         
         bytes32[] memory pools = new bytes32[](3);
