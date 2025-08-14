@@ -14,7 +14,7 @@ abstract contract DagRouter is CommonLib {
     struct SwapState {
         /// @notice the number of nodes need to be processed
         uint256 nodeNum;
-        /// @notice to record the refundTo address of the DAG
+        /// @notice the refundTo address of the DAG
         address refundTo;
     }
 

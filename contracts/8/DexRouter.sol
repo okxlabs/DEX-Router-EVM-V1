@@ -818,7 +818,6 @@ contract DexRouter is
                 baseRequest.fromTokenAmount
             );
 
-        // calculate actual fromTokenAmount and swap
         uint256 swappedAmount = _dagSwapInternal(
             baseRequest,
             paths,
