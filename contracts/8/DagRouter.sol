@@ -54,14 +54,8 @@ abstract contract DagRouter is CommonLib {
         // 2. execute dag swap
         _exeDagSwap(payer, receiver, refundTo, _baseRequest.fromTokenAmount, IERC20(_baseRequest.toToken).isETH(), paths);
 
-        // 3. transfer tokens to receiver and refund surplus ETH
+        // 3. transfer tokens to receiver
         _transferTokenToUser(_baseRequest.toToken, receiver);
-        if (address(this).balance > 0) {
-            (bool success, ) = payable(refundTo).call{
-                value: address(this).balance
-            }("");
-            require(success, "refund ETH failed");
-        }
 
         // 4. check minReturnAmount
         returnAmount =
@@ -98,10 +92,11 @@ abstract contract DagRouter is CommonLib {
 
         // execute nodes
         for (uint256 i = 0; i < nodeNum;) {
-            _exeNode(payer, receiver, firstNodeBalance, i, isToNative, paths[i], swapState);
-            if (i == 0) { // reset payer for non-first node
+            if (i != 0) { // reset payer for non-first node
                 payer = address(this);
             }
+
+            _exeNode(payer, receiver, firstNodeBalance, i, isToNative, paths[i], swapState);
 
             unchecked {
                 ++i;
@@ -177,7 +172,11 @@ abstract contract DagRouter is CommonLib {
             {
                 uint256 _fromTokenAmount;
                 if (i == path.mixAdapters.length - 1) {
-                    _fromTokenAmount = nodeBalance - accAmount;
+                    if (payer == address(this)) {
+                        _fromTokenAmount = IERC20(fromToken).balanceOf(address(this));
+                    } else {
+                        _fromTokenAmount = nodeBalance - accAmount;
+                    }
                 } else {
                     _fromTokenAmount = (nodeBalance * weight) / 10_000;
                     accAmount += _fromTokenAmount;
