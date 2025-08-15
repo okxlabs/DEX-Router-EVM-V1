@@ -36,21 +36,22 @@ abstract contract DagRouter is CommonLib {
             receiver
         );
 
+        require(paths.length > 0, "paths must be > 0");
+        address firstNodeToken = _bytes32ToAddress(paths[0].fromToken);
+
         // In order to deal with ETH/WETH transfer rules in a unified manner,
         // we do not need to judge according to fromToken.
-        if (UniversalERC20.isETH(IERC20(fromToken))) {
+        if (IERC20(fromToken).isETH()) {
+            require(firstNodeToken == _WETH, "firstToken mismatch");
             IWETH(address(uint160(_WETH))).deposit{
                 value: _baseRequest.fromTokenAmount
             }();
             payer = address(this);
+        } else {
+            require(firstNodeToken == fromToken, "firstToken mismatch");
         }
 
-        // 2. check and execute dag swap
-        {
-            require(paths.length > 0, "paths must be > 0");
-            address firstNodeToken = _bytes32ToAddress(paths[0].fromToken);
-            require(fromToken == firstNodeToken || (fromToken == _ETH && firstNodeToken == _WETH), "fromToken mismatch");
-        }
+        // 2. execute dag swap
         _exeDagSwap(payer, receiver, refundTo, _baseRequest.fromTokenAmount, IERC20(_baseRequest.toToken).isETH(), paths);
 
         // 3. transfer tokens to receiver and refund surplus ETH
@@ -82,7 +83,8 @@ abstract contract DagRouter is CommonLib {
         return returnAmount;
     }
 
-    /// @notice the core logic to execute the DAG swap
+    /// @notice The core logic to execute the DAG swap. For the first node, the payer should use passed value.
+    /// For the non-first node, the payer should always be address(this) cause the to address of the middle swap is address(this).
     function _exeDagSwap(
         address payer,
         address receiver,
@@ -107,7 +109,7 @@ abstract contract DagRouter is CommonLib {
         }
     }
 
-    /// @notice initialize the swap state for the DAG execution
+    /// @notice Initialize the swap state for the DAG execution
     function _initSwapState(
         uint256 _nodeNum,
         address _refundTo
@@ -116,7 +118,7 @@ abstract contract DagRouter is CommonLib {
         state.refundTo = _refundTo;
     }
 
-    /// @notice the core logic to execute the each node
+    /// @notice The core logic to execute the each node
     function _exeNode(
         address payer,
         address receiver,
