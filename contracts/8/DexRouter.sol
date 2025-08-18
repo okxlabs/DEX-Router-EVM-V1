@@ -46,22 +46,18 @@ contract DexRouter is
         uint256 orderId,
         address receiver,
         BaseRequest memory baseRequest,
-        address assetTo,
-        uint256 toTokenExpectedAmount,
-        uint256 maxConsumeAmount,
-        address executor,
-        bytes memory executorData
+        ExecutorInfo memory executorInfo
     ) external payable returns (uint256) {
         emit SwapOrderId(orderId);
         address fromToken = _bytes32ToAddress(baseRequest.fromToken);
         
-        _validateExecuteRequest(fromToken, maxConsumeAmount, baseRequest.fromTokenAmount);
+        _validateExecuteRequest(fromToken, executorInfo.maxConsumeAmount, baseRequest.fromTokenAmount);
         
         CommissionInfo memory commissionInfo = _getCommissionInfo();
         _validateCommissionInfo(commissionInfo, fromToken, baseRequest.toToken);
 
-        baseRequest.fromTokenAmount = IExecutor(executor).preview(baseRequest, toTokenExpectedAmount, executorData);
-        require(baseRequest.fromTokenAmount <= maxConsumeAmount, "consumeAmount > maxConsumeAmount");
+        baseRequest.fromTokenAmount = IExecutor(executorInfo.executor).preview(baseRequest, executorInfo.toTokenExpectedAmount, executorInfo.executorData);
+        require(baseRequest.fromTokenAmount <= executorInfo.maxConsumeAmount, "consumeAmount > maxConsumeAmount");
         
         (address middleReceiver, uint256 balanceBefore) = _doCommissionFromToken(
             commissionInfo,
@@ -70,13 +66,13 @@ contract DexRouter is
             baseRequest.fromTokenAmount
         );
         
-        _handleTokenTransfer(fromToken, assetTo, baseRequest.fromTokenAmount);
+        _handleTokenTransfer(fromToken, executorInfo.assetTo, baseRequest.fromTokenAmount);
 
         uint256 toTokenBalanceBefore = _getBalanceOf(baseRequest.toToken, receiver);
 
         // WETH in, ETH/WETH out
         // asset already in assetTo address
-        IExecutor(executor).execute(msg.sender, middleReceiver, baseRequest, toTokenExpectedAmount, maxConsumeAmount, executorData);
+        IExecutor(executorInfo.executor).execute(msg.sender, middleReceiver, baseRequest, executorInfo.toTokenExpectedAmount, executorInfo.maxConsumeAmount, executorInfo.executorData);
 
         _doCommissionToToken(commissionInfo, receiver, balanceBefore);
 
@@ -126,46 +122,6 @@ contract DexRouter is
     }
 
 
-    function _exeAdapter(
-        bool reverse,
-        address adapter,
-        address to,
-        address poolAddress,
-        bytes memory moreinfo,
-        address refundTo
-    ) internal override {
-        if (reverse) {
-            (bool s, bytes memory res) = address(adapter).call(
-                abi.encodePacked(
-                    abi.encodeWithSelector(
-                        IAdapter.sellQuote.selector,
-                        to,
-                        poolAddress,
-                        moreinfo
-                    ),
-                    ORIGIN_PAYER + uint(uint160(refundTo))
-                )
-            );
-            if (!s) {
-                _revert(res);
-            }
-        } else {
-            (bool s, bytes memory res) = address(adapter).call(
-                abi.encodePacked(
-                    abi.encodeWithSelector(
-                        IAdapter.sellBase.selector,
-                        to,
-                        poolAddress,
-                        moreinfo
-                    ),
-                    ORIGIN_PAYER + uint(uint160(refundTo))
-                )
-            );
-            if (!s) {
-                _revert(res);
-            }
-        }
-    }
     //-------------------------------
     //------- Internal Functions ----
     //-------------------------------

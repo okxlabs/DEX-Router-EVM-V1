@@ -22,7 +22,7 @@ abstract contract CommonLib is CommonUtils {
         address poolAddress,
         bytes memory moreinfo,
         address refundTo
-    ) internal virtual {
+    ) internal {
         if (reverse) {
             (bool s, bytes memory res) = address(adapter).call(
                 abi.encodePacked(
