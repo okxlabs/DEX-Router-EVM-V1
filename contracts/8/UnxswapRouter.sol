@@ -483,23 +483,6 @@ contract UnxswapRouter is CommonUtils {
                 }
             }
 
-            if lt(returnAmount, minReturn) {
-                revertWithReason(
-                    0x000000164d696e2072657475726e206e6f742072656163686564000000000000,
-                    0x5a
-                ) // "Min return not reached"
-            }
-            // emit event
-            mstore(emptyPtr, srcToken)
-            mstore(add(emptyPtr, 0x20), toToken)
-            mstore(add(emptyPtr, 0x40), origin())
-            mstore(add(emptyPtr, 0x60), amount)
-            mstore(add(emptyPtr, 0x80), returnAmount)
-            log1(
-                emptyPtr,
-                0xa0,
-                0x1bb43f2da90e35f7b0cf38521ca95a49e68eb42fac49924930a5bd73cdf7576c
-            )
         }
     }
 }
