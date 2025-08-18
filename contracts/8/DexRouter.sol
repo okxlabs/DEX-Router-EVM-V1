@@ -13,18 +13,19 @@ import "./libraries/PMMLib.sol";
 import "./libraries/CommissionLib.sol";
 import "./libraries/EthReceiver.sol";
 import "./libraries/UniswapTokenInfoHelper.sol";
+import "./libraries/CommonLib.sol";
+
 import "./DagRouter.sol";
+
 
 /// @title DexRouterV1
 /// @notice Entrance of Split trading in Dex platform
 /// @dev Entrance of Split trading in Dex platform
 contract DexRouter is
-    IDexRouter,
     EthReceiver,
     UnxswapRouter,
     UnxswapV3Router,
     CommissionLib,
-    CommonLib,
     UniswapTokenInfoHelper,
     DagRouter
 {
@@ -132,7 +133,7 @@ contract DexRouter is
         address poolAddress,
         bytes memory moreinfo,
         address refundTo
-    ) internal {
+    ) internal override {
         if (reverse) {
             (bool s, bytes memory res) = address(adapter).call(
                 abi.encodePacked(
@@ -749,7 +750,7 @@ contract DexRouter is
         );
 
         // check minReturnAmount
-        uint256 returnAmount = _getBalanceOf(toToken, receiver) - balanceBeforeReceiver;
+        returnAmount = _getBalanceOf(toToken, receiver) - balanceBeforeReceiver;
         require(
             returnAmount >= minReturn,
             "Min return not reached"

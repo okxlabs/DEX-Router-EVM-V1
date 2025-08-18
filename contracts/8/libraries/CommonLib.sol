@@ -10,25 +10,10 @@ import "../interfaces/IWNativeRelayer.sol";
 import "../interfaces/IWETH.sol";
 import "../interfaces/IERC20.sol";
 
+
 /// @title Base contract with common permit handling logics
 abstract contract CommonLib is CommonUtils {
     using UniversalERC20 for IERC20;
-
-    struct BaseRequest {
-        uint256 fromToken;
-        address toToken;
-        uint256 fromTokenAmount;
-        uint256 minReturnAmount;
-        uint256 deadLine;
-    }
-
-    struct RouterPath {
-        address[] mixAdapters;
-        address[] assetTo;
-        uint256[] rawData;
-        bytes[] extraData;
-        uint256 fromToken;
-    }
 
     function _exeAdapter(
         bool reverse,
@@ -37,7 +22,7 @@ abstract contract CommonLib is CommonUtils {
         address poolAddress,
         bytes memory moreinfo,
         address refundTo
-    ) internal {
+    ) internal virtual {
         if (reverse) {
             (bool s, bytes memory res) = address(adapter).call(
                 abi.encodePacked(
@@ -75,7 +60,7 @@ abstract contract CommonLib is CommonUtils {
      * @dev Reverts with returndata if present. Otherwise reverts with "FailedCall".
      * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/c64a1edb67b6e3f4a15cca8909c9482ad33a02b0/contracts/utils/Address.sol#L135-L149
      */
-    function _revert(bytes memory returndata) private pure {
+    function _revert(bytes memory returndata) internal pure {
         // Look for revert reason and bubble it up if present
         if (returndata.length > 0) {
             // The easiest way to bubble the revert reason is using memory via assembly
