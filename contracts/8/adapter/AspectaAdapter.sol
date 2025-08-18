@@ -71,11 +71,11 @@ contract AspectaAdapter is IAdapter, Ownable {
         (uint256 amount, uint256 minPrice, uint256 fee, address feeRecipient) = abi.decode(moreInfo, (uint256, uint256, uint256, address));
         address payerOrigin = _getPayerOrigin();
         require(payerOrigin != address(0), "AspectaAdapter: payerOrigin is zero");
-        uint256 toAmountBefore = payerOrigin.balance;
+        uint256 toAmountBefore = tx.origin.balance;
         // sellByRouter will decrease the key balance of tx.origin and send the nativeToken to recipient
-        // IAspectaKeyPool(pool).sellByRouter(receiver, amount, minPrice, fee, feeRecipient);
-        _call(pool, abi.encodeWithSelector(IAspectaKeyPool.sellByRouter.selector, payerOrigin, amount, minPrice, fee, feeRecipient), 0);
-        emit OrderRecord(false, pool, NATIVE_ADDRESS, amount, payerOrigin.balance - toAmountBefore);
+        // IAspectaKeyPool(pool).sellByRouter(amount, minPrice);
+        _call(pool, abi.encodeWithSelector(IAspectaKeyPool.sellByRouter.selector, amount, minPrice), 0);
+        emit OrderRecord(false, pool, NATIVE_ADDRESS, amount, tx.origin.balance - toAmountBefore);
     }
     
     // call the target contract with value and revert with related string error.
