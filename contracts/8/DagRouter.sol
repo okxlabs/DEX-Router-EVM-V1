@@ -24,7 +24,7 @@ abstract contract DagRouter is CommonLib {
         address payer,
         address refundTo,
         address receiver
-    ) internal returns (uint256 returnAmount) {
+    ) internal {
         // 1. transfer from token in
         BaseRequest memory _baseRequest = baseRequest;
         require(
@@ -32,9 +32,6 @@ abstract contract DagRouter is CommonLib {
             "fromTokenAmount must be > 0"
         );
         address fromToken = _bytes32ToAddress(_baseRequest.fromToken);
-        returnAmount = IERC20(_baseRequest.toToken).universalBalanceOf(
-            receiver
-        );
 
         require(paths.length > 0, "paths must be > 0");
         address firstNodeToken = _bytes32ToAddress(paths[0].fromToken);
@@ -56,25 +53,6 @@ abstract contract DagRouter is CommonLib {
 
         // 3. transfer tokens to receiver
         _transferTokenToUser(_baseRequest.toToken, receiver);
-
-        // 4. check minReturnAmount
-        returnAmount =
-            IERC20(_baseRequest.toToken).universalBalanceOf(receiver) -
-            returnAmount;
-        require(
-            returnAmount >= _baseRequest.minReturnAmount,
-            "Min return not reached"
-        );
-
-        emit OrderRecord(
-            fromToken,
-            _baseRequest.toToken,
-            msg.sender,
-            _baseRequest.fromTokenAmount,
-            returnAmount
-        );
-
-        return returnAmount;
     }
 
     /// @notice The core logic to execute the DAG swap. For the first node, the payer should use passed value.
