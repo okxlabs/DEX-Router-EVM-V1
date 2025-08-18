@@ -30,7 +30,8 @@ contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
         ExecutorInfo memory executorInfo
     ) external returns (uint256) {
         (uint256[] memory pools) = abi.decode(executorInfo.executorData, (uint256[]));
-        _swap(executorInfo.toTokenExpectedAmount, pools, pools.length, _getReceiver(pools.length, pools, receiver), false);
+        address middleReceiver = pools[pools.length - 1] & _WETH_MASK != 0 ? address(this) : receiver;
+        _swap(executorInfo.toTokenExpectedAmount, pools, pools.length, middleReceiver, false);
         if (pools[pools.length - 1] & _WETH_MASK != 0) {
             IWETH(_WETH).withdraw(IERC20(_WETH).balanceOf(address(this)));
             (bool success, ) = payable(receiver).call{value: address(this).balance}("");
@@ -48,15 +49,6 @@ contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
         return amount;
     }
 
-    function _getReceiver(uint256 i, uint256[] memory pools, address receiver) internal returns (address) {
-        if (i > 0) {
-            return address(this);
-        }
-        if (i == 0 && pools[0] & _WETH_MASK != 0) {
-            return address(this);
-        }
-        return receiver;
-    }
 
     function _swap(
         uint256 toTokenExpectedAmount,
@@ -72,7 +64,7 @@ contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
         int256 amountSpecified = -SafeCast.toInt256(toTokenExpectedAmount);
         bytes memory callbackData = abi.encode(pools, i - 1, receiver, isPreview);
         (int256 amount0, int256 amount1) = IUniV3(poolAddress).swap(
-            _getReceiver(i, pools, receiver),
+            receiver,
             zeroForOne,
             amountSpecified,
             zeroForOne ? _MIN_SQRT_RATIO : _MAX_SQRT_RATIO,
