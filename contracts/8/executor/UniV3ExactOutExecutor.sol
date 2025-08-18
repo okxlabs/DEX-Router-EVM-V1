@@ -62,7 +62,7 @@ contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
         bool zeroForOne = (pool & _ONE_FOR_ZERO_MASK) == 0;
         // Specify the amount as a negative value to indicate exact output.
         int256 amountSpecified = -SafeCast.toInt256(toTokenExpectedAmount);
-        bytes memory callbackData = abi.encode(pools, i - 1, receiver, isPreview);
+        bytes memory callbackData = abi.encode(pools, i, receiver, isPreview);
         (int256 amount0, int256 amount1) = IUniV3(poolAddress).swap(
             receiver,
             zeroForOne,
@@ -79,13 +79,7 @@ contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
             abi.decode(data, (uint256[], uint256, address, bool));
         address poolAddress = address(uint160(pools[i] & _ADDRESS_MASK));
         require(msg.sender == poolAddress, "not pool");
-        uint amountToPay = amount0 > 0 ? uint256(amount0) : uint256(amount1);
-        uint amountToReceive = amount0 < 0 ? uint256(amount0) : uint256(amount1);
-        address toTokenPay = amount0 > 0 ? IUniV3(poolAddress).token0() : IUniV3(poolAddress).token1();
-        address toTokenReceive = amount0 < 0 ? IUniV3(poolAddress).token0() : IUniV3(poolAddress).token1();
-        SafeERC20.safeTransfer(IERC20(toTokenReceive), receiver, amountToReceive);
-        bool zeroForOne = (pools[i] & _ONE_FOR_ZERO_MASK) == 0;
-
+        uint256 amountToPay = amount0 > 0 ? uint256(amount0) : uint256(amount1);
 
         if (i == 0) {
             if (isPreview) {
@@ -94,6 +88,8 @@ contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
                     revert(0, 32)
                 }
             }
+            
+            address toTokenPay = amount0 > 0 ? IUniV3(poolAddress).token0() : IUniV3(poolAddress).token1();
             SafeERC20.safeTransfer(IERC20(toTokenPay), msg.sender, amountToPay);
         } else {
             _swap(amountToPay, pools, i - 1, poolAddress, isPreview);
