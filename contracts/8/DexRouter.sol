@@ -22,6 +22,7 @@ contract DexRouter is
     UnxswapRouter,
     UnxswapV3Router,
     CommissionLib,
+    CommonLib,
     UniswapTokenInfoHelper,
     DagRouter
 {
