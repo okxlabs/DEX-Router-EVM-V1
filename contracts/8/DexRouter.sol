@@ -46,6 +46,7 @@ contract DexRouter is
         uint256 orderId,
         address receiver,
         BaseRequest memory baseRequest,
+        address executor,
         ExecutorInfo memory executorInfo
     ) external payable returns (uint256) {
         emit SwapOrderId(orderId);
@@ -56,7 +57,7 @@ contract DexRouter is
         CommissionInfo memory commissionInfo = _getCommissionInfo();
         _validateCommissionInfo(commissionInfo, fromToken, baseRequest.toToken);
 
-        baseRequest.fromTokenAmount = IExecutor(executorInfo.executor).preview(baseRequest, executorInfo.toTokenExpectedAmount, executorInfo.executorData);
+        baseRequest.fromTokenAmount = IExecutor(executor).preview(baseRequest, executorInfo);
         require(baseRequest.fromTokenAmount <= executorInfo.maxConsumeAmount, "consumeAmount > maxConsumeAmount");
         
         (address middleReceiver, uint256 balanceBefore) = _doCommissionFromToken(
@@ -72,12 +73,12 @@ contract DexRouter is
 
         // WETH in, ETH/WETH out
         // asset already in assetTo address
-        IExecutor(executorInfo.executor).execute(msg.sender, middleReceiver, baseRequest, executorInfo.toTokenExpectedAmount, executorInfo.maxConsumeAmount, executorInfo.executorData);
+        IExecutor(executor).execute(msg.sender, middleReceiver, baseRequest, executorInfo);
 
         _doCommissionToToken(commissionInfo, receiver, balanceBefore);
 
         uint256 toTokenBalanceAfter = _getBalanceOf(baseRequest.toToken, receiver);
-        require(toTokenBalanceAfter >= toTokenBalanceBefore + baseRequest.minReturnAmount, "minReturn not reached");
+        require(toTokenBalanceAfter - toTokenBalanceBefore >= baseRequest.minReturnAmount, "minReturn not reached");
         
         if (_bytes32ToAddress(baseRequest.fromToken) == _ETH && address(this).balance > 0) {
             (bool success, ) = payable(msg.sender).call{value: address(this).balance}("");

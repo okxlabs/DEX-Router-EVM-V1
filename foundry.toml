@@ -1,7 +1,8 @@
 [profile.default]
 src = "contracts/8"
 out = "artifacts"
-test = "src/tests/dag"
+# test = "src/tests/dag"
+test = "src/tests/executor"
 libs = ["node_modules", "lib"]
 optimizer = true
 optimizer_runs = 200
@@ -11,6 +12,7 @@ remappings = [
     "@openzeppelin/=node_modules/@openzeppelin/",
     "eth-gas-reporter/=node_modules/eth-gas-reporter/",
     "hardhat/=node_modules/hardhat/",
+    "@dex/=contracts/8/",
 ]
 
 evm_version = "cancun"

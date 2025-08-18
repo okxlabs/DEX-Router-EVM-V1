@@ -6,7 +6,6 @@ interface IDexRouter {
         address assetTo;
         uint256 toTokenExpectedAmount;
         uint256 maxConsumeAmount;
-        address executor;
         bytes executorData;
     }
     struct BaseRequest {

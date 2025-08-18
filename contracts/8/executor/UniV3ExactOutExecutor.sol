@@ -4,6 +4,7 @@ pragma solidity 0.8.17;
 import "../interfaces/IExecutor.sol";
 import "../libraries/CommonUtils.sol";
 import "../interfaces/IUniV3.sol";
+import "../interfaces/IWETH.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
@@ -26,21 +27,24 @@ contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
         address payer,
         address receiver,
         BaseRequest memory baseRequest,
-        uint256 toTokenExpectedAmount,
-        uint256 maxConsumeAmount,
-        bytes memory data
+        ExecutorInfo memory executorInfo
     ) external returns (uint256) {
-        (uint256[] memory pools) = abi.decode(data, (uint256[]));
-        _calculate(toTokenExpectedAmount, pools, pools.length, receiver, false);
-        return toTokenExpectedAmount;
+        (uint256[] memory pools) = abi.decode(executorInfo.executorData, (uint256[]));
+        _swap(executorInfo.toTokenExpectedAmount, pools, pools.length, _getReceiver(pools.length, pools, receiver), false);
+        if (pools[pools.length - 1] & _WETH_MASK != 0) {
+            IWETH(_WETH).withdraw(IERC20(_WETH).balanceOf(address(this)));
+            (bool success, ) = payable(receiver).call{value: address(this).balance}("");
+            require(success, "transfer native token failed");
+        }
+        return executorInfo.toTokenExpectedAmount;
     }
 
-    function preview(BaseRequest memory baseRequest, uint256 toTokenExpectedAmount, bytes memory data)
+    function preview(BaseRequest memory baseRequest, ExecutorInfo memory executorInfo)
         external
         returns (uint256 fromTokenAmount)
     {
-        (uint256[] memory pools) = abi.decode(data, (uint256[]));
-        uint256 amount = _calculate(toTokenExpectedAmount, pools, pools.length, address(this), true);
+        (uint256[] memory pools) = abi.decode(executorInfo.executorData, (uint256[]));
+        uint256 amount = _swap(executorInfo.toTokenExpectedAmount, pools, pools.length, address(this), true);
         return amount;
     }
 
@@ -54,7 +58,7 @@ contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
         return receiver;
     }
 
-    function _calculate(
+    function _swap(
         uint256 toTokenExpectedAmount,
         uint256[] memory pools,
         uint256 i,
@@ -77,25 +81,30 @@ contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
         return zeroForOne ? uint256(amount0) : uint256(amount1);
     }
 
+
     function uniswapV3SwapCallback(int256 amount0, int256 amount1, bytes memory data) external {
         (uint256[] memory pools, uint256 i, address receiver, bool isPreview) =
             abi.decode(data, (uint256[], uint256, address, bool));
         address poolAddress = address(uint160(pools[i] & _ADDRESS_MASK));
+        require(msg.sender == poolAddress, "not pool");
+        uint amountToPay = amount0 > 0 ? uint256(amount0) : uint256(amount1);
+        uint amountToReceive = amount0 < 0 ? uint256(amount0) : uint256(amount1);
+        address toTokenPay = amount0 > 0 ? IUniV3(poolAddress).token0() : IUniV3(poolAddress).token1();
+        address toTokenReceive = amount0 < 0 ? IUniV3(poolAddress).token0() : IUniV3(poolAddress).token1();
+        SafeERC20.safeTransfer(IERC20(toTokenReceive), receiver, amountToReceive);
         bool zeroForOne = (pools[i] & _ONE_FOR_ZERO_MASK) == 0;
-        uint256 amount = zeroForOne ? uint256(amount0) : uint256(amount1);
+
 
         if (i == 0) {
             if (isPreview) {
                 assembly {
-                    mstore(0, amount)
+                    mstore(0, amountToPay)
                     revert(0, 32)
                 }
             }
-            require(msg.sender == poolAddress, "not pool");
-            address token = zeroForOne ? IUniV3(poolAddress).token0() : IUniV3(poolAddress).token1();
-            SafeERC20.safeTransfer(IERC20(token), address(this), amount);
+            SafeERC20.safeTransfer(IERC20(toTokenPay), msg.sender, amountToPay);
         } else {
-            _calculate(amount, pools, i - 1, receiver, isPreview);
+            _swap(amountToPay, pools, i - 1, poolAddress, isPreview);
         }
     }
 }

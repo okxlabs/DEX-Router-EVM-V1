@@ -10,10 +10,8 @@ interface IExecutor  is IDexRouter {
         address payer,
         address receiver,
         BaseRequest memory baseRequest,
-        uint256 toTokenExpectedAmount,
-        uint256 maxConsumeAmount,
-        bytes memory data
+        ExecutorInfo memory executorInfo
     ) external returns (uint256);
 
-    function preview(BaseRequest memory baseRequest, uint256 toTokenExpectedAmount, bytes memory data) external returns (uint256);
+    function preview(BaseRequest memory baseRequest, ExecutorInfo memory executorInfo) external returns (uint256);
 }

@@ -23,15 +23,13 @@ contract UniV2ExactOutExecutor is IExecutor, CommonUtils {
         address payer,
         address receiver,
         BaseRequest memory baseRequest,
-        uint256 toTokenExpectedAmount,
-        uint256 maxConsumeAmount,
-        bytes memory data
+        ExecutorInfo memory executorInfo
     ) external returns (uint256) {
-        (bytes32[] memory pools) = abi.decode(data, (bytes32[]));
+        (bytes32[] memory pools) = abi.decode(executorInfo.executorData, (bytes32[]));
         AmountInfo[] memory amountInfos = _calculate(
             address(uint160(baseRequest.fromToken & _ADDRESS_MASK)),
             baseRequest.fromTokenAmount,
-            toTokenExpectedAmount,
+            executorInfo.toTokenExpectedAmount,
             pools
         );
         for (uint256 i = 0; i < amountInfos.length; i++) {
@@ -64,15 +62,15 @@ contract UniV2ExactOutExecutor is IExecutor, CommonUtils {
         }
     }
 
-    function preview(BaseRequest memory baseRequest, uint256 toTokenExpectedAmount, bytes memory data)
+    function preview(BaseRequest memory baseRequest, ExecutorInfo memory executorInfo)
         external
         returns (uint256 fromTokenAmount)
     {
-        (bytes32[] memory pools) = abi.decode(data, (bytes32[]));
+        (bytes32[] memory pools) = abi.decode(executorInfo.executorData, (bytes32[]));
         AmountInfo[] memory amountInfos = _calculate(
             address(uint160(baseRequest.fromToken & _ADDRESS_MASK)),
             baseRequest.fromTokenAmount,
-            toTokenExpectedAmount,
+            executorInfo.toTokenExpectedAmount,
             pools
         );
         return amountInfos[0].amountIn;
