@@ -5,7 +5,6 @@ import "./UnxswapRouter.sol";
 import "./UnxswapV3Router.sol";
 
 import "./interfaces/IWETH.sol";
-import "./interfaces/IAdapter.sol";
 import "./interfaces/IApproveProxy.sol";
 import "./interfaces/IWNativeRelayer.sol";
 import "./interfaces/IExecutor.sol";
@@ -14,6 +13,7 @@ import "./libraries/PMMLib.sol";
 import "./libraries/CommissionLib.sol";
 import "./libraries/EthReceiver.sol";
 import "./libraries/UniswapTokenInfoHelper.sol";
+import "./DagRouter.sol";
 
 /// @title DexRouterV1
 /// @notice Entrance of Split trading in Dex platform
@@ -24,11 +24,11 @@ contract DexRouter is
     UnxswapRouter,
     UnxswapV3Router,
     CommissionLib,
-    UniswapTokenInfoHelper
+    UniswapTokenInfoHelper,
+    DagRouter
 {
     string public constant version = "v1.0.5-tee";
     using UniversalERC20 for IERC20;
-
 
     //-------------------------------
     //------- Modifier --------------
@@ -278,78 +278,12 @@ contract DexRouter is
         }
     }
 
-    /// @notice Transfers tokens internally within the contract.
-    /// @param payer The address of the payer.
-    /// @param to The address of the receiver.
-    /// @param token The address of the token to be transferred.
-    /// @param amount The amount of tokens to be transferred.
-    /// @dev Handles the transfer of ERC20 tokens or native tokens within the contract.
-    function _transferInternal(
-        address payer,
-        address to,
-        address token,
-        uint256 amount
-    ) private {
-        if (payer == address(this)) {
-            SafeERC20.safeTransfer(IERC20(token), to, amount);
-        } else {
-            IApproveProxy(_APPROVE_PROXY).claimTokens(token, payer, to, amount);
-        }
-    }
-    /// @notice Transfers the specified token to the user.
-    /// @param token The address of the token to be transferred.
-    /// @param to The address of the receiver.
-    /// @dev Handles the withdrawal of tokens to the user, converting WETH to ETH if necessary.
-
-    function _transferTokenToUser(address token, address to) private {
-        if ((IERC20(token).isETH())) {
-            uint256 wethBal = IERC20(address(uint160(_WETH))).balanceOf(
-                address(this)
-            );
-            if (wethBal > 0) {
-                IWETH(address(uint160(_WETH))).transfer(
-                    _WNATIVE_RELAY,
-                    wethBal
-                );
-                IWNativeRelayer(_WNATIVE_RELAY).withdraw(wethBal);
-            }
-            if (to != address(this)) {
-                uint256 ethBal = address(this).balance;
-                if (ethBal > 0) {
-                    (bool success, ) = payable(to).call{value: ethBal}("");
-                    require(success, "transfer native token failed");
-                }
-            }
-        } else {
-            if (to != address(this)) {
-                uint256 bal = IERC20(token).balanceOf(address(this));
-                if (bal > 0) {
-                    SafeERC20.safeTransfer(IERC20(token), to, bal);
-                }
-            }
-        }
-    }
-
-    /// @notice Converts a uint256 value into an address.
-    /// @param param The uint256 value to be converted.
-    /// @return result The address obtained from the conversion.
-    /// @dev This function is used to extract an address from a uint256,
-    /// typically used when dealing with low-level data operations or when addresses are packed into larger data types.
-
-    function _bytes32ToAddress(
-        uint256 param
-    ) private pure returns (address result) {
-        assembly {
-            result := and(param, _ADDRESS_MASK)
-        }
-    }
     /// @notice Executes a complex swap based on provided parameters and paths.
     /// @param baseRequest Basic swap details including tokens, amounts, and deadline.
     /// @param batchesAmount Amounts for each swap batch.
     /// @param batches Detailed swap paths for execution.
     /// @param payer Address providing the tokens.
     /// @param receiver Address receiving the swapped tokens.
-    /// @return returnAmount Total received tokens from the swap.
 
     function _smartSwapInternal(
         BaseRequest memory baseRequest,
@@ -358,7 +292,7 @@ contract DexRouter is
         address payer,
         address refundTo,
         address receiver
-    ) private returns (uint256 returnAmount) {
+    ) private {
         // 1. transfer from token in
         BaseRequest memory _baseRequest = baseRequest;
         require(
@@ -366,9 +300,6 @@ contract DexRouter is
             "Route: fromTokenAmount must be > 0"
         );
         address fromToken = _bytes32ToAddress(_baseRequest.fromToken);
-        returnAmount = IERC20(_baseRequest.toToken).universalBalanceOf(
-            receiver
-        );
 
         // In order to deal with ETH/WETH transfer rules in a unified manner,
         // we do not need to judge according to fromToken.
@@ -415,24 +346,6 @@ contract DexRouter is
 
         // 5. transfer tokens to user
         _transferTokenToUser(_baseRequest.toToken, receiver);
-
-        // 6. check minReturnAmount
-        returnAmount =
-            IERC20(_baseRequest.toToken).universalBalanceOf(receiver) -
-            returnAmount;
-        require(
-            returnAmount >= _baseRequest.minReturnAmount,
-            "Min return not reached"
-        );
-
-        emit OrderRecord(
-            fromToken,
-            _baseRequest.toToken,
-            tx.origin,
-            _baseRequest.fromTokenAmount,
-            returnAmount
-        );
-        return returnAmount;
     }
 
     //-------------------------------
@@ -548,15 +461,31 @@ contract DexRouter is
             }
         }
         baseRequest.fromTokenAmount = amount;
-        return
-            _smartSwapInternal(
-                baseRequest,
-                batchesAmount,
-                batches,
-                address(this), // payer
-                refundTo, // refundTo
-                to // receiver
-            );
+
+        returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(to);
+        _smartSwapInternal(
+            baseRequest,
+            batchesAmount,
+            batches,
+            address(this), // payer
+            refundTo, // refundTo
+            to // receiver
+        );
+        // check minReturnAmount
+        returnAmount =
+            IERC20(baseRequest.toToken).universalBalanceOf(to) -
+            returnAmount;
+        require(
+            returnAmount >= baseRequest.minReturnAmount,
+            "Min return not reached"
+        );
+        emit OrderRecord(
+            fromToken,
+            baseRequest.toToken,
+            tx.origin,
+            baseRequest.fromTokenAmount,
+            returnAmount
+        );
     }
 
     /// @notice Executes a swap using the Uniswap V3 protocol.
@@ -668,11 +597,12 @@ contract DexRouter is
         BaseRequest memory baseRequest,
         uint256[] memory batchesAmount,
         RouterPath[][] memory batches
-    ) internal returns (uint256) {
+    ) internal returns (uint256 returnAmount) {
         require(receiver != address(0), "not addr(0)");
         CommissionInfo memory commissionInfo = _getCommissionInfo();
 
-        _validateCommissionInfo(commissionInfo, _bytes32ToAddress(baseRequest.fromToken), baseRequest.toToken);
+        address fromToken = _bytes32ToAddress(baseRequest.fromToken);
+        _validateCommissionInfo(commissionInfo, fromToken, baseRequest.toToken);
 
         (
             address middleReceiver,
@@ -683,8 +613,13 @@ contract DexRouter is
                 receiver,
                 baseRequest.fromTokenAmount
             );
+
+        returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(
+            receiver
+        );
+
         address _payer = payer; // avoid stack too deep
-        uint256 swappedAmount = _smartSwapInternal(
+        _smartSwapInternal(
             baseRequest,
             batchesAmount,
             batches,
@@ -693,12 +628,28 @@ contract DexRouter is
             middleReceiver
         );
 
-        uint256 commissionAmount = _doCommissionToToken(
+        _doCommissionToToken(
             commissionInfo,
             receiver,
             balanceBefore
         );
-        return swappedAmount - commissionAmount;
+
+        // check minReturnAmount
+        returnAmount =
+            IERC20(baseRequest.toToken).universalBalanceOf(receiver) -
+            returnAmount;
+        require(
+            returnAmount >= baseRequest.minReturnAmount,
+            "Min return not reached"
+        );
+
+        emit OrderRecord(
+            fromToken,
+            baseRequest.toToken,
+            tx.origin,
+            baseRequest.fromTokenAmount,
+            returnAmount
+        );
     }
     /// @notice Executes a token swap using the Unxswap protocol, sending the output directly to a specified receiver. For unxswap, if srcToken is ETH, srcToken needs to be address(0).
     /// @param srcToken The source token to be swapped.
@@ -974,19 +925,75 @@ contract DexRouter is
         _swapWrap(orderId, receiver, reversed, baseRequest.fromTokenAmount);
     }
 
-    /**
-     * @dev Reverts with returndata if present. Otherwise reverts with "FailedCall".
-     * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/c64a1edb67b6e3f4a15cca8909c9482ad33a02b0/contracts/utils/Address.sol#L135-L149
-     */
-    function _revert(bytes memory returndata) private pure {
-        // Look for revert reason and bubble it up if present
-        if (returndata.length > 0) {
-            // The easiest way to bubble the revert reason is using memory via assembly
-            assembly ("memory-safe") {
-                revert(add(returndata, 0x20), mload(returndata))
-            }
-        } else {
-            revert("adaptor call failed");
-        }
+    /// @notice Executes a DAG swap to a specified receiver using structured base request parameters.
+    /// @param orderId Unique identifier for the swap order, facilitating tracking and reference.
+    /// @param receiver The address that will receive the swapped tokens.
+    /// @param baseRequest Struct containing essential swap parameters including source token, destination token, amount, minimum return, and deadline.
+    /// @param paths An array of RouterPath structs defining the DAG swap route.
+    /// @return returnAmount The total amount of destination tokens received from the swap.
+    /// @dev This function validates token compatibility with the provided pool route and ensures proper swap execution.
+    function dagSwapTo(
+        uint256 orderId,
+        address receiver,
+        BaseRequest calldata baseRequest,
+        RouterPath[] calldata paths
+    )
+        external
+        payable
+        isExpired(baseRequest.deadLine)
+        returns (uint256 returnAmount)
+    {
+        emit SwapOrderId(orderId);
+
+        require(receiver != address(0), "not addr(0)");
+
+        address fromToken = _bytes32ToAddress(baseRequest.fromToken);
+        CommissionInfo memory commissionInfo = _getCommissionInfo();
+        _validateCommissionInfo(commissionInfo, fromToken, baseRequest.toToken);
+
+        (
+            address middleReceiver,
+            uint256 balanceBefore
+        ) = _doCommissionFromToken(
+                commissionInfo,
+                msg.sender,
+                receiver,
+                baseRequest.fromTokenAmount
+            );
+
+        returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(
+            receiver
+        );
+
+        _dagSwapInternal(
+            baseRequest,
+            paths,
+            msg.sender,
+            msg.sender,
+            middleReceiver
+        );
+
+        _doCommissionToToken(
+            commissionInfo,
+            receiver,
+            balanceBefore
+        );
+
+        // check minReturnAmount
+        returnAmount =
+            IERC20(baseRequest.toToken).universalBalanceOf(receiver) -
+            returnAmount;
+        require(
+            returnAmount >= baseRequest.minReturnAmount,
+            "Min return not reached"
+        );
+
+        emit OrderRecord(
+            fromToken,
+            baseRequest.toToken,
+            msg.sender,
+            baseRequest.fromTokenAmount,
+            returnAmount
+        );
     }
 }
