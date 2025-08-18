@@ -91,7 +91,7 @@ contract DexRouter is
             baseRequest.toToken,
             tx.origin,
             baseRequest.fromTokenAmount,
-            swappedAmount
+            toTokenBalanceAfter - toTokenBalanceBefore
         );
 
         return toTokenBalanceAfter - toTokenBalanceBefore;
