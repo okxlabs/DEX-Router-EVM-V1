@@ -74,15 +74,16 @@ contract DexRouter is
 
         // WETH in, ETH/WETH out
         // asset already in assetTo address
-        uint256 swappedAmount = IExecutor(executor).execute(msg.sender, middleReceiver, baseRequest, toTokenExpectedAmount, maxConsumeAmount, executorData);
+        IExecutor(executor).execute(msg.sender, middleReceiver, baseRequest, toTokenExpectedAmount, maxConsumeAmount, executorData);
 
-        uint256 commissionAmount = _doCommissionToToken(commissionInfo, receiver, balanceBefore);
+        _doCommissionToToken(commissionInfo, receiver, balanceBefore);
 
         uint256 toTokenBalanceAfter = _getBalanceOf(baseRequest.toToken, receiver);
         require(toTokenBalanceAfter >= toTokenBalanceBefore + baseRequest.minReturnAmount, "minReturn not reached");
         
         if (_bytes32ToAddress(baseRequest.fromToken) == _ETH && address(this).balance > 0) {
-            payable(msg.sender).transfer(address(this).balance);
+            (bool success, ) = payable(msg.sender).call{value: address(this).balance}("");
+            require(success, "refund native token failed");
         }
         
         emit OrderRecord(
@@ -93,7 +94,7 @@ contract DexRouter is
             swappedAmount
         );
 
-        return swappedAmount - commissionAmount;
+        return toTokenBalanceAfter - toTokenBalanceBefore;
     }
 
     function _validateExecuteRequest(
