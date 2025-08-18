@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
+
 contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
     bytes32 private constant _POOL_INIT_CODE_HASH = 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54; // Pool init code hash
     bytes32 private constant _FF_FACTORY = 0xff1F98431c8aD98523631AE4a59f267346ea31F9840000000000000000000000; // Factory address
@@ -23,6 +24,23 @@ contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
     uint256 private constant _INT256_MAX = 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff; // Maximum int256
     uint256 private constant _INT256_MIN = 0x8000000000000000000000000000000000000000000000000000000000000000; // Minimum int256
 
+    // tsload
+    
+    function getTpool() internal view returns (address addr) {
+        bytes32 _TPOOL_ADDR = keccak256("tpool");
+        assembly {
+            addr := sload(_TPOOL_ADDR) 
+            addr := and(addr, _ADDRESS_MASK)
+        }
+        return addr;
+    }
+    function setTpool(address addr) internal {
+        bytes32 _TPOOL_ADDR = keccak256("tpool");
+        assembly {
+            sstore(_TPOOL_ADDR, addr)
+        }
+    }
+    
     function execute(
         address payer,
         address receiver,
@@ -44,9 +62,17 @@ contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
         external
         returns (uint256 fromTokenAmount)
     {
-        (uint256[] memory pools) = abi.decode(executorInfo.executorData, (uint256[]));
-        uint256 amount = _swap(executorInfo.toTokenExpectedAmount, pools, pools.length, address(this), true);
-        return amount;
+        if (msg.sender == address(this)) {
+            (uint256[] memory pools) = abi.decode(executorInfo.executorData, (uint256[]));
+            _swap(executorInfo.toTokenExpectedAmount, pools, pools.length, address(this), true);
+            return executorInfo.toTokenExpectedAmount;
+        } else {
+            (bool success, bytes memory result) = address(this).call(abi.encodeWithSelector(this.preview.selector, baseRequest, executorInfo));
+            require(!success, "preview failed");
+            fromTokenAmount = abi.decode(result, (uint256));
+            return fromTokenAmount;
+        }
+
     }
 
 
@@ -58,11 +84,16 @@ contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
         bool isPreview
     ) internal returns (uint256) {
         uint256 pool = pools[i - 1];
+
         address poolAddress = address(uint160(pool & _ADDRESS_MASK));
+
         bool zeroForOne = (pool & _ONE_FOR_ZERO_MASK) == 0;
         // Specify the amount as a negative value to indicate exact output.
         int256 amountSpecified = -SafeCast.toInt256(toTokenExpectedAmount);
-        bytes memory callbackData = abi.encode(pools, i, receiver, isPreview);
+        bytes memory callbackData = abi.encode(pools, i - 1, receiver, isPreview);
+
+        setTpool(poolAddress);
+
         (int256 amount0, int256 amount1) = IUniV3(poolAddress).swap(
             receiver,
             zeroForOne,
@@ -78,7 +109,8 @@ contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
         (uint256[] memory pools, uint256 i, address receiver, bool isPreview) =
             abi.decode(data, (uint256[], uint256, address, bool));
         address poolAddress = address(uint160(pools[i] & _ADDRESS_MASK));
-        require(msg.sender == poolAddress, "not pool");
+        require(msg.sender == getTpool(), "not pool");
+
         uint256 amountToPay = amount0 > 0 ? uint256(amount0) : uint256(amount1);
 
         if (i == 0) {
@@ -92,7 +124,8 @@ contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
             address toTokenPay = amount0 > 0 ? IUniV3(poolAddress).token0() : IUniV3(poolAddress).token1();
             SafeERC20.safeTransfer(IERC20(toTokenPay), msg.sender, amountToPay);
         } else {
-            _swap(amountToPay, pools, i - 1, poolAddress, isPreview);
+            _swap(amountToPay, pools, i, poolAddress, isPreview);
         }
     }
+    receive() external payable {}
 }
