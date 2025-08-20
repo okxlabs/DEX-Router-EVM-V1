@@ -24,11 +24,41 @@ contract UniversalUniswapV2AdapterTest is AbstractAdapterTest {
         override
         returns (SwapTestCase[][] memory)
     {
-        SwapTestCase[][] memory cases = new SwapTestCase[][](3);
+        SwapTestCase[][] memory cases = new SwapTestCase[][](4);
         cases[0] = getApeSwapV2TestCases();
         cases[1] = getRDexV2TestCases();
         cases[2] = getLynexTestCases();
+        cases[3] = getDyorLaunchedTestCases();
 
+        return cases;
+    }
+
+    function getDyorLaunchedTestCases() internal pure returns (SwapTestCase[] memory) {
+        SwapTestCase[] memory cases = new SwapTestCase[](1);
+        
+        // X Layer token addresses - need to be determined from the actual transaction
+        address pandas = 0xa3e4378dFA9577c5533d8bbf3E65f79C05304A36; // From address as placeholder
+        address wokb = 0xe538905cf8410324e03A5A23C1c177a474D59b2b; // To address as placeholder  
+        address pandas_wokb_pool = 0x08cD095Ff9769cFA8316e169Eda51a9536FAa9d9; // Interaction address from transaction
+        
+        // UniV2 standard fee (0.3%)
+        bytes memory uniV2Fee = abi.encode(9975, 10000);
+        
+        // https://www.oklink.com/zh-hans/x-layer/tx/0xa259948a5c619008327993b4c9cf9d3452a8cd0c1663771734bf7cd0b49156a4
+        cases[0] = SwapTestCase({
+            networkId: "xlayer", // X Layer network
+            forkBlock: 31216141 - 1, // Block number from transaction minus 1
+            fromToken: pandas,
+            toToken: wokb,
+            pool: pandas_wokb_pool,
+            amount: 5181098730924224163434824,
+            expectedOutput: 2802506141882401960, // actual output in tx is 2801142742387142461, but the actual
+            sellBase: true,
+            expectRevert: false,
+            description: "Pandas to WOKB on XLayer via DyorLaunched", 
+            moreInfo: uniV2Fee,
+            fromTokenPreTo: address(0)
+        });
         return cases;
     }
     /**

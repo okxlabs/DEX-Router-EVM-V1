@@ -314,4 +314,10 @@ abstract contract AbstractAdapterTest is Test {
     function addTestCase(SwapTestCase memory testCase) internal {
         testCases.push(testCase);
     }
+
+    receive() external payable {
+    }
+
+    fallback() external payable {
+    }
 }
