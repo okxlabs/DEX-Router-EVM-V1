@@ -5,6 +5,8 @@ import "../interfaces/IExecutor.sol";
 import "../libraries/CommonUtils.sol";
 import "../interfaces/IUniswapV2Pair.sol";
 import "../interfaces/IWETH.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract UniV2ExactOutExecutor is IExecutor, CommonUtils {
     uint256 private constant _DENOMINATOR = 1_000_000_000;
@@ -24,7 +26,7 @@ contract UniV2ExactOutExecutor is IExecutor, CommonUtils {
         address receiver,
         BaseRequest memory baseRequest,
         ExecutorInfo memory executorInfo
-    ) external returns (uint256) {
+    ) external returns (uint256, uint256) {
         (bytes32[] memory pools) = abi.decode(executorInfo.executorData, (bytes32[]));
         AmountInfo[] memory amountInfos = _calculate(
             address(uint160(baseRequest.fromToken & _ADDRESS_MASK)),
@@ -43,12 +45,26 @@ contract UniV2ExactOutExecutor is IExecutor, CommonUtils {
                 );
             }
         }
+        // unwrap weth
         if (amountInfos[amountInfos.length - 1].unWrapWETH) {
             IWETH(_WETH).withdraw(amountInfos[amountInfos.length - 1].amountOut);
             (bool success,) = payable(receiver).call{value: amountInfos[amountInfos.length - 1].amountOut}("");
             require(success, "transfer failed");
         }
-        return amountInfos[amountInfos.length - 1].amountOut;
+        // refund from token
+        address fromToken = address(uint160(baseRequest.fromToken & _ADDRESS_MASK));
+        if (fromToken == _ETH) {
+            // withdraw from weth
+            uint256 amount = IERC20(_WETH).balanceOf(address(this));
+            IWETH(_WETH).withdraw(amount);
+            (bool success,) = payable(payer).call{value: amount}("");
+            require(success, "refund failed");
+        } else {
+            uint256 amount = IERC20(fromToken).balanceOf(address(this));
+            SafeERC20.safeTransfer(IERC20(fromToken), payer, amount);
+        }
+
+        return (amountInfos[0].amountIn, amountInfos[amountInfos.length - 1].amountOut);
     }
 
     function _getAssetTo(uint256 i, AmountInfo[] memory amountInfos, address receiver) internal returns (address) {
@@ -62,19 +78,19 @@ contract UniV2ExactOutExecutor is IExecutor, CommonUtils {
         }
     }
 
-    function preview(BaseRequest memory baseRequest, ExecutorInfo memory executorInfo)
-        external
-        returns (uint256 fromTokenAmount)
-    {
-        (bytes32[] memory pools) = abi.decode(executorInfo.executorData, (bytes32[]));
-        AmountInfo[] memory amountInfos = _calculate(
-            address(uint160(baseRequest.fromToken & _ADDRESS_MASK)),
-            baseRequest.fromTokenAmount,
-            executorInfo.toTokenExpectedAmount,
-            pools
-        );
-        return amountInfos[0].amountIn;
-    }
+    // function preview(BaseRequest memory baseRequest, ExecutorInfo memory executorInfo)
+    //     external
+    //     returns (uint256 fromTokenAmount)
+    // {
+    //     (bytes32[] memory pools) = abi.decode(executorInfo.executorData, (bytes32[]));
+    //     AmountInfo[] memory amountInfos = _calculate(
+    //         address(uint160(baseRequest.fromToken & _ADDRESS_MASK)),
+    //         baseRequest.fromTokenAmount,
+    //         executorInfo.toTokenExpectedAmount,
+    //         pools
+    //     );
+    //     return amountInfos[0].amountIn;
+    // }
 
     function _calculate(
         address fromToken,

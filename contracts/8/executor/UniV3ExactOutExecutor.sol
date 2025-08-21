@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 
+
 contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
     bytes32 private constant _POOL_INIT_CODE_HASH = 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54; // Pool init code hash
     bytes32 private constant _FF_FACTORY = 0xff1F98431c8aD98523631AE4a59f267346ea31F9840000000000000000000000; // Factory address
@@ -46,34 +47,46 @@ contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
         address receiver,
         BaseRequest memory baseRequest,
         ExecutorInfo memory executorInfo
-    ) external returns (uint256) {
+    ) external returns (uint256, uint256) {
         (uint256[] memory pools) = abi.decode(executorInfo.executorData, (uint256[]));
         address middleReceiver = pools[pools.length - 1] & _WETH_MASK != 0 ? address(this) : receiver;
-        _swap(executorInfo.toTokenExpectedAmount, pools, pools.length, middleReceiver, false);
+        uint amountToPay = _swap(executorInfo.toTokenExpectedAmount, pools, pools.length, middleReceiver, false);
         if (pools[pools.length - 1] & _WETH_MASK != 0) {
             IWETH(_WETH).withdraw(IERC20(_WETH).balanceOf(address(this)));
             (bool success, ) = payable(receiver).call{value: address(this).balance}("");
             require(success, "transfer native token failed");
         }
-        return executorInfo.toTokenExpectedAmount;
-    }
-
-    function preview(BaseRequest memory baseRequest, ExecutorInfo memory executorInfo)
-        external
-        returns (uint256 fromTokenAmount)
-    {
-        if (msg.sender == address(this)) {
-            (uint256[] memory pools) = abi.decode(executorInfo.executorData, (uint256[]));
-            _swap(executorInfo.toTokenExpectedAmount, pools, pools.length, address(this), true);
-            return executorInfo.toTokenExpectedAmount;
+        // refund from token
+        address fromToken = address(uint160(baseRequest.fromToken & _ADDRESS_MASK));
+        if (fromToken == _ETH) {
+            // withdraw from weth
+            uint256 amount = IERC20(_WETH).balanceOf(address(this));
+            IWETH(_WETH).withdraw(amount);
+            (bool success,) = payable(payer).call{value: amount}("");
+            require(success, "refund failed");
         } else {
-            (bool success, bytes memory result) = address(this).call(abi.encodeWithSelector(this.preview.selector, baseRequest, executorInfo));
-            require(!success, "preview failed");
-            fromTokenAmount = abi.decode(result, (uint256));
-            return fromTokenAmount;
+            uint256 amount = IERC20(fromToken).balanceOf(address(this));
+            SafeERC20.safeTransfer(IERC20(fromToken), payer, amount);
         }
-
+        return (amountToPay, executorInfo.toTokenExpectedAmount);
     }
+
+    // function preview(BaseRequest memory baseRequest, ExecutorInfo memory executorInfo)
+    //     external
+    //     returns (uint256 fromTokenAmount)
+    // {
+    //     if (msg.sender == address(this)) {
+    //         (uint256[] memory pools) = abi.decode(executorInfo.executorData, (uint256[]));
+    //         _swap(executorInfo.toTokenExpectedAmount, pools, pools.length, address(this), true);
+    //         return executorInfo.toTokenExpectedAmount;
+    //     } else {
+    //         (bool success, bytes memory result) = address(this).call(abi.encodeWithSelector(this.preview.selector, baseRequest, executorInfo));
+    //         require(!success, "preview failed");
+    //         fromTokenAmount = abi.decode(result, (uint256));
+    //         return fromTokenAmount;
+    //     }
+
+    // }
 
 
     function _swap(
@@ -101,7 +114,7 @@ contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
             zeroForOne ? _MIN_SQRT_RATIO : _MAX_SQRT_RATIO,
             callbackData
         );
-        return zeroForOne ? uint256(amount0) : uint256(amount1);
+        return amount0 > 0 ? uint256(amount0) : uint256(amount1);
     }
 
 

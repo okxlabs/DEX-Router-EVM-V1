@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "forge-std/console2.sol";
-import "@dex/DexRouter.sol";
-import "@dex/executor/UniV2ExactOutExecutor.sol";
+import {DexRouter, IDexRouter} from "@dex/DexRouter.sol";
+import {UniV2ExactOutExecutor} from "@dex/executor/UniV2ExactOutExecutor.sol";
 import "@dex/TokenApprove.sol";
 import "@dex/TokenApproveProxy.sol";
 import "@dex/utils/WNativeRelayer.sol";
@@ -352,41 +352,7 @@ contract UniV2ExactOutExecutorForkTest is Test {
         assertGt(returnAmount, 0, "Return amount should be positive");
     }
     
-    function testPreviewFunction() public {
-        uint256 amountOut = 1000 * 1e6; // 1000 USDC
-        
-        // Build pool data for WETH -> USDC swap
-        bytes32 poolData = _buildPool(address(WETH), address(USDC), WETH_USDC_PAIR, false);
-        bytes32[] memory pools = new bytes32[](1);
-        pools[0] = poolData;
-        bytes memory executorData = abi.encode(pools);
-        
-        // Create BaseRequest
-        IDexRouter.BaseRequest memory baseRequest = IDexRouter.BaseRequest({
-            fromToken: uint256(uint160(address(WETH))),
-            toToken: address(USDC),
-            fromTokenAmount: 1 ether, // Initial amount (will be recalculated)
-            minReturnAmount: amountOut * 99 / 100,
-            deadLine: block.timestamp + 300
-        });
-        
-        // Create ExecutorInfo for preview
-        IDexRouter.ExecutorInfo memory executorInfo = IDexRouter.ExecutorInfo({
-            assetTo: WETH_USDC_PAIR,
-            toTokenExpectedAmount: amountOut,
-            maxConsumeAmount: type(uint256).max, // Large value for preview
-            executorData: executorData
-        });
-        
-        // Call preview function
-        uint256 requiredAmount = executor.preview(baseRequest, executorInfo);
-        
-        console2.log("Required WETH amount for 1000 USDC:", requiredAmount);
-        
-        // Assertions
-        assertGt(requiredAmount, 0, "Required amount should be positive");
-        assertLt(requiredAmount, 10 ether, "Required amount should be reasonable");
-    }
+
     
     function testExecuteWithBaseRequest_TwoPool_USDC_to_DAI() public {
         _testTwoPoolSwap();

@@ -144,6 +144,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
         }
     }
 
+
     function _doCommissionFromToken(
         CommissionInfo memory commissionInfo,
         address payer,

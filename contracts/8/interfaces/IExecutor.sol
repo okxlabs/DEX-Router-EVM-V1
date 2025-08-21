@@ -11,7 +11,7 @@ interface IExecutor  is IDexRouter {
         address receiver,
         BaseRequest memory baseRequest,
         ExecutorInfo memory executorInfo
-    ) external returns (uint256);
+    ) external returns (uint256, uint256);
 
-    function preview(BaseRequest memory baseRequest, ExecutorInfo memory executorInfo) external returns (uint256);
+
 }
