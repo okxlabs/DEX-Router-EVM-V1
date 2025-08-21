@@ -65,13 +65,13 @@ contract DexRouter is
         uint256 toTokenBalanceBefore = _getBalanceOf(baseRequest.toToken, receiver);
         // WETH in, ETH/WETH out
         // asset already in assetTo address
-        (uint256 actualAmount, uint returnAmount) = IExecutor(executor).execute(msg.sender, middleReceiver, baseRequest, executorInfo);
+        (uint256 actualAmount, ) = IExecutor(executor).execute(msg.sender, middleReceiver, baseRequest, executorInfo);
         
         _doCommissionFromToken(
             commissionInfo,
             msg.sender,
             address(uint160(receiver)),
-            baseRequest.fromTokenAmount
+            actualAmount
         );
         
         _doCommissionToToken(commissionInfo, receiver, balanceBefore);
