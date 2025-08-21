@@ -856,8 +856,8 @@ contract DexRouter is
                 SafeERC20.safeTransfer(IERC20(_WETH), middleReceiver, amount);
             }
         }
-
-        _doCommissionToToken(
+        // emit return amount should be the amount after commission
+        amount -= _doCommissionToToken(
             commissionInfo,
             receiver,
             balanceBefore
