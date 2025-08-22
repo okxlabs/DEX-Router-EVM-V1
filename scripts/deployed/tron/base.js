@@ -8,7 +8,6 @@ module.exports = {
     //nftmarket: "",
     investEntrance: "",
     marketMaker: "",
-    pmmAdapter: "",
     protocolAdmin: "",
     newImpl: "TVbYrdupAymaF5ibPo2WREho7g23rQcqC7",
 }

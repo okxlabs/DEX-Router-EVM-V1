@@ -8,7 +8,6 @@ module.exports = {
     //nftmarket: "0x191b0e61ccBf3B26df76ca4321D9dEE4C960E91E",
     investEntrance: "0x7251FEbEABB01eC9dE53ECe7a96f1C951F886Dd2",
     marketMaker: "0x55b35bF627944396f9950dD6BDdaDb5218110c76",
-    pmmAdapter: "0x19440199101Fb45882d06Ee432437eC89f406248",
     marketMakerProxyAdmin: "0x3c18F8554362c3F07Dc5476C3bBeB9Fdd6F6a500",
     limitOrder: "0xA6dA84219B1d5F419Ef959F1f2A7ec7E32f45CA6",
     limitOrderV2: "0x2ae8947FB81f0AAd5955Baeff9Dcc7779A3e49F2",

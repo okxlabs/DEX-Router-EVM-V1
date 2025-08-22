@@ -9,7 +9,6 @@ module.exports = {
     dexRouterProxyAdmin: "",
     xbridgeProxyAdmin: "",
     marketMaker: "",
-    pmmAdapter: "",
     _FF_FACTORY: "0xff1F98431c8aD98523631AE4a59f267346ea31F9840000000000000000000000",
     uniV2Factory: "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
     newExactOutImpl: "0x6490ea3f5f1889f576c6ebba6ac169b551d40a7b",
