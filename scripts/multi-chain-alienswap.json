@@ -1,9 +1,0 @@
-{
-   "logPath":"scripts/out/",
-   "cmd" : " npx hardhat run scripts/adapter/spartanv2_adapter.js --network ",
-   "test":["goerli","basetest"],
-   "pre":["mainnetpre","basepre","lineapre"],
-   "production":["mainnet","base","linea"],
-   "production_test":["bsc", "base"]
-
-}

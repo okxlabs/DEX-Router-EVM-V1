@@ -1,4 +1,0 @@
-{
-  "plugins": ["prettier-plugin-solidity"],
-  "singleQuote": false
-}
