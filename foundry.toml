@@ -1,0 +1,31 @@
+[profile.default]
+src = "contracts/8"
+out = "artifacts"
+test = "test"
+
+evm_version = "cancun"
+fs_permissions = [{access = "read-write", path = "./"}]
+libs = ["node_modules", "lib"]
+
+[rpc_endpoints]
+arb = "https://arb1.arbitrum.io/rpc"
+avax = "https://rpc.ankr.com/avalanche"
+base = "https://mainnet.base.org"
+bsc = "https://bnb-mainnet.g.alchemy.com/public"
+conflux = "https://evm.confluxrpc.com"
+cro = "https://evm-cronos.crypto.org"
+eth = "https://eth-mainnet.public.blastapi.io"
+ethw = "https://mainnet.ethereumpow.org"
+flare = "https://flare-api.flare.network/ext/C/rpc"
+ftm = "https://rpc.ankr.com/fantom"
+linea = "https://1rpc.io/linea"
+manta = "https://pacific-rpc.manta.network"
+mantle = "https://rpc.mantle.xyz"
+metis = "https://andromeda.metis.io/?owner=1088"
+mode = "https://mainnet.mode.network"
+okc = "http://35.72.176.238:26659"
+op = "https://optimism-mainnet.public.blastapi.io"
+polygon = "https://polygon-mainnet.public.blastapi.io"
+polyzkevm = "https://zkevm-rpc.com"
+scroll = "https://rpc.scroll.io"
+sonic = "https://rpc.soniclabs.com"

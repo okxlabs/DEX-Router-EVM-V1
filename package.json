@@ -1,0 +1,20 @@
+{
+  "name": "@okxlabs/DEX-Router-EVM-V1",
+  "version": "0.0.1",
+  "description": "okxlabs core smart contracts for the Dex Router evm",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/okxlabs/DEX-Router-EVM-V1.git"
+  },
+  "license": "MIT",
+  "keywords": [
+    "okxlabs",
+    "dexrouter",
+    "evm"
+  ],
+  "homepage": "https://github.com/okxlabs/DEX-Router-EVM-V1/blob/main/README.md",
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.5.0",
+    "@openzeppelin/contracts-upgradeable": "^4.7.0"
+  }
+}
