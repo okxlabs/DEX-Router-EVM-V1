@@ -49,6 +49,10 @@ contract PMMAdapter {
             uint256 signatureType
         ) = abi.decode(moreInfo, (IPMMProtocol.OrderRFQ, bytes, uint256));
         uint256 amount = IERC20(order.takerAsset).balanceOf(address(this));
+        if (amount > order.takerAmount) {
+            // The surplus will be returned back to the payer in the end
+            amount = order.takerAmount;
+        }
         require(amount > 0, "Zero balance of PMM adapter");
         SafeERC20.safeApprove(IERC20(order.takerAsset), pool, amount);
         uint256 flagsAndAmount = (
