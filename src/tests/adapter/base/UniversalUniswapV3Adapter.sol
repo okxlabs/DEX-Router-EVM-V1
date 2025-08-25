@@ -72,12 +72,12 @@ contract UniversalUniswapV3AdapterTest is AbstractAdapterTest {
         // Test 1: WBNB to ETH
         cases[0] = SwapTestCase({
             networkId: "bsc",
-            forkBlock: 0, // latest head - use most recent block
+            forkBlock: 55363063, // latest head
             fromToken: WBNB,
             toToken: ETH,
             pool: WBNB_ETH_POOL,
             amount: 1 * 10 ** 18, // 1 WBNB (BSC WBNB has 18 decimals)
-            expectedOutput: 0, // dynamic - will be calculated
+            expectedOutput: 207698750360467694, 
             sellBase: false,
             expectRevert: false,
             description: "WBNB to ETH on Thena V3",
