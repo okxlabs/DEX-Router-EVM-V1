@@ -916,6 +916,14 @@ contract DexRouter is
         _swapWrap(orderId, receiver, reversed, baseRequest.fromTokenAmount);
     }
 
+    function dagSwapByOrderId(
+        uint256 orderId,
+        BaseRequest calldata baseRequest,
+        RouterPath[] calldata paths
+    ) external payable  returns (uint256 returnAmount) {
+        return dagSwapTo(orderId, msg.sender, baseRequest, paths);
+    }
+
     /// @notice Executes a DAG swap to a specified receiver using structured base request parameters.
     /// @param orderId Unique identifier for the swap order, facilitating tracking and reference.
     /// @param receiver The address that will receive the swapped tokens.
@@ -929,7 +937,7 @@ contract DexRouter is
         BaseRequest calldata baseRequest,
         RouterPath[] calldata paths
     )
-        external
+        public
         payable
         isExpired(baseRequest.deadLine)
         returns (uint256 returnAmount)
