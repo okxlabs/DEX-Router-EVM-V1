@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {AbstractAdapterTest} from "../common/AbstractAdapterTest.t.sol";
 import {FlapAdapter} from "@dex/adapter/FlapAdapter.sol";
-import {ExactInputParams} from "@dex/types/ExactInputParams.sol";
+import {ExactInputParams} from "@dex/interfaces/IPortal.sol";
 
 contract FlapAdapterTest is AbstractAdapterTest {
 
@@ -61,7 +61,7 @@ contract FlapAdapterTest is AbstractAdapterTest {
             expectRevert: false,
             description: "WOKB to XStock on XLayer FlapAdapter",
             moreInfo: abi.encode(params1),
-            fromTokenPreTo: address(0) // Tokens will be sent to adapter directly
+            fromTokenPreTo: address(0)
         });
 
         // XStock to WOKB
@@ -86,7 +86,7 @@ contract FlapAdapterTest is AbstractAdapterTest {
             expectRevert: false,
             description: "XStock to WOKB on XLayer FlapAdapter",
             moreInfo: abi.encode(params2),
-            fromTokenPreTo: address(0) // Tokens will be sent to adapter directly
+            fromTokenPreTo: address(0)
         });
 
         return cases;
