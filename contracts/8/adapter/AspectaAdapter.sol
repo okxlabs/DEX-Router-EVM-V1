@@ -20,21 +20,13 @@ contract AspectaAdapter is IAdapter, Ownable {
     address constant NATIVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address public immutable WNATIVETOKEN;
 
-    mapping(address => bool) public dexRouter;
-
     event Received(address sender, uint256 amount);
     // To record swap info for cases that the OrderRecord event is invalid.
     // direction: true for sellBase(buy key), false for sellQuote(sell key)
     event OrderRecord(bool direction, address fromToken, address toToken, uint256 fromAmount, uint256 toAmount);
-    event DexRouterSet(address dexRouter, bool isDexRouter);
 
     constructor(address payable wNativeToken) {
         WNATIVETOKEN = wNativeToken;
-    }
-
-    modifier onlyDexRouter() {
-        require(dexRouter[msg.sender], "AspectaAdapter: only DexRouter can call this adapter");
-        _;
     }
 
     // fromToken == WNativeToken, toToken == Key
@@ -42,7 +34,7 @@ contract AspectaAdapter is IAdapter, Ownable {
         address to,
         address pool,
         bytes memory moreInfo
-    ) external override onlyDexRouter {
+    ) external override {
         (uint256 amount) = abi.decode(moreInfo, (uint256));
         // Withdraw all wnativeToken to nativeToken
         IWETH(WNATIVETOKEN).withdraw(IWETH(WNATIVETOKEN).balanceOf(address(this)));
@@ -67,7 +59,7 @@ contract AspectaAdapter is IAdapter, Ownable {
         address, // to
         address pool,
         bytes memory moreInfo
-    ) external override onlyDexRouter {
+    ) external override {
         (uint256 amount, uint256 minPrice, uint256 fee, address feeRecipient) = abi.decode(moreInfo, (uint256, uint256, uint256, address));
         address payerOrigin = _getPayerOrigin();
         require(payerOrigin != address(0), "AspectaAdapter: payerOrigin is zero");
@@ -113,11 +105,6 @@ contract AspectaAdapter is IAdapter, Ownable {
     receive() external payable {
        emit Received(msg.sender, msg.value);
    }
-
-    function setDexRouter(address _dexRouter, bool _isDexRouter) external onlyOwner {
-        dexRouter[_dexRouter] = _isDexRouter;
-        emit DexRouterSet(_dexRouter, _isDexRouter);
-    }
 
     function _getPayerOrigin() internal pure returns (address payerOriginAddr) {
         uint256 _payerOrigin;
