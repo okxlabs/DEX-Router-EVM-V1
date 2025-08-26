@@ -124,6 +124,32 @@ abstract contract CommonLib is CommonUtils {
         }
     }
 
+    function _validateExecuteRequest(
+        address fromToken,
+        uint256 maxConsumeAmount,
+        uint256 fromTokenAmount
+    ) internal view {
+        require(
+            (fromToken == _ETH && msg.value >= maxConsumeAmount && maxConsumeAmount >= fromTokenAmount) ||
+            (fromToken != _ETH && maxConsumeAmount >= fromTokenAmount && msg.value == 0),
+            "maxConsumeAmount > msg.value || maxConsumeAmount < baseRequest.fromTokenAmount"
+        );
+    }
+
+
+    function _handleTokenTransfer(
+        address fromToken,
+        address assetTo,
+        uint256 amount
+    ) internal {
+        if (fromToken == _ETH) {
+            IWETH(_WETH).deposit{value: amount}();
+            _transferInternal(msg.sender, assetTo, _WETH, amount);
+        } else {
+            _transferInternal(msg.sender, assetTo, fromToken, amount);
+        }
+    }
+
     /// @notice Converts a uint256 value into an address.
     /// @param param The uint256 value to be converted.
     /// @return result The address obtained from the conversion.
