@@ -50,7 +50,8 @@ contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
     ) external returns (uint256, uint256) {
         (uint256[] memory pools) = abi.decode(executorInfo.executorData, (uint256[]));
         address middleReceiver = pools[pools.length - 1] & _WETH_MASK != 0 ? address(this) : receiver;
-        uint amountToPay = _swap(executorInfo.toTokenExpectedAmount, pools, pools.length, middleReceiver, false);
+        SwapResult[] memory swapResults = new SwapResult[](pools.length);
+        _swap(executorInfo.toTokenExpectedAmount, pools, pools.length, middleReceiver, false, swapResults);
         if (pools[pools.length - 1] & _WETH_MASK != 0) {
             IWETH(_WETH).withdraw(IERC20(_WETH).balanceOf(address(this)));
             (bool success, ) = payable(receiver).call{value: address(this).balance}("");
@@ -68,7 +69,7 @@ contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
             uint256 amount = IERC20(fromToken).balanceOf(address(this));
             SafeERC20.safeTransfer(IERC20(fromToken), payer, amount);
         }
-        return (amountToPay, executorInfo.toTokenExpectedAmount);
+        return (swapResults[0].amountToPay, swapResults[swapResults.length - 1].amountToReceive);
     }
 
     // function preview(BaseRequest memory baseRequest, ExecutorInfo memory executorInfo)
@@ -87,15 +88,20 @@ contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
     //     }
 
     // }
-
+    struct SwapResult {
+        uint i;
+        uint256 amountToPay;
+        uint256 amountToReceive;
+    }
 
     function _swap(
         uint256 toTokenExpectedAmount,
         uint256[] memory pools,
         uint256 i,
         address receiver,
-        bool isPreview
-    ) internal returns (uint256) {
+        bool isPreview,
+        SwapResult[] memory swapResults
+    ) internal  {
         uint256 pool = pools[i - 1];
 
         address poolAddress = address(uint160(pool & _ADDRESS_MASK));
@@ -114,30 +120,34 @@ contract UniV3ExactOutExecutor is IExecutor, CommonUtils {
             zeroForOne ? _MIN_SQRT_RATIO : _MAX_SQRT_RATIO,
             callbackData
         );
-        return amount0 > 0 ? uint256(amount0) : uint256(amount1);
+        swapResults[i-1] = SwapResult({
+            i: i - 1,
+            amountToPay: amount0 > 0 ? uint256(amount0) : uint256(amount1),
+            amountToReceive: amount0 > 0 ? uint256(-amount1) : uint256(-amount0)
+        });
     }
 
 
     function uniswapV3SwapCallback(int256 amount0, int256 amount1, bytes memory data) external {
-        (uint256[] memory pools, uint256 i, address receiver, bool isPreview) =
-            abi.decode(data, (uint256[], uint256, address, bool));
+        (uint256[] memory pools, uint256 i, address receiver, bool isPreview, SwapResult[] memory swapResults) =
+            abi.decode(data, (uint256[], uint256, address, bool, SwapResult[]));
         address poolAddress = address(uint160(pools[i] & _ADDRESS_MASK));
         require(msg.sender == getTpool(), "not pool");
 
         uint256 amountToPay = amount0 > 0 ? uint256(amount0) : uint256(amount1);
 
         if (i == 0) {
-            if (isPreview) {
-                assembly {
-                    mstore(0, amountToPay)
-                    revert(0, 32)
-                }
-            }
+            // if (isPreview) {
+            //     assembly {
+            //         mstore(0, amountToPay)
+            //         revert(0, 32)
+            //     }
+            // }
             
             address toTokenPay = amount0 > 0 ? IUniV3(poolAddress).token0() : IUniV3(poolAddress).token1();
             SafeERC20.safeTransfer(IERC20(toTokenPay), msg.sender, amountToPay);
         } else {
-            _swap(amountToPay, pools, i, poolAddress, isPreview);
+            _swap(amountToPay, pools, i, poolAddress, isPreview, swapResults);
         }
     }
     receive() external payable {}

@@ -57,21 +57,21 @@ contract DexRouter is
         CommissionInfo memory commissionInfo = _getCommissionInfo();
         _validateCommissionInfo(commissionInfo, fromToken, baseRequest.toToken);
         
-        uint256 estimatedAmount = executorInfo.maxConsumeAmount * (10**9 - commissionInfo.commissionRate - commissionInfo.commissionRate2) / 10**9;
-        _handleTokenTransfer(fromToken, executorInfo.assetTo, estimatedAmount);
+        uint256 estimatedAmountIn = executorInfo.maxConsumeAmount * (10**9 - commissionInfo.commissionRate - commissionInfo.commissionRate2) / 10**9;
+        _handleTokenTransfer(fromToken, executorInfo.assetTo, estimatedAmountIn);
         address middleReceiver = commissionInfo.isToTokenCommission ? address(this) : address(uint160(receiver));
         uint256 balanceBefore = commissionInfo.isToTokenCommission ?_getBalanceOf(baseRequest.toToken, address(this)): 0;
 
         uint256 toTokenBalanceBefore = _getBalanceOf(baseRequest.toToken, receiver);
         // WETH in, ETH/WETH out
         // asset already in assetTo address
-        (uint256 actualAmount, ) = IExecutor(executor).execute(msg.sender, middleReceiver, baseRequest, executorInfo);
-        
+        (uint256 actualAmountIn, ) = IExecutor(executor).execute(msg.sender, middleReceiver, baseRequest, executorInfo);
+        require(actualAmountIn > 0 && actualAmountIn <= estimatedAmountIn, "actualAmountIn exceeds");
         _doCommissionFromToken(
             commissionInfo,
             msg.sender,
             address(uint160(receiver)),
-            actualAmount
+            actualAmountIn
         );
         
         _doCommissionToToken(commissionInfo, receiver, balanceBefore);
