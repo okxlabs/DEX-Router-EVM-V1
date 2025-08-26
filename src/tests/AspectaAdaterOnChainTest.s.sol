@@ -20,24 +20,16 @@ contract AspectaAdapterOnChain is Script {
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address constant DEX_ROUTER = 0x6015126d7D23648C2e4466693b8DeaB005ffaba8;
     address constant TOKEN_APPROVE = 0x2c34A2Fb1d0b4f55de51E1d0bDEfaDDce6b7cDD6;
-    address constant ASPECTA_POOL_ADDRESS =
-        0x0834f67a5882feB21B310310b03D93bA9a17Adfd;
-    address constant ASPECTA_ADAPTER =
-        0x1e3143b9cB44170098092e53bfbCE76E1Ce53E00;
+    address constant ASPECTA_POOL_ADDRESS = 0x0834f67a5882feB21B310310b03D93bA9a17Adfd;
+    address constant ASPECTA_ADAPTER = 0x1e3143b9cB44170098092e53bfbCE76E1Ce53E00;
 
     // Test parameters
     uint256 constant BUY_AMOUNT = 0.05 ether;
     uint256 constant KEY_AMOUNT = 10;
-    uint256 constant SELL_AMOUNT = 10;
     uint256 constant MIN_RETURN = 1;
 
-    AspectaAdapter public adapter = AspectaAdapter(payable(ASPECTA_ADAPTER));
-    IAspectaKeyPool public aspectaPool = IAspectaKeyPool(ASPECTA_POOL_ADDRESS);
-    DexRouter public dexRouter = DexRouter(payable(DEX_ROUTER));
-    IERC20 public wbnb = IERC20(WBNB_ADDRESS);
-
-    address public user;
-    uint256 public userPrivateKey;
+    DexRouter dexRouter = DexRouter(payable(DEX_ROUTER));
+    IERC20 wbnb = IERC20(WBNB_ADDRESS);
 
     struct SwapInfo {
         uint256 orderId;
@@ -48,55 +40,30 @@ contract AspectaAdapterOnChain is Script {
     }
 
     function run() public {
-        // Get deployer private key from environment and derive address
-        userPrivateKey = vm.envUint("DEPLOY_PRIVATE_KEY");
-        user = vm.rememberKey(userPrivateKey);
-
+        uint256 privateKey = vm.envUint("DEPLOY_PRIVATE_KEY");
+        vm.rememberKey(privateKey);
         require(block.chainid == 56, "Must be BSC mainnet");
 
-        vm.startBroadcast(userPrivateKey);
-
-        // Uncomment to test buy and sell transactions
+        vm.startBroadcast(privateKey);
         // buyKeysTransaction();
         // sellKeysTransaction();
-        sellKeysTransactionThroughRouter();
         vm.stopBroadcast();
-    }
-
-    function approveTokenTransfers() internal {
-        // Check current allowances
-        uint256 wbnbAllowance = wbnb.allowance(user, TOKEN_APPROVE);
-        console2.log("Current WBNB allowance to TokenApprove:", wbnbAllowance);
-
-        // Approve maximum amount for WBNB if needed
-        if (wbnbAllowance < type(uint256).max / 2) {
-            console2.log("Approving WBNB to TokenApprove...");
-            wbnb.approve(TOKEN_APPROVE, type(uint256).max);
-            console2.log("WBNB approval successful!");
-        } else {
-            console2.log("WBNB already has sufficient allowance");
-        }
-
-        console2.log("Token approvals completed");
     }
 
     /// @notice Buy keys transaction (BNB -> Keys) - calls AspectaAdapter.sellBase()
     function buyKeysTransaction() internal {
-        approveTokenTransfers();
-        console2.log("\n=== Executing Buy Keys Transaction ===");
-
-        uint256 bnbBefore = user.balance;
-        console2.log("User BNB before:", bnbBefore, "wei");
+        // Approve WBNB to TokenApprove
+        wbnb.approve(TOKEN_APPROVE, BUY_AMOUNT);
 
         // Prepare swap info
         SwapInfo memory swapInfo;
 
         // Setup base request - BNB to Keys
-        swapInfo.baseRequest.fromToken = uint256(uint160(ETH_ADDRESS)); // Native BNB
-        swapInfo.baseRequest.toToken = ASPECTA_POOL_ADDRESS; // Keys (pool address)
+        swapInfo.baseRequest.fromToken = uint256(uint160(ETH_ADDRESS));
+        swapInfo.baseRequest.toToken = ASPECTA_POOL_ADDRESS;
         swapInfo.baseRequest.fromTokenAmount = BUY_AMOUNT;
         swapInfo.baseRequest.minReturnAmount = MIN_RETURN;
-        swapInfo.baseRequest.deadLine = block.timestamp + 300; // 5 minutes
+        swapInfo.baseRequest.deadLine = block.timestamp + 300;
 
         // Setup batch amounts
         swapInfo.batchesAmount = new uint256[](1);
@@ -108,14 +75,13 @@ contract AspectaAdapterOnChain is Script {
 
         // Setup adapter
         swapInfo.batches[0][0].mixAdapters = new address[](1);
-        swapInfo.batches[0][0].mixAdapters[0] = address(adapter);
+        swapInfo.batches[0][0].mixAdapters[0] = ASPECTA_ADAPTER;
 
         // Setup asset destination
         swapInfo.batches[0][0].assetTo = new address[](1);
-        swapInfo.batches[0][0].assetTo[0] = address(adapter);
+        swapInfo.batches[0][0].assetTo[0] = ASPECTA_ADAPTER;
 
         // Setup raw data: reverse(1byte) + weight(11bytes) + poolAddress(20bytes)
-        // reverse = 0x00 for sellBase (buy keys)
         swapInfo.batches[0][0].rawData = new uint256[](1);
         swapInfo.batches[0][0].rawData[0] = uint256(
             bytes32(
@@ -137,78 +103,33 @@ contract AspectaAdapterOnChain is Script {
         // Setup PMM extra data (empty)
         swapInfo.extraData = new PMMLib.PMMSwapRequest[](0);
 
-        console2.log("Swap amount:", BUY_AMOUNT, "wei");
-        console2.log("Expected keys:", KEY_AMOUNT);
-
         // Execute the transaction
-        uint256 returnAmount = dexRouter.smartSwapByOrderId{value: BUY_AMOUNT}(
+        dexRouter.smartSwapByOrderId{value: BUY_AMOUNT}(
             swapInfo.orderId,
             swapInfo.baseRequest,
             swapInfo.batchesAmount,
             swapInfo.batches,
             swapInfo.extraData
         );
-
-        uint256 bnbAfter = user.balance;
-        console2.log("User BNB after:", bnbAfter, "wei");
-        console2.log("BNB spent:", bnbBefore - bnbAfter, "wei");
-        console2.log("Return amount:", returnAmount);
-        console2.log("Buy keys transaction successful!");
-    }
-
-    /// @notice Sell keys transaction (Keys -> BNB) - calls AspectaAdapter.sellQuote()
-    function sellKeysTransaction() internal {
-        console2.log("\n=== Selling Keys Directly ===");
-
-        uint256 minPrice = 0.00001 ether;
-
-        uint256 bnbBefore = user.balance;
-        console2.log("User BNB before:", bnbBefore, "wei");
-
-        // Get expected sell price
-        uint256 expectedPrice = aspectaPool.getSellPrice(SELL_AMOUNT);
-        console2.log("Expected BNB from selling", SELL_AMOUNT, "keys");
-        console2.log("Expected price:", expectedPrice, "wei");
-
-        console2.log("Attempting to sell", SELL_AMOUNT, "keys");
-        console2.log("Minimum price:", minPrice, "wei");
-
-        // Call sellByRouter directly
-        aspectaPool.sellByRouter(SELL_AMOUNT, minPrice);
-
-        uint256 bnbAfter = user.balance;
-        console2.log("User BNB after:", bnbAfter, "wei");
-        console2.log("BNB gained:", bnbAfter - bnbBefore, "wei");
-        console2.log("Sell transaction successful!");
     }
 
     /// @notice Sell keys transaction (Keys -> BNB) through DexRouter - calls AspectaAdapter.sellQuote()
-    function sellKeysTransactionThroughRouter() internal {
-        console2.log("\n=== Selling Keys Through DexRouter ===");
-
-        uint256 sellAmount = 10; // Number of keys to sell
-        uint256 minPrice = 0.00001 ether; // Minimum BNB to receive
-
-        uint256 bnbBefore = user.balance;
-        console2.log("User BNB before:", bnbBefore, "wei");
-
-        // Get expected sell price
-        uint256 expectedPrice = aspectaPool.getSellPrice(sellAmount);
+    function sellKeysTransaction() internal {
+        uint256 minPrice = 0.00001 ether;
         
-
         // Prepare swap info for selling keys
         SwapInfo memory swapInfo;
 
         // Setup base request - Keys to BNB
-        swapInfo.baseRequest.fromToken = uint256(uint160(ASPECTA_POOL_ADDRESS)); // Keys (pool address)
-        swapInfo.baseRequest.toToken = ETH_ADDRESS; // Native BNB
-        swapInfo.baseRequest.fromTokenAmount = sellAmount; // Number of keys
-        swapInfo.baseRequest.minReturnAmount = minPrice; // Minimum BNB
-        swapInfo.baseRequest.deadLine = block.timestamp + 300; // 5 minutes
+        swapInfo.baseRequest.fromToken = uint256(uint160(ASPECTA_POOL_ADDRESS));
+        swapInfo.baseRequest.toToken = ETH_ADDRESS;
+        swapInfo.baseRequest.fromTokenAmount = KEY_AMOUNT;
+        swapInfo.baseRequest.minReturnAmount = minPrice;
+        swapInfo.baseRequest.deadLine = block.timestamp + 300;
 
         // Setup batch amounts
         swapInfo.batchesAmount = new uint256[](1);
-        swapInfo.batchesAmount[0] = sellAmount;
+        swapInfo.batchesAmount[0] = 0;
 
         // Setup routing batches
         swapInfo.batches = new DexRouter.RouterPath[][](1);
@@ -216,20 +137,19 @@ contract AspectaAdapterOnChain is Script {
 
         // Setup adapter
         swapInfo.batches[0][0].mixAdapters = new address[](1);
-        swapInfo.batches[0][0].mixAdapters[0] = address(adapter);
+        swapInfo.batches[0][0].mixAdapters[0] = ASPECTA_ADAPTER;
 
         // Setup asset destination
         swapInfo.batches[0][0].assetTo = new address[](1);
-        swapInfo.batches[0][0].assetTo[0] = address(adapter);
+        swapInfo.batches[0][0].assetTo[0] = ASPECTA_ADAPTER;
 
         // Setup raw data: reverse(1byte) + weight(11bytes) + poolAddress(20bytes)
-        // reverse = 0x80 for sellQuote (sell keys) - set the reverse bit
         swapInfo.batches[0][0].rawData = new uint256[](1);
         swapInfo.batches[0][0].rawData[0] = uint256(
             bytes32(
                 abi.encodePacked(
-                    uint8(0x80), // Set reverse bit for sellQuote
-                    uint88(10000), // 100% weight
+                    uint8(0x80),
+                    uint88(10000),
                     ASPECTA_POOL_ADDRESS
                 )
             )
@@ -239,10 +159,10 @@ contract AspectaAdapterOnChain is Script {
         // sellQuote expects: (uint256 amount, uint256 minPrice, uint256 fee, address feeRecipient)
         swapInfo.batches[0][0].extraData = new bytes[](1);
         swapInfo.batches[0][0].extraData[0] = abi.encode(
-            sellAmount, // amount of keys to sell
-            minPrice, // minimum price
-            0, // fee (set to 0 if no fee)
-            address(0) // fee recipient (set to 0 if no fee)
+            KEY_AMOUNT,
+            minPrice,
+            0,
+            address(0)
         );
 
         swapInfo.batches[0][0].fromToken = uint256(
@@ -252,22 +172,14 @@ contract AspectaAdapterOnChain is Script {
         // Setup PMM extra data (empty)
         swapInfo.extraData = new PMMLib.PMMSwapRequest[](0);
 
-        console2.log("Selling", sellAmount, "keys");
-        console2.log("Minimum price:", minPrice, "wei");
-
-        // Execute the transaction (no ETH value needed for selling)
-        uint256 returnAmount = dexRouter.smartSwapByOrderId(
+        // Execute the transaction
+        dexRouter.smartSwapByOrderId(
             swapInfo.orderId,
             swapInfo.baseRequest,
             swapInfo.batchesAmount,
             swapInfo.batches,
             swapInfo.extraData
         );
-
-        uint256 bnbAfter = user.balance;
-        console2.log("User BNB after:", bnbAfter, "wei");
-        console2.log("BNB gained:", bnbAfter - bnbBefore, "wei");
-        console2.log("Return amount:", returnAmount);
-        console2.log("Sell keys transaction successful!");
     }
 }
+
