@@ -150,11 +150,7 @@ abstract contract DagRouter is CommonLib {
             {
                 uint256 _fromTokenAmount;
                 if (i == path.mixAdapters.length - 1) {
-                    if (payer == address(this)) {
-                        _fromTokenAmount = IERC20(fromToken).balanceOf(address(this));
-                    } else {
-                        _fromTokenAmount = nodeBalance - accAmount;
-                    }
+                    _fromTokenAmount = nodeBalance - accAmount;
                 } else {
                     _fromTokenAmount = (nodeBalance * weight) / 10_000;
                     accAmount += _fromTokenAmount;
