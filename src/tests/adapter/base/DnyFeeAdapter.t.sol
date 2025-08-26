@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.17;
 
 import {DnyFeeAdapter} from "@dex/adapter/DnyFeeAdapter.sol";
 import {AbstractAdapterTest} from "../common/AbstractAdapterTest.t.sol";
@@ -26,8 +26,10 @@ contract DnyFeeAdapterTest is AbstractAdapterTest {
         pure
         returns (SwapTestCase[][] memory)
     {
-        SwapTestCase[][] memory cases = new SwapTestCase[][](1);
+        SwapTestCase[][] memory cases = new SwapTestCase[][](3);
         cases[0] = getRocketForkUniV2TestCases();
+        cases[1] = getLFGTestCases();
+        cases[2] = getOKIETestCases();
 
         return cases;
     }
@@ -86,4 +88,95 @@ contract DnyFeeAdapterTest is AbstractAdapterTest {
 
         return cases;
     }
-} 
+
+    function getLFGTestCases()
+        internal
+        pure
+        returns (SwapTestCase[] memory)
+    {
+
+        SwapTestCase[] memory cases = new SwapTestCase[](2);
+
+        address USDC = 0x74b7F16337b8972027F6196A17a631aC6dE26d22; // 6 dec
+        address USDT = 0x1E4a5963aBFD975d8c9021ce480b42188849D41d; // 6 dec
+        address LFG_LP = 0xA64DE09fDe4e98b1a9a105ebC1F933F1851B1168;
+
+        // tx: https://web3.okx.com/explorer/x-layer/tx/0x8761af72402bf9c9f10183575814d09ffdb45a96fb85f8b5d42cb88bb981b0e4
+        cases[0] = SwapTestCase({
+            networkId: "xlayer",
+            forkBlock: 31645200,
+            fromToken: USDC,
+            toToken: USDT,
+            pool: LFG_LP,
+            amount: 21.837674 * 10 ** 6, 
+            expectedOutput: 21.807808 * 10 ** 6,
+            sellBase: false,
+            expectRevert: false,
+            description: "USDC to USDT on LFG",
+            moreInfo: abi.encode(uint256(30)), // 3/1000 fee
+            fromTokenPreTo: LFG_LP // Transfer tokens to pool first
+        });
+
+        // expect revert because fee is less than 3/1000
+        cases[1] = SwapTestCase({
+            networkId: "xlayer",
+            forkBlock: 31645200,
+            fromToken: USDC,
+            toToken: USDT,
+            pool: LFG_LP,
+            amount: 21.837674 * 10 ** 6, 
+            expectedOutput: 21.807808 * 10 ** 6,
+            sellBase: false,
+            expectRevert: true,
+            description: "USDC to USDT on LFG",
+            moreInfo: abi.encode(uint256(29)), // 2.9/1000 fee
+            fromTokenPreTo: LFG_LP // Transfer tokens to pool first
+        });
+    }
+
+    function getOKIETestCases()
+        internal
+        pure
+        returns (SwapTestCase[] memory)
+    {
+        SwapTestCase[] memory cases = new SwapTestCase[](2);
+
+        address WOKB = 0xe538905cf8410324e03A5A23C1c177a474D59b2b; // WOKB
+        address OKIECAT = 0x2dF6295e1F79751f39594554F1FD93a838430c71; // OKIE CAT
+        address OKIE_LP = 0xf69466eA2Bb7A5Fbb82214f75ABAeF40442F8578; // OKIE LP
+
+        // tx: https://web3.okx.com/explorer/x-layer/tx/0x22ec3d456d29079e78d0974b52f65ae2b250f0e87a9a7d7685687bb02f0c8297
+        cases[0] = SwapTestCase({
+            networkId: "xlayer",
+            forkBlock: 31663032-1,
+            fromToken: OKIECAT,
+            toToken: WOKB,
+            pool: OKIE_LP,
+            amount: 2690411813480424849798337,  
+            expectedOutput: 995059091108356848,
+            sellBase: true,
+            expectRevert: false,
+            description: "OKIECAT to WOKB on OKIE",
+            moreInfo: abi.encode(uint256(25)), // 2.5/1000 fee
+            fromTokenPreTo: OKIE_LP // Transfer tokens to pool first
+        });
+
+        // expect revert because fee is less than 2.5/1000
+        cases[1] = SwapTestCase({
+            networkId: "xlayer",
+            forkBlock: 31663032-1,
+            fromToken: OKIECAT,
+            toToken: WOKB,
+            pool: OKIE_LP,
+            amount: 2690411813480424849798337,  
+            expectedOutput: 995059091108356848,
+            sellBase: true,
+            expectRevert: true,
+            description: "OKIECAT to WOKB on OKIE",
+            moreInfo: abi.encode(uint256(24)), // 2.4/1000 fee
+            fromTokenPreTo: OKIE_LP // Transfer tokens to pool first
+        });
+
+        return cases;
+    } 
+}
