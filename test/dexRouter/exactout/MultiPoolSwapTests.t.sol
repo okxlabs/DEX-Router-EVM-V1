@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 import "../common/BaseTestSetup.t.sol";
 
 contract MultiPoolSwapTests is BaseTestSetup {
-    // V2测试
-    // 测试多池交换
+    // V2 Tests
+    // Test multi-pool exchange
     function testERC20TokenMultiPoolExchange() public {
         uint256 sourceTokenIndex = 1;
         uint256 middleTokenIndex = 2;
@@ -52,7 +52,7 @@ contract MultiPoolSwapTests is BaseTestSetup {
         console2.log("after targetToken balance:", tokens[targetTokenIndex].balanceOf(amy));
     }
 
-    // 测试多池交换（ETH作为源代币）
+    // Test multi-pool exchange (ETH as source token)
     function testETHSourceMultiPoolExchange() public {
         uint256 sourceTokenIndex = 0; // ETH/WETH
         uint256 middleTokenIndex = 1;
@@ -96,7 +96,7 @@ contract MultiPoolSwapTests is BaseTestSetup {
         console2.log("after targetToken balance:", tokens[targetTokenIndex].balanceOf(amy));
     }
 
-    // 测试多池交换（ETH作为目标代币）
+    // Test multi-pool exchange (ETH as target token)
     function testETHTargetMultiPoolExchange() public {
         uint256 sourceTokenIndex = 1;
         uint256 middleTokenIndex = 2;
@@ -143,8 +143,8 @@ contract MultiPoolSwapTests is BaseTestSetup {
         console2.log("after targetToken balance:", amy.balance);
     }
 
-    // V3测试
-    // 测试多池交换V3
+    // V3 Tests
+    // Test multi-pool exchange V3
     function testERC20TokenMultiPoolExchangeV3() public {
         uint256 sourceTokenIndex = 1;
         uint256 middleTokenIndex = 2;
@@ -192,7 +192,7 @@ contract MultiPoolSwapTests is BaseTestSetup {
         console2.log("after targetToken balance:", tokens[targetTokenIndex].balanceOf(amy));
     }
     
-    // 测试多池交换V3（ETH作为目标代币）
+    // Test multi-pool exchange V3 (ETH as target token)
     function testETHTargetMultiPoolExchangeV3() public {
         uint256 sourceTokenIndex = 1;
         uint256 middleTokenIndex = 2;
@@ -216,7 +216,7 @@ contract MultiPoolSwapTests is BaseTestSetup {
         
         uint256[] memory pools = new uint256[](2);
         pools[0] = uint256(pool0);
-        // 将pool1转换为uint256类型，并设置WETH_UNWRAP_MASK标志
+        // Convert pool1 to uint256 type and set WETH_UNWRAP_MASK flag
         pools[1] = uint256(pool1) | _WETH_UNWRAP_MASK;
         
         console2.log("Pool0 data:", uint256(pool0));
@@ -241,7 +241,7 @@ contract MultiPoolSwapTests is BaseTestSetup {
         console2.log("after targetToken balance:", amy.balance);
     }
 
-    // 测试多池交换V3（ETH作为源代币）
+    // Test multi-pool exchange V3 (ETH as source token)
     function testETHSourceMultiPoolExchangeV3() public {
         uint256 sourceTokenIndex = 0; // ETH/WETH
         uint256 middleTokenIndex = 1;
