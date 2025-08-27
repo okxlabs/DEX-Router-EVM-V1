@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "forge-std/console2.sol";
-import "@dex/DexRouter.sol";
+import "@okxlabs/DexRouter.sol";
 
 contract Commission2BTest is Test {
     address internal constant _ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;

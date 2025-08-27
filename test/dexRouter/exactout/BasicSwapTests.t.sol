@@ -5,8 +5,8 @@ import "../common/BaseTestSetup.t.sol";
 
 contract BasicSwapTests is BaseTestSetup {
 
-    // V2测试
-    // 测试ERC20代币单池交换unoswapV2
+    // V2 Tests
+    // Test ERC20 token single pool exchange unoswapV2
     function testERC20TokenSinglePoolExchange() public {
         uint256 sourceTokenIndex = 1;
         uint256 targetTokenIndex = 2;
@@ -21,7 +21,7 @@ contract BasicSwapTests is BaseTestSetup {
         console2.log("before sourceToken balance:", sourceToken.balanceOf(amy));
         console2.log("before targetToken balance:", targetToken.balanceOf(amy));
         
-        // // 构建pool数据
+        // Build pool data
         bytes32 pool0 = _buildPool(address(sourceToken), address(targetToken), address(pair), false);
 
         vm.startPrank(amy);
@@ -43,7 +43,7 @@ contract BasicSwapTests is BaseTestSetup {
         console2.log("after targetToken balance:", targetToken.balanceOf(amy));
     }
 
-    // 测试ETH代币单池交换(ETH作为源代币)
+    // Test ETH token single pool exchange (ETH as source token)
     function testETHTokenSinglePoolInExchange() public {
         uint256 sourceTokenIndex = 0;
         uint256 targetTokenIndex = 1;
@@ -77,7 +77,7 @@ contract BasicSwapTests is BaseTestSetup {
         console2.log("after targetToken balance:", tokens[targetTokenIndex].balanceOf(amy));
     }
 
-    // 测试ETH代币单池交换(ETH作为目标代币)
+    // Test ETH token single pool exchange (ETH as target token)
     function testETHTokenSinglePoolOutExchange() public {
         uint256 sourceTokenIndex = 1;
         uint256 targetTokenIndex = 0;
@@ -112,8 +112,8 @@ contract BasicSwapTests is BaseTestSetup {
         console2.log("after targetToken balance:", amy.balance);
     }
 
-    // V3测试
-    // unoswapV3:测试ERC20代币单池交换
+    // V3 Tests
+    // unoswapV3: Test ERC20 token single pool exchange
     function testERC20TokenSinglePoolExchangeV3() public {
         uint256 sourceTokenIndex = 1;
         uint256 targetTokenIndex = 2;
@@ -123,7 +123,7 @@ contract BasicSwapTests is BaseTestSetup {
         console2.log("sourceToken:", address(tokens[sourceTokenIndex]));
         console2.log("targetToken:", address(tokens[targetTokenIndex]));
         
-        // 记录初始余额
+        // Record initial balances
         console2.log("before sourceToken balance:", tokens[sourceTokenIndex].balanceOf(amy));
         console2.log("before targetToken balance:", tokens[targetTokenIndex].balanceOf(amy));
 
@@ -132,23 +132,23 @@ contract BasicSwapTests is BaseTestSetup {
         pools[0] = uint256(pool0);
 
         vm.startPrank(amy);
-            // 确保足够的批准额度
+            // Ensure sufficient approval amount
             tokens[sourceTokenIndex].approve(address(tokenApprove), type(uint256).max);
             dexRouterExactOut.uniswapV3SwapExactOutTo(
-                uint256(uint160(amy)), // 将 amy 地址转换为 uint256 类型
+                uint256(uint160(amy)), // Convert amy address to uint256 type
                 amountOut,
                 amountInMax,
                 pools
             );
         vm.stopPrank();
 
-        // 记录最终余额
+        // Record final balances
         console2.log("after sourceToken balance:", tokens[sourceTokenIndex].balanceOf(amy));
         console2.log("after targetToken balance:", tokens[targetTokenIndex].balanceOf(amy));
         
     }
     
-    // unoswapV3:测试ETH代币单池交换(ETH作为源代币)
+    // unoswapV3: Test ETH token single pool exchange (ETH as source token)
     function testETHTokenSinglePoolExchangeV3() public {
         uint256 sourceTokenIndex = 0;
         uint256 targetTokenIndex = 1;
@@ -180,7 +180,7 @@ contract BasicSwapTests is BaseTestSetup {
         console2.log("after targetToken balance:", tokens[targetTokenIndex].balanceOf(amy));
     }
 
-    // unoswapV3:测试ETH代币单池交换(ETH作为目标代币)
+    // unoswapV3: Test ETH token single pool exchange (ETH as target token)
     function testETHTokenSinglePoolExchangeV3Out() public {
         uint256 sourceTokenIndex = 1;
         uint256 targetTokenIndex = 0;
@@ -196,7 +196,7 @@ contract BasicSwapTests is BaseTestSetup {
 
         bytes32 pool0 = _buildPool(address(tokens[sourceTokenIndex]), address(tokens[targetTokenIndex]), address(pair), true);
         uint256[] memory pools = new uint256[](1);
-        // 将pool0转换为uint256类型，并设置WETH_UNWRAP_MASK标志
+        // Convert pool0 to uint256 type and set WETH_UNWRAP_MASK flag
         pools[0] = uint256(pool0) | _WETH_UNWRAP_MASK;
 
         vm.startPrank(amy);
