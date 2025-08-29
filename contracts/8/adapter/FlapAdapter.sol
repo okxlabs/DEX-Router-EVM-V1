@@ -174,17 +174,22 @@ contract FlapAdapter is IAdapter {
             IERC20(tokenOut).safeTransfer(to, tokenAmount);
         }
         // Handle any remaining native token dust
-        _transferDust(address(uint160(uint256(payerOrigin))));
+        _transferRefund(payerOrigin);
     }
 
     /**
      * @notice Transfers any remaining native token dust to recipient
      * @param to The recipient address
      */
-    function _transferDust(address to) internal {
+    function _transferRefund(address payerOrigin) internal {
+        address _payerOrigin;
+        if ((payerOrigin & ORIGIN_PAYER) == ORIGIN_PAYER) {
+            _payerOrigin = address(uint160(uint256(payerOrigin)));
+        }
+
         uint256 dust = address(this).balance;
         if (dust > 0) {
-            (bool success, ) = to.call{value: dust}("");
+            (bool success, ) = _payerOrigin.call{value: dust}("");
             require(success, "FlapAdapter: Dust transfer failed");
         }
     }
