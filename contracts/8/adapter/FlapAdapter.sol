@@ -54,7 +54,12 @@ contract FlapAdapter is IAdapter {
         address, // pool parameter not used for Flap Portal
         bytes memory moreInfo
     ) external override {
-        _executeSwap(to, moreInfo);
+        uint256 payerOrigin;
+        assembly {
+            let size := calldatasize()
+            payerOrigin := calldataload(sub(size, 32))
+        }
+        _executeSwap(to, moreInfo, payerOrigin);
     }
 
     /**
@@ -68,7 +73,12 @@ contract FlapAdapter is IAdapter {
         address, // pool parameter not used for Flap Portal
         bytes memory moreInfo
     ) external override {
-        _executeSwap(to, moreInfo);
+        uint256 payerOrigin;
+        assembly {
+            let size := calldatasize()
+            payerOrigin := calldataload(sub(size, 32))
+        }
+        _executeSwap(to, moreInfo, payerOrigin);
     }
 
     /**
@@ -76,20 +86,22 @@ contract FlapAdapter is IAdapter {
      * @param to The recipient address for output tokens
      * @param moreInfo Encoded ExactInputParams for the swap
      */
-    function _executeSwap(address to, bytes memory moreInfo) internal {
+    function _executeSwap(address to, bytes memory moreInfo, uint256 payerOrigin) internal {
         require(to != address(0), "FlapAdapter: Invalid recipient");
         
         ExactInputParams memory params = abi.decode(moreInfo, (ExactInputParams));
         bool outputRequiresWrapping = false;
-        
-        // Handle input token preparation
+
         if (params.inputToken == WNATIVE) {
+            // unwrap WNATIVE input token
             _unwrapInputToken(params);
-        } else {
-            // For non-WNATIVE input, prepare for native output
+        } else if (params.outputToken == WNATIVE) {
+            // prepare for native ouput
             params.outputToken = NATIVE_TOKEN;
             outputRequiresWrapping = true;
         }
+        // For non-WNATIVE and non-NATIVE output
+        // currently no alternative quote tokens on xlayer
 
         // Execute the swap
         _performSwap(params);
@@ -100,7 +112,7 @@ contract FlapAdapter is IAdapter {
         }
 
         // Transfer final tokens to recipient
-        _transferOutput(to, params.outputToken, outputRequiresWrapping);
+        _transferOutput(to, params.outputToken, outputRequiresWrapping, payerOrigin);
     }
 
     /**
@@ -153,41 +165,16 @@ contract FlapAdapter is IAdapter {
     function _transferOutput(
         address to,
         address outputToken,
-        bool outputWasWrapped
+        bool outputWasWrapped,
+        uint256 payerOrigin
     ) internal {
-        if (outputWasWrapped) {
-            // Transfer wrapped native tokens to recipient
-            _transferWrappedTokens(to);
-        } else {
-            // Transfer regular tokens to recipient
-            _transferTokens(to, outputToken);
+        address tokenOut = outputWasWrapped ? WNATIVE : outputToken;
+        uint256 tokenAmount = IERC20(tokenOut).balanceOf(address(this));
+        if (tokenAmount > 0) {
+            IERC20(tokenOut).safeTransfer(to, tokenAmount);
         }
-
         // Handle any remaining native token dust
-        _transferDust(to);
-    }
-
-    /**
-     * @notice Transfers wrapped native tokens to recipient
-     * @param to The recipient address
-     */
-    function _transferWrappedTokens(address to) internal {
-        uint256 wnativeBalance = IERC20(WNATIVE).balanceOf(address(this));
-        if (wnativeBalance > 0) {
-            IERC20(WNATIVE).safeTransfer(to, wnativeBalance);
-        }
-    }
-
-    /**
-     * @notice Transfers regular ERC20 tokens to recipient
-     * @param to The recipient address
-     * @param token The token address to transfer
-     */
-    function _transferTokens(address to, address token) internal {
-        uint256 tokenBalance = IERC20(token).balanceOf(address(this));
-        if (tokenBalance > 0) {
-            IERC20(token).safeTransfer(to, tokenBalance);
-        }
+        _transferDust(address(uint160(uint256(payerOrigin))));
     }
 
     /**
