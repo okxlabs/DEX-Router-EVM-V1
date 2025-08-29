@@ -25,6 +25,10 @@ contract FlapAdapter is IAdapter {
     /// @notice Address constant for native token representation
     address private constant NATIVE_TOKEN = address(0);
 
+    /// @notice specific flag for refund logic, "0x3ca20afc" is flexible and also used for commission, "ccc" mean refund
+    uint256 internal constant ORIGIN_PAYER =
+        0x3ca20afc2ccc0000000000000000000000000000000000000000000000000000;
+
     /// @notice Emitted when the contract receives native tokens
     /// @param sender The address that sent the tokens
     /// @param amount The amount of tokens received
@@ -179,9 +183,9 @@ contract FlapAdapter is IAdapter {
 
     /**
      * @notice Transfers any remaining native token dust to recipient
-     * @param to The recipient address
+     * @param payerOrigin The payer origin
      */
-    function _transferRefund(address payerOrigin) internal {
+    function _transferRefund(uint256 payerOrigin) internal {
         address _payerOrigin;
         if ((payerOrigin & ORIGIN_PAYER) == ORIGIN_PAYER) {
             _payerOrigin = address(uint160(uint256(payerOrigin)));
