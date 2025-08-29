@@ -188,6 +188,7 @@ contract FlapAdapter is IAdapter {
     function _transferRefund(uint256 payerOrigin) internal {
         address _payerOrigin;
         if ((payerOrigin & ORIGIN_PAYER) == ORIGIN_PAYER) {
+            // Extract the address from the lower 160 bits
             _payerOrigin = address(uint160(uint256(payerOrigin)));
         }
 

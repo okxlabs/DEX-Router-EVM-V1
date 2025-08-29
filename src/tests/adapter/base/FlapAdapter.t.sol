@@ -4,11 +4,17 @@ pragma solidity ^0.8.17;
 import {AbstractAdapterTest} from "../common/AbstractAdapterTest.t.sol";
 import {FlapAdapter} from "@dex/adapter/FlapAdapter.sol";
 import {ExactInputParams} from "@dex/interfaces/IPortal.sol";
+import {IERC20} from "@dex/interfaces/IERC20.sol";
+import "forge-std/console2.sol";
 
 contract FlapAdapterTest is AbstractAdapterTest {
 
     address internal FLAP_PORTAL = 0xb30D8c4216E1f21F27444D2FfAee3ad577808678;
     address internal WNATIVE = 0xe538905cf8410324e03A5A23C1c177a474D59b2b;
+
+    address internal XStock = 0x53C66Ee89D09De290C2F259c5BEA41cD761d1111;
+    address internal OKBeaver = 0xf671b45c88c307971d178C1E87DA994C62Ff1111;
+    address internal WOKB = 0xe538905cf8410324e03A5A23C1c177a474D59b2b;
 
     function createCustomAdapter(
         string memory /* networkId */
@@ -19,7 +25,7 @@ contract FlapAdapterTest is AbstractAdapterTest {
     function getSwapTestCases()
         internal
         override
-        pure
+        view
         returns (SwapTestCase[][] memory)
     {
         SwapTestCase[][] memory cases = new SwapTestCase[][](1);
@@ -30,13 +36,10 @@ contract FlapAdapterTest is AbstractAdapterTest {
 
     function getTestCases()
         internal
-        pure
+        view
         returns (SwapTestCase[] memory)
     {
         SwapTestCase[] memory cases = new SwapTestCase[](2);
-
-        address XStock = 0x53C66Ee89D09De290C2F259c5BEA41cD761d1111;
-        address WOKB = 0xe538905cf8410324e03A5A23C1c177a474D59b2b;
 
         // Fix: Match the ExactInputParams with the actual swap direction
         ExactInputParams memory params1 = ExactInputParams({
@@ -91,4 +94,52 @@ contract FlapAdapterTest is AbstractAdapterTest {
 
         return cases;
     }
+
+    function testRefund() public {
+        FlapAdapter flapAdapter = new FlapAdapter(FLAP_PORTAL, WNATIVE);
+
+        // Use a large amount that will hit the graduation threshold
+        // This should trigger the refund mechanism when graduation occurs
+        ExactInputParams memory params = ExactInputParams({
+            inputToken: WOKB,
+            outputToken: OKBeaver,
+            inputAmount: 500 * 10 ** 18, // Large amount to hit graduation and trigger refund
+            minOutputAmount: 0, // Set to 0 for testing, real value would be calculated
+            permitData: ""
+        });
+
+        _switchToNetwork("xlayer", 33013177); // Use old block so graduation doesn't occur
+        
+        // Provide initial WOKB balance to the adapter for the test
+        deal(WOKB, address(flapAdapter), params.inputAmount);
+        
+        uint256 payerOrigin = ORIGIN_PAYER + uint(uint160(address(this)));
+        uint256 testContractNativeBalanceBefore = address(this).balance;
+    
+        
+        // Use the same pattern as AbstractAdapterTest with abi.encodePacked
+        (bool success, ) = address(flapAdapter).call(
+            abi.encodePacked(
+                abi.encodeWithSignature(
+                    "sellBase(address,address,bytes)",
+                    address(this),
+                    address(0),
+                    abi.encode(params)
+                ),
+                payerOrigin //payer origin
+            )
+        );
+        
+        require(success, "Graduation transaction should succeed");
+        console2.log("Graduation transaction completed successfully");
+        
+        uint256 nativeRefundReceived = address(this).balance - testContractNativeBalanceBefore;
+        
+        // Verify the adapter has no remaining balances
+        assertEq(address(flapAdapter).balance, 0, "Adapter should have 0 native balance after refund");
+        require(nativeRefundReceived == 419438421069508988842, "Should have refunded native OKB");
+    }
+    
+    // Add a receive function to accept native token refunds
+    receive() external payable {}
 }
