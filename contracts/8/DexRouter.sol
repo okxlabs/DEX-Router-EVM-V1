@@ -54,7 +54,7 @@ contract DexRouter is
         
         _validateExecuteRequest(fromToken, executorInfo.maxConsumeAmount, baseRequest.fromTokenAmount);
         
-        CommissionInfo memory commissionInfo = _getCommissionInfo();
+        (CommissionInfo memory commissionInfo, ) = _getCommissionInfo();
         _validateCommissionInfo(commissionInfo, fromToken, baseRequest.toToken);
         
         uint256 estimatedAmountIn = executorInfo.maxConsumeAmount * (10**9 - commissionInfo.commissionRate - commissionInfo.commissionRate2) / 10**9;
@@ -459,7 +459,7 @@ contract DexRouter is
         uint256 minReturn,
         uint256[] calldata pools
     ) internal returns (uint256 returnAmount) {
-        CommissionInfo memory commissionInfo = _getCommissionInfo();
+        (CommissionInfo memory commissionInfo, ) = _getCommissionInfo();
         _validateCommissionInfo(commissionInfo, srcToken, toToken);
 
         uint balanceBeforeReceiver = _getBalanceOf(toToken, address(uint160(receiver)));
@@ -549,7 +549,7 @@ contract DexRouter is
         RouterPath[][] memory batches
     ) internal returns (uint256 returnAmount) {
         require(receiver != address(0), "not addr(0)");
-        CommissionInfo memory commissionInfo = _getCommissionInfo();
+        (CommissionInfo memory commissionInfo, ) = _getCommissionInfo();
 
         address fromToken = _bytes32ToAddress(baseRequest.fromToken);
         _validateCommissionInfo(commissionInfo, fromToken, baseRequest.toToken);
@@ -651,7 +651,7 @@ contract DexRouter is
         bytes32[] calldata pools
     ) internal returns (uint256 returnAmount) {
         require(receiver != address(0), "not addr(0)");
-        CommissionInfo memory commissionInfo = _getCommissionInfo();
+        (CommissionInfo memory commissionInfo, ) = _getCommissionInfo();
 
         _validateCommissionInfo(commissionInfo, srcToken, toToken);
         uint balanceBeforeReceiver = _getBalanceOf(toToken, receiver);
@@ -791,7 +791,7 @@ contract DexRouter is
     ) internal {
         require(amount > 0, "amount must be > 0");
 
-        CommissionInfo memory commissionInfo = _getCommissionInfo();
+        (CommissionInfo memory commissionInfo, ) = _getCommissionInfo();
 
         address srcToken = reversed ? _WETH : _ETH;
         address toToken = reversed ? _ETH : _WETH;
@@ -923,7 +923,7 @@ contract DexRouter is
         require(receiver != address(0), "not addr(0)");
 
         address fromToken = _bytes32ToAddress(baseRequest.fromToken);
-        CommissionInfo memory commissionInfo = _getCommissionInfo();
+        (CommissionInfo memory commissionInfo, ) = _getCommissionInfo();
         _validateCommissionInfo(commissionInfo, fromToken, baseRequest.toToken);
 
         (

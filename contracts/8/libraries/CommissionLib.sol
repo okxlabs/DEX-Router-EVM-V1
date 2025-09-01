@@ -42,7 +42,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
         internal
         pure
         override
-        returns (CommissionInfo memory commissionInfo)
+        returns (CommissionInfo memory commissionInfo, uint256 offset)
     {
         assembly ("memory-safe") {
             // let freePtr := mload(0x40)
@@ -99,7 +99,21 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
             default {
                 mstore(add(0xa0, commissionInfo), 0) //commissionRate2
                 mstore(add(0xc0, commissionInfo), 0) //referrerAddress2
+            }            
+            // calculate offset based on commission flag
+            if or(
+                eq(flag, FROM_TOKEN_COMMISSION_DUAL),
+                eq(flag, TO_TOKEN_COMMISSION_DUAL)
+            ) {
+                offset := 0x60  // 96 bytes for dual commission
             }
+            if or(
+                eq(flag, FROM_TOKEN_COMMISSION),
+                eq(flag, TO_TOKEN_COMMISSION)
+            ) {
+                offset := 0x40  // 64 bytes for single commission
+            }
+            // default offset is 0x00 (0 bytes) - no need for explicit else
         }
     }
 
@@ -517,20 +531,23 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 // First shifting left by 96 bits (shl(96, receiver)) to align the address
                 // Then shifting right by 96 bits (shr(96, ...)) to isolate the correct address value
                 // This prevents potential failures by enforcing the correct address length.
-                success := call(
-                    gas(),
-                    shr(96, shl(96, receiver)),
-                    sub(inputAmount, amount),
-                    0,
-                    0,
-                    0,
-                    0
-                )
-                if eq(success, 0) {
-                    _revertWithReason(
-                        0x0000001a7472616e7366657220657468207265636569766572206661696c0000,
-                        0x5e
-                    ) // transfer eth receiver fail
+                let receiverAddress := shr(96, shl(96, receiver))
+                if eq(eq(receiverAddress, address()), 0) {
+                    success := call(
+                        gas(),
+                        receiverAddress,
+                        sub(inputAmount, amount),
+                        0,
+                        0,
+                        0,
+                        0
+                    )
+                    if eq(success, 0) {
+                        _revertWithReason(
+                            0x0000001a7472616e7366657220657468207265636569766572206661696c0000,
+                            0x5e
+                        ) // transfer eth receiver fail
+                    }
                 }
             }
             default {
@@ -640,22 +657,25 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 // First shifting left by 96 bits (shl(96, receiver)) to align the address
                 // Then shifting right by 96 bits (shr(96, ...)) to isolate the correct address value
                 // This prevents potential failures by enforcing the correct address length.
-                mstore(add(freePtr, 0x04), shr(96, shl(96, receiver)))
-                mstore(add(freePtr, 0x24), sub(inputAmount, amount))
-                success := call(gas(), token, 0, freePtr, 0x44, 0, 0x20)
-                if and(
-                    iszero(and(eq(mload(0), 1), gt(returndatasize(), 31))),
-                    success
-                ) {
-                    success := iszero(
-                        or(iszero(extcodesize(token)), returndatasize())
-                    )
-                }
-                if eq(success, 0) {
-                    _revertWithReason(
-                        0x0000001c7472616e7366657220746f6b656e207265636569766572206661696c,
-                        0x60
-                    ) //transfer token receiver fail
+                let receiverAddress := shr(96, shl(96, receiver))
+                if eq(eq(receiverAddress, address()), 0) {
+                    mstore(add(freePtr, 0x04), receiverAddress)
+                    mstore(add(freePtr, 0x24), sub(inputAmount, amount))
+                    success := call(gas(), token, 0, freePtr, 0x44, 0, 0x20)
+                    if and(
+                        iszero(and(eq(mload(0), 1), gt(returndatasize(), 31))),
+                        success
+                    ) {
+                        success := iszero(
+                            or(iszero(extcodesize(token)), returndatasize())
+                        )
+                    }
+                    if eq(success, 0) {
+                        _revertWithReason(
+                            0x0000001c7472616e7366657220746f6b656e207265636569766572206661696c,
+                            0x60
+                        ) //transfer token receiver fail
+                    }
                 }
             }
         }

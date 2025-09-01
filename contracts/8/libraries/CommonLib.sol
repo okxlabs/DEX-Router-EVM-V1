@@ -9,6 +9,8 @@ import "../interfaces/IApproveProxy.sol";
 import "../interfaces/IWNativeRelayer.sol";
 import "../interfaces/IWETH.sol";
 import "../interfaces/IERC20.sol";
+import "../interfaces/AbstractCommissionLib.sol";
+import "../interfaces/AbstractTrimLib.sol";
 
 
 /// @title Base contract with common permit handling logics
@@ -160,6 +162,32 @@ abstract contract CommonLib is CommonUtils {
     ) internal pure returns (address result) {
         assembly {
             result := and(param, _ADDRESS_MASK)
+        }
+    }
+
+    function _transferTokenTo(address token, address to, uint256 amount) internal {
+        if (token == _ETH) {
+            (bool success, ) = payable(to).call{value: amount}("");
+            require(success, "transfer native token failed");
+        } else {
+            SafeERC20.safeTransfer(IERC20(token), to, amount);
+        }
+    }
+
+    function _getReceiverAddress(
+        AbstractCommissionLib.CommissionInfo memory commissionInfo,
+        AbstractTrimLib.TrimInfo memory trimInfo,
+        address receiver
+    ) internal view returns (address swapReceiver, address toTokenCommissionReceiver)  {
+        if (commissionInfo.isToTokenCommission || trimInfo.hasTrim) {
+            swapReceiver = address(this);
+        } else {
+            swapReceiver = receiver;
+        }
+        if (trimInfo.hasTrim) {
+            toTokenCommissionReceiver = address(this);
+        } else {
+            toTokenCommissionReceiver = receiver;
         }
     }
 }

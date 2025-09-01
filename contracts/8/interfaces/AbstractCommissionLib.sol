@@ -18,7 +18,7 @@ abstract contract AbstractCommissionLib {
         internal
         pure
         virtual
-        returns (CommissionInfo memory commissionInfo);
+        returns (CommissionInfo memory commissionInfo, uint256 offset);
 
     // function _getBalanceOf(address token, address user)
     //     internal
