@@ -41,46 +41,56 @@ contract AspectaAdapter is IAdapter, Ownable {
         uint256 minReturnAmount;
     }
 
+    function _aspectaTrading(
+        address to,
+        address pool,
+        bytes memory moreInfo
+    ) private {
+        TradeInfo memory tradeInfo = abi.decode(moreInfo, (TradeInfo));
+        if (tradeInfo.buyMeme) {
+            // Withdraw all wnativeToken to nativeToken
+            IWETH(WNATIVETOKEN).withdraw(IWETH(WNATIVETOKEN).balanceOf(address(this)));
+            uint256 fromAmount = address(this).balance;
+            // buyByRouter will increase the key balance of `to` address and send the surplus nativeToken to `to` address,
+            // and will revert if the nativeToken is insufficient
+            // IAspectaKeyPool(pool).buyByRouter{value: address(this).balance}(amount, to);
+            _call(pool, abi.encodeWithSelector(IAspectaKeyPool.buyByRouter.selector, tradeInfo.sellMemeAmount, to), address(this).balance);
+            // refund the surplus nativeToken to payerOrigin
+            address payerOrigin = _getPayerOrigin();
+            uint256 refundAmount = address(this).balance;
+            if (refundAmount > 0 && payerOrigin != address(0)) {
+                IWETH(WNATIVETOKEN).deposit{value: refundAmount}();
+                SafeERC20.safeTransfer(IERC20(WNATIVETOKEN), payerOrigin, refundAmount);
+            }
+            emit OrderRecord(true, NATIVE_ADDRESS, pool, fromAmount, tradeInfo.sellMemeAmount);
+        } else {
+            address payerOrigin = _getPayerOrigin();
+            require(payerOrigin != address(0), "AspectaAdapter: payerOrigin is zero");
+            uint256 toAmountBefore = tx.origin.balance;
+            // sellByRouter will decrease the key balance of tx.origin and send the nativeToken to recipient
+            // IAspectaKeyPool(pool).sellByRouter(amount, minPrice);
+            _call(pool, abi.encodeWithSelector(IAspectaKeyPool.sellByRouter.selector, tradeInfo.sellMemeAmount, tradeInfo.minReturnAmount), 0);
+            emit OrderRecord(false, pool, NATIVE_ADDRESS, tradeInfo.sellMemeAmount, tx.origin.balance - toAmountBefore);
+        }
+    }
+
     // fromToken == WNativeToken, toToken == Key
     function sellBase(
         address to,
         address pool,
         bytes memory moreInfo
     ) external override {
-        TradeInfo memory tradeInfo = abi.decode(moreInfo, (TradeInfo));
-        
-        // Withdraw all wnativeToken to nativeToken
-        IWETH(WNATIVETOKEN).withdraw(IWETH(WNATIVETOKEN).balanceOf(address(this)));
-        uint256 fromAmount = address(this).balance;
-        // buyByRouter will increase the key balance of `to` address and send the surplus nativeToken to `to` address,
-        // and will revert if the nativeToken is insufficient
-        // IAspectaKeyPool(pool).buyByRouter{value: address(this).balance}(amount, to);
-        _call(pool, abi.encodeWithSelector(IAspectaKeyPool.buyByRouter.selector, tradeInfo.sellMemeAmount, to), address(this).balance);
-        // refund the surplus nativeToken to payerOrigin
-        address payerOrigin = _getPayerOrigin();
-        uint256 refundAmount = address(this).balance;
-        if (refundAmount > 0 && payerOrigin != address(0)) {
-            IWETH(WNATIVETOKEN).deposit{value: refundAmount}();
-            SafeERC20.safeTransfer(IERC20(WNATIVETOKEN), payerOrigin, refundAmount);
-        }
-        emit OrderRecord(true, NATIVE_ADDRESS, pool, fromAmount, tradeInfo.sellMemeAmount);
+        _aspectaTrading(to, pool, moreInfo);
     }
 
     // fromToken == Key, toToken == NativeToken and the nativeToken is send to recepient address
     // So actually the aspecta adapter supports the sellQuote toToken commission in DexRouter, but here we keep the same usage as before.
     function sellQuote(
-        address, // to
+        address ,
         address pool,
         bytes memory moreInfo
     ) external override {
-        TradeInfo memory tradeInfo = abi.decode(moreInfo, (TradeInfo));
-        address payerOrigin = _getPayerOrigin();
-        require(payerOrigin != address(0), "AspectaAdapter: payerOrigin is zero");
-        uint256 toAmountBefore = tx.origin.balance;
-        // sellByRouter will decrease the key balance of tx.origin and send the nativeToken to recipient
-        // IAspectaKeyPool(pool).sellByRouter(amount, minPrice);
-        _call(pool, abi.encodeWithSelector(IAspectaKeyPool.sellByRouter.selector, tradeInfo.sellMemeAmount, tradeInfo.minReturnAmount), 0);
-        emit OrderRecord(false, pool, NATIVE_ADDRESS, tradeInfo.sellMemeAmount, tx.origin.balance - toAmountBefore);
+        _aspectaTrading(address(0), pool, moreInfo);
     }
     
     // call the target contract with value and revert with related string error.
