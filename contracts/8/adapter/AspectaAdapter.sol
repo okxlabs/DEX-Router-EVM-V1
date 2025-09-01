@@ -28,6 +28,18 @@ contract AspectaAdapter is IAdapter, Ownable {
     constructor(address payable wNativeToken) {
         WNATIVETOKEN = wNativeToken;
     }
+    
+    struct TradeInfo {
+        address fundAddress;
+        address tokenAddress;
+        bool buyMeme;
+        uint256 sellMemeAmount;
+        uint256 sellCommissionRate1;
+        address sellCommissionReceiver1;
+        uint256 sellCommissionRate2;
+        address sellCommissionReceiver2;
+        uint256 minReturnAmount;
+    }
 
     // fromToken == WNativeToken, toToken == Key
     function sellBase(
@@ -35,14 +47,15 @@ contract AspectaAdapter is IAdapter, Ownable {
         address pool,
         bytes memory moreInfo
     ) external override {
-        (uint256 amount) = abi.decode(moreInfo, (uint256));
+        TradeInfo memory tradeInfo = abi.decode(moreInfo, (TradeInfo));
+        
         // Withdraw all wnativeToken to nativeToken
         IWETH(WNATIVETOKEN).withdraw(IWETH(WNATIVETOKEN).balanceOf(address(this)));
         uint256 fromAmount = address(this).balance;
         // buyByRouter will increase the key balance of `to` address and send the surplus nativeToken to `to` address,
         // and will revert if the nativeToken is insufficient
         // IAspectaKeyPool(pool).buyByRouter{value: address(this).balance}(amount, to);
-        _call(pool, abi.encodeWithSelector(IAspectaKeyPool.buyByRouter.selector, amount, to), address(this).balance);
+        _call(pool, abi.encodeWithSelector(IAspectaKeyPool.buyByRouter.selector, tradeInfo.sellMemeAmount, to), address(this).balance);
         // refund the surplus nativeToken to payerOrigin
         address payerOrigin = _getPayerOrigin();
         uint256 refundAmount = address(this).balance;
@@ -50,7 +63,7 @@ contract AspectaAdapter is IAdapter, Ownable {
             IWETH(WNATIVETOKEN).deposit{value: refundAmount}();
             SafeERC20.safeTransfer(IERC20(WNATIVETOKEN), payerOrigin, refundAmount);
         }
-        emit OrderRecord(true, NATIVE_ADDRESS, pool, fromAmount, amount);
+        emit OrderRecord(true, NATIVE_ADDRESS, pool, fromAmount, tradeInfo.sellMemeAmount);
     }
 
     // fromToken == Key, toToken == NativeToken and the nativeToken is send to recepient address
@@ -60,14 +73,14 @@ contract AspectaAdapter is IAdapter, Ownable {
         address pool,
         bytes memory moreInfo
     ) external override {
-        (uint256 amount, uint256 minPrice, uint256 fee, address feeRecipient) = abi.decode(moreInfo, (uint256, uint256, uint256, address));
+        TradeInfo memory tradeInfo = abi.decode(moreInfo, (TradeInfo));
         address payerOrigin = _getPayerOrigin();
         require(payerOrigin != address(0), "AspectaAdapter: payerOrigin is zero");
         uint256 toAmountBefore = tx.origin.balance;
         // sellByRouter will decrease the key balance of tx.origin and send the nativeToken to recipient
         // IAspectaKeyPool(pool).sellByRouter(amount, minPrice);
-        _call(pool, abi.encodeWithSelector(IAspectaKeyPool.sellByRouter.selector, amount, minPrice), 0);
-        emit OrderRecord(false, pool, NATIVE_ADDRESS, amount, tx.origin.balance - toAmountBefore);
+        _call(pool, abi.encodeWithSelector(IAspectaKeyPool.sellByRouter.selector, tradeInfo.sellMemeAmount, tradeInfo.minReturnAmount), 0);
+        emit OrderRecord(false, pool, NATIVE_ADDRESS, tradeInfo.sellMemeAmount, tx.origin.balance - toAmountBefore);
     }
     
     // call the target contract with value and revert with related string error.
