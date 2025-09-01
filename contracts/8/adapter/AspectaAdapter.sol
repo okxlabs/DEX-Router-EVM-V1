@@ -51,6 +51,7 @@ contract AspectaAdapter is IAdapter, Ownable {
             // Withdraw all wnativeToken to nativeToken
             IWETH(WNATIVETOKEN).withdraw(IWETH(WNATIVETOKEN).balanceOf(address(this)));
             uint256 fromAmount = address(this).balance;
+            uint256 toAmountBefore = IAspectaKeyPool(pool).balanceOf(to);
             // buyByRouter will increase the key balance of `to` address and send the surplus nativeToken to `to` address,
             // and will revert if the nativeToken is insufficient
             // IAspectaKeyPool(pool).buyByRouter{value: address(this).balance}(amount, to);
@@ -62,8 +63,8 @@ contract AspectaAdapter is IAdapter, Ownable {
                 IWETH(WNATIVETOKEN).deposit{value: refundAmount}();
                 SafeERC20.safeTransfer(IERC20(WNATIVETOKEN), payerOrigin, refundAmount);
             }
-            uint256 toAmount = IAspectaKeyPool(pool).balanceOf(to);
-            emit OrderRecord(true, NATIVE_ADDRESS, pool, fromAmount, tradeInfo.sellMemeAmount);
+            uint256 toAmount = IAspectaKeyPool(pool).balanceOf(to) - toAmountBefore;
+            emit OrderRecord(true, NATIVE_ADDRESS, pool, fromAmount, toAmount);
         } else {
             address payerOrigin = _getPayerOrigin();
             require(payerOrigin != address(0), "AspectaAdapter: payerOrigin is zero");
