@@ -62,6 +62,7 @@ contract AspectaAdapter is IAdapter, Ownable {
                 IWETH(WNATIVETOKEN).deposit{value: refundAmount}();
                 SafeERC20.safeTransfer(IERC20(WNATIVETOKEN), payerOrigin, refundAmount);
             }
+            uint256 toAmount = IAspectaKeyPool(pool).balanceOf(to);
             emit OrderRecord(true, NATIVE_ADDRESS, pool, fromAmount, tradeInfo.sellMemeAmount);
         } else {
             address payerOrigin = _getPayerOrigin();
@@ -86,7 +87,7 @@ contract AspectaAdapter is IAdapter, Ownable {
     // fromToken == Key, toToken == NativeToken and the nativeToken is send to recepient address
     // So actually the aspecta adapter supports the sellQuote toToken commission in DexRouter, but here we keep the same usage as before.
     function sellQuote(
-        address ,
+        address, // to
         address pool,
         bytes memory moreInfo
     ) external override {

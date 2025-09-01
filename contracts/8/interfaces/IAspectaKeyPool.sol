@@ -27,4 +27,8 @@ interface IAspectaKeyPool {
     function getPurchaseAmountByPayment(
         uint256 payment
     ) external view returns (uint256, uint256);
+
+    function balanceOf(
+        address user
+    ) external view returns (uint256);
 }
