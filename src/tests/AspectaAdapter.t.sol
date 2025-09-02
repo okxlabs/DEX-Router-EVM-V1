@@ -73,7 +73,19 @@ contract AspectaAdapterTest is Test {
             bytes32(abi.encodePacked(uint8(0x00), uint88(10000), address(pool))) // false -> sellBase -> buy 
         );
         swapInfo1.batches[0][0].extraData = new bytes[](1);
-        swapInfo1.batches[0][0].extraData[0] = abi.encode(amount);
+        // Create TradeInfo struct for buyBase (sellBase function)
+        AspectaAdapter.TradeInfo memory tradeInfo1 = AspectaAdapter.TradeInfo({
+            fundAddress: address(0),
+            tokenAddress: address(0),
+            buyMeme: true,
+            sellMemeAmount: amount,
+            sellCommissionRate1: 0,
+            sellCommissionReceiver1: address(0),
+            sellCommissionRate2: 0,
+            sellCommissionReceiver2: address(0),
+            minReturnAmount: 0
+        });
+        swapInfo1.batches[0][0].extraData[0] = abi.encode(tradeInfo1);
         swapInfo1.batches[0][0].fromToken = uint256(uint160(address(WBNB)));
 
         swapInfo1.extraData = new PMMLib.PMMSwapRequest[](0);
@@ -91,6 +103,8 @@ contract AspectaAdapterTest is Test {
 
         // test buy
         console2.log("========== test sell by router ==========");
+        console2.log("native balance before:", address(arnaud).balance);
+        console2.log("Key balance before:", IERC20(pool).balanceOf(address(arnaud)));
 
         SwapInfo memory swapInfo2;
         swapInfo2.baseRequest.fromToken = uint256(uint160(address(pool)));
@@ -113,7 +127,19 @@ contract AspectaAdapterTest is Test {
             bytes32(abi.encodePacked(uint8(0x80), uint88(10000), address(pool))) // true -> sellQuote -> buy
         );
         swapInfo2.batches[0][0].extraData = new bytes[](1);
-        swapInfo2.batches[0][0].extraData[0] = abi.encode(amount, 0, 0, address(0));
+        // Create TradeInfo struct for sellQuote function
+        AspectaAdapter.TradeInfo memory tradeInfo2 = AspectaAdapter.TradeInfo({
+            fundAddress: address(0),
+            tokenAddress: address(0),
+            buyMeme: false,
+            sellMemeAmount: amount,
+            sellCommissionRate1: 0,
+            sellCommissionReceiver1: address(0),
+            sellCommissionRate2: 0,
+            sellCommissionReceiver2: address(0),
+            minReturnAmount: 0
+        });
+        swapInfo2.batches[0][0].extraData[0] = abi.encode(tradeInfo2);
         swapInfo2.batches[0][0].fromToken = uint256(uint160(address(pool)));
 
         swapInfo2.extraData = new PMMLib.PMMSwapRequest[](0);
