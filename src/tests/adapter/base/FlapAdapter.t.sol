@@ -139,6 +139,62 @@ contract FlapAdapterTest is AbstractAdapterTest {
         assertEq(address(flapAdapter).balance, 0, "Adapter should have 0 native balance after refund");
         require(nativeRefundReceived == 419438421069508988842, "Should have refunded native OKB");
     }
+
+    function testDeployedAdapter() public {
+        // Fork from a specific X Layer block to access the deployed contract
+        // Using block 33766562 which is the block where the contract was deployed
+        vm.createSelectFork("xlayer");
+        
+        address flapAdapter = 0xa43F2E6e8313B46dDcb9190CE856AF0089320956;
+        FlapAdapter flapAdapterContract = FlapAdapter(payable(flapAdapter));
+                assertEq(flapAdapterContract.FLAP_PORTAL(), FLAP_PORTAL);
+        assertEq(flapAdapterContract.WNATIVE(), WNATIVE);
+
+        // Give this test contract some WOKB tokens to work with
+        uint256 initialTestBalance = 1000 * 10 ** 18;
+        deal(WOKB, address(this), initialTestBalance);
+        
+        ExactInputParams memory params = ExactInputParams({
+            inputToken: WOKB,
+            outputToken: OKBeaver,
+            inputAmount: 500 * 10 ** 18,
+            minOutputAmount: 0,
+            permitData: ""
+        });
+
+        // Record initial balances
+        uint256 testContractInitialBalance = IERC20(WOKB).balanceOf(address(this));
+        uint256 adapterInitialBalance = IERC20(WOKB).balanceOf(address(flapAdapterContract));
+
+        // Transfer tokens to the adapter for the swap
+        IERC20(WOKB).transfer(address(flapAdapterContract), params.inputAmount);
+        
+        // Record balances after transfer
+        uint256 testContractAfterTransfer = IERC20(WOKB).balanceOf(address(this));
+        uint256 adapterAfterTransfer = IERC20(WOKB).balanceOf(address(flapAdapterContract));
+        
+        // Verify transfer worked correctly
+        assertEq(testContractAfterTransfer, testContractInitialBalance - params.inputAmount, "Test contract should have sent WOKB");
+        assertEq(adapterAfterTransfer, adapterInitialBalance + params.inputAmount, "Adapter should have received WOKB");
+        
+        // Execute the swap
+        flapAdapterContract.sellBase(address(this), address(0), abi.encode(params));
+        
+        // Record final balances
+        uint256 testContractFinalBalance = IERC20(WOKB).balanceOf(address(this));
+        uint256 adapterFinalBalance = IERC20(WOKB).balanceOf(address(flapAdapterContract));
+        uint256 outputTokenBalance = IERC20(OKBeaver).balanceOf(address(this));
+        
+        // Verify the adapter consumed the WOKB tokens for the swap
+        assertEq(adapterFinalBalance, 0, "Adapter should have consumed all WOKB tokens for the swap");
+        
+        // The test contract balance should remain the same (it already sent the tokens)
+        assertEq(testContractFinalBalance, testContractAfterTransfer, "Test contract balance should remain unchanged after swap");
+        
+        // Verify we received some output tokens from the swap
+        assertGt(outputTokenBalance, 0, "Should have received some OKBeaver tokens from the swap");
+    }
+
     
     // Add a receive function to accept native token refunds
     receive() external payable {}
