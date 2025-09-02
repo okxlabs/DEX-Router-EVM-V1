@@ -157,7 +157,7 @@ contract FlapAdapterTest is AbstractAdapterTest {
         ExactInputParams memory params = ExactInputParams({
             inputToken: WOKB,
             outputToken: OKBeaver,
-            inputAmount: 500 * 10 ** 18,
+            inputAmount: 0.5 * 10 ** 18,
             minOutputAmount: 0,
             permitData: ""
         });
