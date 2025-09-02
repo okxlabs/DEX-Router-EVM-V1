@@ -125,8 +125,6 @@ contract DexRouter is
         _doTrimToToken(trimInfo, receiver, baseRequest.toToken, balanceBefore);
     }
 
-
-
     //-------------------------------
     //------- Internal Functions ----
     //-------------------------------
@@ -532,15 +530,12 @@ contract DexRouter is
         CommissionInfo memory commissionInfo,
         TrimInfo memory trimInfo
     ) private {
-        (
-            ,
-            uint256 balanceBefore
-        ) = _doCommissionFromToken(
-                commissionInfo,
-                payer,
-                address(uint160(receiver)),
-                amount
-            );
+        (, uint256 balanceBefore) = _doCommissionFromToken(
+            commissionInfo,
+            payer,
+            address(uint160(receiver)),
+            amount
+        );
 
         (address swapReceiver, address toTokenCommissionReceiver) = _getReceiverAddress(commissionInfo, trimInfo, address(uint160(receiver)));
 
@@ -655,15 +650,12 @@ contract DexRouter is
         CommissionInfo memory commissionInfo,
         TrimInfo memory trimInfo
     ) private {
-        (
-            ,
-            uint256 balanceBefore
-        ) = _doCommissionFromToken(
-                commissionInfo,
-                payer,
-                receiver,
-                baseRequest.fromTokenAmount
-            );
+        (, uint256 balanceBefore) = _doCommissionFromToken(
+            commissionInfo,
+            payer,
+            receiver,
+            baseRequest.fromTokenAmount
+        );
 
         (address swapReceiver, address toTokenCommissionReceiver) = _getReceiverAddress(commissionInfo, trimInfo, receiver);
 
@@ -782,15 +774,12 @@ contract DexRouter is
         CommissionInfo memory commissionInfo,
         TrimInfo memory trimInfo
     ) private {
-        (
-            ,
-            uint256 balanceBefore
-        ) = _doCommissionFromToken(
-                commissionInfo,
-                payer,
-                receiver,
-                amount
-            );
+        (, uint256 balanceBefore) = _doCommissionFromToken(
+            commissionInfo,
+            payer,
+            receiver,
+            amount
+        );
 
         (address swapReceiver, address toTokenCommissionReceiver) = _getReceiverAddress(commissionInfo, trimInfo, receiver);
 
@@ -913,15 +902,12 @@ contract DexRouter is
 
         _validateCommissionInfo(commissionInfo, srcToken, toToken);
 
-        (
-            ,
-            uint256 balanceBefore
-        ) = _doCommissionFromToken(
-                commissionInfo,
-                msg.sender,
-                receiver,
-                amount
-            );
+        (, uint256 balanceBefore) = _doCommissionFromToken(
+            commissionInfo,
+            msg.sender,
+            receiver,
+            amount
+        );
 
         (address swapReceiver, address toTokenCommissionReceiver) = _getReceiverAddress(commissionInfo, trimInfo, receiver);
 
@@ -1046,15 +1032,12 @@ contract DexRouter is
         TrimInfo memory trimInfo = _getTrimInfo(offset);
         _validateCommissionInfo(commissionInfo, fromToken, baseRequest.toToken);
 
-        (
-            ,
-            uint256 balanceBefore
-        ) = _doCommissionFromToken(
-                commissionInfo,
-                msg.sender,
-                receiver,
-                baseRequest.fromTokenAmount
-            );
+        (, uint256 balanceBefore) = _doCommissionFromToken(
+            commissionInfo,
+            msg.sender,
+            receiver,
+            baseRequest.fromTokenAmount
+        );
 
         returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(
             receiver
