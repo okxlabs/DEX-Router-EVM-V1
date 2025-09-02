@@ -12,6 +12,15 @@ abstract contract AbstractTrimLib {
         address trimAddress2; // 0xa0
     }
 
+    event PositiveSlippageTrimRecord(
+        address toTokenAddress,
+        uint256 trimRate,
+        uint256 trimAmount,
+        address trimAddress,
+        uint256 expectAmountOut,
+        uint256 actualAmount
+    );
+
     function _getTrimInfo(uint256 offset)
         internal
         pure

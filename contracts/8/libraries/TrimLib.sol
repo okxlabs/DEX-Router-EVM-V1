@@ -119,15 +119,18 @@ abstract contract TrimLib is AbstractTrimLib, CommonLib, CommissionLib {
 
         uint256 actualAmount = _getBalanceOf(token, address(this)) - balanceBefore;
         if (actualAmount > trimInfo.expectAmountOut) {
+            // calculate trim amount
             uint256 surplusAmount = actualAmount - trimInfo.expectAmountOut;
             uint256 allowedMaxTrimAmount = actualAmount * (trimInfo.trimRate + trimInfo.trimRate2) / 1000;
             trimAmount = surplusAmount > allowedMaxTrimAmount ? allowedMaxTrimAmount : surplusAmount;
-            if (trimInfo.trimRate2 == 0) {
-                _transferTokenTo(token, trimInfo.trimAddress, trimAmount);
-            } else {
-                uint256 trimAmount1 = trimAmount * trimInfo.trimRate / (trimInfo.trimRate + trimInfo.trimRate2);
-                _transferTokenTo(token, trimInfo.trimAddress, trimAmount1);
+            // calculate trim1 and transfer
+            uint256 trimAmount1 = trimAmount * trimInfo.trimRate / (trimInfo.trimRate + trimInfo.trimRate2);
+            _transferTokenTo(token, trimInfo.trimAddress, trimAmount1);
+            emit PositiveSlippageTrimRecord(token, trimInfo.trimRate, trimAmount1, trimInfo.trimAddress, trimInfo.expectAmountOut, actualAmount);
+            // transfer trim2 if exists
+            if (trimInfo.trimRate2 > 0) {
                 _transferTokenTo(token, trimInfo.trimAddress2, trimAmount - trimAmount1);
+                emit PositiveSlippageTrimRecord(token, trimInfo.trimRate2, trimAmount - trimAmount1, trimInfo.trimAddress2, trimInfo.expectAmountOut, actualAmount);
             }
         }
         _transferTokenTo(token, receiver, actualAmount - trimAmount);
