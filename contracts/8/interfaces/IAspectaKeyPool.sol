@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-/**
- * @title AspectaKeyPool Interface
- * @dev Interface for the AspectaKeyPool contract
- */
 interface IAspectaKeyPool {
     function buyByRouter(
         uint256 amount,

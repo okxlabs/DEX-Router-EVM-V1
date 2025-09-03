@@ -16,5 +16,4 @@ interface IRabbitRouter {
 
     function token1() external view returns (address);
 
-
 }

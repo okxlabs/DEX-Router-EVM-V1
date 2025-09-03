@@ -15,5 +15,4 @@ interface ISolidlyV3 {
 
     function token1() external view returns (address);
 
-
 }

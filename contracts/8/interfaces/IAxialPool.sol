@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 interface IAxialPool {
-    // the pool like curve pool
 
     function getTokenIndex(address tokenAddress) external view returns (uint8);
 

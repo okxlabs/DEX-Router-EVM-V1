@@ -8,7 +8,6 @@ struct SellParams {
     uint256 amountOutMin;
     bool wrapUnwrap;
     address to;
-    //uint256 gasLimit;
     uint32 submitDeadline;
 }
 interface ITwapDelay {

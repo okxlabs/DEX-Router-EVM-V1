@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 interface ISyncSwap {
-    /// @dev Swaps between to
     struct TokenAmount {
         address token;
         uint amount;

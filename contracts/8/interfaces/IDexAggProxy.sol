@@ -51,7 +51,7 @@ interface IDexAggProxy {
         uint256 quoteInAmount,
         uint256 baseMinAmount,
         uint256 quoteMinAmount,
-        uint8 flag, //  0 - ERC20, 1 - baseInETH, 2 - quoteInETH
+        uint8 flag,
         uint256 deadLine
     )
         external

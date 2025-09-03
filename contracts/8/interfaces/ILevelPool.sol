@@ -56,8 +56,6 @@ interface ILevelPool {
 
     function getAllTranches() external view returns (address[] memory);
 
-    // =========== EVENTS ===========
-
     event SetOrderManager(address indexed orderManager);
     event IncreasePosition(
         bytes32 indexed key,
@@ -151,8 +149,6 @@ interface ILevelPool {
     event LiquidityCalculatorSet(address feeModel);
     event VirtualPoolValueRefreshed(uint256 value);
     event MaxLiquiditySet(address token, uint256 value);
-
-    // ========== ERRORS ==============
 
     error UpdateCauseLiquidation();
     error InvalidLeverageTokenPair();

@@ -26,7 +26,5 @@ interface ITridentBento {
     ) external returns (uint256 amountOut, uint256 shareOut);
 
     function balanceOf(IERC20 token, address account) external view returns (uint256);
-    
-    //function totals(IERC20 token) external view returns (Rebase memory);
-    
+
 }
