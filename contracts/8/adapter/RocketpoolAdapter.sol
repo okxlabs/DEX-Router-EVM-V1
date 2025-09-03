@@ -24,8 +24,8 @@ contract RocketpoolAdapter is IAdapter {
         DEPOSITPOOL = depositpool;
     }
         
-    // true：deposit weth-eth-reth
-    // false：withdraw reth-eth-weth
+    // true: deposit weth-eth-reth
+    // false: withdraw reth-eth-weth
     function _rocketSwap(
         address to,
         address ,

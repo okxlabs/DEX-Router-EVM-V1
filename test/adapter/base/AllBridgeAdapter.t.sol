@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
 import {AllBridgeAdapter} from "@okxlabs/adapter/AllBridgeAdapter.sol";
