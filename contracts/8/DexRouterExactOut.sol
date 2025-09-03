@@ -279,7 +279,7 @@ contract DexRouterExactOut is
         address middleReceiver,
         uint256 targetTokenBefore
     ) internal returns (CommissionInfo memory, uint256, uint256, address) {
-        (CommissionInfo memory commissionInfo, ) = _getCommissionInfo();
+        (CommissionInfo memory commissionInfo, ) = _getCommissionAndTrimInfo();
         if (
             commissionInfo.isToTokenCommission &&
             commissionInfo.commissionRate > 0
@@ -324,7 +324,8 @@ contract DexRouterExactOut is
                 afterSwapParams.commissionInfo,
                 afterSwapParams.payer,
                 afterSwapParams.receiver,
-                afterSwapParams.consumeAmount
+                afterSwapParams.consumeAmount,
+                false
             );
             if (
                 afterSwapParams.srcToken == _ETH &&
@@ -356,10 +357,13 @@ contract DexRouterExactOut is
             afterSwapParams.commissionInfo.isToTokenCommission &&
             afterSwapParams.commissionInfo.commissionRate > 0
         ) {
-            _doCommissionToToken(
+            TrimInfo memory trimInfo;
+            _doCommissionAndTrimToToken(
                 afterSwapParams.commissionInfo,
                 afterSwapParams.receiver,
-                afterSwapParams.targetTokenBefore
+                afterSwapParams.targetTokenBefore,
+                afterSwapParams.toToken,
+                trimInfo
             );
         }
     }

@@ -14,11 +14,20 @@ abstract contract AbstractCommissionLib {
         bool isToBCommission; //0xe0
     }
 
-    function _getCommissionInfo()
+    struct TrimInfo {
+        bool hasTrim; // 0x00
+        uint256 trimRate; // 0x20
+        address trimAddress; // 0x40
+        uint256 expectAmountOut; // 0x60
+        uint256 trimRate2; // 0x80
+        address trimAddress2; // 0xa0
+    }
+
+    function _getCommissionAndTrimInfo()
         internal
         pure
         virtual
-        returns (CommissionInfo memory commissionInfo, uint256 offset);
+        returns (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo);
 
     // function _getBalanceOf(address token, address user)
     //     internal
@@ -29,13 +38,16 @@ abstract contract AbstractCommissionLib {
         CommissionInfo memory commissionInfo,
         address payer,
         address receiver,
-        uint256 inputAmount
+        uint256 inputAmount,
+        bool hasTrim
     ) internal virtual returns (address, uint256);
 
-    function _doCommissionToToken(
+    function _doCommissionAndTrimToToken(
         CommissionInfo memory commissionInfo,
         address receiver,
-        uint256 balanceBefore
+        uint256 balanceBefore,
+        address token,
+        TrimInfo memory trimInfo
     ) internal virtual returns (uint256);
 
     function _validateCommissionInfo(
