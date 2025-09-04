@@ -44,7 +44,7 @@ contract OkoswapAdapter is IAdapter {
                 amountIn,
                 0,
                 path, // (must end with WETH)
-                to,
+                address(this),
                 block.timestamp
             );
 
