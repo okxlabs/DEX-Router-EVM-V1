@@ -325,7 +325,8 @@ contract DexRouterExactOut is
                 afterSwapParams.payer,
                 afterSwapParams.receiver,
                 afterSwapParams.consumeAmount,
-                false
+                false,
+                afterSwapParams.toToken
             );
             if (
                 afterSwapParams.srcToken == _ETH &&

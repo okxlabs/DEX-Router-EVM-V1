@@ -39,14 +39,15 @@ abstract contract AbstractCommissionLib {
         address payer,
         address receiver,
         uint256 inputAmount,
-        bool hasTrim
+        bool hasTrim,
+        address toToken
     ) internal virtual returns (address, uint256);
 
     function _doCommissionAndTrimToToken(
         CommissionInfo memory commissionInfo,
         address receiver,
         uint256 balanceBefore,
-        address token,
+        address toToken,
         TrimInfo memory trimInfo
     ) internal virtual returns (uint256);
 
