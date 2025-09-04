@@ -745,12 +745,13 @@ contract DexRouter is
                 toToken
             );
 
+        address _payer = payer;
         _unxswapInternal(
             srcToken == _ETH ? IERC20(address(0)) : IERC20(srcToken),
             amount,
             minReturn,
             pools,
-            payer,
+            _payer,
             middleReceiver
         );
 

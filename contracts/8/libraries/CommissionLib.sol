@@ -520,204 +520,6 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
             return 0;
         }
         uint256 inputAmount = _getBalanceOf(toToken, address(this)) - balanceBefore;
-        assembly ("memory-safe") {
-            // a << 4 | b | c => 0xab
-            function _getStatus(token, hasRate2) -> c {
-                let a := mul(eq(token, _ETH), 16)
-                c := add(a, hasRate2)
-            }
-            function _revertWithReason(m, len) {
-                mstore(
-                    0,
-                    0x08c379a000000000000000000000000000000000000000000000000000000000
-                )
-                mstore(
-                    0x20,
-                    0x0000002000000000000000000000000000000000000000000000000000000000
-                )
-                mstore(0x40, m)
-                revert(0, len)
-            }
-            function _sendETH(to, amount) {
-                let success := call(gas(), to, amount, 0, 0, 0, 0)
-                if eq(success, 0) {
-                    _revertWithReason(
-                        0x0000001173656e64206574686572206661696c65640000000000000000000000,
-                        0x55
-                    ) // "send ether failed"
-                }
-            }
-            function _sendToken(token, to, amount) {
-                let freePtr := mload(0x40)
-                mstore(0x40, add(freePtr, 0x44))
-                mstore(
-                    freePtr,
-                    0xa9059cbb00000000000000000000000000000000000000000000000000000000
-                ) // transfer
-                mstore(add(freePtr, 0x04), to)
-                mstore(add(freePtr, 0x24), amount)
-                let success := call(
-                    gas(),
-                    token,
-                    0,
-                    freePtr,
-                    0x44,
-                    0,
-                    20
-                )
-                if and(
-                    iszero(and(eq(mload(0), 1), gt(returndatasize(), 31))),
-                    success
-                ) {
-                    success := iszero(
-                        or(iszero(extcodesize(token)), returndatasize())
-                    )
-                }
-                if eq(success, 0) {
-                    _revertWithReason(
-                        0x000000157472616e7366657220746f6b656e206661696c656400000000000000,
-                        0x59
-                    ) // "transfer token failed"
-                }
-            }
-            function _emitCommissionToToken(token, amount, referrer) {
-                let freePtr := mload(0x40)
-                mstore(0x40, add(freePtr, 0x60))
-                mstore(freePtr, token)
-                mstore(add(freePtr, 0x20), amount)
-                mstore(add(freePtr, 0x40), referrer)
-                log1(
-                    freePtr,
-                    0x60,
-                    0xf171268de859ec269c52bbfac94dcb7715e784de194342abb284bf34fd30b32d
-                ) //emit CommissionToTokenRecord(address,uint256,address)
-            }
-            function _emitPositiveSlippageTrim(token, trimRate, trimAmount, trimAddress, expectAmountOut, actualAmount) {
-
-            }
-
-            // process to token commission
-            let flag := mload(add(commissionInfo, 0x20)) // isToTokenCommission
-            if flag {
-                let rate := mload(add(commissionInfo, 0x40))
-                let rate2 := mload(add(commissionInfo, 0xa0))
-                if gt(add(rate, rate2), commissionRateLimit) {
-                    _revertWithReason(
-                        0x0000001b6572726f7220636f6d6d697373696f6e2072617465206c696d697400,
-                        0x5f
-                    ) //"error commission rate limit"
-                }
-                let token := mload(add(commissionInfo, 0x80))
-                let referrer1 := mload(add(commissionInfo, 0x60))
-                let referrer2 := mload(add(commissionInfo, 0xc0))
-                let amount1 := div(mul(inputAmount, rate), DENOMINATOR)
-                let amount2 := div(mul(inputAmount, rate2), DENOMINATOR)
-                let status := _getStatus(token, gt(rate2, 0))
-                switch status
-                case 0x10 { // 1 referrer with ETH
-                    _sendETH(referrer1, amount1)
-                    _emitCommissionToToken(token, amount1, referrer1)
-                }
-                case 0x11 { // 2 referrers with ETH
-                    _sendETH(referrer1, amount1)
-                    _emitCommissionToToken(token, amount1, referrer1)
-                    _sendETH(referrer2, amount2)
-                    _emitCommissionToToken(token, amount2, referrer2)
-                }
-                case 0x00 { // 1 referrer with token
-                    _sendToken(token, referrer1, amount1)
-                    _emitCommissionToToken(token, amount1, referrer1)
-                }
-                case 0x01 { // 2 referrers with token
-                    _sendToken(token, referrer1, amount1)
-                    _emitCommissionToToken(token, amount1, referrer1)
-                    _sendToken(token, referrer2, amount2)
-                    _emitCommissionToToken(token, amount2, referrer2)
-                }
-                default {
-                    _revertWithReason(
-                        0x0000000e696e76616c6964207374617475730000000000000000000000000000,
-                        0x52
-                    ) // invalid status
-                }
-                totalAmount := add(amount1, amount2)
-                inputAmount := sub(inputAmount, totalAmount)
-            }
-            
-            // process trim
-            flag := mload(add(trimInfo, 0x00)) // hasTrim
-            let expectedAmountOut := mload(add(trimInfo, 0x60)) // expectAmountOut
-            // If hasTrim && (inputAmount > expectedAmountOut), then process trim.
-            if and(flag, gt(inputAmount, expectedAmountOut)) {
-                let rate := mload(add(trimInfo, 0x20)) // trimRate
-                let rate2 := mload(add(trimInfo, 0x80)) // trimRate2
-                if gt(add(rate, rate2), TRIM_RATE_LIMIT) {
-                    _revertWithReason(
-                        0x000000156572726f72207472696d2072617465206c696d697400,
-                        0x59
-                    ) //"error trim rate limit"
-                }
-                let trimAmount := sub(inputAmount, expectedAmountOut)
-                let allowedMaxTrimAmount := div(mul(inputAmount, add(rate, rate2)), TRIM_DENOMINATOR)
-                if gt(trimAmount, allowedMaxTrimAmount) {
-                    trimAmount := allowedMaxTrimAmount
-                }
-                let trimAmount1 := div(mul(trimAmount, rate), add(rate, rate2))
-                let trimAddress := mload(add(trimInfo, 0x40)) // trimAddress
-                let trimAddress2 := mload(add(trimInfo, 0xa0)) // trimAddress2
-                let status := _getStatus(toToken, gt(rate2, 0))
-                switch status
-                case 0x10 { // 1 trim with ETH
-                    _sendETH(trimAddress, trimAmount1)
-                    // _emitPositiveSlippageTrim(toToken, rate, trimAmount1, trimAddress, expectedAmountOut, inputAmount)
-                }
-                case 0x11 { // 2 trim with ETH
-                    _sendETH(trimAddress, trimAmount1)
-                    // _emitPositiveSlippageTrim(toToken, rate, trimAmount1, trimAddress, expectedAmountOut, inputAmount)
-                    _sendETH(trimAddress2, sub(trimAmount, trimAmount1))
-                    // _emitPositiveSlippageTrim(toToken, rate2, sub(trimAmount, trimAmount1), trimAddress2, expectedAmountOut, inputAmount)
-                }
-                case 0x00 { // 1 trim with token
-                    _sendToken(toToken, trimAddress, trimAmount1)
-                    // _emitPositiveSlippageTrim(toToken, rate, trimAmount1, trimAddress, expectedAmountOut, inputAmount)
-                }
-                case 0x01 { // 2 trim with token
-                    _sendToken(toToken, trimAddress, trimAmount1)
-                    // _emitPositiveSlippageTrim(toToken, rate, trimAmount1, trimAddress, expectedAmountOut, inputAmount)
-                    _sendToken(toToken, trimAddress2, sub(trimAmount, trimAmount1))
-                    // _emitPositiveSlippageTrim(toToken, rate2, sub(trimAmount, trimAmount1), trimAddress2, expectedAmountOut, inputAmount)
-                }
-                default {
-                    _revertWithReason(
-                        0x0000000e696e76616c6964207374617475730000000000000000000000000000,
-                        0x52
-                    ) // invalid status
-                }
-                inputAmount := sub(inputAmount, trimAmount)
-                totalAmount := add(totalAmount, trimAmount)
-            }
-            // transfer toToken to receiver
-            switch eq(toToken, _ETH)
-            case 1 {
-                _sendETH(shr(96, shl(96, receiver)), inputAmount)
-            }
-            default {
-                _sendToken(toToken, shr(96, shl(96, receiver)), inputAmount)
-            }
-        }
-    }
-
-    function _doCommissionAndTrimToToken2(
-        CommissionInfo memory commissionInfo,
-        address receiver,
-        uint256 balanceBefore,
-        address toToken,
-        TrimInfo memory trimInfo
-    ) internal returns (uint256 totalAmount) {
-        if (!commissionInfo.isToTokenCommission && !trimInfo.hasTrim) {
-            return 0;
-        }
-        uint256 inputAmount = _getBalanceOf(toToken, address(this)) - balanceBefore;
 
         // process commission
         if (commissionInfo.isToTokenCommission) {
@@ -729,9 +531,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 commissionInfo.commissionRate,
                 commissionInfo.refererAddress,
                 commissionInfo.commissionRate2,
-                commissionInfo.refererAddress2,
-                0,
-                0
+                commissionInfo.refererAddress2
             );
             totalAmount = commissionAmount;
             inputAmount -= commissionAmount;
@@ -751,9 +551,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 trimInfo.trimRate,
                 trimInfo.trimAddress,
                 trimInfo.trimRate2,
-                trimInfo.trimAddress2,
-                trimInfo.expectAmountOut,
-                inputAmount
+                trimInfo.trimAddress2
             );
             totalAmount += trimAmount;
             inputAmount -= trimAmount;
@@ -771,9 +569,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
         uint256 rate1,
         address address1,
         uint256 rate2,
-        address address2,
-        uint256 expectedAmountOut, // only for trim
-        uint256 actualAmount // only for trim
+        address address2
     ) private {
         assembly ("memory-safe") {
             // a << 8 | b << 4 | c => 0xabc
@@ -848,8 +644,18 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                     0xf171268de859ec269c52bbfac94dcb7715e784de194342abb284bf34fd30b32d
                 ) //emit CommissionToTokenRecord(address,uint256,address)
             }
-            function _emitPositiveSlippageTrim(token, trimRate, trimAmount, trimAddress, expectAmountOut, actualAmount) {
-
+            function _emitPositiveSlippageTrim(token, trimRate, trimAmount, trimAddress) {
+                let freePtr := mload(0x40)
+                mstore(0x40, add(freePtr, 0x80))
+                mstore(freePtr, token)
+                mstore(add(freePtr, 0x20), trimRate)
+                mstore(add(freePtr, 0x40), trimAmount)
+                mstore(add(freePtr, 0x60), trimAddress)
+                log1(
+                    freePtr,
+                    0x80,
+                    0xfd7b77cbad6777a54388ab730607b1806e6b2153276c6eb561f0b43c309aaea7
+                ) //emit PositiveSlippageTrim(address,uint256,uint256,address)
             }
 
             let amount1 := div(mul(totalAmount, rate1), add(rate1, rate2))
@@ -879,23 +685,23 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
             }
             case 0x110 { // trim 1 address with ETH
                 _sendETH(address1, amount1)
-                // _emitPositiveSlippageTrim(toToken, rate1, amount1, address1, expectedAmountOut, actualAmount)
+                _emitPositiveSlippageTrim(toToken, rate1, amount1, address1)
             }
             case 0x111 { // trim 2 addresses with ETH
                 _sendETH(address1, amount1)
-                // _emitPositiveSlippageTrim(toToken, rate1, amount1, address1, expectedAmountOut, actualAmount)
+                _emitPositiveSlippageTrim(toToken, rate1, amount1, address1)
                 _sendETH(address2, amount2)
-                // _emitPositiveSlippageTrim(toToken, rate2, amount2, address2, expectedAmountOut, actualAmount)
+                _emitPositiveSlippageTrim(toToken, rate2, amount2, address2)
             }
             case 0x100 { // trim 1 address with token
                 _sendToken(toToken, address1, amount1)
-                // _emitPositiveSlippageTrim(toToken, rate1, amount1, address1, expectedAmountOut, actualAmount)
+                _emitPositiveSlippageTrim(toToken, rate1, amount1, address1)
             }
             case 0x101 { // trim 2 addresses with token
                 _sendToken(toToken, address1, amount1)
-                // _emitPositiveSlippageTrim(toToken, rate1, amount1, address1, expectedAmountOut, actualAmount)
+                _emitPositiveSlippageTrim(toToken, rate1, amount1, address1)
                 _sendToken(toToken, address2, amount2)
-                // _emitPositiveSlippageTrim(toToken, rate2, amount2, address2, expectedAmountOut, actualAmount)
+                _emitPositiveSlippageTrim(toToken, rate2, amount2, address2)
             }
             default {
                 _revertWithReason(
