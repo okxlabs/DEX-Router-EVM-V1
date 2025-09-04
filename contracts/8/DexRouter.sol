@@ -59,7 +59,7 @@ contract DexRouter is
         
         uint256 estimatedAmountIn = executorInfo.maxConsumeAmount * (10**9 - commissionInfo.commissionRate - commissionInfo.commissionRate2) / 10**9;
         _handleTokenTransfer(fromToken, executorInfo.assetTo, estimatedAmountIn);
-        address middleReceiver = commissionInfo.isToTokenCommission ? address(this) : address(uint160(receiver));
+        address middleReceiver = commissionInfo.isToTokenCommission ? address(this) : address(receiver);
         uint256 balanceBefore = commissionInfo.isToTokenCommission ?_getBalanceOf(baseRequest.toToken, address(this)): 0;
 
         uint256 toTokenBalanceBefore = _getBalanceOf(baseRequest.toToken, receiver);
@@ -70,7 +70,7 @@ contract DexRouter is
         _doCommissionFromToken(
             commissionInfo,
             msg.sender,
-            address(uint160(receiver)),
+            address(receiver),
             actualAmountIn
         );
         
@@ -238,7 +238,7 @@ contract DexRouter is
         // In order to deal with ETH/WETH transfer rules in a unified manner,
         // we do not need to judge according to fromToken.
         if (UniversalERC20.isETH(IERC20(fromToken))) {
-            IWETH(address(uint160(_WETH))).deposit{
+            IWETH(_WETH).deposit{
                 value: _baseRequest.fromTokenAmount
             }();
             payer = address(this);
@@ -462,7 +462,7 @@ contract DexRouter is
         CommissionInfo memory commissionInfo = _getCommissionInfo();
         _validateCommissionInfo(commissionInfo, srcToken, toToken);
 
-        uint balanceBeforeReceiver = _getBalanceOf(toToken, address(uint160(receiver)));
+        uint balanceBeforeReceiver = _getBalanceOf(toToken, address(uint160(_ADDRESS_MASK & receiver)));
 
         (
             address middleReceiver,
@@ -470,7 +470,7 @@ contract DexRouter is
         ) = _doCommissionFromToken(
                 commissionInfo,
                 payer,
-                address(uint160(receiver)),
+                address(uint160(_ADDRESS_MASK & receiver)),
                 amount
             );
 
@@ -484,12 +484,12 @@ contract DexRouter is
 
         _doCommissionToToken(
             commissionInfo,
-            address(uint160(receiver)),
+            address(uint160(_ADDRESS_MASK & receiver)),
             balanceBefore
         );
 
         // check minReturnAmount
-        returnAmount = _getBalanceOf(toToken, address(uint160(receiver))) - balanceBeforeReceiver;
+        returnAmount = _getBalanceOf(toToken, address(uint160(_ADDRESS_MASK & receiver))) - balanceBeforeReceiver;
         require(
             returnAmount >= minReturn,
             "Min return not reached"
@@ -880,7 +880,7 @@ contract DexRouter is
         isExpired(baseRequest.deadLine)
     {
         bool reversed;
-        address fromTokenAddr = address(uint160(baseRequest.fromToken));
+        address fromTokenAddr = address(uint160(_ADDRESS_MASK & baseRequest.fromToken));
         if (fromTokenAddr == _ETH && baseRequest.toToken == _WETH) {
             reversed = false;
         } else if (fromTokenAddr == _WETH && baseRequest.toToken == _ETH) {
