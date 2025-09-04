@@ -1,7 +1,5 @@
-/// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 pragma abicoder v2;
-
 
 struct IOrder {
     uint256 salt;
@@ -9,19 +7,11 @@ struct IOrder {
     address takerAsset;
     address maker;
     address receiver;
-    address allowedSender;  // equals to Zero address on public orders
+    address allowedSender;
     uint256 makingAmount;
     uint256 takingAmount;
     uint256 offsets;
-    // bytes makerAssetData;
-    // bytes takerAssetData;
-    // bytes getMakingAmount; // this.staticcall(abi.encodePacked(bytes, swapTakerAmount)) => (swapMakerAmount)
-    // bytes getTakingAmount; // this.staticcall(abi.encodePacked(bytes, swapMakerAmount)) => (swapTakerAmount)
-    // bytes predicate;       // this.staticcall(bytes) => (bool)
-    // bytes permit;          // On first fill: permit.1.call(abi.encodePacked(permit.selector, permit.2))
-    // bytes preInteraction;
-    // bytes postInteraction;
-    bytes interactions; // concat(makerAssetData, takerAssetData, getMakingAmount, getTakingAmount, predicate, permit, preIntercation, postInteraction)
+    bytes interactions;
 }
 
 interface ILimitOrder {

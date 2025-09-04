@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
 interface IAxialPool {
-    // the pool like curve pool
 
     function getTokenIndex(address tokenAddress) external view returns (uint8);
 

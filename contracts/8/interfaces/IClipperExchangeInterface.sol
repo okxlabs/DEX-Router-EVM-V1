@@ -2,7 +2,6 @@
 
 pragma solidity 0.8.17;
 
-/// @title Clipper interface subset used in swaps
 interface IClipperExchangeInterface {
     struct Signature {
         uint8 v;

@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 pragma abicoder v2;
 
 interface IEllipsis {
-    // For two crypto pools
     function exchange(
         int128 i,
         int128 j,

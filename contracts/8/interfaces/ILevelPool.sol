@@ -1,4 +1,5 @@
-pragma solidity >=0.8.0;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.17;
 
 import {DataTypes} from "../libraries/LevelFinanceDataType.sol";
 
@@ -54,8 +55,6 @@ interface ILevelPool {
     function getAllAssets() external view returns (address[] memory tokens, bool[] memory isStable);
 
     function getAllTranches() external view returns (address[] memory);
-
-    // =========== EVENTS ===========
 
     event SetOrderManager(address indexed orderManager);
     event IncreasePosition(
@@ -150,8 +149,6 @@ interface ILevelPool {
     event LiquidityCalculatorSet(address feeModel);
     event VirtualPoolValueRefreshed(uint256 value);
     event MaxLiquiditySet(address token, uint256 value);
-
-    // ========== ERRORS ==============
 
     error UpdateCauseLiquidation();
     error InvalidLeverageTokenPair();

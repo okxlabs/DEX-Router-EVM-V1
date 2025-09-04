@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 pragma abicoder v2;
 
 interface ISolidlyV3 {
@@ -14,6 +14,5 @@ interface ISolidlyV3 {
     function token0() external view returns (address);
 
     function token1() external view returns (address);
-
 
 }

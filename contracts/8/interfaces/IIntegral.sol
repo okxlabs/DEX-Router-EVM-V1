@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.0;
+pragma solidity 0.8.17;
 
 struct SellParams {
     address tokenIn;
@@ -8,7 +8,6 @@ struct SellParams {
     uint256 amountOutMin;
     bool wrapUnwrap;
     address to;
-    //uint256 gasLimit;
     uint32 submitDeadline;
 }
 interface ITwapDelay {

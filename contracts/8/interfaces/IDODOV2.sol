@@ -1,5 +1,4 @@
-/// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 pragma abicoder v2;
 
 interface IDODOV2 {
@@ -39,8 +38,6 @@ interface IDODOV2 {
         view
         returns (address[] memory, address[] memory);
 
-    //========== DODOVendingMachine ========
-
     function createDODOVendingMachine(
         address baseToken,
         address quoteToken,
@@ -57,8 +54,6 @@ interface IDODOV2 {
             uint256,
             uint256
         );
-
-    //========== DODOPrivatePool ===========
 
     function createDODOPrivatePool() external returns (address newPrivatePool);
 
@@ -85,8 +80,6 @@ interface IDODOV2 {
     ) external returns (bool);
 
     function _OWNER_() external returns (address);
-
-    //========== CrowdPooling ===========
 
     function createCrowdPooling()
         external

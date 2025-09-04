@@ -1,7 +1,5 @@
-/// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 pragma abicoder v2;
-
 
 struct IQuote {
     address pool;
@@ -18,7 +16,6 @@ struct IQuote {
     bytes32 txid;
     bytes signedQuote;
 }
-
 
 interface IHashflow {
     function tradeSingleHop(

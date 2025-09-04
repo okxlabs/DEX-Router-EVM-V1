@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
 import "../interfaces/IAdapter.sol";
 import "../interfaces/IRocketPool.sol";
@@ -24,8 +24,8 @@ contract RocketpoolAdapter is IAdapter {
         DEPOSITPOOL = depositpool;
     }
         
-    // true：deposit weth-eth-reth
-    // false：withdraw reth-eth-weth
+    // true: deposit weth-eth-reth
+    // false: withdraw reth-eth-weth
     function _rocketSwap(
         address to,
         address ,
