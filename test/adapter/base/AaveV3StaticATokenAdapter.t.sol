@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity 0.8.17;
 
 import {AaveV3StaticATokenAdapter} from "@okxlabs/adapter/AaveV3StaticATokenAdapter.sol";
 import {AbstractAdapterTest} from "../common/AbstractAdapterTest.t.sol";

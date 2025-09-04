@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
 interface INativeLPToken {
     function sharesOf(address account) external returns (uint256 shares);

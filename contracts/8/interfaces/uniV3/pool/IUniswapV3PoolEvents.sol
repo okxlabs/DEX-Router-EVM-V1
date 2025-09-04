@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.5.0;
+pragma solidity 0.8.17;
 
 interface IUniswapV3PoolEvents {
     event Initialize(uint160 sqrtPriceX96, int24 tick);

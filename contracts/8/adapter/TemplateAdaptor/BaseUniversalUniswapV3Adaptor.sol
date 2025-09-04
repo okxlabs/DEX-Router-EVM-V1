@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // solhint-disable
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
 import {IAdapter} from "../../interfaces/IAdapter.sol";
 import {IERC20} from "../../interfaces/IERC20.sol";

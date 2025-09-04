@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.5.0) (utils/cryptography/ECDSA.sol)
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
 library ECDSA {
     // EIP-2 still allows signature malleability for ecrecover(). Remove this possibility and make the signature

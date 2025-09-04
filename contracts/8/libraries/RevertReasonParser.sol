@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
 /// @title Library that allows to parse unsuccessful arbitrary calls revert reasons.
 /// See https://solidity.readthedocs.io/en/latest/control-structures.html#revert for details.

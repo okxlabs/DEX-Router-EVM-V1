@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
 library ZeroCopySource {
     /* @notice              Read next byte as boolean type starting at offset from buff

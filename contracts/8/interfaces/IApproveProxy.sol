@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
 interface IApproveProxy {
     function isAllowedProxy(address _proxy) external view returns (bool);

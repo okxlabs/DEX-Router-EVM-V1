@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
 contract PMMRouterStorage {
     uint256[6] internal DEPRECATED_slots; // to take over 6 slots

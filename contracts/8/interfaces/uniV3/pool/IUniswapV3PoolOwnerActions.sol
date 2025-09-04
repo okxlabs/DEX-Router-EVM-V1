@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.5.0;
+pragma solidity 0.8.17;
 
 interface IUniswapV3PoolOwnerActions {
     function setFeeProtocol(uint8 feeProtocol0, uint8 feeProtocol1) external;

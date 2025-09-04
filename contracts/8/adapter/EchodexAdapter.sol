@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
 import {IEchodex, IEchodexFactory} from "../interfaces/IEchodex.sol";
 import {IAdapter} from "../interfaces/IAdapter.sol";

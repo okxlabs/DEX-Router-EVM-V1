@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity 0.8.17;
 
 import {AlienBaseV3Adapter} from "@okxlabs/adapter/AlienBaseV3Adapter.sol";
 import {AbstractAdapterTest} from "../common/AbstractAdapterTest.t.sol";
