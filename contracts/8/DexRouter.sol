@@ -462,7 +462,7 @@ contract DexRouter is
         CommissionInfo memory commissionInfo = _getCommissionInfo();
         _validateCommissionInfo(commissionInfo, srcToken, toToken);
 
-        uint balanceBeforeReceiver = _getBalanceOf(toToken, address(uint160(_ADDRESS_MASK & receiver)));
+        uint balanceBeforeReceiver = _getBalanceOf(toToken, _bytes32ToAddress(receiver));
 
         (
             address middleReceiver,
@@ -470,7 +470,7 @@ contract DexRouter is
         ) = _doCommissionFromToken(
                 commissionInfo,
                 payer,
-                address(uint160(_ADDRESS_MASK & receiver)),
+                _bytes32ToAddress(receiver),
                 amount
             );
 
@@ -484,12 +484,12 @@ contract DexRouter is
 
         _doCommissionToToken(
             commissionInfo,
-            address(uint160(_ADDRESS_MASK & receiver)),
+            _bytes32ToAddress(receiver),
             balanceBefore
         );
 
         // check minReturnAmount
-        returnAmount = _getBalanceOf(toToken, address(uint160(_ADDRESS_MASK & receiver))) - balanceBeforeReceiver;
+        returnAmount = _getBalanceOf(toToken, _bytes32ToAddress(receiver)) - balanceBeforeReceiver;
         require(
             returnAmount >= minReturn,
             "Min return not reached"
@@ -880,7 +880,7 @@ contract DexRouter is
         isExpired(baseRequest.deadLine)
     {
         bool reversed;
-        address fromTokenAddr = address(uint160(_ADDRESS_MASK & baseRequest.fromToken));
+        address fromTokenAddr = _bytes32ToAddress(baseRequest.fromToken);
         if (fromTokenAddr == _ETH && baseRequest.toToken == _WETH) {
             reversed = false;
         } else if (fromTokenAddr == _WETH && baseRequest.toToken == _ETH) {
