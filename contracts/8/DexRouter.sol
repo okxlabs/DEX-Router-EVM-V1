@@ -93,7 +93,7 @@ contract DexRouter is
         CommissionInfo memory commissionInfo,
         TrimInfo memory trimInfo
     ) private {
-        address middleReceiver = (commissionInfo.isToTokenCommission || trimInfo.hasTrim) ? address(this) : address(uint160(receiver));
+        address middleReceiver = (commissionInfo.isToTokenCommission || trimInfo.hasTrim) ? address(this) : address(receiver);
         uint256 balanceBefore = commissionInfo.isToTokenCommission ?_getBalanceOf(baseRequest.toToken, address(this)): 0;
 
         (uint256 actualAmountIn, ) = IExecutor(executor).execute(msg.sender, middleReceiver, baseRequest, executorInfo);
@@ -253,7 +253,7 @@ contract DexRouter is
         // In order to deal with ETH/WETH transfer rules in a unified manner,
         // we do not need to judge according to fromToken.
         if (UniversalERC20.isETH(IERC20(fromToken))) {
-            IWETH(address(uint160(_WETH))).deposit{
+            IWETH(_WETH).deposit{
                 value: _baseRequest.fromTokenAmount
             }();
             payer = address(this);
@@ -477,11 +477,11 @@ contract DexRouter is
         (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
         _validateCommissionInfo(commissionInfo, srcToken, toToken);
 
-        uint balanceBeforeReceiver = _getBalanceOf(toToken, address(uint160(receiver)));
+        uint balanceBeforeReceiver = _getBalanceOf(toToken, _bytes32ToAddress(receiver));
 
         _doUniswapV3Swap(
             payer,
-            address(uint160(receiver)),
+            _bytes32ToAddress(receiver),
             amount,
             minReturn,
             toToken,
@@ -491,7 +491,7 @@ contract DexRouter is
         );
 
         // check minReturnAmount
-        returnAmount = _getBalanceOf(toToken, address(uint160(receiver))) - balanceBeforeReceiver;
+        returnAmount = _getBalanceOf(toToken, _bytes32ToAddress(receiver)) - balanceBeforeReceiver;
         require(
             returnAmount >= minReturn,
             "Min return not reached"
@@ -949,7 +949,7 @@ contract DexRouter is
         isExpired(baseRequest.deadLine)
     {
         bool reversed;
-        address fromTokenAddr = address(uint160(baseRequest.fromToken));
+        address fromTokenAddr = _bytes32ToAddress(baseRequest.fromToken);
         if (fromTokenAddr == _ETH && baseRequest.toToken == _WETH) {
             reversed = false;
         } else if (fromTokenAddr == _WETH && baseRequest.toToken == _ETH) {
