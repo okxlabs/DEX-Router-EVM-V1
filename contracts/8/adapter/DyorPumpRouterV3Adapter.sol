@@ -7,8 +7,8 @@ import {IERC20} from "@dex/interfaces/IERC20.sol";
 import {SafeERC20} from "@dex/libraries/SafeERC20.sol";
 import {IUniswapV2Pair} from "@dex/interfaces/IUniswapV2Pair.sol";
 import {IDyorPumpRouterV3, IDyorPoolV3} from "@dex/interfaces/IDyor.sol";
+import {RestrictedLiquidityLib, RefundLib} from "@dex/libraries/Adapters.sol";
 import {IWETH} from "@dex/interfaces/IWETH.sol";
-
 /**
  * @title DyorPumpRouterV3Adapter
  * @notice DyorPumpRouterV3 adapter for DyorPumpRouterV3 DEX protocols
@@ -30,20 +30,20 @@ contract DyorPumpRouterV3Adapter is IAdapter {
 
     /// @inheritdoc IAdapter
     function sellBase(
-        address to,
+        address to, // to, not used, cause dyor will send token to tx.origin
         address pool,
         bytes memory moreInfo
     ) external override {
-        _universalSwap(to, pool, moreInfo); 
+        _universalSwap(to, pool, true, moreInfo);
     }
 
     /// @inheritdoc IAdapter
     function sellQuote(
-        address to,
+        address to, // to, not used, cause dyor will send token to tx.origin
         address pool,
         bytes memory moreInfo
     ) external override {
-        _universalSwap(to, pool, moreInfo);
+        _universalSwap(to, pool ,false, moreInfo);
     }
 
     /**
@@ -51,29 +51,48 @@ contract DyorPumpRouterV3Adapter is IAdapter {
      * @param moreInfo Additional configuration containing swap parameters
      */
     function _universalSwap(
-        address , // to
-        address , // pool - unused in this implementation
+        address to,
+        address pool,
+        bool isSellBase,
         bytes memory moreInfo
     ) internal {
-        (uint256 amountIn, uint256 minAmountOut, address[] memory path) = _decodeMoreInfo(moreInfo);
-        
-        uint256 amountOut = _calculateAmountOutSimple(amountIn, path);
-        if (path[0] == WETH) { // buy dyor token
+        require(to == tx.origin, "DyorPumpRouterV3Adapter: receiver is not tx.origin");
+        address[] memory path = new address[](2);
+        if (isSellBase) { // sell eth 
+            path[0] = WETH;
+            path[1] = pool;
+            uint256 amountIn = IERC20(WETH).balanceOf(address(this));
+            uint256 amountOut = _calculateAmountOutSimple(amountIn, path);
             IWETH(WETH).withdraw(amountIn);
             IDyorPumpRouterV3(dyorPumpRouterV3).swapExactETHForTokensSupportingFeeOnTransferTokens{value: amountIn}(
                 amountOut,
                 path,
-                tx.origin, // must be tx.origin, and token will be received by tx.origin
+                to, // must be tx.origin, and token will be received by tx.origin
                 block.timestamp + 1000
             );
-        } else { // sell dyor token
+            /// @notice if dyorfun retrun eth, adapter will receive eth, so adapter will send eth to payerOrigin
+            address payerOrigin = RefundLib.getPayerOrigin();
+            uint256 remainAmount = address(this).balance;
+            if (remainAmount > 0) {
+                if (payerOrigin != address(0)) {
+                    payable(payerOrigin).transfer(remainAmount);
+                } else {
+                    payable(tx.origin).transfer(remainAmount);
+                }
+            }
+        } else { ///@notice sell dyor token is restricted liquidity, have to use tradeInfo to build moreinfo
+            path[0] = pool;
+            path[1] = WETH;
+            RestrictedLiquidityLib.TradeInfo memory tradeInfo = abi.decode(moreInfo, (RestrictedLiquidityLib.TradeInfo));
+            uint256 amountIn = tradeInfo.sellMemeAmount;
+            uint256 amountOut = _calculateAmountOutSimple(amountIn, path);
             /// @notice cause token will be transfer from tx.origin, so adapter can't use approve
             IDyorPumpRouterV3(dyorPumpRouterV3).swapExactTokensForETHSupportingFeeOnTransferTokens(
                 amountIn,
                 amountOut,
                 path,
-                tx.origin, // must be tx.origin, and eth will be received by tx.origin
-                address(0x7F1bb99Ad7770D999A3455275508b9EF9d052343),
+                to, // must be tx.origin, and eth will be received by tx.origin
+                to,
                 0,
                 block.timestamp + 1000
             );
@@ -89,12 +108,13 @@ contract DyorPumpRouterV3Adapter is IAdapter {
         uint256 fee = 100;
         if (path[0] == WETH) {
             (reserveOut, reserveIn) = IDyorPoolV3(path[1]).getReserves();
-            fee = 99;
+            fee = 99; // sell eth, so 1% fee
         } else {
             (reserveIn, reserveOut) = IDyorPoolV3(path[0]).getReserves();
         }
         amountOut = _calculateAmountOut(amountIn, reserveIn, reserveOut, fee, 100);
         
+        // after swap if token is weth, dyor will take 1% fee, 
         if (path[0] != WETH) {
             amountOut = amountOut * 99 / 100;
         }
@@ -130,17 +150,6 @@ contract DyorPumpRouterV3Adapter is IAdapter {
             amountOut := div(numerator, denominator)
         }
     }
-
-     /**
-      * @notice Decode moreInfo parameter into swap configuration
-      * @param moreInfo Encoded swap configuration
-      * @return amountIn Amount in
-      * @return minAmountOut Minimum amount out
-      * @return path Path of tokens
-      */
-     function _decodeMoreInfo(bytes memory moreInfo) internal pure returns (uint256 amountIn, uint256 minAmountOut, address[] memory path) {
-         (amountIn, minAmountOut, path) = abi.decode(moreInfo, (uint256, uint256, address[]));
-     }
 
     receive() external payable {}
 }

@@ -23,7 +23,7 @@ contract DnyFeeAdapter is IAdapter {
             "DnyFeeAdapter: INSUFFICIENT_LIQUIDITY"
         );
         require(
-            dnyFee > 0 && dnyFee < 10000,
+            dnyFee >= 0 && dnyFee < 10000,
             "DnyFeeAdapter: DNYFEE_MUST_BETWEEN_0_TO_10000"
         );
 
@@ -49,7 +49,7 @@ contract DnyFeeAdapter is IAdapter {
             "DnyFeeAdapter: INSUFFICIENT_LIQUIDITY"
         );
         require(
-            dnyFee > 0 && dnyFee < 10000,
+            dnyFee >= 0 && dnyFee < 10000,
             "DnyFeeAdapter: DNYFEE_MUST_BETWEEN_0_TO_10000"
         );
 

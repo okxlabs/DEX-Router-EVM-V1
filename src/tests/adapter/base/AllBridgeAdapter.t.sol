@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.17;
 
 import {AllBridgeAdapter} from "@dex/adapter/AllBridgeAdapter.sol";
 import {AbstractAdapterTest} from "../common/AbstractAdapterTest.t.sol";

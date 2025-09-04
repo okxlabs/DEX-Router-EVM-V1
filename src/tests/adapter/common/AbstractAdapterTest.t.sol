@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.17;
 
 import {Test} from "forge-std/Test.sol";
 import {IERC20} from "@dex/interfaces/IERC20.sol";
@@ -186,6 +186,7 @@ abstract contract AbstractAdapterTest is Test {
             vm.expectRevert();
         }
 
+        vm.startPrank(address(this), address(this)); // @notice: like EOA user
         if (testCase.sellBase) {
             (success, returnData) = customAdapter.call(
                 abi.encodePacked(
@@ -211,6 +212,7 @@ abstract contract AbstractAdapterTest is Test {
                 )
             );
         }
+        vm.stopPrank();
 
         require(success, string(abi.encodePacked("Swap failed: ", returnData)));
 
@@ -226,10 +228,19 @@ abstract contract AbstractAdapterTest is Test {
 
         if (testCase.expectRevert) {
             // For expected reverts, verify no state changes occurred
-            require(
-                finalFromBalance == initialFromBalance,
-                "From token balance should be unchanged after revert"
-            );
+            if (testCase.fromTokenPreTo == address(0)) {
+                // Standard case: tokens should remain in adapter
+                require(
+                    finalFromBalance == initialFromBalance,
+                    "From token balance should be unchanged after revert"
+                );
+            } else {
+                // Pre-transfer case: adapter should have initialFromBalance - amount
+                require(
+                    finalFromBalance == initialFromBalance - testCase.amount,
+                    "Adapter should have initialFromBalance - amount after pre-transfer and revert"
+                );
+            }
             require(
                 outputReceived == 0,
                 "No output tokens should be received after revert"
@@ -241,15 +252,29 @@ abstract contract AbstractAdapterTest is Test {
                 require(
                     outputReceived == testCase.expectedOutput || // Normal case
                     outputReceived - 1 == testCase.expectedOutput, // Adapter may leave for 1 wei for reduce gas cost
-                    "Output amount mismatch"
+                    string(abi.encodePacked(
+                        "Output amount mismatch: ",
+                        "received: ",
+                        vm.toString(outputReceived), " != ",
+                        "expected: ",
+                        vm.toString(testCase.expectedOutput)))
                 );
             }
             // Check from token balance
-            require(
-                finalFromBalance == initialFromBalance - testCase.amount || // Normal case
+            if (testCase.fromTokenPreTo == address(0)) {
+                // Standard case: adapter should have spent the tokens
+                require(
+                    finalFromBalance == initialFromBalance - testCase.amount || // Normal case
                 finalFromBalance - 1 == initialFromBalance - testCase.amount, // Adapter may leave for 1 wei for reduce gas cost
-                "From token balance mismatch"
-            );
+                    string(abi.encodePacked(
+                        "From token balance mismatch: ",
+                        "received: ",
+                        vm.toString(finalFromBalance), " != ",
+                        "expected: ",
+                        vm.toString(initialFromBalance - testCase.amount)
+                    ))
+                );
+            }
         }
     }
 

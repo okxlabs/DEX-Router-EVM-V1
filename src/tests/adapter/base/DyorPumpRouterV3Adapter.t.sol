@@ -8,7 +8,7 @@ import {AbstractAdapterTest} from "../common/AbstractAdapterTest.t.sol";
  * @title DyorPumpRouterV3AdapterTest
  * @dev Test for DyorPumpRouterV3Adapter
  */
-contract DyorPumpRouterV3AdapterTest2 is AbstractAdapterTest {
+contract DyorPumpRouterV3AdapterTest is AbstractAdapterTest {
     /**
      * @dev Create BakeryAdapter
      */
@@ -60,7 +60,7 @@ contract DyorPumpRouterV3AdapterTest2 is AbstractAdapterTest {
             toToken: pandas,
             pool: pandas_wokb_pool,
             amount: 0.303 * 10 ** 18, // 0.3 WOKB
-            expectedOutput: 0, // Dynamic, can be set if known, actual is  4640289545676597216670428
+            expectedOutput: 4640289545676597216670428,
             sellBase: true,
             expectRevert: false,
             description: "WOKB to Pandas on XLayer via DyorPumpRouterV3Adapter",

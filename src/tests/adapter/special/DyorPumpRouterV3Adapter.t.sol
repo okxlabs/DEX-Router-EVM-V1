@@ -4,7 +4,7 @@ import {DyorPumpRouterV3Adapter} from "contracts/8/adapter/DyorPumpRouterV3Adapt
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Test} from "forge-std/Test.sol";
 
-contract DyorPumpRouterV3AdapterTestSpecial is Test {
+contract DyorPumpRouterV3AdapterSpecialTest is Test {
     // https://www.oklink.com/zh-hans/x-layer/tx/0x830ed4300720f80b9130770fdcd69c9fe13943448d7c05417f3fb8a026651b41
     function test_sellQuote() public {
         vm.createSelectFork(
@@ -20,11 +20,18 @@ contract DyorPumpRouterV3AdapterTestSpecial is Test {
         address pandas = 0xa3e4378dFA9577c5533d8bbf3E65f79C05304A36;
         // address pandas_wokb_pool = pandas; // unused in this test
         address user = address(0x84E190b15e562b5f2dc4ADCA8fee4C7616A0E81E);
-        address[] memory path = new address[](2);
-        path[0] = pandas;
-        path[1] = wokb;
         uint256 amount = 1226969441255741335479853;
-        bytes memory moreInfo = abi.encode(amount, 0, path);
+        bytes memory moreInfo = abi.encode(
+            user,  // fundAddress
+            pandas, // tokenAddress
+            false, // buyMeme
+            amount, // sellMemeAmount
+            0, // sellCommissionRate1
+            address(0), // sellCommissionReceiver1
+            0, // sellCommissionRate2
+            address(0), // sellCommissionReceiver2
+            0 // minReturnAmount
+        );
 
         // Give user enough tokens for testing
         deal(pandas, user, amount);

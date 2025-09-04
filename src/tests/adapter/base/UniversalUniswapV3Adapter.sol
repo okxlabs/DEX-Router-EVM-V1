@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.17;
 
 import {UniversalUniswapV3Adapter} from "@dex/adapter/TemplateAdapter/UniversalUniswapV3Adapter.sol";
 import {AbstractAdapterTest} from "../common/AbstractAdapterTest.t.sol";
@@ -25,6 +25,7 @@ contract UniversalUniswapV3AdapterTest is AbstractAdapterTest {
         // Native wrapped token addresses per network
         nativeWrappedTokens["bsc"] = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c; // BSC_WBNB
         nativeWrappedTokens["mantle"] = 0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8; // MANTLE_WMNT
+        nativeWrappedTokens["xlayer"] = 0xe538905cf8410324e03A5A23C1c177a474D59b2b; // XLAYER_WOKB
         nativeWrappedTokens["linea"] = 0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f; // LINEA_WETH
 
         address nativeWrappedToken = nativeWrappedTokens[networkId];
@@ -48,10 +49,11 @@ contract UniversalUniswapV3AdapterTest is AbstractAdapterTest {
         override
         returns (SwapTestCase[][] memory)
     {
-        SwapTestCase[][] memory cases = new SwapTestCase[][](3);
+        SwapTestCase[][] memory cases = new SwapTestCase[][](4);
         cases[0] = getThenaV3TestCases();
         cases[1] = getAgniFinanceTestCases();
-        cases[2] = getEtherexFinanceTestCases();
+        cases[2] = getOkieV3XlayerTestCases();
+        cases[3] = getEtherexFinanceTestCases();
 
         return cases;
     }
@@ -77,7 +79,7 @@ contract UniversalUniswapV3AdapterTest is AbstractAdapterTest {
             toToken: ETH,
             pool: WBNB_ETH_POOL,
             amount: 1 * 10 ** 18, // 1 WBNB (BSC WBNB has 18 decimals)
-            expectedOutput: 207698750360467694, // dynamic
+            expectedOutput: 207698750360467694, 
             sellBase: false,
             expectRevert: false,
             description: "WBNB to ETH on Thena V3",
@@ -182,6 +184,58 @@ contract UniversalUniswapV3AdapterTest is AbstractAdapterTest {
             expectRevert: false,
             description: "USDT to WETH on Mantle",
             moreInfo: abi.encode(uint160(0), abi.encode(USDT, WETH)),
+            fromTokenPreTo: address(0)
+        });
+
+        return cases;
+    }
+
+    function getOkieV3XlayerTestCases()
+        internal
+        pure
+        returns (SwapTestCase[] memory)
+    {
+
+        address WOKB = 0xe538905cf8410324e03A5A23C1c177a474D59b2b; // WOKB
+        address USDC = 0x74b7F16337b8972027F6196A17a631aC6dE26d22; // USDC
+        address USDT = 0x1E4a5963aBFD975d8c9021ce480b42188849D41d; // USDT
+        address USDC_WOKB = 0x01cA49E4a864C49FeDd08B464c042d02598C3538; // USDC_WOKB
+        address USDT_USDC = 0x2b0Fea5Cbe72dcd362fbcA452FEdD57F55747ae3;
+
+        SwapTestCase[] memory cases = new SwapTestCase[](2);
+
+
+        // Test 1: WOKB to USDC
+        // https://www.oklink.com/x-layer/tx/0x6410c2b72c26cab1a678c974bf08a45983e120743e1f27449b2fa76528e3258b
+        cases[0] = SwapTestCase({
+            networkId: "xlayer",
+            forkBlock: 31552191 - 1,
+            fromToken: WOKB,
+            toToken: USDC,
+            pool: USDC_WOKB,
+            amount: 59248269621225,
+            expectedOutput: 27394,
+            sellBase: false,
+            expectRevert: false,
+            description: "EQUA to WOKB on USDC",
+            moreInfo: abi.encode(uint160(0), abi.encode(WOKB, USDC)),
+            fromTokenPreTo: address(0)
+        });
+
+        // Test 2: USDC to USDT
+        // https://www.oklink.com/x-layer/tx/0x7488890d8df542199ee23acdb9ce473806d23573eb2bb0a5e806abc83b98c2fa/log
+        cases[1] = SwapTestCase({
+            networkId: "xlayer",
+            forkBlock: 31793708 -1,
+            fromToken: USDC,
+            toToken: USDT,
+            pool: USDT_USDC,
+            amount: 4172816,
+            expectedOutput: 4167156,
+            sellBase: false,
+            expectRevert: false,
+            description: "USDT to USDC on OKIE",
+            moreInfo: abi.encode(uint160(0), abi.encode(USDC, USDT)),
             fromTokenPreTo: address(0)
         });
 
