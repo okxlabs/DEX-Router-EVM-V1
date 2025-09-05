@@ -9,7 +9,6 @@ import "../interfaces/IApproveProxy.sol";
 import "../interfaces/IWNativeRelayer.sol";
 import "../interfaces/IWETH.sol";
 import "../interfaces/IERC20.sol";
-import "../interfaces/AbstractCommissionLib.sol";
 
 
 /// @title Base contract with common permit handling logics

@@ -523,6 +523,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
 
         // process commission
         if (commissionInfo.isToTokenCommission) {
+            require(commissionInfo.commissionRate + commissionInfo.commissionRate2 <= commissionRateLimit, "error commission rate limit");
             uint256 commissionAmount = inputAmount * (commissionInfo.commissionRate + commissionInfo.commissionRate2) / DENOMINATOR;
             _doCommissionOrTrimToTokenInternal(
                 true,
@@ -539,6 +540,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
 
         // process trim
         if (trimInfo.hasTrim && inputAmount > trimInfo.expectAmountOut) {
+            require(trimInfo.trimRate + trimInfo.trimRate2 <= TRIM_RATE_LIMIT, "error trim rate limit");
             uint256 trimAmount = inputAmount - trimInfo.expectAmountOut;
             uint256 allowedMaxTrimAmount = inputAmount * (trimInfo.trimRate + trimInfo.trimRate2) / TRIM_DENOMINATOR;
             if (trimAmount > allowedMaxTrimAmount) {
