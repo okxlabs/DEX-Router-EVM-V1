@@ -31,4 +31,7 @@ interface IAspectaKeyPool {
     function balanceOf(
         address user
     ) external view returns (uint256);
+
+    function getProtocolFeePercentage() external view returns (uint256);
+
 }
