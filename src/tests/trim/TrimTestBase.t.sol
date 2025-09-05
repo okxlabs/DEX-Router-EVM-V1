@@ -42,7 +42,16 @@ contract TrimTestBase is Test, CommissionHelper, TrimHelper {
 
     uint256 public oneEther = 1 * 10 ** 18;
 
-    modifier tokenLogAndCheck(address _fromToken, address _toToken, uint256 _amount, bool trim1ShouldReceive, bool trim2ShouldReceive, bool referrer1ShouldReceive, bool referrer2ShouldReceive) {
+    modifier tokenLogAndCheck(
+        address _fromToken,
+        address _toToken,
+        uint256 _amount,
+        bool trim1ShouldReceive,
+        bool trim2ShouldReceive,
+        bool isFromCommission,
+        bool referrer1ShouldReceive,
+        bool referrer2ShouldReceive
+    ) {
         vm.startPrank(arnaud);
         console2.log("User arnaud:", arnaud);
         address[] memory tokens = new address[](2);
@@ -52,7 +61,9 @@ contract TrimTestBase is Test, CommissionHelper, TrimHelper {
         for (uint256 i = 0; i < tokens.length; i++) {
             address token = tokens[i];
             if (token == ETH) {
-                deal(address(arnaud), _amount);
+                if (i == 0) {
+                    deal(address(arnaud), _amount);
+                }
                 console2.log(
                     "arnaud ETH balance before: %d",
                     address(arnaud).balance
@@ -70,8 +81,10 @@ contract TrimTestBase is Test, CommissionHelper, TrimHelper {
                 console2.log("referrer2 ETH balance before: %d", referrer2Balance);
                 require(referrer2Balance == 0, "referrer2 ETH balance before should be 0");
             } else {
-                deal(token, arnaud, _amount);
-                SafeERC20.safeApprove(IERC20(token), address(tokenApprove), _amount);
+                if (i == 0) {
+                    deal(token, arnaud, _amount);
+                    SafeERC20.safeApprove(IERC20(token), address(tokenApprove), _amount);
+                }
                 console2.log(
                     "%s balance before: %d",
                     IERC20(token).symbol(),
@@ -99,54 +112,72 @@ contract TrimTestBase is Test, CommissionHelper, TrimHelper {
                 console2.log("arnaud ETH balance after: %d", address(arnaud).balance);
                 uint256 trim1Balance = address(trimAddress).balance;
                 console2.log("trim1 ETH balance after: %d", trim1Balance);
-                require(
-                    (trim1ShouldReceive && trim1Balance > 0) || (!trim1ShouldReceive && trim1Balance == 0),
-                    "trim1 ETH balance after should be > 0"
-                );
+                // Only when token is toToken, then check with shouldReceive flag.
+                if (i == 1) {
+                    require(
+                        (trim1ShouldReceive && trim1Balance > 0) || (!trim1ShouldReceive && trim1Balance == 0),
+                        "trim1 ETH balance error after swap"
+                    );
+                }
                 uint256 trim2Balance = address(trimAddress2).balance;
                 console2.log("trim2 ETH balance after: %d", trim2Balance);
-                require(
-                    (trim2ShouldReceive && trim2Balance > 0) || (!trim2ShouldReceive && trim2Balance == 0),
-                    "trim2 ETH balance after should be > 0"
-                );
+                if (i == 1) {
+                    require(
+                        (trim2ShouldReceive && trim2Balance > 0) || (!trim2ShouldReceive && trim2Balance == 0),
+                        "trim2 ETH balance error after swap"
+                    );
+                }
                 uint256 referrer1Balance = address(referrerAddress).balance;
                 console2.log("referrer1 ETH balance after: %d", referrer1Balance);
-                require(
-                    (referrer1ShouldReceive && referrer1Balance > 0) || (!referrer1ShouldReceive && referrer1Balance == 0),
-                    "referrer1 ETH balance after should be > 0"
-                );
+                // Only when isFromCommission==true and token is fromToken, or isFromCommission==false and token is toToken, then check with shouldReceive flag.
+                if ((i == 0 && isFromCommission) || (i == 1 && !isFromCommission)) {
+                    require(
+                        (referrer1ShouldReceive && referrer1Balance > 0) || (!referrer1ShouldReceive && referrer1Balance == 0),
+                        "referrer1 ETH balance error after swap"
+                    );
+                }
                 uint256 referrer2Balance = address(referrerAddress2).balance;
                 console2.log("referrer2 ETH balance after: %d", referrer2Balance);
-                require(
-                    (referrer2ShouldReceive && referrer2Balance > 0) || (!referrer2ShouldReceive && referrer2Balance == 0),
-                    "referrer2 ETH balance after should be > 0"
-                );
+                if ((i == 0 && isFromCommission) || (i == 1 && !isFromCommission)) {
+                    require(
+                        (referrer2ShouldReceive && referrer2Balance > 0) || (!referrer2ShouldReceive && referrer2Balance == 0),
+                        "referrer2 ETH balance error after swap"
+                    );
+                }
             } else {
                 console2.log("%s balance after: %d", IERC20(token).symbol(), IERC20(token).balanceOf(address(arnaud)));
                 uint256 trim1Balance = IERC20(token).balanceOf(address(trimAddress));
                 console2.log("trim1 %s balance after: %d", IERC20(token).symbol(), trim1Balance);
-                require(
-                    (trim1ShouldReceive && trim1Balance > 0) || (!trim1ShouldReceive && trim1Balance == 0),
-                    "trim1 balance after should be > 0"
-                );
+                if (i == 1) {
+                    require(
+                        (trim1ShouldReceive && trim1Balance > 0) || (!trim1ShouldReceive && trim1Balance == 0),
+                        "trim1 balance error after swap"
+                    );
+                }
                 uint256 trim2Balance = IERC20(token).balanceOf(address(trimAddress2));
                 console2.log("trim2 %s balance after: %d", IERC20(token).symbol(), trim2Balance);
-                require(
-                    (trim2ShouldReceive && trim2Balance > 0) || (!trim2ShouldReceive && trim2Balance == 0),
-                    "trim2 balance after should be > 0"
-                );
+                if (i == 1) {
+                    require(
+                        (trim2ShouldReceive && trim2Balance > 0) || (!trim2ShouldReceive && trim2Balance == 0),
+                        "trim2 balance error after swap"
+                    );
+                }
                 uint256 referrer1Balance = IERC20(token).balanceOf(address(referrerAddress));
                 console2.log("referrer1 %s balance after: %d", IERC20(token).symbol(), referrer1Balance);
-                require(
-                    (referrer1ShouldReceive && referrer1Balance > 0) || (!referrer1ShouldReceive && referrer1Balance == 0),
-                    "referrer1 balance after should be > 0"
-                );
+                if ((i == 0 && isFromCommission) || (i == 1 && !isFromCommission)) {
+                    require(
+                        (referrer1ShouldReceive && referrer1Balance > 0) || (!referrer1ShouldReceive && referrer1Balance == 0),
+                        "referrer1 balance error after swap"
+                    );
+                }
                 uint256 referrer2Balance = IERC20(token).balanceOf(address(referrerAddress2));
                 console2.log("referrer2 %s balance after: %d", IERC20(token).symbol(), referrer2Balance);
-                require(
-                    (referrer2ShouldReceive && referrer2Balance > 0) || (!referrer2ShouldReceive && referrer2Balance == 0),
-                    "referrer2 balance after should be > 0"
-                );
+                if ((i == 0 && isFromCommission) || (i == 1 && !isFromCommission)) {
+                    require(
+                        (referrer2ShouldReceive && referrer2Balance > 0) || (!referrer2ShouldReceive && referrer2Balance == 0),
+                        "referrer2 balance error after swap"
+                    );
+                }
             }
         }
         vm.stopPrank();
@@ -199,10 +230,10 @@ contract TrimTestBase is Test, CommissionHelper, TrimHelper {
         );
     }
 
-    function _generate1ToCommissionData(address token) internal view returns (bytes memory) {
+    function _generate1CommissionData(bool isFromTokenCommission, address token) internal view returns (bytes memory) {
         return _buildCommissionInfoUnified(
-            false, // isFromTokenCommission
-            true, // isToTokenCommission
+            isFromTokenCommission, // isFromTokenCommission
+            !isFromTokenCommission, // isToTokenCommission
             token, // token
             1000000, // commissionRate 0.1%, denominator = 10 ** 9
             referrerAddress, // refererAddress
@@ -212,14 +243,14 @@ contract TrimTestBase is Test, CommissionHelper, TrimHelper {
         );
     }
 
-    function _generate2ToCommissionData(address token) internal view returns (bytes memory) {
+    function _generate2CommissionData(bool isFromTokenCommission, address token) internal view returns (bytes memory) {
         return _buildCommissionInfoUnified(
-            false, // isFromTokenCommission
-            true, // isToTokenCommission
+            isFromTokenCommission, // isFromTokenCommission
+            !isFromTokenCommission, // isToTokenCommission
             token, // token
             1000000, // commissionRate 0.1%, denominator = 10 ** 9
             referrerAddress, // refererAddress
-            10000000, // commissionRate2 0.1%, denominator = 10 ** 9
+            1000000, // commissionRate2 0.1%, denominator = 10 ** 9
             referrerAddress2, // refererAddress2
             false // isToBCommission
         );

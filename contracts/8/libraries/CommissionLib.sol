@@ -139,11 +139,11 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
             ) // hasTrim
             mstore(
                 add(0x20, trimInfo),
-                shr(160, add(trimData, _TRIM_RATE_MASK))
+                shr(160, and(trimData, _TRIM_RATE_MASK))
             ) // trimRate
             mstore(
                 add(0x40, trimInfo),
-                add(trimData, _TRIM_EXPECT_AMOUNT_OUT_AND_ADDRESS_MASK)
+                and(trimData, _TRIM_EXPECT_AMOUNT_OUT_AND_ADDRESS_MASK)
             ) // trimAddress
             // get second bytes32 of trim data
             trimData := calldataload(sub(calldatasize(), add(offset, 64)))
@@ -157,11 +157,11 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 trimData := calldataload(sub(calldatasize(), add(offset, 96)))
                 mstore(
                     add(0x80, trimInfo),
-                    shr(160, add(trimData, _TRIM_RATE_MASK))
+                    shr(160, and(trimData, _TRIM_RATE_MASK))
                 ) // trimRate2
                 mstore(
                     add(0xa0, trimInfo),
-                    add(trimData, _TRIM_EXPECT_AMOUNT_OUT_AND_ADDRESS_MASK)
+                    and(trimData, _TRIM_EXPECT_AMOUNT_OUT_AND_ADDRESS_MASK)
                 ) // trimAddress2
             }
             default {
@@ -665,41 +665,41 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
 
             let status := _getStatus(isCommission, toToken, gt(rate2, 0))
             switch status
-            case 0x010 { // commission 1 referrer with ETH
+            case 0x110 { // commission 1 referrer with ETH
                 _sendETH(address1, amount1)
                 _emitCommissionToToken(toToken, amount1, address1)
             }
-            case 0x011 { // commission 2 referrers with ETH
+            case 0x111 { // commission 2 referrers with ETH
                 _sendETH(address1, amount1)
                 _emitCommissionToToken(toToken, amount1, address1)
                 _sendETH(address2, amount2)
                 _emitCommissionToToken(toToken, amount2, address2)
             }
-            case 0x000 { // commission 1 referrer with token
+            case 0x100 { // commission 1 referrer with token
                 _sendToken(toToken, address1, amount1)
                 _emitCommissionToToken(toToken, amount1, address1)
             }
-            case 0x001 { // commission 2 referrers with token
+            case 0x101 { // commission 2 referrers with token
                 _sendToken(toToken, address1, amount1)
                 _emitCommissionToToken(toToken, amount1, address1)
                 _sendToken(toToken, address2, amount2)
                 _emitCommissionToToken(toToken, amount2, address2)
             }
-            case 0x110 { // trim 1 address with ETH
+            case 0x010 { // trim 1 address with ETH
                 _sendETH(address1, amount1)
                 _emitPositiveSlippageTrim(toToken, rate1, amount1, address1)
             }
-            case 0x111 { // trim 2 addresses with ETH
+            case 0x011 { // trim 2 addresses with ETH
                 _sendETH(address1, amount1)
                 _emitPositiveSlippageTrim(toToken, rate1, amount1, address1)
                 _sendETH(address2, amount2)
                 _emitPositiveSlippageTrim(toToken, rate2, amount2, address2)
             }
-            case 0x100 { // trim 1 address with token
+            case 0x000 { // trim 1 address with token
                 _sendToken(toToken, address1, amount1)
                 _emitPositiveSlippageTrim(toToken, rate1, amount1, address1)
             }
-            case 0x101 { // trim 2 addresses with token
+            case 0x001 { // trim 2 addresses with token
                 _sendToken(toToken, address1, amount1)
                 _emitPositiveSlippageTrim(toToken, rate1, amount1, address1)
                 _sendToken(toToken, address2, amount2)
