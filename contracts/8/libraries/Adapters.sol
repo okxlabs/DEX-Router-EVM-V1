@@ -5,8 +5,8 @@ library RestrictedLiquidityLib {
 
     // if dex is restricted liquidity, then must use this struct to build more info
     struct TradeInfo {
-        address fundAddress;
-        address tokenAddress;
+        address fundAddress; // fromTokenAddress
+        address tokenAddress; // toTokenAddress
         bool buyMeme;
         uint256 sellMemeAmount;
         uint256 sellCommissionRate1;

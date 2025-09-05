@@ -16,14 +16,14 @@ contract DyorPumpRouterV3AdapterSpecialTest is Test {
 
         DyorPumpRouterV3Adapter adapter = new DyorPumpRouterV3Adapter(dyorPumpRouterV3, WETH);
 
-        address wokb = 0xe538905cf8410324e03A5A23C1c177a474D59b2b;
+        address okb = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
         address pandas = 0xa3e4378dFA9577c5533d8bbf3E65f79C05304A36;
         // address pandas_wokb_pool = pandas; // unused in this test
         address user = address(0x84E190b15e562b5f2dc4ADCA8fee4C7616A0E81E);
         uint256 amount = 1226969441255741335479853;
         bytes memory moreInfo = abi.encode(
-            user,  // fundAddress
-            pandas, // tokenAddress
+            pandas,  // fundAddress
+            okb, // tokenAddress
             false, // buyMeme
             amount, // sellMemeAmount
             0, // sellCommissionRate1

@@ -23,6 +23,9 @@ contract DyorPumpRouterV3Adapter is IAdapter {
     address private immutable dyorPumpRouterV3;
     address private immutable WETH;
 
+    // direction: true for buy meme, false for sell meme
+    event OrderRecord(bool direction, address fromToken, address toToken, uint256 fromAmount, uint256 toAmount);
+    
     constructor(address _dyorPumpRouterV3, address _WETH) {
         dyorPumpRouterV3 = _dyorPumpRouterV3;
         WETH = _WETH;
@@ -51,12 +54,11 @@ contract DyorPumpRouterV3Adapter is IAdapter {
      * @param moreInfo Additional configuration containing swap parameters
      */
     function _universalSwap(
-        address to,
+        address ,
         address pool,
         bool isSellBase,
         bytes memory moreInfo
     ) internal {
-        require(to == tx.origin, "DyorPumpRouterV3Adapter: receiver is not tx.origin");
         address[] memory path = new address[](2);
         if (isSellBase) { // sell eth 
             path[0] = WETH;
@@ -67,7 +69,7 @@ contract DyorPumpRouterV3Adapter is IAdapter {
             IDyorPumpRouterV3(dyorPumpRouterV3).swapExactETHForTokensSupportingFeeOnTransferTokens{value: amountIn}(
                 amountOut,
                 path,
-                to, // must be tx.origin, and token will be received by tx.origin
+                tx.origin, // must be tx.origin, and token will be received by tx.origin
                 block.timestamp + 1000
             );
             /// @notice if dyorfun retrun eth, adapter will receive eth, so adapter will send eth to payerOrigin
@@ -83,19 +85,27 @@ contract DyorPumpRouterV3Adapter is IAdapter {
         } else { ///@notice sell dyor token is restricted liquidity, have to use tradeInfo to build moreinfo
             path[0] = pool;
             path[1] = WETH;
+            uint256 amountOut = tx.origin.balance; // eth balance
             RestrictedLiquidityLib.TradeInfo memory tradeInfo = abi.decode(moreInfo, (RestrictedLiquidityLib.TradeInfo));
+            require(tradeInfo.fundAddress == pool, "DyorPumpRouterV3Adapter: sell token is not meme");
+            require(tradeInfo.tokenAddress == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || 
+            tradeInfo.tokenAddress == WETH, "DyorPumpRouterV3Adapter: buy token is not OKB");
             uint256 amountIn = tradeInfo.sellMemeAmount;
-            uint256 amountOut = _calculateAmountOutSimple(amountIn, path);
+            uint256 minReturn = _calculateAmountOutSimple(amountIn, path);
+            require(minReturn >= tradeInfo.minReturnAmount, "DyorPumpRouterV3Adapter: Min return not reached");
             /// @notice cause token will be transfer from tx.origin, so adapter can't use approve
             IDyorPumpRouterV3(dyorPumpRouterV3).swapExactTokensForETHSupportingFeeOnTransferTokens(
                 amountIn,
-                amountOut,
+                minReturn,
                 path,
-                to, // must be tx.origin, and eth will be received by tx.origin
-                to,
+                tx.origin, // must be tx.origin, and eth will be received by tx.origin
+                tx.origin,
                 0,
                 block.timestamp + 1000
             );
+            amountOut = tx.origin.balance - amountOut;
+            require(amountOut >= minReturn, "DyorPumpRouterV3Adapter: Min return not reached");
+            emit OrderRecord(false, tradeInfo.fundAddress, tradeInfo.tokenAddress, amountIn, amountOut);
         }
     }
 
