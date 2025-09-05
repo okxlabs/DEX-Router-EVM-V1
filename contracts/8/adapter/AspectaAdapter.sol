@@ -53,6 +53,7 @@ contract AspectaAdapter is IAdapter, Ownable {
             uint256 fromAmount = address(this).balance;
             uint256 toAmountBefore = IAspectaKeyPool(pool).balanceOf(to);
 
+
             uint256 protocolFeePercentage = IAspectaKeyPool(pool).getProtocolFeePercentage();
             // protocolFee = (totalPrice * protocolFeePercentage) / 1 ether;
             uint256 amountIn = fromAmount - (fromAmount * protocolFeePercentage) / 1 ether;
@@ -73,6 +74,7 @@ contract AspectaAdapter is IAdapter, Ownable {
             address payerOrigin = _getPayerOrigin();
             require(payerOrigin != address(0), "AspectaAdapter: payerOrigin is zero");
             uint256 toAmountBefore = tx.origin.balance;
+
             _call(pool, abi.encodeWithSelector(IAspectaKeyPool.sellByRouter.selector, tradeInfo.sellMemeAmount, 0), 0);
             uint256 toAmount = tx.origin.balance - toAmountBefore;
             require(toAmount >= tradeInfo.minReturnAmount, "AspectaAdapter: Min return not reached");

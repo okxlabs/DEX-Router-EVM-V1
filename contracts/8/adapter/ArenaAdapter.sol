@@ -12,6 +12,7 @@ contract ArenaAdapter is IAdapter {
     uint256 internal constant ORIGIN_PAYER =
         0x3ca20afc2ccc0000000000000000000000000000000000000000000000000000;
     address public immutable WNATIVETOKEN;
+    uint256 constant ADDRESS_MASK = 0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff;
 
     event Received(address sender, uint256 amount);
 
@@ -45,7 +46,7 @@ contract ArenaAdapter is IAdapter {
             }
             address payerOriginAddress;
             if ((payerOrigin & ORIGIN_PAYER) == ORIGIN_PAYER) {
-                payerOriginAddress = address(uint160(uint256(payerOrigin)));
+                payerOriginAddress = address(uint160(uint256(payerOrigin) & ADDRESS_MASK));
             }
             if (payerOriginAddress != address(0)) {
                 IWETH(WNATIVETOKEN).transfer(payerOriginAddress, nativeTokenBalance);
