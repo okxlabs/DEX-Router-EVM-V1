@@ -16,6 +16,7 @@ import "../interfaces/IWETH.sol";
 /// @dev Explain to a developer any extra details
 contract UniV3Adapter is IAdapter, IUniswapV3SwapCallback {
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    uint256 constant ADDRESS_MASK = 0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff;
     uint256 internal constant ORIGIN_PAYER =
         0x3ca20afc2ccc0000000000000000000000000000000000000000000000000000;
     address public immutable WETH;
@@ -33,7 +34,7 @@ contract UniV3Adapter is IAdapter, IUniswapV3SwapCallback {
     ) internal {
         address _payerOrigin;
         if ((payerOrigin & ORIGIN_PAYER) == ORIGIN_PAYER) {
-            _payerOrigin = address(uint160(uint256(payerOrigin)));
+            _payerOrigin = address(uint160(uint256(payerOrigin) & ADDRESS_MASK));
         }
 
         (address fromToken, address toToken, ) = abi.decode(

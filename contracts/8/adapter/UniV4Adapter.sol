@@ -24,6 +24,7 @@ contract UniV4Adapter is IAdapter, SafeCallback {
     address public immutable WETH;
     uint160 internal constant MIN_SQRT_PRICE = 4295128739;
     uint160 internal constant MAX_SQRT_PRICE = 1461446703485210103287273052203988822378723970342;
+    uint256 constant ADDRESS_MASK = 0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff;
     uint256 internal constant ORIGIN_PAYER =
         0x3ca20afc2ccc0000000000000000000000000000000000000000000000000000;
 
@@ -102,7 +103,7 @@ contract UniV4Adapter is IAdapter, SafeCallback {
 
         address _payerOrigin;
         if ((payerOrigin & ORIGIN_PAYER) == ORIGIN_PAYER) {
-            _payerOrigin = address(uint160(uint256(payerOrigin)));
+            _payerOrigin = address(uint160(uint256(payerOrigin) & ADDRESS_MASK));
         }
 
         (PoolKey memory poolKey, bool zeroForOne) = getPoolAndSwapDirection(pathKey, pathKey.inputCurrency); 

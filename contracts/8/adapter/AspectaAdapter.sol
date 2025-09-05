@@ -20,21 +20,66 @@ contract AspectaAdapter is IAdapter, Ownable {
     address constant NATIVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address public immutable WNATIVETOKEN;
 
-    mapping(address => bool) public dexRouter;
-
     event Received(address sender, uint256 amount);
     // To record swap info for cases that the OrderRecord event is invalid.
     // direction: true for sellBase(buy key), false for sellQuote(sell key)
     event OrderRecord(bool direction, address fromToken, address toToken, uint256 fromAmount, uint256 toAmount);
-    event DexRouterSet(address dexRouter, bool isDexRouter);
 
     constructor(address payable wNativeToken) {
         WNATIVETOKEN = wNativeToken;
     }
+    
+    struct TradeInfo {
+        address fundAddress;
+        address tokenAddress;
+        bool buyMeme;
+        uint256 sellMemeAmount;
+        uint256 sellCommissionRate1;
+        address sellCommissionReceiver1;
+        uint256 sellCommissionRate2;
+        address sellCommissionReceiver2;
+        uint256 minReturnAmount;
+    }
 
-    modifier onlyDexRouter() {
-        require(dexRouter[msg.sender], "AspectaAdapter: only DexRouter can call this adapter");
-        _;
+    function _aspectaTrading(
+        address to,
+        address pool,
+        bytes memory moreInfo
+    ) private {
+        TradeInfo memory tradeInfo = abi.decode(moreInfo, (TradeInfo));
+        if (tradeInfo.buyMeme) {
+            // Withdraw all wnativeToken to nativeToken
+            IWETH(WNATIVETOKEN).withdraw(IWETH(WNATIVETOKEN).balanceOf(address(this)));
+            uint256 fromAmount = address(this).balance;
+            uint256 toAmountBefore = IAspectaKeyPool(pool).balanceOf(to);
+
+
+            uint256 protocolFeePercentage = IAspectaKeyPool(pool).getProtocolFeePercentage();
+            // protocolFee = (totalPrice * protocolFeePercentage) / 1 ether;
+            uint256 amountIn = fromAmount - (fromAmount * protocolFeePercentage) / 1 ether;
+            
+            (uint256 amountToBuy, uint totalPriceWithFee) = IAspectaKeyPool(pool).getPurchaseAmountByPayment(amountIn);
+
+            _call(pool, abi.encodeWithSelector(IAspectaKeyPool.buyByRouter.selector, amountToBuy, to), totalPriceWithFee);
+
+            address payerOrigin = _getPayerOrigin();
+            uint256 refundAmount = address(this).balance;
+            if (refundAmount > 0 && payerOrigin != address(0)) {
+                IWETH(WNATIVETOKEN).deposit{value: refundAmount}();
+                SafeERC20.safeTransfer(IERC20(WNATIVETOKEN), payerOrigin, refundAmount);
+            }
+            uint256 toAmount = IAspectaKeyPool(pool).balanceOf(to) - toAmountBefore;
+            emit OrderRecord(true, NATIVE_ADDRESS, pool, totalPriceWithFee, toAmount);
+        } else {
+            address payerOrigin = _getPayerOrigin();
+            require(payerOrigin != address(0), "AspectaAdapter: payerOrigin is zero");
+            uint256 toAmountBefore = tx.origin.balance;
+
+            _call(pool, abi.encodeWithSelector(IAspectaKeyPool.sellByRouter.selector, tradeInfo.sellMemeAmount, 0), 0);
+            uint256 toAmount = tx.origin.balance - toAmountBefore;
+            require(toAmount >= tradeInfo.minReturnAmount, "AspectaAdapter: Min return not reached");
+            emit OrderRecord(false, pool, NATIVE_ADDRESS, tradeInfo.sellMemeAmount, toAmount);
+        }
     }
 
     // fromToken == WNativeToken, toToken == Key
@@ -42,23 +87,8 @@ contract AspectaAdapter is IAdapter, Ownable {
         address to,
         address pool,
         bytes memory moreInfo
-    ) external override onlyDexRouter {
-        (uint256 amount) = abi.decode(moreInfo, (uint256));
-        // Withdraw all wnativeToken to nativeToken
-        IWETH(WNATIVETOKEN).withdraw(IWETH(WNATIVETOKEN).balanceOf(address(this)));
-        uint256 fromAmount = address(this).balance;
-        // buyByRouter will increase the key balance of `to` address and send the surplus nativeToken to `to` address,
-        // and will revert if the nativeToken is insufficient
-        // IAspectaKeyPool(pool).buyByRouter{value: address(this).balance}(amount, to);
-        _call(pool, abi.encodeWithSelector(IAspectaKeyPool.buyByRouter.selector, amount, to), address(this).balance);
-        // refund the surplus nativeToken to payerOrigin
-        address payerOrigin = _getPayerOrigin();
-        uint256 refundAmount = address(this).balance;
-        if (refundAmount > 0 && payerOrigin != address(0)) {
-            IWETH(WNATIVETOKEN).deposit{value: refundAmount}();
-            SafeERC20.safeTransfer(IERC20(WNATIVETOKEN), payerOrigin, refundAmount);
-        }
-        emit OrderRecord(true, NATIVE_ADDRESS, pool, fromAmount, amount);
+    ) external override {
+        _aspectaTrading(to, pool, moreInfo);
     }
 
     // fromToken == Key, toToken == NativeToken and the nativeToken is send to recepient address
@@ -67,15 +97,8 @@ contract AspectaAdapter is IAdapter, Ownable {
         address, // to
         address pool,
         bytes memory moreInfo
-    ) external override onlyDexRouter {
-        (uint256 amount, uint256 minPrice, uint256 fee, address feeRecipient) = abi.decode(moreInfo, (uint256, uint256, uint256, address));
-        address payerOrigin = _getPayerOrigin();
-        require(payerOrigin != address(0), "AspectaAdapter: payerOrigin is zero");
-        uint256 toAmountBefore = tx.origin.balance;
-        // sellByRouter will decrease the key balance of tx.origin and send the nativeToken to recipient
-        // IAspectaKeyPool(pool).sellByRouter(amount, minPrice);
-        _call(pool, abi.encodeWithSelector(IAspectaKeyPool.sellByRouter.selector, amount, minPrice), 0);
-        emit OrderRecord(false, pool, NATIVE_ADDRESS, amount, tx.origin.balance - toAmountBefore);
+    ) external override {
+        _aspectaTrading(address(0), pool, moreInfo);
     }
     
     // call the target contract with value and revert with related string error.
@@ -113,11 +136,6 @@ contract AspectaAdapter is IAdapter, Ownable {
     receive() external payable {
        emit Received(msg.sender, msg.value);
    }
-
-    function setDexRouter(address _dexRouter, bool _isDexRouter) external onlyOwner {
-        dexRouter[_dexRouter] = _isDexRouter;
-        emit DexRouterSet(_dexRouter, _isDexRouter);
-    }
 
     function _getPayerOrigin() internal pure returns (address payerOriginAddr) {
         uint256 _payerOrigin;

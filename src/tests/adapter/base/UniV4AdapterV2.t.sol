@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.17;
 
 import {UniV4AdapterV2} from "@dex/adapter/UniV4AdapterV2.sol";
 import {AbstractAdapterTest} from "../common/AbstractAdapterTest.t.sol";
