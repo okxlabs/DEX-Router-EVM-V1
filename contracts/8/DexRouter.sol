@@ -380,6 +380,7 @@ contract DexRouter is
     ) external payable returns (uint256 returnAmount) {
         emit SwapOrderId((receiver & _ORDER_ID_MASK) >> 160);
         (address srcToken, address toToken) = _getUniswapV3TokenInfo(msg.value > 0, pools);
+        receiver = (receiver & _ADDRESS_MASK) == 0 ? uint256(uint160(msg.sender)) : receiver;
         return
             _uniswapV3SwapTo(
                 msg.sender,
@@ -501,7 +502,7 @@ contract DexRouter is
             _smartSwapTo(
                 msg.sender,
                 msg.sender,
-                receiver,
+                receiver == address(0) ? msg.sender : receiver,
                 baseRequest,
                 batchesAmount,
                 batches
@@ -575,7 +576,8 @@ contract DexRouter is
             returnAmount
         );
     }
-    /// @notice Executes a token swap using the Unxswap protocol, sending the output directly to a specified receiver. For unxswap, if srcToken is ETH, srcToken needs to be address(0).
+    /// @notice Executes a token swap using the Unxswap protocol, sending the output directly to a specified receiver.
+    ///         The srcToken can be 0xEeee or address(0) for temporary use, the address(0) usage will removed in the future.
     /// @param srcToken The source token to be swapped.
     /// @param amount The amount of the source token to be swapped.
     /// @param minReturn The minimum amount of destination tokens expected from the swap, ensuring the trade does not proceed under unfavorable conditions.
@@ -596,8 +598,9 @@ contract DexRouter is
         // validate token info
         (address fromToken, address toToken) = _getUnxswapTokenInfo(msg.value > 0, pools);
         address srcTokenAddr = _bytes32ToAddress(srcToken);
+        srcTokenAddr = srcTokenAddr == address(0) ? _ETH : srcTokenAddr;
         require(
-            (srcTokenAddr == fromToken && fromToken != _ETH) || (srcTokenAddr == address(0) && fromToken == _ETH),
+            srcTokenAddr == fromToken,
             "unxswap: token mismatch"
         );
         
@@ -608,12 +611,12 @@ contract DexRouter is
                 amount,
                 minReturn,
                 msg.sender,
-                receiver,
+                receiver == address(0) ? msg.sender : receiver,
                 pools
             );
     }
 
-    /// @notice If srcToken is ETH, srcToken needs to be 0xEeee. And for commission validation, ETH needs to be 0xEeee. But _unxswapInternal needs srcToken to be address(0) if srcToken is ETH.
+    /// @notice If srcToken is ETH, srcToken needs to be 0xEeee for commission validation and _unxswapInternal.
     function _unxswapTo(
         address srcToken,
         address toToken,
@@ -675,7 +678,7 @@ contract DexRouter is
 
         address _payer = payer;
         _unxswapInternal(
-            srcToken == _ETH ? IERC20(address(0)) : IERC20(srcToken),
+            IERC20(srcToken),
             amount,
             minReturn,
             pools,
@@ -721,6 +724,8 @@ contract DexRouter is
             _bytes32ToAddress(baseRequest.fromToken) == srcToken && baseRequest.toToken == toToken,
             "uniswapV3: token mismatch"
         );
+
+        receiver = receiver == address(0) ? msg.sender : receiver;
 
         return
             _uniswapV3SwapTo(
@@ -886,7 +891,7 @@ contract DexRouter is
             revert("SwapWrap: invalid token pair");
         }
 
-        _swapWrap(orderId, receiver, reversed, baseRequest.fromTokenAmount);
+        _swapWrap(orderId, receiver == address(0) ? msg.sender : receiver, reversed, baseRequest.fromTokenAmount);
     }
 
     function dagSwapByOrderId(
@@ -917,7 +922,7 @@ contract DexRouter is
     {
         emit SwapOrderId(orderId);
 
-        require(receiver != address(0), "not addr(0)");
+        receiver = receiver == address(0) ? msg.sender : receiver;
 
         address fromToken = _bytes32ToAddress(baseRequest.fromToken);
         (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();

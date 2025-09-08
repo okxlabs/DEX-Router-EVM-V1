@@ -18,6 +18,7 @@ abstract contract DagRouter is CommonLib {
         address refundTo;
     }
 
+    /// @notice The fromTokenAmount will not must be greater than 0, cause for some protocols the fromTokenAmount needs to be 0 to skip token transfer like fourmeme. 
     function _dagSwapInternal(
         BaseRequest calldata baseRequest,
         RouterPath[] calldata paths,
@@ -27,10 +28,7 @@ abstract contract DagRouter is CommonLib {
     ) internal {
         // 1. transfer from token in
         BaseRequest memory _baseRequest = baseRequest;
-        require(
-            _baseRequest.fromTokenAmount > 0,
-            "fromTokenAmount must be > 0"
-        );
+
         address fromToken = _bytes32ToAddress(_baseRequest.fromToken);
 
         require(paths.length > 0, "paths must be > 0");
@@ -155,12 +153,14 @@ abstract contract DagRouter is CommonLib {
                     _fromTokenAmount = (nodeBalance * weight) / 10_000;
                     accAmount += _fromTokenAmount;
                 }
-                _transferInternal(
-                    payer,
-                    path.assetTo[i],
-                    fromToken,
-                    _fromTokenAmount
-                );
+                if (_fromTokenAmount > 0) {
+                    _transferInternal(
+                        payer,
+                        path.assetTo[i],
+                        fromToken,
+                        _fromTokenAmount
+                    );
+                }
             }
 
             // 3. execute single swap

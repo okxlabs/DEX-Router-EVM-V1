@@ -30,8 +30,6 @@ contract UnxswapRouter is CommonUtils {
     uint256 private constant _DENOMINATOR = 1_000_000_000;
     uint256 private constant _NUMERATOR_OFFSET = 160;
 
-    uint256 private constant ETH_ADDRESS = 0x00;
-
     //-------------------------------
     //------- Internal Functions ----
     //-------------------------------
@@ -243,7 +241,7 @@ contract UnxswapRouter is CommonUtils {
             }
             let emptyPtr := mload(0x40)
             let rawPair := calldataload(poolsOffset)
-            switch eq(ETH_ADDRESS, srcToken)
+            switch eq(_ETH, srcToken)
             case 1 {
                 // require callvalue() >= amount, lt: if x < y return 1，else return 0
                 if eq(lt(callvalue(), amount), 1) {
@@ -443,7 +441,7 @@ contract UnxswapRouter is CommonUtils {
                 }
             }
             default {
-                toToken := ETH_ADDRESS
+                toToken := _ETH
                 returnAmount := swap(
                     emptyPtr,
                     returnAmount,
