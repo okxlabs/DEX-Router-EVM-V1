@@ -7,7 +7,6 @@ import "./UnxswapV3Router.sol";
 import "./interfaces/IWETH.sol";
 import "./interfaces/IApproveProxy.sol";
 import "./interfaces/IWNativeRelayer.sol";
-import "./interfaces/IExecutor.sol";
 
 import "./libraries/PMMLib.sol";
 import "./libraries/CommissionLib.sol";
@@ -41,77 +40,6 @@ contract DexRouter is
         require(deadLine >= block.timestamp, "Route: expired");
         _;
     }
-
-    function executeWithBaseRequest(
-        uint256 orderId,
-        address receiver,
-        BaseRequest memory baseRequest,
-        address executor,
-        ExecutorInfo memory executorInfo
-    ) external payable returns (uint256) {
-        emit SwapOrderId(orderId);
-        address fromToken = _bytes32ToAddress(baseRequest.fromToken);
-        
-        _validateExecuteRequest(fromToken, executorInfo.maxConsumeAmount, baseRequest.fromTokenAmount);
-        
-        (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
-        _validateCommissionInfo(commissionInfo, fromToken, baseRequest.toToken);
-        
-        uint256 estimatedAmountIn = executorInfo.maxConsumeAmount * (10**9 - commissionInfo.commissionRate - commissionInfo.commissionRate2) / 10**9;
-        _handleTokenTransfer(fromToken, executorInfo.assetTo, estimatedAmountIn);
-
-        uint256 toTokenBalanceBefore = _getBalanceOf(baseRequest.toToken, receiver);
-        // WETH in, ETH/WETH out
-        // asset already in assetTo address
-        _doExecuteWithBaseRequest(executor, receiver, estimatedAmountIn, baseRequest, executorInfo, commissionInfo, trimInfo);
-
-        uint256 toTokenBalanceAfter = _getBalanceOf(baseRequest.toToken, receiver);
-        require(toTokenBalanceAfter - toTokenBalanceBefore >= baseRequest.minReturnAmount, "minReturn not reached");
-        
-        if (_bytes32ToAddress(baseRequest.fromToken) == _ETH && address(this).balance > 0) {
-            (bool success, ) = payable(msg.sender).call{value: address(this).balance}("");
-            require(success, "refund native token failed");
-        }
-        
-        emit OrderRecord(
-            fromToken,
-            baseRequest.toToken,
-            tx.origin,
-            baseRequest.fromTokenAmount,
-            toTokenBalanceAfter - toTokenBalanceBefore
-        );
-
-        return toTokenBalanceAfter - toTokenBalanceBefore;
-    }
-
-    function _doExecuteWithBaseRequest(
-        address executor,
-        address receiver,
-        uint256 estimatedAmountIn,
-        BaseRequest memory baseRequest,
-        ExecutorInfo memory executorInfo,
-        CommissionInfo memory commissionInfo,
-        TrimInfo memory trimInfo
-    ) private {
-        address middleReceiver = (commissionInfo.isToTokenCommission || trimInfo.hasTrim) ? address(this) : address(receiver);
-        uint256 balanceBefore = commissionInfo.isToTokenCommission ?_getBalanceOf(baseRequest.toToken, address(this)): 0;
-
-        (uint256 actualAmountIn, ) = IExecutor(executor).execute(msg.sender, middleReceiver, baseRequest, executorInfo);
-        require(actualAmountIn > 0 && actualAmountIn <= estimatedAmountIn, "actualAmountIn exceeds");
-        _doCommissionFromToken(
-            commissionInfo,
-            msg.sender,
-            address(uint160(receiver)),
-            actualAmountIn,
-            trimInfo.hasTrim,
-            baseRequest.toToken
-        );
-        
-        _doCommissionAndTrimToToken(commissionInfo, receiver, balanceBefore, baseRequest.toToken, trimInfo);
-    }
-
-
-
 
     //-------------------------------
     //------- Internal Functions ----
