@@ -26,6 +26,7 @@ contract UniversalUniswapV3AdapterTest is AbstractAdapterTest {
         nativeWrappedTokens["bsc"] = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c; // BSC_WBNB
         nativeWrappedTokens["mantle"] = 0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8; // MANTLE_WMNT
         nativeWrappedTokens["xlayer"] = 0xe538905cf8410324e03A5A23C1c177a474D59b2b; // XLAYER_WOKB
+        nativeWrappedTokens["linea"] = 0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f; // LINEA_WETH
 
         address nativeWrappedToken = nativeWrappedTokens[networkId];
         require(nativeWrappedToken != address(0), "Unsupported network");
@@ -48,10 +49,11 @@ contract UniversalUniswapV3AdapterTest is AbstractAdapterTest {
         override
         returns (SwapTestCase[][] memory)
     {
-        SwapTestCase[][] memory cases = new SwapTestCase[][](3);
+        SwapTestCase[][] memory cases = new SwapTestCase[][](4);
         cases[0] = getThenaV3TestCases();
         cases[1] = getAgniFinanceTestCases();
         cases[2] = getOkieV3XlayerTestCases();
+        cases[3] = getEtherexFinanceTestCases();
 
         return cases;
     }
@@ -234,6 +236,40 @@ contract UniversalUniswapV3AdapterTest is AbstractAdapterTest {
             expectRevert: false,
             description: "USDT to USDC on OKIE",
             moreInfo: abi.encode(uint160(0), abi.encode(USDC, USDT)),
+            fromTokenPreTo: address(0)
+        });
+
+        return cases;
+    }
+
+    function getEtherexFinanceTestCases()
+        internal
+        pure
+        returns (SwapTestCase[] memory)
+    {
+        // Token addresses on linea
+        address WETH = 0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f;
+        address USDT = 0xA219439258ca9da29E9Cc4cE5596924745e12B93;
+
+        // Pool addresses
+        address WETH_USDT = 0xd5E04ba35908D7bF5BD2eAd7e3e14d21df07DC01;
+
+        SwapTestCase[] memory cases = new SwapTestCase[](1);
+
+        // Test 1: WETH to USDT
+        // https://lineascan.build/tx/0xac0add9f82fc5f131963c32667ee16b55cef76d35aacda86ad9a2aacbdca7408
+        cases[0] = SwapTestCase({
+            networkId: "linea",
+            forkBlock: 21882671 - 1,
+            fromToken: WETH,
+            toToken: USDT,
+            pool: WETH_USDT,
+            amount: 1.5 * 10 ** 18, // 0.45 WETH
+            expectedOutput: 6445.447958 * 10 ** 6,
+            sellBase: false,
+            expectRevert: false,
+            description: "WETH to USDT in Etherex on Linea",
+            moreInfo: abi.encode(uint160(0), abi.encode(WETH, USDT)),
             fromTokenPreTo: address(0)
         });
 

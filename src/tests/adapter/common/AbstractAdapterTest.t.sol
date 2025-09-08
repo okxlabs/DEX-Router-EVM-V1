@@ -186,6 +186,7 @@ abstract contract AbstractAdapterTest is Test {
             vm.expectRevert();
         }
 
+        vm.startPrank(address(this), address(this)); // @notice: like EOA user
         if (testCase.sellBase) {
             (success, returnData) = customAdapter.call(
                 abi.encodePacked(
@@ -211,6 +212,7 @@ abstract contract AbstractAdapterTest is Test {
                 )
             );
         }
+        vm.stopPrank();
 
         require(success, string(abi.encodePacked("Swap failed: ", returnData)));
 
@@ -248,7 +250,8 @@ abstract contract AbstractAdapterTest is Test {
             // Check expected output if specified
             if (testCase.expectedOutput > 0) {
                 require(
-                    outputReceived == testCase.expectedOutput,
+                    outputReceived == testCase.expectedOutput || // Normal case
+                    outputReceived - 1 == testCase.expectedOutput, // Adapter may leave for 1 wei for reduce gas cost
                     string(abi.encodePacked(
                         "Output amount mismatch: ",
                         "received: ",
@@ -261,7 +264,8 @@ abstract contract AbstractAdapterTest is Test {
             if (testCase.fromTokenPreTo == address(0)) {
                 // Standard case: adapter should have spent the tokens
                 require(
-                    finalFromBalance == initialFromBalance - testCase.amount,
+                    finalFromBalance == initialFromBalance - testCase.amount || // Normal case
+                finalFromBalance - 1 == initialFromBalance - testCase.amount, // Adapter may leave for 1 wei for reduce gas cost
                     string(abi.encodePacked(
                         "From token balance mismatch: ",
                         "received: ",
@@ -334,5 +338,11 @@ abstract contract AbstractAdapterTest is Test {
      */
     function addTestCase(SwapTestCase memory testCase) internal {
         testCases.push(testCase);
+    }
+
+    receive() external payable {
+    }
+
+    fallback() external payable {
     }
 }
