@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "./TrimTestBase.t.sol";
 
 /*
- * The smartSwap method is tested with condition1 * condition2:
+ * The smartSwap method is tested with condition1 * condition2 + condition3 * condition4:
  * condition1:
  *     (1) ERC20 -> ERC20
  *     (2) ETH -> ERC20
@@ -18,6 +18,16 @@ import "./TrimTestBase.t.sol";
  *     (6) 1trim + 2toCommission
  *     (7) 2trim + 2toCommission
  *     (8) 2trim + 2fromCommission
+ * condition3:
+ *     (1) ERC20 -> TaxToken(SAFEMOON)
+ *     (2) TaxToken(SAFEMOON) -> ERC20
+ * condition4:
+ *     (1) noTrim + noCommission
+ *     (2) noTrim + 2fromCommission
+ *     (3) notrim + 2toCommission
+ *     (4) 2trim + noCommission
+ *     (5) 2trim + 2fromCommission
+ *     (6) 2trim + 2toCommission
 */
 contract SmartSwapTrimTest is TrimTestBase {
     
@@ -257,6 +267,116 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
+    // ================= ERC20->TaxToken(SAFEMOON) ================
+    // ERC20->TaxToken(SAFEMOON) with noTrim and noCommission
+    function test_trim_smartSwapTo_WETH2SAFEMOON_noTrim_noCommission() tokenLogAndCheck(WETH, SAFEMOON, 0.01 * 10 ** 18, false, false, false, false, false) public {
+        bytes memory swapData = _generateWETH2SAFEMOONSmartSwapData();
+        (bool success, ) = address(dexRouter).call(swapData);
+        require(success, "call failed");
+    }
+
+    // ERC20->TaxToken(SAFEMOON) with noTrim and 2fromCommission
+    function test_trim_smartSwapTo_WETH2SAFEMOON_noTrim_2fromCommission() tokenLogAndCheck(WETH, SAFEMOON, 0.02 * 10 ** 18, false, false, true, true, true) public {
+        bytes memory swapData = _generateWETH2SAFEMOONSmartSwapData();
+        bytes memory commissionData = _generate2CommissionData(true, WETH);
+        bytes memory data = bytes.concat(swapData, commissionData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // ERC20->TaxToken(SAFEMOON) with noTrim and 2toCommission TODO failed for send token success check
+    function test_trim_smartSwapTo_WETH2SAFEMOON_noTrim_2toCommission() tokenLogAndCheck(WETH, SAFEMOON, 0.01 * 10 ** 18, false, false, false, true, true) public {
+        bytes memory swapData = _generateWETH2SAFEMOONSmartSwapData();
+        bytes memory commissionData = _generate2CommissionData(false, SAFEMOON);
+        bytes memory data = bytes.concat(swapData, commissionData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // ERC20->TaxToken(SAFEMOON) with 2trim and noCommission TODO failed
+    function test_trim_smartSwapTo_WETH2SAFEMOON_2trim_noCommission() tokenLogAndCheck(WETH, SAFEMOON, 0.01 * 10 ** 18, true, true, false, false, false) public {
+        bytes memory swapData = _generateWETH2SAFEMOONSmartSwapData();
+        bytes memory trimData = _generate2TrimData();
+        bytes memory data = bytes.concat(swapData, trimData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // ERC20->TaxToken(SAFEMOON) with 2trim and 2fromCommission TODO failed
+    function test_trim_smartSwapTo_WETH2SAFEMOON_2trim_2fromCommission() tokenLogAndCheck(WETH, SAFEMOON, 0.02 * 10 ** 18, true, true, true, true, true) public {
+        bytes memory swapData = _generateWETH2SAFEMOONSmartSwapData();
+        bytes memory trimData = _generate2TrimData();
+        bytes memory commissionData = _generate2CommissionData(true, WETH);
+        bytes memory data = bytes.concat(swapData, trimData, commissionData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // ERC20->TaxToken(SAFEMOON) with 2trim and 2toCommission TODO failed
+    function test_trim_smartSwapTo_WETH2SAFEMOON_2trim_2toCommission() tokenLogAndCheck(WETH, SAFEMOON, 0.01 * 10 ** 18, true, true, false, true, true) public {
+        bytes memory swapData = _generateWETH2SAFEMOONSmartSwapData();
+        bytes memory trimData = _generate2TrimData();
+        bytes memory commissionData = _generate2CommissionData(false, SAFEMOON);
+        bytes memory data = bytes.concat(swapData, trimData, commissionData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // ==================== TaxToken(SAFEMOON)->ERC20 ====================
+    // TaxToken(SAFEMOON)->ERC20 with noTrim and noCommission
+    function test_trim_smartSwapTo_SAFEMOON2WETH_noTrim_noCommission() tokenLogAndCheck(SAFEMOON, WETH, 1 * 10 ** 27, false, false, false, false, false) public {
+        bytes memory swapData = _generateSAFEMOON2WETHSmartSwapData();
+        (bool success, ) = address(dexRouter).call(swapData);
+        require(success, "call failed");
+    }
+
+    // TaxToken(SAFEMOON)->ERC20 with noTrim and 2fromCommission
+    function test_trim_smartSwapTo_SAFEMOON2WETH_noTrim_2fromCommission() tokenLogAndCheck(SAFEMOON, WETH, 2 * 10 ** 27, false, false, true, true, true) public {
+        bytes memory swapData = _generateSAFEMOON2WETHSmartSwapData();
+        bytes memory commissionData = _generate2CommissionData(true, SAFEMOON);
+        bytes memory data = bytes.concat(swapData, commissionData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // TaxToken(SAFEMOON)->ERC20 with noTrim and 2toCommission
+    function test_trim_smartSwapTo_SAFEMOON2WETH_noTrim_2toCommission() tokenLogAndCheck(SAFEMOON, WETH, 1 * 10 ** 27, false, false, false, true, true) public {
+        bytes memory swapData = _generateSAFEMOON2WETHSmartSwapData();
+        bytes memory trimData = _generate2TrimData();
+        bytes memory data = bytes.concat(swapData, trimData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // TaxToken(SAFEMOON)->ERC20 with 2trim and noCommission
+    function test_trim_smartSwapTo_SAFEMOON2WETH_2trim_noCommission() tokenLogAndCheck(SAFEMOON, WETH, 1 * 10 ** 27, true, true, false, false, false) public {
+        bytes memory swapData = _generateSAFEMOON2WETHSmartSwapData();
+        bytes memory trimData = _generate2TrimData();
+        bytes memory data = bytes.concat(swapData, trimData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+    
+    // TaxToken(SAFEMOON)->ERC20 with 2trim and 2fromCommission
+    function test_trim_smartSwapTo_SAFEMOON2WETH_2trim_2fromCommission() tokenLogAndCheck(SAFEMOON, WETH, 2 * 10 ** 27, true, true, true, true, true) public {
+        bytes memory swapData = _generateSAFEMOON2WETHSmartSwapData();
+        bytes memory trimData = _generate2TrimData();
+        bytes memory commissionData = _generate2CommissionData(true, SAFEMOON);
+        bytes memory data = bytes.concat(swapData, trimData, commissionData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // TaxToken(SAFEMOON)->ERC20 with 2trim and 2toCommission
+    function test_trim_smartSwapTo_SAFEMOON2WETH_2trim_2toCommission() tokenLogAndCheck(SAFEMOON, WETH, 1 * 10 ** 27, true, true, false, true, true) public {
+        bytes memory swapData = _generateSAFEMOON2WETHSmartSwapData();
+        bytes memory trimData = _generate2TrimData();
+        bytes memory commissionData = _generate2CommissionData(false, WETH);
+        bytes memory data = bytes.concat(swapData, trimData, commissionData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
     // ==================== Internal Functions ====================
     function _generateWETH2USDTSmartSwapData() internal view returns (bytes memory) {
         SwapInfo memory swapInfo;
@@ -340,5 +460,59 @@ contract SmartSwapTrimTest is TrimTestBase {
             DexRouter.smartSwapTo.selector,
             swapInfo.orderId, arnaud, swapInfo.baseRequest, swapInfo.batchesAmount, swapInfo.batches, swapInfo.extraData
         ); 
+    }
+
+    function _generateWETH2SAFEMOONSmartSwapData() internal view returns (bytes memory) {
+        SwapInfo memory swapInfo;
+        // baseRequest
+        swapInfo.baseRequest = _generateBaseRequest(WETH, SAFEMOON, 0.01 * 10 ** 18);
+        // batchesAmount
+        swapInfo.batchesAmount = new uint256[](1);
+        swapInfo.batchesAmount[0] = 0.01 * 10 ** 18;
+        // batches
+        swapInfo.batches = new DexRouter.RouterPath[][](1);
+        swapInfo.batches[0] = new DexRouter.RouterPath[](1);
+        swapInfo.batches[0][0].mixAdapters = new address[](1);
+        swapInfo.batches[0][0].mixAdapters[0] = address(UniV2Adapter);
+        swapInfo.batches[0][0].assetTo = new address[](1);
+        swapInfo.batches[0][0].assetTo[0] = address(WETH_SAFEMOON_UNIV2);
+        swapInfo.batches[0][0].rawData = new uint256[](1);
+        swapInfo.batches[0][0].rawData[0] = uint256(bytes32(abi.encodePacked(uint8(0x00), uint88(10000), address(WETH_SAFEMOON_UNIV2))));
+        swapInfo.batches[0][0].extraData = new bytes[](1);
+        swapInfo.batches[0][0].fromToken = uint256(uint160(WETH));
+        // extraData
+        swapInfo.extraData = new PMMLib.PMMSwapRequest[](0);
+
+        return abi.encodeWithSelector(
+            DexRouter.smartSwapTo.selector,
+            swapInfo.orderId, arnaud, swapInfo.baseRequest, swapInfo.batchesAmount, swapInfo.batches, swapInfo.extraData
+        );
+    }
+
+    function _generateSAFEMOON2WETHSmartSwapData() internal view returns (bytes memory) {
+        SwapInfo memory swapInfo;
+        // baseRequest
+        swapInfo.baseRequest = _generateBaseRequest(SAFEMOON, WETH, 1 * 10 ** 27);
+        // batchesAmount
+        swapInfo.batchesAmount = new uint256[](1);
+        swapInfo.batchesAmount[0] = 1 * 10 ** 27;
+        // batches
+        swapInfo.batches = new DexRouter.RouterPath[][](1);
+        swapInfo.batches[0] = new DexRouter.RouterPath[](1);
+        swapInfo.batches[0][0].mixAdapters = new address[](1);
+        swapInfo.batches[0][0].mixAdapters[0] = address(UniV2Adapter);
+        swapInfo.batches[0][0].assetTo = new address[](1);
+        swapInfo.batches[0][0].assetTo[0] = address(WETH_SAFEMOON_UNIV2);
+        swapInfo.batches[0][0].rawData = new uint256[](1);
+        swapInfo.batches[0][0].rawData[0] = uint256(bytes32(abi.encodePacked(uint8(0x80), uint88(10000), address(WETH_SAFEMOON_UNIV2))));
+        swapInfo.batches[0][0].extraData = new bytes[](1);
+        swapInfo.batches[0][0].fromToken = uint256(uint160(SAFEMOON));
+        // extraData
+        swapInfo.extraData = new PMMLib.PMMSwapRequest[](0);
+
+        return abi.encodeWithSelector(
+            DexRouter.smartSwapTo.selector,
+            swapInfo.orderId, arnaud, swapInfo.baseRequest, swapInfo.batchesAmount, swapInfo.batches, swapInfo.extraData
+        );
     }
 }

@@ -7,8 +7,17 @@ import "@dex/TokenApprove.sol";
 import "@dex/TokenApproveProxy.sol";
 import "@dex/utils/WNativeRelayer.sol";
 import "@dex/libraries/SafeERC20.sol";
+import "@dex/adapter/UniAdapter.sol";
 import "../common/CommissionHelper.t.sol";
 import "../common/TrimHelper.t.sol";
+
+interface ISafeMoon {
+    function owner() external view returns (address);
+    function updateBuyFees(uint256 _marketingFee, uint256 _liquidityFee, uint256 _devFee) external;
+    function updateSellFees(uint256 _marketingFee, uint256 _liquidityFee, uint256 _devFee) external;
+    function buyTotalFees() external view returns (uint256);
+    function sellTotalFees() external view returns (uint256);
+}
 
 contract TrimTestBase is Test, CommissionHelper, TrimHelper {
     // tokens
@@ -16,12 +25,14 @@ contract TrimTestBase is Test, CommissionHelper, TrimHelper {
     address constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // decimals=18
     address constant USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7; // decimals=6
     address constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48; // decimals=6
+    address constant SAFEMOON = 0xE253Be149830bcE1a6Af3BE399f3a952eabe127E; // Tax token, UniswapV2 pool always takes fee for sell and buy, decimals=18
 
     // pools
     address constant WETH_USDT_UNIV2 = 0x0d4a11d5EEaaC28EC3F61d100daF4d40471f1852;
     address constant WETH_USDT_UNIV3 = 0x4e68Ccd3E89f51C3074ca5072bbAC773960dFa36;
     address constant USDC_WETH_UNIV2 = 0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc;
     address constant USDC_WETH_UNIV3 = 0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640;
+    address constant WETH_SAFEMOON_UNIV2 = 0xd2e185A9076d33BD76cE548961EE6E9cB700BA17;
 
     // users
     address public admin = vm.rememberKey(1);
@@ -38,7 +49,7 @@ contract TrimTestBase is Test, CommissionHelper, TrimHelper {
     WNativeRelayer wNativeRelayer = WNativeRelayer(payable(0x5703B683c7F928b721CA95Da988d73a3299d4757)); // ETH
 
     address constant UniversalUniV3Adapter = 0x6747BcaF9bD5a5F0758Cbe08903490E45DdfACB5;
-    address constant UniV2Adapter = 0xc837BbEa8C7b0caC0e8928f797ceB04A34c9c06e;
+    address public UniV2Adapter;
 
     uint256 public oneEther = 1 * 10 ** 18;
 
@@ -186,6 +197,7 @@ contract TrimTestBase is Test, CommissionHelper, TrimHelper {
     function setUp() public {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), 23293873); // 2025.9.5 10:18
         vm.startPrank(admin);
+        UniV2Adapter = address(new UniAdapter());
         dexRouter = new DexRouter();
         vm.stopPrank();
         address wNativeRelayerOwner = wNativeRelayer.owner();
@@ -195,6 +207,13 @@ contract TrimTestBase is Test, CommissionHelper, TrimHelper {
         whitelistedCallers[0] = address(dexRouter);
         wNativeRelayer.setCallerOk(whitelistedCallers, true);
         vm.stopPrank();
+        address safeMoonOwner = ISafeMoon(SAFEMOON).owner();
+        vm.startPrank(safeMoonOwner);
+        ISafeMoon(SAFEMOON).updateBuyFees(10, 0, 0);
+        ISafeMoon(SAFEMOON).updateSellFees(20, 0, 0);
+        vm.stopPrank();
+        // console2.log("safeMoon buy fees: %d", ISafeMoon(SAFEMOON).buyTotalFees());
+        // console2.log("safeMoon sell fees: %d", ISafeMoon(SAFEMOON).sellTotalFees());
     }
 
     // ==================== Internal Functions ====================
