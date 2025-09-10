@@ -617,7 +617,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                     freePtr,
                     0x44,
                     0,
-                    20
+                    0x20
                 )
                 if and(
                     iszero(and(eq(mload(0), 1), gt(returndatasize(), 31))),
@@ -757,7 +757,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                     freePtr,
                     0x44,
                     0,
-                    20
+                    0x20
                 )
                 if and(
                     iszero(and(eq(mload(0), 1), gt(returndatasize(), 31))),

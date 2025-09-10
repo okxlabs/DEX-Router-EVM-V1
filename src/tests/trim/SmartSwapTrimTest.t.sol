@@ -137,7 +137,7 @@ contract SmartSwapTrimTest is TrimTestBase {
     function test_trim_smartSwapTo_USDT2WETH_1trim_1toCommission() tokenLogAndCheck(USDT, WETH, 1000 * 10 ** 6, true, false, false, true, false) public {
         bytes memory swapData = _generateUSDT2WETHSmartSwapData();
         bytes memory trimData = _generate1TrimData();
-        bytes memory commissionData = _generate1CommissionData(false, USDT);
+        bytes memory commissionData = _generate1CommissionData(false, WETH);
         bytes memory data = bytes.concat(swapData, trimData, commissionData);
         (bool success, ) = address(dexRouter).call(data);
         require(success, "call failed");
@@ -147,7 +147,7 @@ contract SmartSwapTrimTest is TrimTestBase {
     function test_trim_smartSwapTo_USDT2WETH_2trim_1toCommission() tokenLogAndCheck(USDT, WETH, 1000 * 10 ** 6, true, true, false, true, false) public {
         bytes memory swapData = _generateUSDT2WETHSmartSwapData();
         bytes memory trimData = _generate2TrimData();
-        bytes memory commissionData = _generate1CommissionData(false, USDT);
+        bytes memory commissionData = _generate1CommissionData(false, WETH);
         bytes memory data = bytes.concat(swapData, trimData, commissionData);
         (bool success, ) = address(dexRouter).call(data);
         require(success, "call failed");
@@ -157,7 +157,7 @@ contract SmartSwapTrimTest is TrimTestBase {
     function test_trim_smartSwapTo_USDT2WETH_1trim_2toCommission() tokenLogAndCheck(USDT, WETH, 1000 * 10 ** 6, true, false, false, true, true) public {
         bytes memory swapData = _generateUSDT2WETHSmartSwapData();
         bytes memory trimData = _generate1TrimData();
-        bytes memory commissionData = _generate2CommissionData(false, USDT);
+        bytes memory commissionData = _generate2CommissionData(false, WETH);
         bytes memory data = bytes.concat(swapData, trimData, commissionData);
         (bool success, ) = address(dexRouter).call(data);
         require(success, "call failed");
@@ -167,7 +167,7 @@ contract SmartSwapTrimTest is TrimTestBase {
     function test_trim_smartSwapTo_USDT2WETH_2trim_2toCommission() tokenLogAndCheck(USDT, WETH, 1000 * 10 ** 6, true, true, false, true, true) public {
         bytes memory swapData = _generateUSDT2WETHSmartSwapData();
         bytes memory trimData = _generate2TrimData();
-        bytes memory commissionData = _generate2CommissionData(false, USDT);
+        bytes memory commissionData = _generate2CommissionData(false, WETH);
         bytes memory data = bytes.concat(swapData, trimData, commissionData);
         (bool success, ) = address(dexRouter).call(data);
         require(success, "call failed");
@@ -177,7 +177,7 @@ contract SmartSwapTrimTest is TrimTestBase {
     function test_trim_smartSwapTo_USDT2WETH_2trim_2fromCommission() tokenLogAndCheck(USDT, WETH, 2 * 10 ** 18, true, true, true, true, true) public {
         bytes memory swapData = _generateUSDT2WETHSmartSwapData();
         bytes memory trimData = _generate2TrimData();
-        bytes memory commissionData = _generate2CommissionData(true, WETH);
+        bytes memory commissionData = _generate2CommissionData(true, USDT);
         bytes memory data = bytes.concat(swapData, trimData, commissionData);
         (bool success, ) = address(dexRouter).call(data);
         require(success, "call failed");
@@ -410,8 +410,8 @@ contract SmartSwapTrimTest is TrimTestBase {
     // TaxToken(SAFEMOON)->ERC20 with noTrim and 2toCommission
     function test_trim_smartSwapTo_SAFEMOON2WETH_noTrim_2toCommission() tokenLogAndCheck(SAFEMOON, WETH, 1 * 10 ** 27, false, false, false, true, true) public {
         bytes memory swapData = _generateSAFEMOON2WETHSmartSwapData();
-        bytes memory trimData = _generate2TrimData();
-        bytes memory data = bytes.concat(swapData, trimData);
+        bytes memory commissionData = _generate2CommissionData(false, WETH);
+        bytes memory data = bytes.concat(swapData, commissionData);
         (bool success, ) = address(dexRouter).call(data);
         require(success, "call failed");
     }
