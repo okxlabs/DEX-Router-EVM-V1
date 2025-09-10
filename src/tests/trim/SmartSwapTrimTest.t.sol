@@ -40,14 +40,14 @@ contract SmartSwapTrimTest is TrimTestBase {
     }
 
     // ==================== ERC20->ERC20 ====================
-    // ERC20->ERC20 with noTrim and noCommission
+    // WETH->USDT with noTrim and noCommission
     function test_trim_smartSwapTo_WETH2USDT_noTrim_noCommission() tokenLogAndCheck(WETH, USDT, oneEther, false, false, false, false, false)  public {
         bytes memory swapData = _generateWETH2USDTSmartSwapData();
         (bool success, ) = address(dexRouter).call(swapData);
         require(success, "call failed");
     }
 
-    // ERC20->ERC20 with 1trim and noCommission
+    // WETH->USDT with 1trim and noCommission
     function test_trim_smartSwapTo_WETH2USDT_1trim_noCommission() tokenLogAndCheck(WETH, USDT, oneEther, true, false, false, false, false) public {
         bytes memory swapData = _generateWETH2USDTSmartSwapData();
         bytes memory trimData = _generate1TrimData();
@@ -56,7 +56,7 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
-    // ERC20->ERC20 with 2trim and noCommission
+    // WETH->USDT with 2trim and noCommission
     function test_trim_smartSwapTo_WETH2USDT_2trim_noCommission() tokenLogAndCheck(WETH, USDT, oneEther, true, true, false, false, false) public {
         bytes memory swapData = _generateWETH2USDTSmartSwapData();
         bytes memory trimData = _generate2TrimData();
@@ -65,7 +65,7 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
-    // ERC20->ERC20 with 1trim and 1toCommission
+    // WETH->USDT with 1trim and 1toCommission
     function test_trim_smartSwapTo_WETH2USDT_1trim_1toCommission() tokenLogAndCheck(WETH, USDT, oneEther, true, false, false, true, false) public {
         bytes memory swapData = _generateWETH2USDTSmartSwapData();
         bytes memory trimData = _generate1TrimData();
@@ -75,7 +75,7 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
-    // ERC20->ERC20 with 2trim and 1toCommission
+    // WETH->USDT with 2trim and 1toCommission
     function test_trim_smartSwapTo_WETH2USDT_2trim_1toCommission() tokenLogAndCheck(WETH, USDT, oneEther, true, true, false, true, false) public {
         bytes memory swapData = _generateWETH2USDTSmartSwapData();
         bytes memory trimData = _generate2TrimData();
@@ -85,7 +85,7 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
-    // ERC20->ERC20 with 1trim and 2toCommission
+    // WETH->USDT with 1trim and 2toCommission
     function test_trim_smartSwapTo_WETH2USDT_1trim_2toCommission() tokenLogAndCheck(WETH, USDT, oneEther, true, false, false, true, true) public {
         bytes memory swapData = _generateWETH2USDTSmartSwapData();
         bytes memory trimData = _generate1TrimData();
@@ -95,7 +95,7 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
-    // ERC20->ERC20 with 2trim and 2toCommission
+    // WETH->USDT with 2trim and 2toCommission
     function test_trim_smartSwapTo_WETH2USDT_2trim_2toCommission() tokenLogAndCheck(WETH, USDT, oneEther, true, true, false, true, true) public {
         bytes memory swapData = _generateWETH2USDTSmartSwapData();
         bytes memory trimData = _generate2TrimData();
@@ -105,9 +105,77 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
     
-    // ERC20->ERC20 with 2trim and 2fromCommission
+    // WETH->USDT with 2trim and 2fromCommission
     function test_trim_smartSwapTo_WETH2USDT_2trim_2fromCommission() tokenLogAndCheck(WETH, USDT, 2 * 10 ** 18, true, true, true, true, true) public {
         bytes memory swapData = _generateWETH2USDTSmartSwapData();
+        bytes memory trimData = _generate2TrimData();
+        bytes memory commissionData = _generate2CommissionData(true, WETH);
+        bytes memory data = bytes.concat(swapData, trimData, commissionData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // USDT->WETH with 1trim and noCommission
+    function test_trim_smartSwapTo_USDT2WETH_1trim_noCommission() tokenLogAndCheck(USDT, WETH, 1000 * 10 ** 6, true, false, false, false, false) public {
+        bytes memory swapData = _generateUSDT2WETHSmartSwapData();
+        bytes memory trimData = _generate1TrimData();
+        bytes memory data = bytes.concat(swapData, trimData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // USDT->WETH with 2trim and noCommission
+    function test_trim_smartSwapTo_USDT2WETH_2trim_noCommission() tokenLogAndCheck(USDT, WETH, 1000 * 10 ** 6, true, true, false, false, false) public {
+        bytes memory swapData = _generateUSDT2WETHSmartSwapData();
+        bytes memory trimData = _generate2TrimData();
+        bytes memory data = bytes.concat(swapData, trimData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // USDT->WETH with 1trim and 1toCommission
+    function test_trim_smartSwapTo_USDT2WETH_1trim_1toCommission() tokenLogAndCheck(USDT, WETH, 1000 * 10 ** 6, true, false, false, true, false) public {
+        bytes memory swapData = _generateUSDT2WETHSmartSwapData();
+        bytes memory trimData = _generate1TrimData();
+        bytes memory commissionData = _generate1CommissionData(false, USDT);
+        bytes memory data = bytes.concat(swapData, trimData, commissionData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // USDT->WETH with 2trim and 1toCommission
+    function test_trim_smartSwapTo_USDT2WETH_2trim_1toCommission() tokenLogAndCheck(USDT, WETH, 1000 * 10 ** 6, true, true, false, true, false) public {
+        bytes memory swapData = _generateUSDT2WETHSmartSwapData();
+        bytes memory trimData = _generate2TrimData();
+        bytes memory commissionData = _generate1CommissionData(false, USDT);
+        bytes memory data = bytes.concat(swapData, trimData, commissionData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // USDT->WETH with 1trim and 2toCommission
+    function test_trim_smartSwapTo_USDT2WETH_1trim_2toCommission() tokenLogAndCheck(USDT, WETH, 1000 * 10 ** 6, true, false, false, true, true) public {
+        bytes memory swapData = _generateUSDT2WETHSmartSwapData();
+        bytes memory trimData = _generate1TrimData();
+        bytes memory commissionData = _generate2CommissionData(false, USDT);
+        bytes memory data = bytes.concat(swapData, trimData, commissionData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // USDT->WETH with 2trim and 2toCommission
+    function test_trim_smartSwapTo_USDT2WETH_2trim_2toCommission() tokenLogAndCheck(USDT, WETH, 1000 * 10 ** 6, true, true, false, true, true) public {
+        bytes memory swapData = _generateUSDT2WETHSmartSwapData();
+        bytes memory trimData = _generate2TrimData();
+        bytes memory commissionData = _generate2CommissionData(false, USDT);
+        bytes memory data = bytes.concat(swapData, trimData, commissionData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+    
+    // USDT->WETH with 2trim and 2fromCommission
+    function test_trim_smartSwapTo_USDT2WETH_2trim_2fromCommission() tokenLogAndCheck(USDT, WETH, 2 * 10 ** 18, true, true, true, true, true) public {
+        bytes memory swapData = _generateUSDT2WETHSmartSwapData();
         bytes memory trimData = _generate2TrimData();
         bytes memory commissionData = _generate2CommissionData(true, WETH);
         bytes memory data = bytes.concat(swapData, trimData, commissionData);
@@ -284,7 +352,7 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
-    // ERC20->TaxToken(SAFEMOON) with noTrim and 2toCommission TODO failed for send token success check
+    // ERC20->TaxToken(SAFEMOON) with noTrim and 2toCommission
     function test_trim_smartSwapTo_WETH2SAFEMOON_noTrim_2toCommission() tokenLogAndCheck(WETH, SAFEMOON, 0.01 * 10 ** 18, false, false, false, true, true) public {
         bytes memory swapData = _generateWETH2SAFEMOONSmartSwapData();
         bytes memory commissionData = _generate2CommissionData(false, SAFEMOON);
@@ -293,7 +361,7 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
-    // ERC20->TaxToken(SAFEMOON) with 2trim and noCommission TODO failed
+    // ERC20->TaxToken(SAFEMOON) with 2trim and noCommission
     function test_trim_smartSwapTo_WETH2SAFEMOON_2trim_noCommission() tokenLogAndCheck(WETH, SAFEMOON, 0.01 * 10 ** 18, true, true, false, false, false) public {
         bytes memory swapData = _generateWETH2SAFEMOONSmartSwapData();
         bytes memory trimData = _generate2TrimData();
@@ -302,7 +370,7 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
-    // ERC20->TaxToken(SAFEMOON) with 2trim and 2fromCommission TODO failed
+    // ERC20->TaxToken(SAFEMOON) with 2trim and 2fromCommission
     function test_trim_smartSwapTo_WETH2SAFEMOON_2trim_2fromCommission() tokenLogAndCheck(WETH, SAFEMOON, 0.02 * 10 ** 18, true, true, true, true, true) public {
         bytes memory swapData = _generateWETH2SAFEMOONSmartSwapData();
         bytes memory trimData = _generate2TrimData();
@@ -312,7 +380,7 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
-    // ERC20->TaxToken(SAFEMOON) with 2trim and 2toCommission TODO failed
+    // ERC20->TaxToken(SAFEMOON) with 2trim and 2toCommission
     function test_trim_smartSwapTo_WETH2SAFEMOON_2trim_2toCommission() tokenLogAndCheck(WETH, SAFEMOON, 0.01 * 10 ** 18, true, true, false, true, true) public {
         bytes memory swapData = _generateWETH2SAFEMOONSmartSwapData();
         bytes memory trimData = _generate2TrimData();
@@ -397,6 +465,34 @@ contract SmartSwapTrimTest is TrimTestBase {
         swapInfo.batches[0][0].extraData = new bytes[](1);
         swapInfo.batches[0][0].extraData[0] = abi.encode(0, abi.encode(WETH, USDT, 0));
         swapInfo.batches[0][0].fromToken = uint256(uint160(WETH));
+        // extraData
+        swapInfo.extraData = new PMMLib.PMMSwapRequest[](0);
+
+        return abi.encodeWithSelector(
+            DexRouter.smartSwapTo.selector,
+            swapInfo.orderId, arnaud, swapInfo.baseRequest, swapInfo.batchesAmount, swapInfo.batches, swapInfo.extraData
+        );
+    }
+
+    function _generateUSDT2WETHSmartSwapData() internal view returns (bytes memory) {
+        SwapInfo memory swapInfo;
+        // baseRequest
+        swapInfo.baseRequest = _generateBaseRequest(USDT, WETH, oneEther);
+        // batchesAmount
+        swapInfo.batchesAmount = new uint256[](1);
+        swapInfo.batchesAmount[0] = 1000 * 10 ** 6;
+        // batches
+        swapInfo.batches = new DexRouter.RouterPath[][](1);
+        swapInfo.batches[0] = new DexRouter.RouterPath[](1);
+        swapInfo.batches[0][0].mixAdapters = new address[](1);
+        swapInfo.batches[0][0].mixAdapters[0] = address(UniversalUniV3Adapter);
+        swapInfo.batches[0][0].assetTo = new address[](1);
+        swapInfo.batches[0][0].assetTo[0] = address(UniversalUniV3Adapter);
+        swapInfo.batches[0][0].rawData = new uint256[](1);
+        swapInfo.batches[0][0].rawData[0] = uint256(bytes32(abi.encodePacked(uint8(0x00), uint88(10000), address(WETH_USDT_UNIV3))));
+        swapInfo.batches[0][0].extraData = new bytes[](1);
+        swapInfo.batches[0][0].extraData[0] = abi.encode(0, abi.encode(USDT, WETH, 0));
+        swapInfo.batches[0][0].fromToken = uint256(uint160(USDT));
         // extraData
         swapInfo.extraData = new PMMLib.PMMSwapRequest[](0);
 
