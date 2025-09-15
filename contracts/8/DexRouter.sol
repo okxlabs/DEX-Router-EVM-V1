@@ -172,10 +172,7 @@ contract DexRouter is
     ) private {
         // 1. transfer from token in
         BaseRequest memory _baseRequest = baseRequest;
-        require(
-            _baseRequest.fromTokenAmount > 0,
-            "Route: fromTokenAmount must be > 0"
-        );
+
         address fromToken = _bytes32ToAddress(_baseRequest.fromToken);
 
         // In order to deal with ETH/WETH transfer rules in a unified manner,
