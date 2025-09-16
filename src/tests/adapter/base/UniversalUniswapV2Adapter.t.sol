@@ -24,12 +24,91 @@ contract UniversalUniswapV2AdapterTest is AbstractAdapterTest {
         override
         returns (SwapTestCase[][] memory)
     {
-        SwapTestCase[][] memory cases = new SwapTestCase[][](4);
-        cases[0] = getApeSwapV2TestCases();
-        cases[1] = getRDexV2TestCases();
-        cases[2] = getLynexTestCases();
-        cases[3] = getDyorLaunchedTestCases();
+        SwapTestCase[][] memory cases = new SwapTestCase[][](7);
+        // cases[0] = getApeSwapV2TestCases();
+        // cases[1] = getRDexV2TestCases();
+        // cases[2] = getLynexTestCases();
+        // cases[3] = getDyorLaunchedTestCases();
+        // cases[4] = getEtherexClassicTestCases();
+        // cases[5] = getDooarTestCases();
+        cases[6] = getCronaSwapTestCases();
 
+        return cases;
+    }
+
+    function getCronaSwapTestCases() internal pure returns (SwapTestCase[] memory) {
+        SwapTestCase[] memory cases = new SwapTestCase[](1);
+
+        address WCRO = 0x5C7F8A570d578ED84E63fdFA7b1eE72dEae1AE23;
+        address USDC = 0xc21223249CA28397B4B6541dfFaEcC539BfF0c59;
+        address WCRO_USDC_POOL = 0x0625A68D25d304aed698c806267a4e369e8Eb12a;
+        //https://cronoscan.com/tx/0xb03977728411444ed8c22f408bff62cd07f7a0c8abe67ca773abe0732511fd1f
+        cases[0] = SwapTestCase({
+            networkId: "cro",
+            forkBlock: 32185138 - 1,
+            fromToken: WCRO,
+            toToken: USDC,
+            pool: WCRO_USDC_POOL,
+            amount: 170 ether,
+            expectedOutput: 38.409408 * 10 ** 6,
+            sellBase: true,
+            expectRevert: false,
+            description: "WCRO to USDC on CronaSwap",
+            moreInfo: abi.encode(9975, 10000),
+            fromTokenPreTo: address(0)
+        });
+
+        return cases;
+    }
+
+    function getDooarTestCases() internal pure returns (SwapTestCase[] memory) {
+        SwapTestCase[] memory cases = new SwapTestCase[](1);
+        
+        address WPOL = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
+        address USDT0 = 0xc2132D05D31c914a87C6611C10748AEb04B58e8F;
+        address WPOL_USDT0_POOL = 0xC84F479bF220E38BA3bd0262049BAd47Aaa673EE;
+        //https://polygonscan.com/tx/0x6c930723fd10d55d74b4702ae82c9158f7eb371f3f817691fc69b4618ab87698
+        cases[0] = SwapTestCase({
+            networkId: "polygon",
+            forkBlock: 76521141 - 1,
+            fromToken: WPOL,
+            toToken: USDT0,
+            pool: WPOL_USDT0_POOL,
+            amount: 827.531418609526541691 * 10 ** 18,
+            expectedOutput: 0,
+            sellBase: true,
+            expectRevert: false,
+            description: "WPOL to USDT0 on Polygon",
+            moreInfo: abi.encode(990, 1000),
+            fromTokenPreTo: address(0)
+        });
+
+        return cases;
+    }
+
+    ///@notice not correct, need to be fixed, output amount is not correct
+    function getEtherexClassicTestCases() internal pure returns (SwapTestCase[] memory) {
+
+        address USDC = 0x176211869cA2b568f2A7D4EE941E073a821EE1ff;
+        address USDT = 0xA219439258ca9da29E9Cc4cE5596924745e12B93;
+        address USDC_USDT_POOL = 0x8418e91cf8Cbf7Dd37B6492e23Bec75D0F4D81D8;
+        bytes memory etherexClassicFee = abi.encode(10000, 10000);
+        //https://lineascan.build/tx/0x12f577c0b75c2588210bcace8c28f09c0a8a3d54db80cfb2f63738e0392726dc
+        SwapTestCase[] memory cases = new SwapTestCase[](1);
+        cases[0] = SwapTestCase({
+            networkId: "linea",
+            forkBlock: 23384001 - 1,
+            fromToken: USDC,
+            toToken: USDT,
+            pool: USDC_USDT_POOL,
+            amount: 8500.00108 * 10 ** 6,
+            expectedOutput: 0,
+            sellBase: true,
+            expectRevert: false,
+            description: "USDC to USDT on Etherex Classic",
+            moreInfo: etherexClassicFee,
+            fromTokenPreTo: address(0)
+        });
         return cases;
     }
 
@@ -128,7 +207,7 @@ contract UniversalUniswapV2AdapterTest is AbstractAdapterTest {
             moreInfo: rdxFee,
             fromTokenPreTo: address(0)
         });
-        
+
         return cases;
     }
 

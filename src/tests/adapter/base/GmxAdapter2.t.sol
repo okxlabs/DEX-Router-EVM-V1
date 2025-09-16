@@ -27,10 +27,35 @@ contract GmxAdapter2Test is AbstractAdapterTest {
         override
         returns (SwapTestCase[][] memory)
     {
-        SwapTestCase[][] memory cases = new SwapTestCase[][](2);
+        SwapTestCase[][] memory cases = new SwapTestCase[][](3);
         cases[0] = getGmxV2TestCases();
         cases[1] = getBmxTestCases();
+        cases[2] = getNavigatorCryptoPoolTestCases();
         
+        return cases;
+    }
+    function getNavigatorCryptoPoolTestCases() internal pure returns (SwapTestCase[] memory) {
+        SwapTestCase[] memory cases = new SwapTestCase[](1);
+
+        address WSONIC = 0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38;
+        address LBTC = 0xecAc9C5F704e954931349Da37F60E39f515c11c1;
+        address VAULT = 0xe9263682E837eFabb145f8C632B9d2c518D90652;
+        // https://sonicscan.org/tx/0xbc3f352ec9c04541c90a4e976184b18310f704f07598123ff7c316b192891b7f
+        cases[0] = SwapTestCase({
+            networkId: "sonic",
+            forkBlock: 47040356,
+            fromToken: WSONIC,
+            toToken: LBTC,
+            pool: VAULT,
+            amount: 1045.7224308028324 * 10 ** 18,
+            expectedOutput: 272511,
+            sellBase: true,
+            expectRevert: false,
+            description: "WSONIC to LBTC on Navigator Crypto Pool",
+            moreInfo: abi.encode(WSONIC, LBTC),
+            fromTokenPreTo: address(0)
+        });
+
         return cases;
     }
 

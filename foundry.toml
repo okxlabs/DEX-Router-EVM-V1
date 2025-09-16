@@ -16,12 +16,12 @@ evm_version = "cancun"
 fs_permissions = [{access = "read-write", path = "./"}]
 
 [rpc_endpoints]
-arb = "https://arb1.arbitrum.io/rpc"
+arb = "https://arb1.lava.build"
 avax = "https://avax-mainnet.g.alchemy.com/v2/Vi9EBxKbLyTvKM3I2LXvsOV8f6fWsbrj"
 base = "https://mainnet.base.org"
 bsc = "https://site1.moralis-nodes.com/bsc/ca1462af506243baa6d81ceef01176b9"
 conflux = "https://evm.confluxrpc.com"
-cro = "https://evm-cronos.crypto.org"
+cro = "https://1rpc.io/cro"
 eth = "https://eth-mainnet.g.alchemy.com/v2/aMbWrR8EcmCGpF6rCSNk0P24wTZbbG7R"
 ethw = "https://mainnet.ethereumpow.org"
 flare = "https://flare-api.flare.network/ext/C/rpc"
@@ -34,3 +34,4 @@ polygon = "https://polygon-mainnet.g.alchemy.com/v2/aMbWrR8EcmCGpF6rCSNk0P24wTZb
 polyzkevm = "https://zkevm-rpc.com"
 scroll = "https://rpc.scroll.io"
 xlayer = "https://rpc.xlayer.tech"
+sonic = "https://sonic-rpc.publicnode.com"

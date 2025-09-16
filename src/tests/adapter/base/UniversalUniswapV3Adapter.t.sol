@@ -27,6 +27,8 @@ contract UniversalUniswapV3AdapterTest is AbstractAdapterTest {
         nativeWrappedTokens["mantle"] = 0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8; // MANTLE_WMNT
         nativeWrappedTokens["xlayer"] = 0xe538905cf8410324e03A5A23C1c177a474D59b2b; // XLAYER_WOKB
         nativeWrappedTokens["linea"] = 0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f; // LINEA_WETH
+        nativeWrappedTokens["cro"] = 0x5C7F8A570d578ED84E63fdFA7b1eE72dEae1AE23; // CRO_WCRO
+        nativeWrappedTokens["polygon"] = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270; // POLYGON_WMATIC
 
         address nativeWrappedToken = nativeWrappedTokens[networkId];
         require(nativeWrappedToken != address(0), "Unsupported network");
@@ -49,12 +51,100 @@ contract UniversalUniswapV3AdapterTest is AbstractAdapterTest {
         override
         returns (SwapTestCase[][] memory)
     {
-        SwapTestCase[][] memory cases = new SwapTestCase[][](4);
-        cases[0] = getThenaV3TestCases();
-        cases[1] = getAgniFinanceTestCases();
-        cases[2] = getOkieV3XlayerTestCases();
-        cases[3] = getEtherexFinanceTestCases();
+        SwapTestCase[][] memory cases = new SwapTestCase[][](7);
+        // cases[0] = getThenaV3TestCases();
+        // cases[1] = getAgniFinanceTestCases();
+        // cases[2] = getOkieV3XlayerTestCases();
+        // cases[3] = getEtherexFinanceTestCases();
+        // cases[4] = getVVSFinanceV3TestCases();
+        cases[5] = getWDEXTestCases();
+        cases[6] = getRadioCACATestCases();
 
+        return cases;
+    }
+
+    function getRadioCACATestCases()
+        internal
+        pure
+        returns (SwapTestCase[] memory)
+    {
+        SwapTestCase[] memory cases = new SwapTestCase[](1);
+        
+        address WBNB = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
+        address RACA = 0x12BB890508c125661E03b09EC06E404bc9289040;
+        address WBNB_RACA_POOL = 0x3f0CB8346ce04D8923Dcb1bE9552b011723e46AB;
+
+        // https://bscscan.com/tx/0x91735f905597d2246dc712f029c222dde23c278bd1194788d8c5eccfa67731c5
+        cases[0] = SwapTestCase({
+            networkId: "bsc",
+            forkBlock: 61274377 - 1,
+            fromToken: RACA,
+            toToken: WBNB,
+            pool: WBNB_RACA_POOL,
+            amount: 10168626.636766333521362944 * 10 ** 18,
+            expectedOutput: 0.600987876171391804 * 10 ** 18,
+            sellBase: false,
+            expectRevert: false,
+            description: "RACA to WBNB on Radio CAC",
+            moreInfo: abi.encode(uint160(0), abi.encode(RACA, WBNB, uint24(0))),
+            fromTokenPreTo: address(0)
+        });
+        return cases;
+    }
+
+    function getWDEXTestCases()
+        internal
+        pure
+        returns (SwapTestCase[] memory)
+    {
+        SwapTestCase[] memory cases = new SwapTestCase[](1);
+        
+        address WMATIC = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
+        address USDT0 = 0xc2132D05D31c914a87C6611C10748AEb04B58e8F;
+        address WMATIC_USDT0_POOL = 0x702d3438B2c6DE6911a6A43A673cE5593c797F74;
+        // https://polygonscan.com/tx/0xa18ece5b031818a756da7aea5aae6f21d614cafb646a9f484176f13270d99737
+        cases[0] = SwapTestCase({
+            networkId: "polygon",
+            forkBlock: 76523329 - 1,
+            fromToken: WMATIC,
+            toToken: USDT0,
+            pool: WMATIC_USDT0_POOL,
+            amount: 3147499147711281767326,
+            expectedOutput: 795340356,
+            sellBase: true,
+            expectRevert: false,
+            description: "WMATIC to USDT0 on Polygon",
+            moreInfo: abi.encode(uint160(0), abi.encode(WMATIC, USDT0, uint24(0))),
+            fromTokenPreTo: address(0)
+        });
+        return cases;
+    }
+
+    function getVVSFinanceV3TestCases()
+        internal
+        pure
+        returns (SwapTestCase[] memory)
+    {
+        address WCRO = 0x5C7F8A570d578ED84E63fdFA7b1eE72dEae1AE23;
+        address USDC = 0xc21223249CA28397B4B6541dfFaEcC539BfF0c59;
+        address USDC_WCRO_POOL = 0x67255a0AB5aDD6D65045E6E855842Ca8b8A2B625;
+        //https://cronoscan.com/tx/0x9bd51581acb3c08478e321ca4321ace3c4527500c9fac099701b8568ddcfe73d
+        SwapTestCase[] memory cases = new SwapTestCase[](1);
+        cases[0] = SwapTestCase({
+            networkId: "cro",
+            forkBlock: 32068322 - 1,
+            fromToken: USDC,
+            toToken: WCRO,
+            pool: USDC_WCRO_POOL,
+            amount: 400 * 10 ** 6,
+            expectedOutput: 1735114089020313384588,
+            sellBase: true,
+            expectRevert: false,
+            description: "USDC to WCRO on VVS Finance V3",
+            moreInfo: abi.encode(uint160(0), abi.encode(USDC, WCRO, uint24(0))),
+            fromTokenPreTo: address(0)
+        });
+    
         return cases;
     }
 

@@ -107,10 +107,7 @@ abstract contract AbstractAdapterTest is Test {
         } catch Error(string memory reason) {
             console2.log("[FAIL] Test case %s failed: %s", index, reason);
         } catch (bytes memory) {
-            console2.log(
-                "[FAIL] Test case %s failed with low-level error",
-                index
-            );
+            console2.log("[FAIL] Test case %s failed with low-level error", index);
         }
 
         emit TestCaseComplete(index, success);
@@ -128,7 +125,7 @@ abstract contract AbstractAdapterTest is Test {
     function _executeTestCase(SwapTestCase memory testCase) external {
         // Switch to test case network using network identifier
         _switchToNetwork(testCase.networkId, testCase.forkBlock);
-
+        
         // Execute swap
         _performSwap(testCase);
     }
