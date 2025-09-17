@@ -4,18 +4,34 @@ pragma solidity ^0.8.24;
 import {CurveAdapter} from "@dex/adapter/CurveAdapter.sol";
 import {AbstractAdapterTest} from "../common/AbstractAdapterTest.t.sol";
 
-/// @title CurveAdapter Xlayer Test
-/// @notice Adapter tests for CurveAdapter on Xlayer
+/// @title CurveAdapter Multi-Chain Test
+/// @notice Adapter tests for CurveAdapter on multiple networks
 /// @dev Uses the new AbstractAdapterTest harness to minimise boilerplate.
-contract CurveAdapterXlayerTest is AbstractAdapterTest {
-    address public immutable WETH_ADDRESS = 0xe538905cf8410324e03A5A23C1c177a474D59b2b;
+contract CurveAdapterTest is AbstractAdapterTest {
+    // Mapping of network IDs to their wrapped tokens
+    mapping(string => address) internal WETH_ADDRESSES;
+    
     /**
-     * @dev Create CurveAdapter
+     * @dev Create CurveAdapter for the specified network
+     * @param networkId The network identifier (e.g. "xlayer", "eth", "bsc")
      */
     function createCustomAdapter(
-        string memory /* networkId */
+        string memory networkId
     ) internal override returns (address) {
-        return address(new CurveAdapter(WETH_ADDRESS));
+        // Wrapped token addresses per network
+        WETH_ADDRESSES["xlayer"] = 0xe538905cf8410324e03A5A23C1c177a474D59b2b; // XLAYER_WOKB
+        WETH_ADDRESSES["eth"] = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // ETH_WETH
+        WETH_ADDRESSES["bsc"] = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c; // BSC_WBNB
+        WETH_ADDRESSES["polygon"] = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270; // POLYGON_WMATIC
+        WETH_ADDRESSES["arbitrum"] = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1; // ARBITRUM_WETH
+        WETH_ADDRESSES["base"] = 0x4200000000000000000000000000000000000006; // BASE_WETH
+        WETH_ADDRESSES["linea"] = 0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f; // LINEA_WETH
+        WETH_ADDRESSES["mantle"] = 0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8; // MANTLE_WMNT
+        
+        address weth = WETH_ADDRESSES[networkId];
+        require(weth != address(0), "Unsupported network for CurveAdapter");
+        
+        return address(new CurveAdapter(weth));
     }
 
     /**
@@ -27,7 +43,7 @@ contract CurveAdapterXlayerTest is AbstractAdapterTest {
         pure
         returns (SwapTestCase[][] memory)
     {
-        SwapTestCase[][] memory cases = new SwapTestCase[][](1);
+        SwapTestCase[][] memory cases = new SwapTestCase[][](2);
         cases[0] = getCurveAdapterTestCases();
 
         return cases;
