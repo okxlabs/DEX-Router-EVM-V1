@@ -25,12 +25,12 @@ contract UniversalUniswapV2AdapterTest is AbstractAdapterTest {
         returns (SwapTestCase[][] memory)
     {
         SwapTestCase[][] memory cases = new SwapTestCase[][](7);
-        // cases[0] = getApeSwapV2TestCases();
-        // cases[1] = getRDexV2TestCases();
-        // cases[2] = getLynexTestCases();
-        // cases[3] = getDyorLaunchedTestCases();
-        // cases[4] = getEtherexClassicTestCases();
-        // cases[5] = getDooarTestCases();
+        cases[0] = getApeSwapV2TestCases();
+        cases[1] = getRDexV2TestCases();
+        cases[2] = getLynexTestCases();
+        cases[3] = getDyorLaunchedTestCases();
+        cases[4] = getEtherexClassicTestCases();
+        cases[5] = getDooarTestCases();
         cases[6] = getCronaSwapTestCases();
 
         return cases;
@@ -75,7 +75,7 @@ contract UniversalUniswapV2AdapterTest is AbstractAdapterTest {
             toToken: USDT0,
             pool: WPOL_USDT0_POOL,
             amount: 827.531418609526541691 * 10 ** 18,
-            expectedOutput: 0,
+            expectedOutput: 210149562,
             sellBase: true,
             expectRevert: false,
             description: "WPOL to USDT0 on Polygon",

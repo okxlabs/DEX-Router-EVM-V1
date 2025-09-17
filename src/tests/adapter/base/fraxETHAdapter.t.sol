@@ -64,12 +64,12 @@ contract fraxETHAdapterTest is AbstractAdapterTest {
         // ETH to frxETH conversion
         cases[0] = SwapTestCase({
             networkId: "eth",
-            forkBlock: 23378221 - 1, 
+            forkBlock: 23378221, 
             fromToken: USDe, 
             toToken: StakedUSDe, // frxETH as output
             pool: address(0), // Not used in fraxETH adapter
             amount: 36805.65 * 10 ** 18, // 1 ETH worth of WETH
-            expectedOutput: 0, // Dynamic output based on current exchange rate
+            expectedOutput: 30746306491739392601756, // Dynamic output based on current exchange rate
             sellBase: true,
             expectRevert: false,
             description: "USDe to StakedUSDe conversion via Frax ETH Minter",

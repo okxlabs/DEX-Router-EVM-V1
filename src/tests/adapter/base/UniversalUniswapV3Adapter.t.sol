@@ -52,11 +52,11 @@ contract UniversalUniswapV3AdapterTest is AbstractAdapterTest {
         returns (SwapTestCase[][] memory)
     {
         SwapTestCase[][] memory cases = new SwapTestCase[][](7);
-        // cases[0] = getThenaV3TestCases();
-        // cases[1] = getAgniFinanceTestCases();
-        // cases[2] = getOkieV3XlayerTestCases();
-        // cases[3] = getEtherexFinanceTestCases();
-        // cases[4] = getVVSFinanceV3TestCases();
+        cases[0] = getThenaV3TestCases();
+        cases[1] = getAgniFinanceTestCases();
+        cases[2] = getOkieV3XlayerTestCases();
+        cases[3] = getEtherexFinanceTestCases();
+        cases[4] = getVVSFinanceV3TestCases();
         cases[5] = getWDEXTestCases();
         cases[6] = getRadioCACATestCases();
 
