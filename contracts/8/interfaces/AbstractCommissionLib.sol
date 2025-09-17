@@ -19,8 +19,8 @@ abstract contract AbstractCommissionLib {
         uint256 trimRate; // 0x20
         address trimAddress; // 0x40
         uint256 expectAmountOut; // 0x60
-        uint256 trimRate2; // 0x80
-        address trimAddress2; // 0xa0
+        uint256 chargeRate; // 0x80
+        address chargeAddress; // 0xa0
     }
 
     function _getCommissionAndTrimInfo()

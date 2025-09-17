@@ -32,17 +32,39 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
     uint256 internal constant TRIM_DUAL_FLAG =
         0x7777777722220000000000000000000000000000000000000000000000000000;
 
-    event CommissionFromTokenRecord(
-        address fromTokenAddress,
-        uint256 commissionAmount,
-        address referrerAddress
+    // @notice CommissionFromTokenRecord is emitted in assembly, commentted out for gas saving
+    // event CommissionFromTokenRecord(
+    //     address fromTokenAddress,
+    //     uint256 commissionAmount,
+    //     address referrerAddress
+    // );
+
+    // @notice CommissionToTokenRecord is emitted in assembly, commentted out for gas saving
+    // event CommissionToTokenRecord(
+    //     address toTokenAddress,
+    //     uint256 commissionAmount,
+    //     address referrerAddress
+    // );
+
+    event PositiveSlippageTrimInfo(
+        address toTokenAddress,
+        uint256 trimRate,
+        uint256 chargeRate
     );
 
-    event CommissionToTokenRecord(
-        address toTokenAddress,
-        uint256 commissionAmount,
-        address referrerAddress
-    );
+    // @notice PositiveSlippageTrimRecord is emitted in assembly, commentted out for gas saving
+    // event PositiveSlippageTrimRecord(
+    //     address toTokenAddress,
+    //     uint256 trimAmount,
+    //     address trimAddress
+    // );
+
+    // @notice PositiveSlippageTrimRecord2 is emitted in assembly, commentted out for gas saving
+    // event PositiveSlippageTrimRecord2(
+    //     address toTokenAddress,
+    //     uint256 chargeAmount,
+    //     address chargeAddress
+    // );
 
     // set default value can change when need.
     uint256 public constant commissionRateLimit = 30000000;
@@ -158,15 +180,15 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 mstore(
                     add(0x80, trimInfo),
                     shr(160, and(trimData, _TRIM_RATE_MASK))
-                ) // trimRate2
+                ) // chargeRate
                 mstore(
                     add(0xa0, trimInfo),
                     and(trimData, _TRIM_EXPECT_AMOUNT_OUT_AND_ADDRESS_MASK)
-                ) // trimAddress2
+                ) // chargeAddress
             }
             default {
-                mstore(add(0x80, trimInfo), 0) // trimRate2
-                mstore(add(0xa0, trimInfo), 0) // trimAddress2
+                mstore(add(0x80, trimInfo), 0) // chargeRate
+                mstore(add(0xa0, trimInfo), 0) // chargeAddress
             }
         }
     }
@@ -539,24 +561,28 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
         }
 
         // process trim
-        if (trimInfo.hasTrim && inputAmount > trimInfo.expectAmountOut) {
-            require(trimInfo.trimRate + trimInfo.trimRate2 <= TRIM_RATE_LIMIT, "error trim rate limit");
-            uint256 trimAmount = inputAmount - trimInfo.expectAmountOut;
-            uint256 allowedMaxTrimAmount = inputAmount * (trimInfo.trimRate + trimInfo.trimRate2) / TRIM_DENOMINATOR;
-            if (trimAmount > allowedMaxTrimAmount) {
-                trimAmount = allowedMaxTrimAmount;
+        if (trimInfo.hasTrim) {
+            emit PositiveSlippageTrimInfo(toToken, trimInfo.trimRate, trimInfo.chargeRate);
+            if (inputAmount > trimInfo.expectAmountOut) {
+                require(trimInfo.trimRate <= TRIM_RATE_LIMIT, "error trim rate limit");
+                require(trimInfo.chargeRate <= TRIM_DENOMINATOR, "error charge rate");
+                uint256 trimAmount = inputAmount - trimInfo.expectAmountOut;
+                uint256 allowedMaxTrimAmount = inputAmount * trimInfo.trimRate / TRIM_DENOMINATOR;
+                if (trimAmount > allowedMaxTrimAmount) {
+                    trimAmount = allowedMaxTrimAmount;
+                }
+                _doCommissionOrTrimToTokenInternal(
+                    false,
+                    toToken,
+                    trimAmount,
+                    (TRIM_DENOMINATOR - trimInfo.chargeRate),
+                    trimInfo.trimAddress,
+                    trimInfo.chargeRate,
+                    trimInfo.chargeAddress
+                );
+                totalAmount += trimAmount;
+                inputAmount -= trimAmount;
             }
-            _doCommissionOrTrimToTokenInternal(
-                false,
-                toToken,
-                trimAmount,
-                trimInfo.trimRate,
-                trimInfo.trimAddress,
-                trimInfo.trimRate2,
-                trimInfo.trimAddress2
-            );
-            totalAmount += trimAmount;
-            inputAmount -= trimAmount;
         }
 
         // transfer toToken to receiver
@@ -574,11 +600,11 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
         address address2
     ) private {
         assembly ("memory-safe") {
-            // a << 8 | b << 4 | c => 0xabc
-            function _getStatus(flag, token, hasRate2) -> c {
-                let a := mul(gt(flag, 0), 256)
-                let b := mul(eq(token, _ETH), 16)
-                c := add(a, add(b, hasRate2))
+            // a << 4 | b => 0xab
+            function _getStatus(flag, token) -> c {
+                let a := mul(gt(flag, 0), 16)
+                let b := eq(token, _ETH)
+                c := add(a, b)
             }
             function _revertWithReason(m, len) {
                 mstore(
@@ -646,64 +672,71 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                     0xf171268de859ec269c52bbfac94dcb7715e784de194342abb284bf34fd30b32d
                 ) //emit CommissionToTokenRecord(address,uint256,address)
             }
-            function _emitPositiveSlippageTrim(token, trimRate, trimAmount, trimAddress) {
+            function _emitPositiveSlippageTrimRecord(token, trimAmount, trimAddress) {
                 let freePtr := mload(0x40)
-                mstore(0x40, add(freePtr, 0x80))
+                mstore(0x40, add(freePtr, 0x60))
                 mstore(freePtr, token)
-                mstore(add(freePtr, 0x20), trimRate)
-                mstore(add(freePtr, 0x40), trimAmount)
-                mstore(add(freePtr, 0x60), trimAddress)
+                mstore(add(freePtr, 0x20), trimAmount)
+                mstore(add(freePtr, 0x40), trimAddress)
                 log1(
                     freePtr,
-                    0x80,
-                    0xfd7b77cbad6777a54388ab730607b1806e6b2153276c6eb561f0b43c309aaea7
-                ) //emit PositiveSlippageTrim(address,uint256,uint256,address)
+                    0x60,
+                    0x7bec7d55a62a7a7b8068f1533e2a3bbf727b3e2e57f30c576fe159da60e09a65
+                ) // emit PositiveSlippageTrimRecord(address,uint256,address)
+            }
+            function _emitPositiveSlippageTrimRecord2(token, chargeAmount, chargeAddress) {
+                let freePtr := mload(0x40)
+                mstore(0x40, add(freePtr, 0x60))
+                mstore(freePtr, token)
+                mstore(add(freePtr, 0x20), chargeAmount)
+                mstore(add(freePtr, 0x40), chargeAddress)
+                log1(
+                    freePtr,
+                    0x60,
+                    0xeb9b0cff1cba8271f67c9757bbbef735c34ec74c45c4f4e162bd6aac51cde5c4
+                ) // emit PositiveSlippageTrimRecord2(address,uint256,address)
             }
 
             let amount1 := div(mul(totalAmount, rate1), add(rate1, rate2))
             let amount2 := sub(totalAmount, amount1)
 
-            let status := _getStatus(isCommission, toToken, gt(rate2, 0))
+            let status := _getStatus(isCommission, toToken)
             switch status
-            case 0x110 { // commission 1 referrer with ETH
+            case 0x11 { // commission with ETH
                 _sendETH(address1, amount1)
                 _emitCommissionToToken(toToken, amount1, address1)
+                if gt(rate2, 0) {
+                    _sendETH(address2, amount2)
+                    _emitCommissionToToken(toToken, amount2, address2)
+                }
             }
-            case 0x111 { // commission 2 referrers with ETH
-                _sendETH(address1, amount1)
-                _emitCommissionToToken(toToken, amount1, address1)
-                _sendETH(address2, amount2)
-                _emitCommissionToToken(toToken, amount2, address2)
-            }
-            case 0x100 { // commission 1 referrer with token
+            case 0x10 { // commission with token
                 _sendToken(toToken, address1, amount1)
                 _emitCommissionToToken(toToken, amount1, address1)
+                if gt(rate2, 0) {
+                    _sendToken(toToken, address2, amount2)
+                    _emitCommissionToToken(toToken, amount2, address2)
+                }
             }
-            case 0x101 { // commission 2 referrers with token
-                _sendToken(toToken, address1, amount1)
-                _emitCommissionToToken(toToken, amount1, address1)
-                _sendToken(toToken, address2, amount2)
-                _emitCommissionToToken(toToken, amount2, address2)
+            case 0x01 { // trim with ETH
+                if gt(rate1, 0) {
+                    _sendETH(address1, amount1)
+                    _emitPositiveSlippageTrimRecord(toToken, amount1, address1)
+                }
+                if gt(rate2, 0) {
+                    _sendETH(address2, amount2)
+                    _emitPositiveSlippageTrimRecord2(toToken, amount1, address1)
+                }
             }
-            case 0x010 { // trim 1 address with ETH
-                _sendETH(address1, amount1)
-                _emitPositiveSlippageTrim(toToken, rate1, amount1, address1)
-            }
-            case 0x011 { // trim 2 addresses with ETH
-                _sendETH(address1, amount1)
-                _emitPositiveSlippageTrim(toToken, rate1, amount1, address1)
-                _sendETH(address2, amount2)
-                _emitPositiveSlippageTrim(toToken, rate2, amount2, address2)
-            }
-            case 0x000 { // trim 1 address with token
-                _sendToken(toToken, address1, amount1)
-                _emitPositiveSlippageTrim(toToken, rate1, amount1, address1)
-            }
-            case 0x001 { // trim 2 addresses with token
-                _sendToken(toToken, address1, amount1)
-                _emitPositiveSlippageTrim(toToken, rate1, amount1, address1)
-                _sendToken(toToken, address2, amount2)
-                _emitPositiveSlippageTrim(toToken, rate2, amount2, address2)
+            case 0x00 { // trim with token
+                if gt(rate1, 0) {
+                    _sendToken(toToken, address1, amount1)
+                    _emitPositiveSlippageTrimRecord(toToken, amount1, address1)
+                }
+                if gt(rate2, 0) {
+                    _sendToken(toToken, address2, amount2)
+                    _emitPositiveSlippageTrimRecord2(toToken, amount2, address2)
+                }
             }
             default {
                 _revertWithReason(
