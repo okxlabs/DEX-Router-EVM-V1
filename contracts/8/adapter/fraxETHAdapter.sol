@@ -45,13 +45,13 @@ contract fraxETHAdapter is IAdapter {
         bytes memory moreInfo
     ) internal {
         (SWAPTYPE swapType) = abi.decode(moreInfo, (SWAPTYPE));
-        if (swapType == SWAPTYPE.ETH_TO_FRXETH) {
+        if (swapType == SWAPTYPE.ETH_TO_FRXETH) { //withdraw 1
             _eth_to_fraxeth(to);
-        } else if (swapType == SWAPTYPE.FRXETH_TO_SFRXETH) {
+        } else if (swapType == SWAPTYPE.FRXETH_TO_SFRXETH) { // deposit 2
             _fraxeth_to_sfrxeth(to);
-        } else if (swapType == SWAPTYPE.SFRXETH_TO_FRXETH) {
+        } else if (swapType == SWAPTYPE.SFRXETH_TO_FRXETH) { // redeem 3
             _sfraxeth_to_frxeth(to);
-        } else if (swapType == SWAPTYPE.ETH_SFRXETH) {
+        } else if (swapType == SWAPTYPE.ETH_SFRXETH) { // submitAndDeposit 4
             _eth_to_sfraxeth(to);
         } else {
         }

@@ -9,7 +9,7 @@ contract DyorPumpRouterV3AdapterSpecialTest is Test {
     function test_sellQuote() public {
         vm.createSelectFork(
             "xlayer", 
-            31196607 - 1
+            35904465 - 1
         );
         address WETH = 0xe538905cf8410324e03A5A23C1c177a474D59b2b;
         address dyorPumpRouterV3 = 0xD983C98D1522731146bAd34078dA0bD966D9EA08;
@@ -17,10 +17,10 @@ contract DyorPumpRouterV3AdapterSpecialTest is Test {
         DyorPumpRouterV3Adapter adapter = new DyorPumpRouterV3Adapter(dyorPumpRouterV3, WETH);
 
         address okb = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-        address pandas = 0xa3e4378dFA9577c5533d8bbf3E65f79C05304A36;
+        address pandas = 0xeBbF2f1C007a1e6EAE88372B1061DD0E1015B8d0;
         // address pandas_wokb_pool = pandas; // unused in this test
-        address user = address(0x84E190b15e562b5f2dc4ADCA8fee4C7616A0E81E);
-        uint256 amount = 1226969441255741335479853;
+        address user = address(0xEB33b04b8731966DA91990C681f880F379050f33);
+        uint256 amount = 10000 * 10 ** 18;
         bytes memory moreInfo = abi.encode(
             pandas,  // fundAddress
             okb, // tokenAddress

@@ -64,7 +64,7 @@ contract DyorPumpRouterV3Adapter is IAdapter {
             path[0] = WETH;
             path[1] = pool;
             uint256 amountIn = IERC20(WETH).balanceOf(address(this));
-            uint256 amountOut = _calculateAmountOutSimple(amountIn, path);
+            uint256 amountOut = _calculateAmountOutSimple(pool,amountIn, path);
             IWETH(WETH).withdraw(amountIn);
             IDyorPumpRouterV3(dyorPumpRouterV3).swapExactETHForTokensSupportingFeeOnTransferTokens{value: amountIn}(
                 amountOut,
@@ -91,7 +91,7 @@ contract DyorPumpRouterV3Adapter is IAdapter {
             require(tradeInfo.tokenAddress == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || 
             tradeInfo.tokenAddress == WETH, "DyorPumpRouterV3Adapter: buy token is not OKB");
             uint256 amountIn = tradeInfo.sellMemeAmount;
-            uint256 minReturn = _calculateAmountOutSimple(amountIn, path);
+            uint256 minReturn = _calculateAmountOutSimple(pool, amountIn, path);
             require(minReturn >= tradeInfo.minReturnAmount, "DyorPumpRouterV3Adapter: Min return not reached");
             /// @notice cause token will be transfer from tx.origin, so adapter can't use approve
             IDyorPumpRouterV3(dyorPumpRouterV3).swapExactTokensForETHSupportingFeeOnTransferTokens(
@@ -110,20 +110,24 @@ contract DyorPumpRouterV3Adapter is IAdapter {
     }
 
     function _calculateAmountOutSimple(
+        address pool,
         uint256 amountIn,
         address[] memory path
     ) internal view returns (uint256 amountOut) {
-        uint256 reserveIn;
-        uint256 reserveOut;
+        uint256 reserveIn; // sell token amount path[0]
+        uint256 reserveOut; // buy token amount path[1]
         uint256 fee = 100;
-        if (path[0] == WETH) {
-            (reserveOut, reserveIn) = IDyorPoolV3(path[1]).getReserves();
-            fee = 99; // sell eth, so 1% fee
-        } else {
-            (reserveIn, reserveOut) = IDyorPoolV3(path[0]).getReserves();
+        IDyorPoolV3 dyorPoolV3 = IDyorPoolV3(pool);
+        (reserveIn, reserveOut) = dyorPoolV3.getReserves(); // token0, token1
+
+        if (dyorPoolV3.token0() != path[0]) { // sell token is token1
+            (reserveIn, reserveOut) = (reserveOut, reserveIn);
         }
+
+        if (path[0] == WETH) {
+            fee = 99; // sell eth, so 1% fee
+        } 
         amountOut = _calculateAmountOut(amountIn, reserveIn, reserveOut, fee, 100);
-        
         // after swap if token is weth, dyor will take 1% fee, 
         if (path[0] != WETH) {
             amountOut = amountOut * 99 / 100;

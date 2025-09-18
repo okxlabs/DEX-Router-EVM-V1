@@ -194,8 +194,4 @@ contract FlapAdapterTest is AbstractAdapterTest {
         // Verify we received some output tokens from the swap
         assertGt(outputTokenBalance, 0, "Should have received some OKBeaver tokens from the swap");
     }
-
-    
-    // Add a receive function to accept native token refunds
-    receive() external payable {}
 }
