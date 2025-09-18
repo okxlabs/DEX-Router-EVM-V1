@@ -32,14 +32,14 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
     uint256 internal constant TRIM_DUAL_FLAG =
         0x7777777722220000000000000000000000000000000000000000000000000000;
 
-    // @notice CommissionFromTokenRecord is emitted in assembly, commentted out for gas saving
+    // @notice CommissionFromTokenRecord is emitted in assembly, commentted out for contract size saving
     // event CommissionFromTokenRecord(
     //     address fromTokenAddress,
     //     uint256 commissionAmount,
     //     address referrerAddress
     // );
 
-    // @notice CommissionToTokenRecord is emitted in assembly, commentted out for gas saving
+    // @notice CommissionToTokenRecord is emitted in assembly, commentted out for contract size saving
     // event CommissionToTokenRecord(
     //     address toTokenAddress,
     //     uint256 commissionAmount,
@@ -52,14 +52,14 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
         uint256 chargeRate
     );
 
-    // @notice PositiveSlippageTrimRecord is emitted in assembly, commentted out for gas saving
+    // @notice PositiveSlippageTrimRecord is emitted in assembly, commentted out for contract size saving
     // event PositiveSlippageTrimRecord(
     //     address toTokenAddress,
     //     uint256 trimAmount,
     //     address trimAddress
     // );
 
-    // @notice PositiveSlippageTrimRecord2 is emitted in assembly, commentted out for gas saving
+    // @notice PositiveSlippageTrimRecord2 is emitted in assembly, commentted out for contract size saving
     // event PositiveSlippageTrimRecord2(
     //     address toTokenAddress,
     //     uint256 chargeAmount,
@@ -541,7 +541,9 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
         if (!commissionInfo.isToTokenCommission && !trimInfo.hasTrim) {
             return 0;
         }
-        uint256 inputAmount = _getBalanceOf(toToken, address(this)) - balanceBefore;
+        uint256 balanceAfter = _getBalanceOf(toToken, address(this));
+        require(balanceAfter >= balanceBefore, "invalid balance after");
+        uint256 inputAmount = balanceAfter - balanceBefore;
 
         // process commission
         if (commissionInfo.isToTokenCommission) {
