@@ -11,13 +11,16 @@ import "./TrimTestBase.t.sol";
  *     (3) ERC20 -> ETH
  * condition2:
  *     (1) noTrim + noCommission
- *     (2) 1trim + noCommission
- *     (3) 2trim + noCommission
- *     (4) 1trim + 1toCommission
- *     (5) 2trim + 1toCommission
- *     (6) 1trim + 2toCommission
- *     (7) 2trim + 2toCommission
- *     (8) 2trim + 2fromCommission
+ *     (2) 1trimOnlyTrim + noCommission
+ *     (3) 1trimOnlyCharge + noCommission
+ *     (4) 2trim + noCommission
+ *     (5) 1trimOnlyTrim + 1toCommission
+ *     (6) 1trimOnlyCharge + 1toCommission
+ *     (7) 2trim + 1toCommission
+ *     (8) 1trimOnlyTrim + 2toCommission
+ *     (9) 1trimOnlyCharge + 2toCommission
+ *     (10) 2trim + 2toCommission
+ *     (11) 2trim + 2fromCommission
  * condition3:
  *     (1) ERC20 -> TaxToken(SAFEMOON)
  *     (2) TaxToken(SAFEMOON) -> ERC20
@@ -47,10 +50,19 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
-    // WETH->USDT with 1trim and noCommission
-    function test_trim_smartSwapTo_WETH2USDT_1trim_noCommission() tokenLogAndCheck(WETH, USDT, oneEther, true, false, false, false, false) public {
+    // WETH->USDT with 1trimOnlyTrim and noCommission
+    function test_trim_smartSwapTo_WETH2USDT_1trimOnlyTrim_noCommission() tokenLogAndCheck(WETH, USDT, oneEther, true, false, false, false, false) public {
         bytes memory swapData = _generateWETH2USDTSmartSwapData();
-        bytes memory trimData = _generate1TrimData();
+        bytes memory trimData = _generate1TrimOnlyTrimData();
+        bytes memory data = bytes.concat(swapData, trimData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // WETH->USDT with 1trimOnlyCharge and noCommission
+    function test_trim_smartSwapTo_WETH2USDT_1trimOnlyCharge_noCommission() tokenLogAndCheck(WETH, USDT, oneEther, false, true, false, false, false) public {
+        bytes memory swapData = _generateWETH2USDTSmartSwapData();
+        bytes memory trimData = _generate1TrimOnlyChargeData();
         bytes memory data = bytes.concat(swapData, trimData);
         (bool success, ) = address(dexRouter).call(data);
         require(success, "call failed");
@@ -65,10 +77,20 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
-    // WETH->USDT with 1trim and 1toCommission
-    function test_trim_smartSwapTo_WETH2USDT_1trim_1toCommission() tokenLogAndCheck(WETH, USDT, oneEther, true, false, false, true, false) public {
+    // WETH->USDT with 1trimOnlyTrim and 1toCommission
+    function test_trim_smartSwapTo_WETH2USDT_1trimOnlyTrim_1toCommission() tokenLogAndCheck(WETH, USDT, oneEther, true, false, false, true, false) public {
         bytes memory swapData = _generateWETH2USDTSmartSwapData();
-        bytes memory trimData = _generate1TrimData();
+        bytes memory trimData = _generate1TrimOnlyTrimData();
+        bytes memory commissionData = _generate1CommissionData(false, USDT);
+        bytes memory data = bytes.concat(swapData, trimData, commissionData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // WETH->USDT with 1trimOnlyCharge and 1toCommission
+    function test_trim_smartSwapTo_WETH2USDT_1trimOnlyCharge_1toCommission() tokenLogAndCheck(WETH, USDT, oneEther, false, true, false, true, false) public {
+        bytes memory swapData = _generateWETH2USDTSmartSwapData();
+        bytes memory trimData = _generate1TrimOnlyChargeData();
         bytes memory commissionData = _generate1CommissionData(false, USDT);
         bytes memory data = bytes.concat(swapData, trimData, commissionData);
         (bool success, ) = address(dexRouter).call(data);
@@ -85,10 +107,20 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
-    // WETH->USDT with 1trim and 2toCommission
-    function test_trim_smartSwapTo_WETH2USDT_1trim_2toCommission() tokenLogAndCheck(WETH, USDT, oneEther, true, false, false, true, true) public {
+    // WETH->USDT with 1trimOnlyTrim and 2toCommission
+    function test_trim_smartSwapTo_WETH2USDT_1trimOnlyTrim_2toCommission() tokenLogAndCheck(WETH, USDT, oneEther, true, false, false, true, true) public {
         bytes memory swapData = _generateWETH2USDTSmartSwapData();
-        bytes memory trimData = _generate1TrimData();
+        bytes memory trimData = _generate1TrimOnlyTrimData();
+        bytes memory commissionData = _generate2CommissionData(false, USDT);
+        bytes memory data = bytes.concat(swapData, trimData, commissionData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // WETH->USDT with 1trimOnlyCharge and 2toCommission
+    function test_trim_smartSwapTo_WETH2USDT_1trimOnlyCharge_2toCommission() tokenLogAndCheck(WETH, USDT, oneEther, false, true, false, true, true) public {
+        bytes memory swapData = _generateWETH2USDTSmartSwapData();
+        bytes memory trimData = _generate1TrimOnlyChargeData();
         bytes memory commissionData = _generate2CommissionData(false, USDT);
         bytes memory data = bytes.concat(swapData, trimData, commissionData);
         (bool success, ) = address(dexRouter).call(data);
@@ -115,10 +147,19 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
-    // USDT->WETH with 1trim and noCommission
-    function test_trim_smartSwapTo_USDT2WETH_1trim_noCommission() tokenLogAndCheck(USDT, WETH, 1000 * 10 ** 6, true, false, false, false, false) public {
+    // USDT->WETH with 1trimOnlyTrim and noCommission
+    function test_trim_smartSwapTo_USDT2WETH_1trimOnlyTrim_noCommission() tokenLogAndCheck(USDT, WETH, 1000 * 10 ** 6, true, false, false, false, false) public {
         bytes memory swapData = _generateUSDT2WETHSmartSwapData();
-        bytes memory trimData = _generate1TrimData();
+        bytes memory trimData = _generate1TrimOnlyTrimData();
+        bytes memory data = bytes.concat(swapData, trimData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // USDT->WETH with 1trimOnlyCharge and noCommission
+    function test_trim_smartSwapTo_USDT2WETH_1trimOnlyCharge_noCommission() tokenLogAndCheck(USDT, WETH, 1000 * 10 ** 6, false, true, false, false, false) public {
+        bytes memory swapData = _generateUSDT2WETHSmartSwapData();
+        bytes memory trimData = _generate1TrimOnlyChargeData();
         bytes memory data = bytes.concat(swapData, trimData);
         (bool success, ) = address(dexRouter).call(data);
         require(success, "call failed");
@@ -133,10 +174,20 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
-    // USDT->WETH with 1trim and 1toCommission
-    function test_trim_smartSwapTo_USDT2WETH_1trim_1toCommission() tokenLogAndCheck(USDT, WETH, 1000 * 10 ** 6, true, false, false, true, false) public {
+    // USDT->WETH with 1trimOnlyTrim and 1toCommission
+    function test_trim_smartSwapTo_USDT2WETH_1trimOnlyTrim_1toCommission() tokenLogAndCheck(USDT, WETH, 1000 * 10 ** 6, true, false, false, true, false) public {
         bytes memory swapData = _generateUSDT2WETHSmartSwapData();
-        bytes memory trimData = _generate1TrimData();
+        bytes memory trimData = _generate1TrimOnlyTrimData();
+        bytes memory commissionData = _generate1CommissionData(false, WETH);
+        bytes memory data = bytes.concat(swapData, trimData, commissionData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // USDT->WETH with 1trimOnlyCharge and 1toCommission
+    function test_trim_smartSwapTo_USDT2WETH_1trimOnlyCharge_1toCommission() tokenLogAndCheck(USDT, WETH, 1000 * 10 ** 6, false, true, false, true, false) public {
+        bytes memory swapData = _generateUSDT2WETHSmartSwapData();
+        bytes memory trimData = _generate1TrimOnlyChargeData();
         bytes memory commissionData = _generate1CommissionData(false, WETH);
         bytes memory data = bytes.concat(swapData, trimData, commissionData);
         (bool success, ) = address(dexRouter).call(data);
@@ -153,10 +204,20 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
-    // USDT->WETH with 1trim and 2toCommission
-    function test_trim_smartSwapTo_USDT2WETH_1trim_2toCommission() tokenLogAndCheck(USDT, WETH, 1000 * 10 ** 6, true, false, false, true, true) public {
+    // USDT->WETH with 1trimOnlyTrim and 2toCommission
+    function test_trim_smartSwapTo_USDT2WETH_1trimOnlyTrim_2toCommission() tokenLogAndCheck(USDT, WETH, 1000 * 10 ** 6, true, false, false, true, true) public {
         bytes memory swapData = _generateUSDT2WETHSmartSwapData();
-        bytes memory trimData = _generate1TrimData();
+        bytes memory trimData = _generate1TrimOnlyTrimData();
+        bytes memory commissionData = _generate2CommissionData(false, WETH);
+        bytes memory data = bytes.concat(swapData, trimData, commissionData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // USDT->WETH with 1trimOnlyCharge and 2toCommission
+    function test_trim_smartSwapTo_USDT2WETH_1trimOnlyCharge_2toCommission() tokenLogAndCheck(USDT, WETH, 1000 * 10 ** 6, false, true, false, true, true) public {
+        bytes memory swapData = _generateUSDT2WETHSmartSwapData();
+        bytes memory trimData = _generate1TrimOnlyChargeData();
         bytes memory commissionData = _generate2CommissionData(false, WETH);
         bytes memory data = bytes.concat(swapData, trimData, commissionData);
         (bool success, ) = address(dexRouter).call(data);
@@ -191,10 +252,19 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
-    // ETH->ERC20 with 1trim and noCommission
-    function test_trim_smartSwapTo_ETH2USDT_1trim_noCommission() tokenLogAndCheck(ETH, USDT, oneEther, true, false, false, false, false) public {
+    // ETH->ERC20 with 1trimOnlyTrim and noCommission
+    function test_trim_smartSwapTo_ETH2USDT_1trimOnlyTrim_noCommission() tokenLogAndCheck(ETH, USDT, oneEther, true, false, false, false, false) public {
         bytes memory swapData = _generateETH2USDTSmartSwapData();
-        bytes memory trimData = _generate1TrimData();
+        bytes memory trimData = _generate1TrimOnlyTrimData();
+        bytes memory data = bytes.concat(swapData, trimData);
+        (bool success, ) = address(dexRouter).call{value: oneEther}(data);
+        require(success, "call failed");
+    }
+
+    // ETH->ERC20 with 1trimOnlyTrim and noCommission
+    function test_trim_smartSwapTo_ETH2USDT_1trimOnlyCharge_noCommission() tokenLogAndCheck(ETH, USDT, oneEther, false, true, false, false, false) public {
+        bytes memory swapData = _generateETH2USDTSmartSwapData();
+        bytes memory trimData = _generate1TrimOnlyChargeData();
         bytes memory data = bytes.concat(swapData, trimData);
         (bool success, ) = address(dexRouter).call{value: oneEther}(data);
         require(success, "call failed");
@@ -209,10 +279,20 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
-    // ETH->ERC20 with 1trim and 1toCommission
-    function test_trim_smartSwapTo_ETH2USDT_1trim_1toCommission() tokenLogAndCheck(ETH, USDT, oneEther, true, false, false, true, false) public {
+    // ETH->ERC20 with 1trimOnlyTrim and 1toCommission
+    function test_trim_smartSwapTo_ETH2USDT_1trimOnlyTrim_1toCommission() tokenLogAndCheck(ETH, USDT, oneEther, true, false, false, true, false) public {
         bytes memory swapData = _generateETH2USDTSmartSwapData();
-        bytes memory trimData = _generate1TrimData();
+        bytes memory trimData = _generate1TrimOnlyTrimData();
+        bytes memory commissionData = _generate1CommissionData(false, USDT);
+        bytes memory data = bytes.concat(swapData, trimData, commissionData);
+        (bool success, ) = address(dexRouter).call{value: oneEther}(data);
+        require(success, "call failed");
+    }
+
+    // ETH->ERC20 with 1trimOnlyCharge and 1toCommission
+    function test_trim_smartSwapTo_ETH2USDT_1trimOnlyCharge_1toCommission() tokenLogAndCheck(ETH, USDT, oneEther, false, true, false, true, false) public {
+        bytes memory swapData = _generateETH2USDTSmartSwapData();
+        bytes memory trimData = _generate1TrimOnlyChargeData();
         bytes memory commissionData = _generate1CommissionData(false, USDT);
         bytes memory data = bytes.concat(swapData, trimData, commissionData);
         (bool success, ) = address(dexRouter).call{value: oneEther}(data);
@@ -229,10 +309,20 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
-    // ETH->ERC20 with 1trim and 2toCommission
-    function test_trim_smartSwapTo_ETH2USDT_1trim_2toCommission() tokenLogAndCheck(ETH, USDT, oneEther, true, false, false, true, true) public {
+    // ETH->ERC20 with 1trimOnlyTrim and 2toCommission
+    function test_trim_smartSwapTo_ETH2USDT_1trimOnlyTrim_2toCommission() tokenLogAndCheck(ETH, USDT, oneEther, true, false, false, true, true) public {
         bytes memory swapData = _generateETH2USDTSmartSwapData();
-        bytes memory trimData = _generate1TrimData();
+        bytes memory trimData = _generate1TrimOnlyTrimData();
+        bytes memory commissionData = _generate2CommissionData(false, USDT);
+        bytes memory data = bytes.concat(swapData, trimData, commissionData);
+        (bool success, ) = address(dexRouter).call{value: oneEther}(data);
+        require(success, "call failed");
+    }
+
+    // ETH->ERC20 with 1trimOnlyCharge and 2toCommission
+    function test_trim_smartSwapTo_ETH2USDT_1trimOnlyCharge_2toCommission() tokenLogAndCheck(ETH, USDT, oneEther, false, true, false, true, true) public {
+        bytes memory swapData = _generateETH2USDTSmartSwapData();
+        bytes memory trimData = _generate1TrimOnlyChargeData();
         bytes memory commissionData = _generate2CommissionData(false, USDT);
         bytes memory data = bytes.concat(swapData, trimData, commissionData);
         (bool success, ) = address(dexRouter).call{value: oneEther}(data);
@@ -267,10 +357,19 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
-    // ERC20->ETH with 1trim and noCommission
-    function test_trim_smartSwapTo_USDT2ETH_1trim_noCommission() tokenLogAndCheck(USDT, ETH, 1000 * 10 ** 6, true, false, false, false, false) public {
+    // ERC20->ETH with 1trimOnlyTrim and noCommission
+    function test_trim_smartSwapTo_USDT2ETH_1trimOnlyTrim_noCommission() tokenLogAndCheck(USDT, ETH, 1000 * 10 ** 6, true, false, false, false, false) public {
         bytes memory swapData = _generateUSDT2ETHSmartSwapData();
-        bytes memory trimData = _generate1TrimData();
+        bytes memory trimData = _generate1TrimOnlyTrimData();
+        bytes memory data = bytes.concat(swapData, trimData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // ERC20->ETH with 1trimOnlyCharge and noCommission
+    function test_trim_smartSwapTo_USDT2ETH_1trimOnlyCharge_noCommission() tokenLogAndCheck(USDT, ETH, 1000 * 10 ** 6, false, true, false, false, false) public {
+        bytes memory swapData = _generateUSDT2ETHSmartSwapData();
+        bytes memory trimData = _generate1TrimOnlyChargeData();
         bytes memory data = bytes.concat(swapData, trimData);
         (bool success, ) = address(dexRouter).call(data);
         require(success, "call failed");
@@ -285,10 +384,20 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
-    // ERC20->ETH with 1trim and 1toCommission
-    function test_trim_smartSwapTo_USDT2ETH_1trim_1toCommission() tokenLogAndCheck(USDT, ETH, 1000 * 10 ** 6, true, false, false, true, false) public {
+    // ERC20->ETH with 1trimOnlyTrim and 1toCommission
+    function test_trim_smartSwapTo_USDT2ETH_1trimOnlyTrim_1toCommission() tokenLogAndCheck(USDT, ETH, 1000 * 10 ** 6, true, false, false, true, false) public {
         bytes memory swapData = _generateUSDT2ETHSmartSwapData();
-        bytes memory trimData = _generate1TrimData();
+        bytes memory trimData = _generate1TrimOnlyTrimData();
+        bytes memory commissionData = _generate1CommissionData(false, ETH);
+        bytes memory data = bytes.concat(swapData, trimData, commissionData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // ERC20->ETH with 1trimOnlyCharge and 1toCommission
+    function test_trim_smartSwapTo_USDT2ETH_1trimOnlyCharge_1toCommission() tokenLogAndCheck(USDT, ETH, 1000 * 10 ** 6, false, true, false, true, false) public {
+        bytes memory swapData = _generateUSDT2ETHSmartSwapData();
+        bytes memory trimData = _generate1TrimOnlyChargeData();
         bytes memory commissionData = _generate1CommissionData(false, ETH);
         bytes memory data = bytes.concat(swapData, trimData, commissionData);
         (bool success, ) = address(dexRouter).call(data);
@@ -305,10 +414,20 @@ contract SmartSwapTrimTest is TrimTestBase {
         require(success, "call failed");
     }
 
-    // ERC20->ETH with 1trim and 2toCommission
-    function test_trim_smartSwapTo_USDT2ETH_1trim_2toCommission() tokenLogAndCheck(USDT, ETH, 1000 * 10 ** 6, true, false, false, true, true) public {
+    // ERC20->ETH with 1trimOnlyTrim and 2toCommission
+    function test_trim_smartSwapTo_USDT2ETH_1trimOnlyTrim_2toCommission() tokenLogAndCheck(USDT, ETH, 1000 * 10 ** 6, true, false, false, true, true) public {
         bytes memory swapData = _generateUSDT2ETHSmartSwapData();
-        bytes memory trimData = _generate1TrimData();
+        bytes memory trimData = _generate1TrimOnlyTrimData();
+        bytes memory commissionData = _generate2CommissionData(false, ETH);
+        bytes memory data = bytes.concat(swapData, trimData, commissionData);
+        (bool success, ) = address(dexRouter).call(data);
+        require(success, "call failed");
+    }
+
+    // ERC20->ETH with 1trimOnlyCharge and 2toCommission
+    function test_trim_smartSwapTo_USDT2ETH_1trimOnlyCharge_2toCommission() tokenLogAndCheck(USDT, ETH, 1000 * 10 ** 6, false, true, false, true, true) public {
+        bytes memory swapData = _generateUSDT2ETHSmartSwapData();
+        bytes memory trimData = _generate1TrimOnlyChargeData();
         bytes memory commissionData = _generate2CommissionData(false, ETH);
         bytes memory data = bytes.concat(swapData, trimData, commissionData);
         (bool success, ) = address(dexRouter).call(data);

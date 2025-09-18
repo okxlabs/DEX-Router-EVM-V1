@@ -765,6 +765,8 @@ contract DexRouter is
         require((fromTokenAddr == fromToken && fromToken != _ETH) || (fromTokenAddr == address(0) && fromToken == _ETH), "unxswap: fromToken mismatch");
         require((baseRequest.toToken == toToken && toToken != _ETH) || (baseRequest.toToken == address(0) && toToken == _ETH), "unxswap: toToken mismatch");
 
+        receiver = receiver == address(0) ? msg.sender : receiver;
+
         return
             _unxswapTo(
                 fromToken,

@@ -38,7 +38,7 @@ contract TrimTestBase is Test, CommissionHelper, TrimHelper {
     address public admin = vm.rememberKey(1);
     address public arnaud = vm.rememberKey(11111111111111111111);
     address public trimAddress = vm.rememberKey(22222222222222222222);
-    address public trimAddress2 = vm.rememberKey(33333333333333333333);
+    address public chargeAddress = vm.rememberKey(33333333333333333333);
     address public referrerAddress = vm.rememberKey(44444444444444444444);
     address public referrerAddress2 = vm.rememberKey(55555555555555555555);
     
@@ -57,8 +57,8 @@ contract TrimTestBase is Test, CommissionHelper, TrimHelper {
         address _fromToken,
         address _toToken,
         uint256 _amount,
-        bool trim1ShouldReceive,
-        bool trim2ShouldReceive,
+        bool trimShouldReceive,
+        bool chargeShouldReceive,
         bool isFromCommission,
         bool referrer1ShouldReceive,
         bool referrer2ShouldReceive
@@ -79,12 +79,12 @@ contract TrimTestBase is Test, CommissionHelper, TrimHelper {
                     "arnaud ETH balance before: %d",
                     address(arnaud).balance
                 );
-                uint256 trim1Balance = address(trimAddress).balance;
-                console2.log("trim1 ETH balance before: %d", trim1Balance);
-                require(trim1Balance == 0, "trim1 ETH balance before should be 0");
-                uint256 trim2Balance = address(trimAddress2).balance;
-                console2.log("trim2 ETH balance before: %d", trim2Balance);
-                require(trim2Balance == 0, "trim2 ETH balance before should be 0");
+                uint256 trimBalance = address(trimAddress).balance;
+                console2.log("trim ETH balance before: %d", trimBalance);
+                require(trimBalance == 0, "trim ETH balance before should be 0");
+                uint256 chargeBalance = address(chargeAddress).balance;
+                console2.log("charge ETH balance before: %d", chargeBalance);
+                require(chargeBalance == 0, "charge ETH balance before should be 0");
                 uint256 referrer1Balance = address(referrerAddress).balance;
                 console2.log("referrer1 ETH balance before: %d", referrer1Balance);
                 require(referrer1Balance == 0, "referrer1 ETH balance before should be 0");
@@ -101,12 +101,12 @@ contract TrimTestBase is Test, CommissionHelper, TrimHelper {
                     IERC20(token).symbol(),
                     IERC20(token).balanceOf(address(arnaud))
                 );
-                uint256 trim1Balance = IERC20(token).balanceOf(address(trimAddress));
-                console2.log("trim1 %s balance before: %d", IERC20(token).symbol(), trim1Balance);
-                require(trim1Balance == 0, "trim1 balance before should be 0");
-                uint256 trim2Balance = IERC20(token).balanceOf(address(trimAddress2));
-                console2.log("trim2 %s balance before: %d", IERC20(token).symbol(), trim2Balance);
-                require(trim2Balance == 0, "trim2 balance before should be 0");
+                uint256 trimBalance = IERC20(token).balanceOf(address(trimAddress));
+                console2.log("trim %s balance before: %d", IERC20(token).symbol(), trimBalance);
+                require(trimBalance == 0, "trim balance before should be 0");
+                uint256 chargeBalance = IERC20(token).balanceOf(address(chargeAddress));
+                console2.log("charge %s balance before: %d", IERC20(token).symbol(), chargeBalance);
+                require(chargeBalance == 0, "charge balance before should be 0");
                 uint256 referrer1Balance = IERC20(token).balanceOf(address(referrerAddress));
                 console2.log("referrer1 %s balance before: %d", IERC20(token).symbol(), referrer1Balance);
                 require(referrer1Balance == 0, "referrer1 balance before should be 0");
@@ -121,21 +121,21 @@ contract TrimTestBase is Test, CommissionHelper, TrimHelper {
             address token = tokens[i];
             if (token == ETH) {
                 console2.log("arnaud ETH balance after: %d", address(arnaud).balance);
-                uint256 trim1Balance = address(trimAddress).balance;
-                console2.log("trim1 ETH balance after: %d", trim1Balance);
+                uint256 trimBalance = address(trimAddress).balance;
+                console2.log("trim ETH balance after: %d", trimBalance);
                 // Only when token is toToken, then check with shouldReceive flag.
                 if (i == 1) {
                     require(
-                        (trim1ShouldReceive && trim1Balance > 0) || (!trim1ShouldReceive && trim1Balance == 0),
+                        (trimShouldReceive && trimBalance > 0) || (!trimShouldReceive && trimBalance == 0),
                         "trim1 ETH balance error after swap"
                     );
                 }
-                uint256 trim2Balance = address(trimAddress2).balance;
-                console2.log("trim2 ETH balance after: %d", trim2Balance);
+                uint256 chargeBalance = address(chargeAddress).balance;
+                console2.log("charge ETH balance after: %d", chargeBalance);
                 if (i == 1) {
                     require(
-                        (trim2ShouldReceive && trim2Balance > 0) || (!trim2ShouldReceive && trim2Balance == 0),
-                        "trim2 ETH balance error after swap"
+                        (chargeShouldReceive && chargeBalance > 0) || (!chargeShouldReceive && chargeBalance == 0),
+                        "charge ETH balance error after swap"
                     );
                 }
                 uint256 referrer1Balance = address(referrerAddress).balance;
@@ -157,20 +157,20 @@ contract TrimTestBase is Test, CommissionHelper, TrimHelper {
                 }
             } else {
                 console2.log("%s balance after: %d", IERC20(token).symbol(), IERC20(token).balanceOf(address(arnaud)));
-                uint256 trim1Balance = IERC20(token).balanceOf(address(trimAddress));
-                console2.log("trim1 %s balance after: %d", IERC20(token).symbol(), trim1Balance);
+                uint256 trimBalance = IERC20(token).balanceOf(address(trimAddress));
+                console2.log("trim %s balance after: %d", IERC20(token).symbol(), trimBalance);
                 if (i == 1) {
                     require(
-                        (trim1ShouldReceive && trim1Balance > 0) || (!trim1ShouldReceive && trim1Balance == 0),
-                        "trim1 balance error after swap"
+                        (trimShouldReceive && trimBalance > 0) || (!trimShouldReceive && trimBalance == 0),
+                        "trim balance error after swap"
                     );
                 }
-                uint256 trim2Balance = IERC20(token).balanceOf(address(trimAddress2));
-                console2.log("trim2 %s balance after: %d", IERC20(token).symbol(), trim2Balance);
+                uint256 chargeBalance = IERC20(token).balanceOf(address(chargeAddress));
+                console2.log("charge %s balance after: %d", IERC20(token).symbol(), chargeBalance);
                 if (i == 1) {
                     require(
-                        (trim2ShouldReceive && trim2Balance > 0) || (!trim2ShouldReceive && trim2Balance == 0),
-                        "trim2 balance error after swap"
+                        (chargeShouldReceive && chargeBalance > 0) || (!chargeShouldReceive && chargeBalance == 0),
+                        "charge balance error after swap"
                     );
                 }
                 uint256 referrer1Balance = IERC20(token).balanceOf(address(referrerAddress));
@@ -229,13 +229,23 @@ contract TrimTestBase is Test, CommissionHelper, TrimHelper {
         baseRequest.deadLine = block.timestamp + 1000;
     }
 
-    function _generate1TrimData() internal view returns (bytes memory) {
+    function _generate1TrimOnlyTrimData() internal view returns (bytes memory) {
         return _buildTrimInfoUnified(
             50, // trimRate 5%
             trimAddress, // trimAddress
             100, // expectAmountOut 100, but usually the trimAmount will be the allowedMaxTrimAmount cause the expectAmountOut is too small
-            0, // trimRate2 0%
-            address(0) // trimAddress2
+            0, // chargeRate 0%, all for trim
+            address(0) // chargeAddress
+        );
+    }
+
+    function _generate1TrimOnlyChargeData() internal view returns (bytes memory) {
+        return _buildTrimInfoUnified(
+            50, // trimRate 5%
+            trimAddress, // trimAddress
+            100, // expectAmountOut 100, but usually the trimAmount will be the allowedMaxTrimAmount cause the expectAmountOut is too small
+            1000, // chargeRate 100%, all for charge
+            chargeAddress // chargeAddress
         );
     }
 
@@ -244,8 +254,8 @@ contract TrimTestBase is Test, CommissionHelper, TrimHelper {
             50, // trimRate 5%
             trimAddress, // trimAddress
             100, // expectAmountOut 100, but usually the trimAmount will be the allowedMaxTrimAmount cause the expectAmountOut is too small
-            50, // trimRate2 5%
-            trimAddress2 // trimAddress2
+            40, // chargeRate 40% of trimAmount
+            chargeAddress // chargeAddress
         );
     }
 
