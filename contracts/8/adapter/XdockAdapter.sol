@@ -56,11 +56,11 @@ contract XdockAdapter is IAdapter {
         } else {
             amountIn = tradeInfo.sellMemeAmount;
             address fundToken = address(0);
-            IERC20(tradeInfo.tokenAddress).approve(AMM_POOL, amountIn);
+            amountOut = _getBalance(fundToken, address(tx.origin));
 
             IXdock(AMM_POOL).sellExactIn(tradeInfo.tokenAddress, tx.origin, amountIn, 0);
 
-            amountOut = _getBalance(fundToken, address(tx.origin));
+            amountOut = _getBalance(fundToken, tx.origin) - amountOut;
             require(amountOut >= tradeInfo.minReturnAmount, "XdockAdapter: Min return not reached");
             emit OrderRecord(false, tradeInfo.tokenAddress, tradeInfo.fundAddress, amountIn, amountOut);
         }
