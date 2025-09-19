@@ -10,7 +10,7 @@ import {PMMLib} from "@dex/libraries/PMMLib.sol";
 contract XdockAdapterTest is Test {
     DexRouter dexRouter = DexRouter(payable(0x69C236E021F5775B0D0328ded5EaC708E3B869DF));
     address tokenApprove = 0x8b773D83bc66Be128c60e07E17C8901f7a64F000;
-    address tokenLaunchFactory = 0xe6A5f4b8257BbAd4F033D3831ebF23E0F833961F;
+    address AmmPool = 0xe6A5f4b8257BbAd4F033D3831ebF23E0F833961F;
     address constant WOKB = 0xe538905cf8410324e03A5A23C1c177a474D59b2b;
     address constant OKB = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
@@ -18,12 +18,12 @@ contract XdockAdapterTest is Test {
     XdockAdapter adapter;
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("XLAYER_RPC_URL"));
-        adapter = new XdockAdapter(tokenLaunchFactory, WOKB);
+        vm.createSelectFork(vm.envString("XLAYER_RPC_URL"), 36301390);
+        adapter = new XdockAdapter(AmmPool, WOKB);
     }
 
     modifier user(address _user) {
-        vm.startPrank(_user);
+        vm.startPrank(_user, _user);
         _;
         vm.stopPrank();
     }
@@ -90,11 +90,11 @@ contract XdockAdapterTest is Test {
     }
 
     function test_sell_meme() public user(amy) {
-        address memeToken = 0x26A406f6755d87414dC474e9472ED3917835a7B4;
-        uint256 amount = 10000 * 10 ** 18;
+        address memeToken = 0xd222D9535640D2Adf6A905e26f8CEfeA447D31da;
+        uint256 amount = 734427 * 10 ** 18;
 
         deal(memeToken, amy, amount);
-        IERC20(memeToken).approve(tokenLaunchFactory, amount);
+        IERC20(memeToken).approve(AmmPool, amount);
 
         SwapInfo memory swapInfo;
         swapInfo.baseRequest.fromToken = uint256(uint160(address(memeToken)));
@@ -135,7 +135,6 @@ contract XdockAdapterTest is Test {
         console2.log("ETH balance before", address(amy).balance);
         console2.log("memeToken balance before", IERC20(memeToken).balanceOf(address(amy)));
 
-        IERC20(memeToken).transfer(address(adapter), amount);
         dexRouter.smartSwapByOrderId(
             swapInfo.orderId, swapInfo.baseRequest, swapInfo.batchesAmount, swapInfo.batches, swapInfo.extraData
         );

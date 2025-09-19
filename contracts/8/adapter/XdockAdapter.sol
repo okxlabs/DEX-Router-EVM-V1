@@ -6,7 +6,6 @@ import "../interfaces/IAdapter.sol";
 import "../interfaces/IXdock.sol";
 import "../interfaces/IWETH.sol";
 import "../libraries/SafeERC20.sol";
-import "forge-std/console2.sol";
 
 contract XdockAdapter is IAdapter {
     address public immutable AMM_POOL;
@@ -53,16 +52,16 @@ contract XdockAdapter is IAdapter {
             }
             amountOut = IERC20(tradeInfo.tokenAddress).balanceOf(address(this));
             SafeERC20.safeTransfer(IERC20(tradeInfo.tokenAddress), to, amountOut);
+            emit OrderRecord(true, tradeInfo.fundAddress, tradeInfo.tokenAddress, amountIn - dust, amountOut);
         } else {
             amountIn = tradeInfo.sellMemeAmount;
             address fundToken = address(0);
             IERC20(tradeInfo.tokenAddress).approve(AMM_POOL, amountIn);
 
-            IXdock(AMM_POOL).sellExactIn(tradeInfo.tokenAddress, amountIn, 0);
+            IXdock(AMM_POOL).sellExactIn(tradeInfo.tokenAddress, tx.origin, amountIn, 0);
 
-            amountOut = _getBalance(fundToken, address(this));
-            IWETH(WNATIVE).deposit{value: amountOut}();
-            _safeTransfer(WNATIVE, to, amountOut);
+            amountOut = _getBalance(fundToken, address(tx.origin));
+            require(amountOut >= tradeInfo.minReturnAmount, "XdockAdapter: Min return not reached");
             emit OrderRecord(false, tradeInfo.tokenAddress, tradeInfo.fundAddress, amountIn, amountOut);
         }
     }
