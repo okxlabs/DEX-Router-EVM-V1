@@ -194,7 +194,7 @@ contract TrimTestBase is Test, CommissionHelper, TrimHelper {
         vm.stopPrank();
     }
 
-    function setUp() public {
+    function setUp() public virtual {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"), 23293873); // 2025.9.5 10:18
         vm.startPrank(admin);
         UniV2Adapter = address(new UniAdapter());
