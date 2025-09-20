@@ -4,11 +4,10 @@ pragma solidity ^0.8.0;
 import "./TrimTestBase.t.sol";
 
 contract MultiCall {
-    function multiCall(address[] calldata targets, uint256[] calldata values, bytes[] calldata datas) external payable returns (bool[] memory success) {
-        success = new bool[](targets.length);
+    function multiCall(address[] calldata targets, uint256[] calldata values, bytes[] calldata datas) external payable {
         for (uint256 i = 0; i < targets.length; i++) {
             (bool success_, ) = targets[i].call{value: values[i]}(datas[i]);
-            success[i] = success_;
+            require(success_, "call failed");
         }
     }
 }
@@ -75,10 +74,18 @@ contract MultiCallTrimTest is TrimTestBase {
         datas[1] = bytes.concat(swapData, trimData1, commissionData2);
         datas[2] = bytes.concat(swapData, trimData2, commissionData1);
 
-        bool[] memory success = multiCall.multiCall{value: 5 * 10 ** 18}(targets, values, datas);
-        for (uint256 i = 0; i < success.length; i++) {
-            require(success[i], "call failed");
-        }
+        bytes memory allData = abi.encodeWithSelector(
+            MultiCall.multiCall.selector,
+            targets,
+            values,
+            datas
+        );
+
+        // log calldata
+        // console2.logBytes(allData);
+
+        (bool success, ) = address(multiCall).call{value: 5 * 10 ** 18}(allData);
+        require(success, "call failed");
         vm.stopPrank();
     }
 
