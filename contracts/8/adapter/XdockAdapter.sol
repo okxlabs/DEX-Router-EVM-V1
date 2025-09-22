@@ -58,7 +58,7 @@ contract XdockAdapter is IAdapter {
             address fundToken = address(0);
             amountOut = _getBalance(fundToken, address(tx.origin));
 
-            IXdock(AMM_POOL).sellExactIn(tradeInfo.tokenAddress, tx.origin, amountIn, 0);
+            IXdock(AMM_POOL).sellExactIn(tradeInfo.tokenAddress, tx.origin, amountIn, tradeInfo.minReturnAmount);
 
             amountOut = _getBalance(fundToken, tx.origin) - amountOut;
             require(amountOut >= tradeInfo.minReturnAmount, "XdockAdapter: Min return not reached");
@@ -99,10 +99,8 @@ contract XdockAdapter is IAdapter {
         _xdockMemeTrading(to, moreInfo);
     }
 
-    function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
-        return interfaceId == type(IAdapter).interfaceId || 
-               interfaceId == 0x01ffc9a7 || 
-               interfaceId == 0xd885433f;  
+    function supportsInterface(bytes4) external pure returns (bool) {
+        return true;
     }
 
     receive() external payable {
