@@ -43,7 +43,7 @@ contract XdockAdapter is IAdapter {
             amountIn = IERC20(WNATIVE).balanceOf(address(this));
             IWETH(WNATIVE).withdraw(amountIn);
 
-            IXdock(AMM_POOL).buyExactIn{value: amountIn}(tradeInfo.tokenAddress, 0);
+            IXdock(AMM_POOL).buyExactIn{value: amountIn}(tradeInfo.tokenAddress, tradeInfo.minReturnAmount);
 
             uint256 dust = address(this).balance;
             if (dust > 0) {
@@ -58,7 +58,7 @@ contract XdockAdapter is IAdapter {
             address fundToken = address(0);
             amountOut = _getBalance(fundToken, address(tx.origin));
 
-            IXdock(AMM_POOL).sellExactIn(tradeInfo.tokenAddress, tx.origin, amountIn, 0);
+            IXdock(AMM_POOL).sellExactIn(tradeInfo.tokenAddress, tx.origin, amountIn, tradeInfo.minReturnAmount);
 
             amountOut = _getBalance(fundToken, tx.origin) - amountOut;
             require(amountOut >= tradeInfo.minReturnAmount, "XdockAdapter: Min return not reached");
@@ -100,9 +100,7 @@ contract XdockAdapter is IAdapter {
     }
 
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
-        return interfaceId == type(IAdapter).interfaceId || 
-               interfaceId == 0x01ffc9a7 || 
-               interfaceId == 0xd885433f;  
+        return interfaceId == type(IAdapter).interfaceId || interfaceId == 0x01ffc9a7;
     }
 
     receive() external payable {
