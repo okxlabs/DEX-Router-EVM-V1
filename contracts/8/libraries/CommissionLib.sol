@@ -32,6 +32,13 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
     uint256 internal constant TRIM_DUAL_FLAG =
         0x7777777722220000000000000000000000000000000000000000000000000000;
 
+    event CommissionAndTrimInfo(
+        uint256 commissionRate1,
+        uint256 commissionRate2,
+        uint256 trimRate,
+        uint256 chargeRate
+    );
+
     // @notice CommissionFromTokenRecord is emitted in assembly, commentted out for contract size saving
     // event CommissionFromTokenRecord(
     //     address fromTokenAddress,
@@ -45,12 +52,6 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
     //     uint256 commissionAmount,
     //     address referrerAddress
     // );
-
-    event PositiveSlippageTrimInfo(
-        address toTokenAddress,
-        uint256 trimRate,
-        uint256 chargeRate
-    );
 
     // @notice PositiveSlippageTrimRecord is emitted in assembly, commentted out for contract size saving
     // event PositiveSlippageTrimRecord(
@@ -75,7 +76,6 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
 
     function _getCommissionAndTrimInfo()
         internal
-        pure
         override
         returns (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo)
     {
@@ -190,6 +190,10 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 mstore(add(0x80, trimInfo), 0) // chargeRate
                 mstore(add(0xa0, trimInfo), 0) // chargeAddress
             }
+        }
+
+        if (commissionInfo.isFromTokenCommission || commissionInfo.isToTokenCommission || trimInfo.hasTrim) {
+            emit CommissionAndTrimInfo(commissionInfo.commissionRate, commissionInfo.commissionRate2, trimInfo.trimRate, trimInfo.chargeRate);
         }
     }
 
@@ -563,28 +567,25 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
         }
 
         // process trim
-        if (trimInfo.hasTrim) {
-            emit PositiveSlippageTrimInfo(toToken, trimInfo.trimRate, trimInfo.chargeRate);
-            if (inputAmount > trimInfo.expectAmountOut) {
-                require(trimInfo.trimRate <= TRIM_RATE_LIMIT, "error trim rate limit");
-                require(trimInfo.chargeRate <= TRIM_DENOMINATOR, "error charge rate");
-                uint256 trimAmount = inputAmount - trimInfo.expectAmountOut;
-                uint256 allowedMaxTrimAmount = inputAmount * trimInfo.trimRate / TRIM_DENOMINATOR;
-                if (trimAmount > allowedMaxTrimAmount) {
-                    trimAmount = allowedMaxTrimAmount;
-                }
-                _doCommissionOrTrimToTokenInternal(
-                    false,
-                    toToken,
-                    trimAmount,
-                    (TRIM_DENOMINATOR - trimInfo.chargeRate),
-                    trimInfo.trimAddress,
-                    trimInfo.chargeRate,
-                    trimInfo.chargeAddress
-                );
-                totalAmount += trimAmount;
-                inputAmount -= trimAmount;
+        if (trimInfo.hasTrim && inputAmount > trimInfo.expectAmountOut) {
+            require(trimInfo.trimRate <= TRIM_RATE_LIMIT, "error trim rate limit");
+            require(trimInfo.chargeRate <= TRIM_DENOMINATOR, "error charge rate");
+            uint256 trimAmount = inputAmount - trimInfo.expectAmountOut;
+            uint256 allowedMaxTrimAmount = inputAmount * trimInfo.trimRate / TRIM_DENOMINATOR;
+            if (trimAmount > allowedMaxTrimAmount) {
+                trimAmount = allowedMaxTrimAmount;
             }
+            _doCommissionOrTrimToTokenInternal(
+                false,
+                toToken,
+                trimAmount,
+                (TRIM_DENOMINATOR - trimInfo.chargeRate),
+                trimInfo.trimAddress,
+                trimInfo.chargeRate,
+                trimInfo.chargeAddress
+            );
+            totalAmount += trimAmount;
+            inputAmount -= trimAmount;
         }
 
         // transfer toToken to receiver

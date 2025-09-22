@@ -25,7 +25,6 @@ abstract contract AbstractCommissionLib {
 
     function _getCommissionAndTrimInfo()
         internal
-        pure
         virtual
         returns (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo);
 
