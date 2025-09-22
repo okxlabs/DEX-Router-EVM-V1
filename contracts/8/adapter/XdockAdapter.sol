@@ -43,7 +43,7 @@ contract XdockAdapter is IAdapter {
             amountIn = IERC20(WNATIVE).balanceOf(address(this));
             IWETH(WNATIVE).withdraw(amountIn);
 
-            IXdock(AMM_POOL).buyExactIn{value: amountIn}(tradeInfo.tokenAddress, tradeInfo.minReturnAmount);
+            IXdock(AMM_POOL).buyExactIn{value: amountIn}(tradeInfo.tokenAddress, 0);
 
             uint256 dust = address(this).balance;
             if (dust > 0) {
@@ -99,8 +99,8 @@ contract XdockAdapter is IAdapter {
         _xdockMemeTrading(to, moreInfo);
     }
 
-    function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
-        return interfaceId == type(IAdapter).interfaceId || interfaceId == 0x01ffc9a7;
+    function supportsInterface(bytes4) external pure returns (bool) {
+        return true;
     }
 
     receive() external payable {
