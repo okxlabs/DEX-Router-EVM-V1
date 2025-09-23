@@ -831,7 +831,7 @@ contract DexRouter is
             }
         }
         // emit return amount should be the amount after commission
-        amount -= _doCommissionAndTrimToToken(
+        uint256 toTokenCommissionAndTrimAmount = _doCommissionAndTrimToToken(
             commissionInfo,
             receiver,
             balanceBefore,
@@ -845,7 +845,7 @@ contract DexRouter is
             toToken,
             tx.origin,
             amount,
-            amount
+            amount - toTokenCommissionAndTrimAmount
         );
     }
 

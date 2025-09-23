@@ -23,7 +23,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
 
     uint256 internal constant _TRIM_FLAG_MASK =
         0xffffffffffff0000000000000000000000000000000000000000000000000000;
-    uint256 internal constant _TRIM_EXPECT_AMOUNT_OUT_AND_ADDRESS_MASK =
+    uint256 internal constant _TRIM_EXPECT_AMOUNT_OUT_OR_ADDRESS_MASK =
         0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff;
     uint256 internal constant _TRIM_RATE_MASK =
         0x000000000000ffffffffffff0000000000000000000000000000000000000000;
@@ -35,6 +35,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
     event CommissionAndTrimInfo(
         uint256 commissionRate1,
         uint256 commissionRate2,
+        bool isToBCommission,
         uint256 trimRate,
         uint256 chargeRate
     );
@@ -68,11 +69,11 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
     // );
 
     // set default value can change when need.
-    uint256 public constant commissionRateLimit = 30000000;
-    uint public constant DENOMINATOR = 10 ** 9;
-    uint constant WAD = 1 ether;
-    uint256 public constant TRIM_RATE_LIMIT = 100;
-    uint256 public constant TRIM_DENOMINATOR = 1000;
+    uint256 internal constant commissionRateLimit = 30000000;
+    uint256 internal constant DENOMINATOR = 10 ** 9;
+    uint256 internal constant WAD = 1 ether;
+    uint256 internal constant TRIM_RATE_LIMIT = 100;
+    uint256 internal constant TRIM_DENOMINATOR = 1000;
 
     function _getCommissionAndTrimInfo()
         internal
@@ -165,13 +166,13 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
             ) // trimRate
             mstore(
                 add(0x40, trimInfo),
-                and(trimData, _TRIM_EXPECT_AMOUNT_OUT_AND_ADDRESS_MASK)
+                and(trimData, _TRIM_EXPECT_AMOUNT_OUT_OR_ADDRESS_MASK)
             ) // trimAddress
             // get second bytes32 of trim data
             trimData := calldataload(sub(calldatasize(), add(offset, 64)))
             mstore(
                 add(0x60, trimInfo),
-                and(trimData, _TRIM_EXPECT_AMOUNT_OUT_AND_ADDRESS_MASK)
+                and(trimData, _TRIM_EXPECT_AMOUNT_OUT_OR_ADDRESS_MASK)
             ) // expectAmountOut
             switch eq(flag, TRIM_DUAL_FLAG)
             case 1 {
@@ -183,7 +184,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 ) // chargeRate
                 mstore(
                     add(0xa0, trimInfo),
-                    and(trimData, _TRIM_EXPECT_AMOUNT_OUT_AND_ADDRESS_MASK)
+                    and(trimData, _TRIM_EXPECT_AMOUNT_OUT_OR_ADDRESS_MASK)
                 ) // chargeAddress
             }
             default {
@@ -193,7 +194,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
         }
 
         if (commissionInfo.isFromTokenCommission || commissionInfo.isToTokenCommission || trimInfo.hasTrim) {
-            emit CommissionAndTrimInfo(commissionInfo.commissionRate, commissionInfo.commissionRate2, trimInfo.trimRate, trimInfo.chargeRate);
+            emit CommissionAndTrimInfo(commissionInfo.commissionRate, commissionInfo.commissionRate2, commissionInfo.isToBCommission, trimInfo.trimRate, trimInfo.chargeRate);
         }
     }
 
