@@ -122,15 +122,29 @@ contract UniV4Adapter is IAdapter, SafeCallback {
             _take(pathKey.outputCurrency, to, amountOut); 
         }
 
-        address fromToken = Currency.unwrap(pathKey.inputCurrency);
-
-        if (fromToken == address(0)) {
-            fromToken = WETH;
-        }
-        uint amount = IERC20(fromToken).balanceOf(address(this));
-        if (amount > 0 && _payerOrigin != address(0)) {
-            (bool s, bytes memory res) = address(fromToken).call(abi.encodeWithSignature("transfer(address,uint256)", _payerOrigin, amount));
-            require(s && (res.length == 0 || abi.decode(res, (bool))), "Transfer failed");
+        // Refund excess tokens to payerOrigin
+        if (_payerOrigin != address(0)) {
+            address fromToken = Currency.unwrap(pathKey.inputCurrency);
+            uint256 refundAmount;
+            
+            if (fromToken == address(0)) {
+                // Handle ETH: wrap to WETH first
+                refundAmount = address(this).balance;
+                if (refundAmount > 0) {
+                    IWETH(WETH).deposit{value: refundAmount}();
+                    fromToken = WETH; // Update fromToken to WETH for transfer
+                }
+            } else {
+                // Handle ERC20 tokens
+                refundAmount = IERC20(fromToken).balanceOf(address(this));
+            }
+            
+            if (refundAmount > 0) {
+                (bool s, bytes memory res) = address(fromToken).call(
+                    abi.encodeWithSignature("transfer(address,uint256)", _payerOrigin, refundAmount)
+                );
+                require(s && (res.length == 0 || abi.decode(res, (bool))), "Transfer failed");
+            }
         }
 
         return "";
