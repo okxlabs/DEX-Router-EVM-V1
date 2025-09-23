@@ -140,10 +140,10 @@ contract UniV4Adapter is IAdapter, SafeCallback {
             }
             
             if (refundAmount > 0) {
-                (bool s, bytes memory res) = address(fromToken).call(
+                (bool s,) = address(fromToken).call(
                     abi.encodeWithSignature("transfer(address,uint256)", _payerOrigin, refundAmount)
                 );
-                require(s && (res.length == 0 || abi.decode(res, (bool))), "Transfer failed");
+                require(s, "Transfer failed");
             }
         }
 
