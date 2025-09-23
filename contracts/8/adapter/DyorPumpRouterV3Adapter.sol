@@ -64,10 +64,10 @@ contract DyorPumpRouterV3Adapter is IAdapter {
             path[0] = WETH;
             path[1] = pool;
             uint256 amountIn = IERC20(WETH).balanceOf(address(this));
-            uint256 amountOut = _calculateAmountOutSimple(pool,amountIn, path);
+            uint256 amountOutBefore = IERC20(pool).balanceOf(tx.origin);
             IWETH(WETH).withdraw(amountIn);
             IDyorPumpRouterV3(dyorPumpRouterV3).swapExactETHForTokensSupportingFeeOnTransferTokens{value: amountIn}(
-                amountOut,
+                0,
                 path,
                 tx.origin, // must be tx.origin, and token will be received by tx.origin
                 block.timestamp + 1000
@@ -82,6 +82,7 @@ contract DyorPumpRouterV3Adapter is IAdapter {
                     payable(tx.origin).transfer(remainAmount);
                 }
             }
+            emit OrderRecord(true, WETH, pool, amountIn, IERC20(pool).balanceOf(tx.origin) - amountOutBefore);
         } else { ///@notice sell dyor token is restricted liquidity, have to use tradeInfo to build moreinfo
             path[0] = pool;
             path[1] = WETH;
@@ -91,12 +92,11 @@ contract DyorPumpRouterV3Adapter is IAdapter {
             require(tradeInfo.tokenAddress == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || 
             tradeInfo.tokenAddress == WETH, "DyorPumpRouterV3Adapter: buy token is not OKB");
             uint256 amountIn = tradeInfo.sellMemeAmount;
-            uint256 minReturn = _calculateAmountOutSimple(pool, amountIn, path);
-            require(minReturn >= tradeInfo.minReturnAmount, "DyorPumpRouterV3Adapter: Min return not reached");
+
             /// @notice cause token will be transfer from tx.origin, so adapter can't use approve
             IDyorPumpRouterV3(dyorPumpRouterV3).swapExactTokensForETHSupportingFeeOnTransferTokens(
                 amountIn,
-                minReturn,
+                0,
                 path,
                 tx.origin, // must be tx.origin, and eth will be received by tx.origin
                 tx.origin,
@@ -104,66 +104,11 @@ contract DyorPumpRouterV3Adapter is IAdapter {
                 block.timestamp + 1000
             );
             amountOut = tx.origin.balance - amountOut;
-            require(amountOut >= minReturn, "DyorPumpRouterV3Adapter: Min return not reached");
+            require(amountOut >= tradeInfo.minReturnAmount, "DyorPumpRouterV3Adapter: Min return not reached");
             emit OrderRecord(false, tradeInfo.fundAddress, tradeInfo.tokenAddress, amountIn, amountOut);
         }
     }
 
-    function _calculateAmountOutSimple(
-        address pool,
-        uint256 amountIn,
-        address[] memory path
-    ) internal view returns (uint256 amountOut) {
-        uint256 reserveIn; // sell token amount path[0]
-        uint256 reserveOut; // buy token amount path[1]
-        uint256 fee = 100;
-        IDyorPoolV3 dyorPoolV3 = IDyorPoolV3(pool);
-        (reserveIn, reserveOut) = dyorPoolV3.getReserves(); // token0, token1
-
-        if (dyorPoolV3.token0() != path[0]) { // sell token is token1
-            (reserveIn, reserveOut) = (reserveOut, reserveIn);
-        }
-
-        if (path[0] == WETH) {
-            fee = 99; // sell eth, so 1% fee
-        } 
-        amountOut = _calculateAmountOut(amountIn, reserveIn, reserveOut, fee, 100);
-        // after swap if token is weth, dyor will take 1% fee, 
-        if (path[0] != WETH) {
-            amountOut = amountOut * 99 / 100;
-        }
-    }
-
-    /**
-     * @notice Calculate output amount using optimized assembly
-     * @param amountIn Input amount
-     * @param reserveIn Input token reserve
-     * @param reserveOut Output token reserve
-     * @param feeNumerator Fee numerator
-     * @param feeDenominator Fee denominator
-     * @return amountOut Calculated output amount
-     */
-    function _calculateAmountOut(
-        uint256 amountIn,
-        uint256 reserveIn,
-        uint256 reserveOut,
-        uint256 feeNumerator,
-        uint256 feeDenominator
-    ) internal pure returns (uint256 amountOut) {
-        assembly {
-            // amountInWithFee = amountIn * feeNumerator
-            let amountInWithFee := mul(amountIn, feeNumerator)
-            
-            // numerator = amountInWithFee * reserveOut
-            let numerator := mul(amountInWithFee, reserveOut)
-            
-            // denominator = reserveIn * feeDenominator + amountInWithFee
-            let denominator := add(mul(reserveIn, feeDenominator), amountInWithFee)
-            
-            // amountOut = numerator / denominator
-            amountOut := div(numerator, denominator)
-        }
-    }
 
     receive() external payable {}
 }
