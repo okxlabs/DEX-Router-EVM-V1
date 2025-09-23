@@ -33,15 +33,6 @@ import "./TrimTestBase.t.sol";
  *     (6) 2trim + 2toCommission
 */
 contract SmartSwapTrimTest is TrimTestBase {
-    
-    struct SwapInfo {
-        uint256 orderId;
-        DexRouter.BaseRequest baseRequest;
-        uint256[] batchesAmount;
-        DexRouter.RouterPath[][] batches;
-        PMMLib.PMMSwapRequest[] extraData;
-    }
-
     // ==================== ERC20->ERC20 ====================
     // WETH->USDT with noTrim and noCommission
     function test_trim_smartSwapTo_WETH2USDT_noTrim_noCommission() tokenLogAndCheck(WETH, USDT, oneEther, false, false, false, false, false)  public {

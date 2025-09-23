@@ -13,14 +13,6 @@ contract MultiCall {
 }
 
 contract MultiCallTrimTest is TrimTestBase {
-    struct SwapInfo {
-        uint256 orderId;
-        DexRouter.BaseRequest baseRequest;
-        uint256[] batchesAmount;
-        DexRouter.RouterPath[][] batches;
-        PMMLib.PMMSwapRequest[] extraData;
-    }
-
     MultiCall multiCall;
 
     modifier tokenLog() {

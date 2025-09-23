@@ -53,6 +53,14 @@ contract TrimTestBase is Test, CommissionHelper, TrimHelper {
 
     uint256 public oneEther = 1 * 10 ** 18;
 
+    struct SwapInfo {
+        uint256 orderId;
+        DexRouter.BaseRequest baseRequest;
+        uint256[] batchesAmount;
+        DexRouter.RouterPath[][] batches;
+        PMMLib.PMMSwapRequest[] extraData;
+    }
+
     modifier tokenLogAndCheck(
         address _fromToken,
         address _toToken,
