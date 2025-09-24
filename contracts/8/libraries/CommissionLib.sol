@@ -703,20 +703,26 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
 
             let amount1 := div(mul(totalAmount, rate1), add(rate1, rate2))
             let amount2 := sub(totalAmount, amount1)
+            address1 := shr(96, shl(96, address1))
+            address2 := shr(96, shl(96, address2))
 
             let status := _getStatus(isCommission, toToken)
             switch status
             case 0x11 { // commission with ETH
-                _sendETH(address1, amount1)
-                _emitCommissionToToken(toToken, amount1, address1)
+                if gt(rate1, 0) {
+                    _sendETH(address1, amount1)
+                    _emitCommissionToToken(_ETH, amount1, address1)
+                }
                 if gt(rate2, 0) {
                     _sendETH(address2, amount2)
-                    _emitCommissionToToken(toToken, amount2, address2)
+                    _emitCommissionToToken(_ETH, amount2, address2)
                 }
             }
             case 0x10 { // commission with token
-                _sendToken(toToken, address1, amount1)
-                _emitCommissionToToken(toToken, amount1, address1)
+                if gt(rate1, 0) {
+                    _sendToken(toToken, address1, amount1)
+                    _emitCommissionToToken(toToken, amount1, address1)
+                }
                 if gt(rate2, 0) {
                     _sendToken(toToken, address2, amount2)
                     _emitCommissionToToken(toToken, amount2, address2)
@@ -725,11 +731,11 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
             case 0x01 { // trim with ETH
                 if gt(rate1, 0) {
                     _sendETH(address1, amount1)
-                    _emitPositiveSlippageTrimRecord(toToken, amount1, address1)
+                    _emitPositiveSlippageTrimRecord(_ETH, amount1, address1)
                 }
                 if gt(rate2, 0) {
                     _sendETH(address2, amount2)
-                    _emitPositiveSlippageTrimRecord2(toToken, amount1, address1)
+                    _emitPositiveSlippageTrimRecord2(_ETH, amount2, address2)
                 }
             }
             case 0x00 { // trim with token
