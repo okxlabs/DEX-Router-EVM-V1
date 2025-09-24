@@ -250,7 +250,7 @@ contract TrimTestBase is Test, CommissionHelper, TrimHelper {
     function _generate1TrimOnlyChargeData() internal view returns (bytes memory) {
         return _buildTrimInfoUnified(
             50, // trimRate 5%
-            trimAddress, // trimAddress
+            address(0), // trimAddress
             100, // expectAmountOut 100, but usually the trimAmount will be the allowedMaxTrimAmount cause the expectAmountOut is too small
             1000, // chargeRate 100%, all for charge
             chargeAddress // chargeAddress

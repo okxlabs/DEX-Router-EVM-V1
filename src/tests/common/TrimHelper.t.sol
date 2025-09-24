@@ -41,12 +41,14 @@ contract TrimHelper {
         uint256 chargeRate,
         address chargeAddress
     ) internal pure returns (bytes memory) {
-        // ensure trimRate and trimAddress are both set
-        require(trimRate > 0 && trimAddress != address(0));
-        // ensure chargeRate and chargeAddress are both set or both not set
+        // ensure trimRate and chargeRate are valid
+        require(trimRate > 0 && trimRate <= 1000);
+        require(chargeRate <= 1000);
+        // ensure chargeRate and address are valid
         require(
             (chargeRate == 0 && chargeAddress == address(0)) ||
-            (chargeRate > 0 && chargeAddress != address(0))
+            (chargeRate == 1000 && trimAddress == address(0)) ||
+            ((chargeRate > 0 && chargeRate < 1000) && trimAddress != address(0) && chargeAddress != address(0))
         );
         if (chargeRate == 0) {
             return abi.encodePacked(

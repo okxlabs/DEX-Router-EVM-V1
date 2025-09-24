@@ -61,8 +61,8 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
     //     address trimAddress
     // );
 
-    // @notice PositiveSlippageTrimRecord2 is emitted in assembly, commentted out for contract size saving
-    // event PositiveSlippageTrimRecord2(
+    // @notice PositiveSlippageChargeRecord is emitted in assembly, commentted out for contract size saving
+    // event PositiveSlippageChargeRecord(
     //     address toTokenAddress,
     //     uint256 chargeAmount,
     //     address chargeAddress
@@ -688,7 +688,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                     0x7bec7d55a62a7a7b8068f1533e2a3bbf727b3e2e57f30c576fe159da60e09a65
                 ) // emit PositiveSlippageTrimRecord(address,uint256,address)
             }
-            function _emitPositiveSlippageTrimRecord2(token, chargeAmount, chargeAddress) {
+            function _emitPositiveSlippageChargeRecord(token, chargeAmount, chargeAddress) {
                 let freePtr := mload(0x40)
                 mstore(0x40, add(freePtr, 0x60))
                 mstore(freePtr, token)
@@ -697,8 +697,8 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 log1(
                     freePtr,
                     0x60,
-                    0xeb9b0cff1cba8271f67c9757bbbef735c34ec74c45c4f4e162bd6aac51cde5c4
-                ) // emit PositiveSlippageTrimRecord2(address,uint256,address)
+                    0xfd08115c8e43d2a49d95ee18d7f69b8bbac60bd368c73cf22d30664a22a0626d
+                ) // emit PositiveSlippageChargeRecord(address,uint256,address)
             }
 
             let amount1 := div(mul(totalAmount, rate1), add(rate1, rate2))
@@ -735,7 +735,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 }
                 if gt(rate2, 0) {
                     _sendETH(address2, amount2)
-                    _emitPositiveSlippageTrimRecord2(_ETH, amount2, address2)
+                    _emitPositiveSlippageChargeRecord(_ETH, amount2, address2)
                 }
             }
             case 0x00 { // trim with token
@@ -745,7 +745,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 }
                 if gt(rate2, 0) {
                     _sendToken(toToken, address2, amount2)
-                    _emitPositiveSlippageTrimRecord2(toToken, amount2, address2)
+                    _emitPositiveSlippageChargeRecord(toToken, amount2, address2)
                 }
             }
             default {
