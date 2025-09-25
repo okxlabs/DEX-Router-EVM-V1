@@ -26,7 +26,7 @@ abstract contract DagRouter is CommonLib {
         address refundTo,
         address receiver
     ) internal {
-        // 1. transfer from token in
+        // 1. check and process ETH
         BaseRequest memory _baseRequest = baseRequest;
 
         address fromToken = _bytes32ToAddress(_baseRequest.fromToken);
