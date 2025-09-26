@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 import "../interfaces/IAdapter.sol";
@@ -24,6 +24,7 @@ contract UniV4Adapter is IAdapter, SafeCallback {
     address public immutable WETH;
     uint160 internal constant MIN_SQRT_PRICE = 4295128739;
     uint160 internal constant MAX_SQRT_PRICE = 1461446703485210103287273052203988822378723970342;
+    uint256 constant ADDRESS_MASK = 0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff;
     uint256 internal constant ORIGIN_PAYER =
         0x3ca20afc2ccc0000000000000000000000000000000000000000000000000000;
 
@@ -102,7 +103,7 @@ contract UniV4Adapter is IAdapter, SafeCallback {
 
         address _payerOrigin;
         if ((payerOrigin & ORIGIN_PAYER) == ORIGIN_PAYER) {
-            _payerOrigin = address(uint160(uint256(payerOrigin)));
+            _payerOrigin = address(uint160(uint256(payerOrigin) & ADDRESS_MASK));
         }
 
         (PoolKey memory poolKey, bool zeroForOne) = getPoolAndSwapDirection(pathKey, pathKey.inputCurrency); 
@@ -121,15 +122,29 @@ contract UniV4Adapter is IAdapter, SafeCallback {
             _take(pathKey.outputCurrency, to, amountOut); 
         }
 
-        address fromToken = Currency.unwrap(pathKey.inputCurrency);
-
-        if (fromToken == address(0)) {
-            fromToken = WETH;
-        }
-        uint amount = IERC20(fromToken).balanceOf(address(this));
-        if (amount > 0 && _payerOrigin != address(0)) {
-            (bool s, bytes memory res) = address(fromToken).call(abi.encodeWithSignature("transfer(address,uint256)", _payerOrigin, amount));
-            require(s && (res.length == 0 || abi.decode(res, (bool))), "Transfer failed");
+        // Refund excess tokens to payerOrigin
+        if (_payerOrigin != address(0)) {
+            address fromToken = Currency.unwrap(pathKey.inputCurrency);
+            uint256 refundAmount;
+            
+            if (fromToken == address(0)) {
+                // Handle ETH: wrap to WETH first
+                refundAmount = address(this).balance;
+                if (refundAmount > 0) {
+                    IWETH(WETH).deposit{value: refundAmount}();
+                    fromToken = WETH; // Update fromToken to WETH for transfer
+                }
+            } else {
+                // Handle ERC20 tokens
+                refundAmount = IERC20(fromToken).balanceOf(address(this));
+            }
+            
+            if (refundAmount > 0) {
+                (bool s,) = address(fromToken).call(
+                    abi.encodeWithSignature("transfer(address,uint256)", _payerOrigin, refundAmount)
+                );
+                require(s, "Transfer failed");
+            }
         }
 
         return "";
