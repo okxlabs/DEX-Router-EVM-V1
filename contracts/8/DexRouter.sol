@@ -448,7 +448,7 @@ contract DexRouter is
         ) = _doCommissionFromToken(
                 commissionInfo,
                 payer,
-                address(uint160(receiver)),
+                receiver,
                 amount,
                 trimInfo.hasTrim,
                 toToken
@@ -464,7 +464,7 @@ contract DexRouter is
 
         _doCommissionAndTrimToToken(
             commissionInfo,
-            address(uint160(receiver)),
+            receiver,
             balanceBefore,
             toToken,
             trimInfo
@@ -760,7 +760,7 @@ contract DexRouter is
 
         // validate fromToken and toToken from baseRequest
         address fromTokenAddr = _bytes32ToAddress(baseRequest.fromToken);
-        require((fromTokenAddr == fromToken && fromToken != _ETH) || (fromTokenAddr == address(0) && fromToken == _ETH), "unxswap: fromToken mismatch");
+        require((fromTokenAddr == fromToken) || (fromTokenAddr == address(0) && fromToken == _ETH), "unxswap: fromToken mismatch");
         require((baseRequest.toToken == toToken && toToken != _ETH) || (baseRequest.toToken == address(0) && toToken == _ETH), "unxswap: toToken mismatch");
 
         return
