@@ -782,6 +782,8 @@ contract DexRouter is
         bool reversed,
         uint256 amount
     ) internal {
+        emit SwapOrderId(orderId);
+
         require(amount > 0, "amount must be > 0");
         receiver = receiver == address(0) ? msg.sender : receiver;
 
@@ -836,7 +838,6 @@ contract DexRouter is
             trimInfo
         );
 
-        emit SwapOrderId(orderId);
         emit OrderRecord(
             srcToken,
             toToken,
