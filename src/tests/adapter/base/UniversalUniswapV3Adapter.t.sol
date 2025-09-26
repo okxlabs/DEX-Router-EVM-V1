@@ -51,7 +51,7 @@ contract UniversalUniswapV3AdapterTest is AbstractAdapterTest {
         override
         returns (SwapTestCase[][] memory)
     {
-        SwapTestCase[][] memory cases = new SwapTestCase[][](7);
+        SwapTestCase[][] memory cases = new SwapTestCase[][](8);
         cases[0] = getThenaV3TestCases();
         cases[1] = getAgniFinanceTestCases();
         cases[2] = getOkieV3XlayerTestCases();
@@ -59,7 +59,37 @@ contract UniversalUniswapV3AdapterTest is AbstractAdapterTest {
         cases[4] = getVVSFinanceV3TestCases();
         cases[5] = getWDEXTestCases();
         cases[6] = getRadioCACATestCases();
+        cases[7] = getDyorV3TestCases();
 
+        return cases;
+    }
+
+    function getDyorV3TestCases()
+        internal
+        pure
+        returns (SwapTestCase[] memory)
+    {
+        SwapTestCase[] memory cases = new SwapTestCase[](1);
+
+        address FORM_TOKEN = 0x5158c92b0afD985ad963A7755BD648e430ca5099;
+        address TO_TOKEN = 0x679A80e5D2a0fD5aD01D701446d9397a662d9Bcf;
+        address POOL = 0xCeEB9C788e4FC03EB799e002dabf071e3393Ee35;
+
+        // https://www.oklink.com/zh-hans/x-layer/tx/0x7ce0e6be164d1b9941a4319bfdf12c02ba09627c5419f1152d568465a880ee9e
+        cases[0] = SwapTestCase({
+            networkId: "xlayer",
+            forkBlock: 36331618 - 1,
+            fromToken: FORM_TOKEN,
+            toToken: TO_TOKEN,
+            pool: POOL,
+            amount: 1 * 10 ** 18,
+            expectedOutput: 998501997253744881,
+            sellBase: true,
+            expectRevert: false,
+            description: "STB to T2 on Dyor V3",
+            moreInfo: abi.encode(uint160(0), abi.encode(FORM_TOKEN, TO_TOKEN, uint24(0))),
+            fromTokenPreTo: address(0)
+        });
         return cases;
     }
 
