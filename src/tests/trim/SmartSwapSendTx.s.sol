@@ -21,7 +21,9 @@ contract SendTx is Test, CommissionHelper, TrimHelper {
         PMMLib.PMMSwapRequest[] extraData;
     }
 
-    uint256 amountIn = 0.00001 * 10 ** 18 + 0.00001 * 10 ** 16 * 3; // inputAmount + fromTokenCommission
+    uint256 inputAmount = 0.00001 * 10 ** 18;
+    uint256 fromTokenCommissionAmount = 0.00001 * 10 ** 16 * 4;
+
     address ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address WETH = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
     address USDC = 0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d;
@@ -35,12 +37,12 @@ contract SendTx is Test, CommissionHelper, TrimHelper {
         // baseRequest
         swapInfo.baseRequest.fromToken = uint256(uint160(ETH));
         swapInfo.baseRequest.toToken = USDC;
-        swapInfo.baseRequest.fromTokenAmount = amountIn;
+        swapInfo.baseRequest.fromTokenAmount = inputAmount;
         swapInfo.baseRequest.minReturnAmount = 0;
         swapInfo.baseRequest.deadLine = block.timestamp + 1000;
         // batchesAmount
         swapInfo.batchesAmount = new uint256[](1);
-        swapInfo.batchesAmount[0] = amountIn;
+        swapInfo.batchesAmount[0] = inputAmount;
         // batches
         swapInfo.batches = new DexRouter.RouterPath[][](1);
         swapInfo.batches[0] = new DexRouter.RouterPath[](1);
@@ -68,7 +70,7 @@ contract SendTx is Test, CommissionHelper, TrimHelper {
         vm.createSelectFork(vm.envString("BSC_RPC_URL"));
         vm.startBroadcast(deployer);
         console2.log("block.chainID", block.chainid);
-        console2.log("amountIn", amountIn);
+        console2.log("inputAmount", inputAmount);
 
         console2.log("deployer balance before", address(deployer).balance);
         console2.log("ownedAddress balance before", address(ownedAddress).balance);
@@ -77,24 +79,26 @@ contract SendTx is Test, CommissionHelper, TrimHelper {
 
         bytes memory swapData = _generateETH2USDCSmartSwapData();
         bytes memory commissionData = _buildCommissionInfoUnified(
-            true,
-            false,
-            ETH,
-            10000000,
-            ownedAddress,
-            20000000,
-            deployer,
-            true
+            true, // isFromTokenCommission
+            false, // isToBCommission
+            ETH, // commissionToken
+            10000000, // commissionRate1
+            ownedAddress, // refer1
+            20000000, // commissionRate2
+            deployer, // refer2
+            true // isToBCommission
         );
         bytes memory trimData = _buildTrimInfoUnified(
-            100,
-            ownedAddress,
-            2000,
-            300,
-            deployer
+            100, // trimRate
+            ownedAddress, // trimAddress
+            2000, // expectAmountOut
+            300, // chargeRate
+            deployer // chargeAddress
         );
-        bytes memory data = bytes.concat(swapData, commissionData, trimData);
-        (bool success, ) = address(dexRouter).call{value: amountIn}(data);
+        bytes memory data = bytes.concat(swapData, trimData, commissionData); /// @notice the trimData should be before the commissionData
+        (bool success, ) = address(dexRouter).call{
+            value: inputAmount + fromTokenCommissionAmount /// @notice if commission is not used or toTokenCommission, the value shouldn't add fromTokenCommissionAmount
+        }(data);
         require(success, "call failed");
 
         console2.log("deployer balance after", address(deployer).balance);
