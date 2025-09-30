@@ -338,7 +338,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 }
             }
             // get balance, then scale amount1, amount2 according to balance
-            function _sendTokenWithinBalance(token, to1, amount1, to2, amount2)
+            function _sendTokenWithinBalance(token, to1, rate1, to2, rate2)
                 -> amount1Scaled, amount2Scaled
             {
                 let freePtr := mload(0x40)
@@ -364,9 +364,9 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                     )
                 }
                 let balanceAfter := mload(0x00)
-                let amountTotal := add(amount1, amount2)
+                let rateTotal := add(rate1, rate2) // amount = 0.0000001
                 amount1Scaled := _mulDiv(
-                    _mulDiv(amount1, WAD, amountTotal),
+                    _mulDiv(rate1, WAD, rateTotal),
                     balanceAfter,
                     WAD
                 ) // WARNING: Precision issues may also exist!!
@@ -504,10 +504,11 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 _claimToken(token, payer, address(), amount1)
                 // considering the tax token, we first transfer it into dexrouter, then check balance, after that
                 // scaled amount accordingly
+                let rate1 := mload(add(commissionInfo, 0x40))
                 let amount1Scaled, amount2Scaled := _sendTokenWithinBalance(
                     token,
                     referrer1,
-                    amount1,
+                    rate1,
                     0,
                     0
                 )
@@ -517,12 +518,14 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 _claimToken(token, payer, address(), add(amount1, amount2))
                 // considering the tax token, we first transfer it into dexrouter, then check balance, after that
                 // scaled amount accordingly
+                let rate1 := mload(add(commissionInfo, 0x40))
+                let rate2 := mload(add(commissionInfo, 0xa0))
                 let amount1Scaled, amount2Scaled := _sendTokenWithinBalance(
                     token,
                     referrer1,
-                    amount1,
+                    rate1,
                     referrer2,
-                    amount2
+                    rate2
                 )
                 _emitCommissionFromToken(token, amount1Scaled, referrer1)
                 _emitCommissionFromToken(token, amount2Scaled, referrer2)
