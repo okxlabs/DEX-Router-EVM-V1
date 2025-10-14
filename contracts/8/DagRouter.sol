@@ -101,7 +101,7 @@ abstract contract DagRouter is CommonLib {
     ) private {
         uint256 totalWeight;
         uint256 accAmount;
-        address fromToken = _bytes32ToAddress(path.fromToken);
+        address fromTokenAddress = address(uint160(path.fromToken & _ADDRESS_MASK));
 
         require(path.mixAdapters.length > 0, "edge length must be > 0");
         require(
@@ -113,7 +113,7 @@ abstract contract DagRouter is CommonLib {
 
         // to get the nodeBalance for non-first node, the balance of the first node is the original passed value
         if (nodeIndex != 0) {
-            nodeBalance = IERC20(fromToken).balanceOf(address(this));
+            nodeBalance = IERC20(fromTokenAddress).balanceOf(address(this));
             require(nodeBalance > 0, "node balance must be > 0");
         }
 
@@ -157,7 +157,7 @@ abstract contract DagRouter is CommonLib {
                     _transferInternal(
                         payer,
                         path.assetTo[i],
-                        fromToken,
+                        path.fromToken,
                         _fromTokenAmount
                     );
                 }

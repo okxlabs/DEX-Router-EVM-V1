@@ -66,7 +66,6 @@ contract DexRouter is
             bool reverse;
             {
                 uint256 weight;
-                address fromToken = _bytes32ToAddress(path.fromToken);
                 assembly {
                     poolAddress := and(rawData, _ADDRESS_MASK)
                     reverse := and(rawData, _REVERSE_MASK)
@@ -87,7 +86,7 @@ contract DexRouter is
                     _transferInternal(
                         payer,
                         path.assetTo[i],
-                        fromToken,
+                        path.fromToken,
                         _fromTokenAmount
                     );
                 }
