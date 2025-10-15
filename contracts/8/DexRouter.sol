@@ -400,7 +400,7 @@ contract DexRouter is
     ) internal returns (uint256 returnAmount) {
         address receiverAddr = (receiver & _ADDRESS_MASK) == 0 ? msg.sender : _bytes32ToAddress(receiver);
         (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
-        _validateCommissionInfo(commissionInfo, srcToken, toToken);
+        _validateCommissionInfo(commissionInfo, srcToken, toToken, 0);
 
         returnAmount = _getBalanceOf(toToken, receiverAddr);
 
@@ -517,8 +517,22 @@ contract DexRouter is
         receiver = receiver == address(0) ? msg.sender : receiver;
         (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
 
-        address fromToken = _bytes32ToAddress(baseRequest.fromToken);
-        _validateCommissionInfo(commissionInfo, fromToken, baseRequest.toToken);
+        uint256 mode = 0;
+        if (batches.length > 0 && batches[0].length > 0) {
+            mode = batches[0][0].fromToken & _TRANSFER_MODE_MASK;
+            
+            address baseFromToken = _bytes32ToAddress(baseRequest.fromToken);
+            for (uint256 i = 0; i < batches.length; i++) {
+                require(batches[i].length > 0, "Empty batch");
+                address batchFromToken = _bytes32ToAddress(batches[i][0].fromToken);
+                require(batchFromToken == baseFromToken, "FromToken mismatch in batch");
+                
+                uint256 batchMode = batches[i][0].fromToken & _TRANSFER_MODE_MASK;
+                require(batchMode == mode, "Inconsistent transfer modes across batches");
+            }
+        }
+        
+        _validateCommissionInfo(commissionInfo, _bytes32ToAddress(baseRequest.fromToken), baseRequest.toToken, mode);
 
         returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(
             receiver
@@ -565,7 +579,7 @@ contract DexRouter is
         );
 
         emit OrderRecord(
-            fromToken,
+            _bytes32ToAddress(baseRequest.fromToken),
             baseRequest.toToken,
             tx.origin,
             baseRequest.fromTokenAmount,
@@ -626,7 +640,7 @@ contract DexRouter is
         receiver = receiver == address(0) ? msg.sender : receiver;
         (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
 
-        _validateCommissionInfo(commissionInfo, srcToken, toToken);
+        _validateCommissionInfo(commissionInfo, srcToken, toToken, 0);
         returnAmount = _getBalanceOf(toToken, receiver);
 
         _doUnxswap(payer, receiver, srcToken, toToken, amount, minReturn, pools, commissionInfo, trimInfo);
@@ -791,7 +805,7 @@ contract DexRouter is
         address srcToken = reversed ? _WETH : _ETH;
         address toToken = reversed ? _ETH : _WETH;
 
-        _validateCommissionInfo(commissionInfo, srcToken, toToken);
+        _validateCommissionInfo(commissionInfo, srcToken, toToken, 0);
 
         (
             address middleReceiver,
@@ -920,9 +934,14 @@ contract DexRouter is
 
         receiver = receiver == address(0) ? msg.sender : receiver;
 
-        address fromToken = _bytes32ToAddress(baseRequest.fromToken);
         (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
-        _validateCommissionInfo(commissionInfo, fromToken, baseRequest.toToken);
+        
+        uint256 mode = 0;
+        if (paths.length > 0) {
+            mode = paths[0].fromToken & _TRANSFER_MODE_MASK;
+        }
+        
+        _validateCommissionInfo(commissionInfo, _bytes32ToAddress(baseRequest.fromToken), baseRequest.toToken, mode);
 
         returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(
             receiver
@@ -966,7 +985,7 @@ contract DexRouter is
         );
 
         emit OrderRecord(
-            fromToken,
+            _bytes32ToAddress(baseRequest.fromToken),
             baseRequest.toToken,
             tx.origin,
             baseRequest.fromTokenAmount,

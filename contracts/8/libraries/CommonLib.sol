@@ -15,21 +15,6 @@ import "../interfaces/IERC20.sol";
 abstract contract CommonLib is CommonUtils {
     using UniversalERC20 for IERC20;
 
-    enum TransferMode {
-        // LEGACY,
-        BY_INVEST,
-        NO_TRANSFER
-    }
-
-    /// @notice Mode flags for fromToken high bits
-    /// Using bits 254-255 for mode flags (2 bits = 4 possible modes)
-    uint256 internal constant _TRANSFER_MODE_MASK = 0xC000000000000000000000000000000000000000000000000000000000000000;
-    uint256 internal constant _TRANSFER_MODE_SHIFT = 254;
-    
-    // uint256 internal constant _MODE_LEGACY = 0x0000000000000000000000000000000000000000000000000000000000000000;
-    uint256 internal constant _MODE_BY_INVEST = 0x4000000000000000000000000000000000000000000000000000000000000000;  // bit 254
-    uint256 internal constant _MODE_NO_TRANSFER = 0x8000000000000000000000000000000000000000000000000000000000000000; // bit 255
-
     function _exeAdapter(
         bool reverse,
         address adapter,
@@ -90,28 +75,33 @@ abstract contract CommonLib is CommonUtils {
     /// @notice Transfers tokens internally within the contract.
     /// @param payer The address of the payer.
     /// @param to The address of the receiver.
-    /// @param tokenOrFromTokenWithMode Either a plain token address or fromToken with mode encoded in high bits
+    /// @param fromTokenWithMode FromToken with mode encoded in high bits
     /// @param amount The amount of tokens to be transferred.
     /// @dev Handles the transfer of ERC20 tokens or native tokens within the contract.
     function _transferInternal(
         address payer,
         address to,
-        uint256 tokenOrFromTokenWithMode,
+        uint256 fromTokenWithMode,
         uint256 amount
     ) internal {
-        address token = address(uint160(tokenOrFromTokenWithMode & _ADDRESS_MASK));
-        uint256 modeFlag = tokenOrFromTokenWithMode & _TRANSFER_MODE_MASK;
-
-        if (modeFlag == _MODE_BY_INVEST) {
-            SafeERC20.safeTransfer(IERC20(token), to, amount);
-        } else if (modeFlag == _MODE_NO_TRANSFER) {
-            // No operation
-        } else {
-            if (payer == address(this)) {
+        address token = address(uint160(fromTokenWithMode & _ADDRESS_MASK));
+        uint256 mode = fromTokenWithMode & _TRANSFER_MODE_MASK;
+        
+        if (mode != 0) {
+            if ((mode & _MODE_NO_TRANSFER) != 0) {
+                return;
+            } else if ((mode & _MODE_BY_INVEST) != 0) {
                 SafeERC20.safeTransfer(IERC20(token), to, amount);
-            } else {
-                IApproveProxy(_APPROVE_PROXY).claimTokens(token, payer, to, amount);
+                return;
+            } else if ((mode & _MODE_PERMIT2) != 0) {
+                return;
             }
+        }
+        
+        if (payer == address(this)) {
+            SafeERC20.safeTransfer(IERC20(token), to, amount);
+        } else {
+            IApproveProxy(_APPROVE_PROXY).claimTokens(token, payer, to, amount);
         }
     }
 
@@ -145,32 +135,6 @@ abstract contract CommonLib is CommonUtils {
                     SafeERC20.safeTransfer(IERC20(token), to, bal);
                 }
             }
-        }
-    }
-
-    function _validateExecuteRequest(
-        address fromToken,
-        uint256 maxConsumeAmount,
-        uint256 fromTokenAmount
-    ) internal view {
-        require(
-            (fromToken == _ETH && msg.value >= maxConsumeAmount && maxConsumeAmount >= fromTokenAmount) ||
-            (fromToken != _ETH && maxConsumeAmount >= fromTokenAmount && msg.value == 0),
-            "maxConsumeAmount > msg.value || maxConsumeAmount < baseRequest.fromTokenAmount"
-        );
-    }
-
-
-    function _handleTokenTransfer(
-        address fromToken,
-        address assetTo,
-        uint256 amount
-    ) internal {
-        if (fromToken == _ETH) {
-            IWETH(_WETH).deposit{value: amount}();
-            _transferInternal(msg.sender, assetTo, uint256(uint160(_WETH)), amount);
-        } else {
-            _transferInternal(msg.sender, assetTo, uint256(uint160(fromToken)), amount);
         }
     }
 

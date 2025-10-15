@@ -301,7 +301,7 @@ contract DexRouterExactOut is
     // Handles commission.
     function _afterSwap(AfterSwapParams memory afterSwapParams) internal {
         // validate commission info
-        _validateCommissionInfo(afterSwapParams.commissionInfo, afterSwapParams.srcToken, afterSwapParams.toToken); // @notice For commission validation, ETH needs to be 0xEeee.
+        _validateCommissionInfo(afterSwapParams.commissionInfo, afterSwapParams.srcToken, afterSwapParams.toToken, 0); // @notice For commission validation, ETH needs to be 0xEeee.
 
         // Handle commission from the source token if applicable.
         if (

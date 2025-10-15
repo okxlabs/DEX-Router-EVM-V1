@@ -22,6 +22,12 @@ abstract contract CommonUtils is IDexRouter {
         0x4000000000000000000000000000000000000000000000000000000000000000;
     uint256 internal constant _ONE_FOR_ZERO_MASK = 1 << 255; // Mask for identifying if the swap is one-for-zero
     uint256 internal constant _WETH_UNWRAP_MASK = 1 << 253; // Mask for identifying if WETH should be unwrapped to ETH
+
+    uint256 internal constant _MODE_NO_TRANSFER = 1 << 251;
+    uint256 internal constant _MODE_BY_INVEST = 1 << 250;
+    uint256 internal constant _MODE_PERMIT2 = 1 << 249;
+    
+    uint256 internal constant _TRANSFER_MODE_MASK = 0x0E00000000000000000000000000000000000000000000000000000000000000;
     uint256 internal constant _INPUT_INDEX_MASK =
         0x0000000000000000ff0000000000000000000000000000000000000000000000;
     uint256 internal constant _OUTPUT_INDEX_MASK =

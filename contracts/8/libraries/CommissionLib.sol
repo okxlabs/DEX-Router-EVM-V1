@@ -833,8 +833,13 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
     function _validateCommissionInfo(
         CommissionInfo memory commissionInfo,
         address fromToken,
-        address toToken
+        address toToken,
+        uint256 mode
     ) internal pure override {
+        if ((mode & _MODE_NO_TRANSFER) != 0 && commissionInfo.isFromTokenCommission) {
+            revert("From token commission not supported in NO_TRANSFER mode");
+        }
+        
         require(
             (commissionInfo.isFromTokenCommission && commissionInfo.token == fromToken)
                 || (commissionInfo.isToTokenCommission && commissionInfo.token == toToken)
