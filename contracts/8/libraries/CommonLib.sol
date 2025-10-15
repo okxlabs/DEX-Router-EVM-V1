@@ -87,21 +87,20 @@ abstract contract CommonLib is CommonUtils {
         address token = address(uint160(fromTokenWithMode & _ADDRESS_MASK));
         uint256 mode = fromTokenWithMode & _TRANSFER_MODE_MASK;
         
-        if (mode != 0) {
-            if ((mode & _MODE_NO_TRANSFER) != 0) {
-                return;
-            } else if ((mode & _MODE_BY_INVEST) != 0) {
-                SafeERC20.safeTransfer(IERC20(token), to, amount);
-                return;
-            } else if ((mode & _MODE_PERMIT2) != 0) {
-                return;
-            }
-        }
-        
-        if (payer == address(this)) {
+        if (mode == _MODE_NO_TRANSFER) {
+            return;
+        } else if (mode == _MODE_BY_INVEST) {
             SafeERC20.safeTransfer(IERC20(token), to, amount);
+            return;
+        } else if (mode == _MODE_PERMIT2) {
+            // Permit2 mode - reserved for future implementation
+            return;
         } else {
-            IApproveProxy(_APPROVE_PROXY).claimTokens(token, payer, to, amount);
+            if (payer == address(this)) {
+                SafeERC20.safeTransfer(IERC20(token), to, amount);
+            } else {
+                IApproveProxy(_APPROVE_PROXY).claimTokens(token, payer, to, amount);
+            }
         }
     }
 

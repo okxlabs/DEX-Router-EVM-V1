@@ -203,6 +203,11 @@ contract DexRouter is
         // check length, fix DRW-02: LACK OF LENGTH CHECK ON BATATCHES
         require(batchesAmount.length == batches.length, "length mismatch");
         for (uint256 i = 0; i < batches.length; ) {
+            require(batches[i].length > 0, "Empty batch");
+            if (i > 0) {
+                require(batches[i][0].fromToken == batches[0][0].fromToken, "Inconsistent fromToken across batches");
+            }
+            
             // execute hop, if the whole swap replacing by pmm fails, the funds will return to dexRouter
             _exeHop(
                 payer,
@@ -400,7 +405,7 @@ contract DexRouter is
     ) internal returns (uint256 returnAmount) {
         address receiverAddr = (receiver & _ADDRESS_MASK) == 0 ? msg.sender : _bytes32ToAddress(receiver);
         (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
-        _validateCommissionInfo(commissionInfo, srcToken, toToken, 0);
+        _validateCommissionInfo(commissionInfo, srcToken, toToken, _MODE_LEGACY);
 
         returnAmount = _getBalanceOf(toToken, receiverAddr);
 
@@ -516,20 +521,10 @@ contract DexRouter is
     ) internal returns (uint256 returnAmount) {
         receiver = receiver == address(0) ? msg.sender : receiver;
         (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
-
-        uint256 mode = 0;
+        
+        uint256 mode = _MODE_LEGACY;
         if (batches.length > 0 && batches[0].length > 0) {
             mode = batches[0][0].fromToken & _TRANSFER_MODE_MASK;
-            
-            address baseFromToken = _bytes32ToAddress(baseRequest.fromToken);
-            for (uint256 i = 0; i < batches.length; i++) {
-                require(batches[i].length > 0, "Empty batch");
-                address batchFromToken = _bytes32ToAddress(batches[i][0].fromToken);
-                require(batchFromToken == baseFromToken, "FromToken mismatch in batch");
-                
-                uint256 batchMode = batches[i][0].fromToken & _TRANSFER_MODE_MASK;
-                require(batchMode == mode, "Inconsistent transfer modes across batches");
-            }
         }
         
         _validateCommissionInfo(commissionInfo, _bytes32ToAddress(baseRequest.fromToken), baseRequest.toToken, mode);
@@ -640,7 +635,7 @@ contract DexRouter is
         receiver = receiver == address(0) ? msg.sender : receiver;
         (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
 
-        _validateCommissionInfo(commissionInfo, srcToken, toToken, 0);
+        _validateCommissionInfo(commissionInfo, srcToken, toToken, _MODE_LEGACY);
         returnAmount = _getBalanceOf(toToken, receiver);
 
         _doUnxswap(payer, receiver, srcToken, toToken, amount, minReturn, pools, commissionInfo, trimInfo);
@@ -805,7 +800,7 @@ contract DexRouter is
         address srcToken = reversed ? _WETH : _ETH;
         address toToken = reversed ? _ETH : _WETH;
 
-        _validateCommissionInfo(commissionInfo, srcToken, toToken, 0);
+        _validateCommissionInfo(commissionInfo, srcToken, toToken, _MODE_LEGACY);
 
         (
             address middleReceiver,
@@ -936,7 +931,7 @@ contract DexRouter is
 
         (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
         
-        uint256 mode = 0;
+        uint256 mode = _MODE_LEGACY;
         if (paths.length > 0) {
             mode = paths[0].fromToken & _TRANSFER_MODE_MASK;
         }
