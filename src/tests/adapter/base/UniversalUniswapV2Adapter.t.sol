@@ -24,7 +24,7 @@ contract UniversalUniswapV2AdapterTest is AbstractAdapterTest {
         override
         returns (SwapTestCase[][] memory)
     {
-        SwapTestCase[][] memory cases = new SwapTestCase[][](7);
+        SwapTestCase[][] memory cases = new SwapTestCase[][](8);
         cases[0] = getApeSwapV2TestCases();
         cases[1] = getRDexV2TestCases();
         cases[2] = getLynexTestCases();
@@ -32,6 +32,7 @@ contract UniversalUniswapV2AdapterTest is AbstractAdapterTest {
         cases[4] = getEtherexClassicTestCases();
         cases[5] = getDooarTestCases();
         cases[6] = getCronaSwapTestCases();
+        cases[7] = getAVAXTestCase();
 
         return cases;
     }
@@ -234,6 +235,31 @@ contract UniversalUniswapV2AdapterTest is AbstractAdapterTest {
             expectRevert: false,
             description: "USDC to LYNX on Linea",
             moreInfo: lynexFee,
+            fromTokenPreTo: address(0)
+        });
+        
+        return cases;
+    }
+
+    function getAVAXTestCase() internal pure returns (SwapTestCase[] memory) {
+        address WAVAX = 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7;
+        address FRAX = 0xD24C2Ad096400B6FBcd2ad8B24E7acBc21A1da64;
+
+        address WAVAX_FRAX_POOL = 0x677aFf5D7AA11BA5AD43C020B0860ff04bC1f69F;
+
+        SwapTestCase[] memory cases = new SwapTestCase[](1);
+        cases[0] = SwapTestCase({
+            networkId: "avax",
+            forkBlock: 0, // 0 = latest block
+            fromToken: FRAX,
+            toToken: WAVAX,
+            pool: WAVAX_FRAX_POOL,
+            amount: 1000 * 10 ** 18,
+            expectedOutput: 0,
+            sellBase: false,
+            expectRevert: false,
+            description: "FRAX to WAVAX on AVAX", // Updated description
+            moreInfo: abi.encode(9975, 1000), // Standard Uniswap V2 fee (0.3%)
             fromTokenPreTo: address(0)
         });
         
