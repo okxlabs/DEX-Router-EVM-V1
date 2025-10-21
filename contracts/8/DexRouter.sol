@@ -203,7 +203,6 @@ contract DexRouter is
         // check length, fix DRW-02: LACK OF LENGTH CHECK ON BATATCHES
         require(batchesAmount.length == batches.length, "length mismatch");
         for (uint256 i = 0; i < batches.length; ) {
-            require(batches[i].length > 0, "Empty batch");
             if (i > 0) {
                 require(batches[i][0].fromToken == batches[0][0].fromToken, "Inconsistent fromToken across batches");
             }
@@ -294,7 +293,7 @@ contract DexRouter is
     /// @return returnAmount The total amount of destination tokens received, ready for investment.
     /// @dev This function is designed for scenarios where investments are made in batches or through complex paths to optimize returns. Adjustments are made based on the contract's current token balance to ensure precise allocation.
 
-    function smartSwapByInvest(
+    function smartSwapByInvest( // change function name
         BaseRequest memory baseRequest,
         uint256[] memory batchesAmount,
         RouterPath[][] memory batches,
@@ -405,6 +404,7 @@ contract DexRouter is
     ) internal returns (uint256 returnAmount) {
         address receiverAddr = (receiver & _ADDRESS_MASK) == 0 ? msg.sender : _bytes32ToAddress(receiver);
         (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
+        // add permit2
         _validateCommissionInfo(commissionInfo, srcToken, toToken, _MODE_LEGACY);
 
         returnAmount = _getBalanceOf(toToken, receiverAddr);
