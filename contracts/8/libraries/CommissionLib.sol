@@ -842,7 +842,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
          || (mode & _MODE_PERMIT2) != 0
         )
          && commissionInfo.isFromTokenCommission) {
-            revert("From token commission not supported in NO_TRANSFER mode");
+            revert("From token commission not supported");
         }
         
         require(
