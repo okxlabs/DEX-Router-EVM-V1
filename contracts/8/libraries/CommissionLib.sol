@@ -836,7 +836,12 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
         address toToken,
         uint256 mode
     ) internal pure override {
-        if ((mode & _MODE_NO_TRANSFER) != 0 && commissionInfo.isFromTokenCommission) {
+        if ((
+            (mode & _MODE_NO_TRANSFER) != 0 
+         || (mode & _MODE_BY_INVEST) != 0
+         || (mode & _MODE_PERMIT2) != 0
+        )
+         && commissionInfo.isFromTokenCommission) {
             revert("From token commission not supported in NO_TRANSFER mode");
         }
         
