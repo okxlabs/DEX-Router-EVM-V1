@@ -443,10 +443,11 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 let hasNextRefer := gt(mload(add(commissionInfo, 0xa0)), 0)
                 status := _getStatus(token, isToB, hasNextRefer)
             }
+            
             let referrer1, referrer2, amount1, amount2
+            let rate1 := mload(add(commissionInfo, 0x40))
+            let rate2 := mload(add(commissionInfo, 0xa0))
             {
-                let rate1 := mload(add(commissionInfo, 0x40))
-                let rate2 := mload(add(commissionInfo, 0xa0))
                 // let totalRate := add(rate, rate2)
                 if gt(add(rate1, rate2), commissionRateLimit) {
                     _revertWithReason(
@@ -501,7 +502,6 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 _claimToken(token, payer, address(), amount1)
                 // considering the tax token, we first transfer it into dexrouter, then check balance, after that
                 // scaled amount accordingly
-                let rate1 := mload(add(commissionInfo, 0x40))
                 let amount1Scaled, amount2Scaled := _sendTokenWithinBalance(
                     token,
                     referrer1,
@@ -515,8 +515,6 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 _claimToken(token, payer, address(), add(amount1, amount2))
                 // considering the tax token, we first transfer it into dexrouter, then check balance, after that
                 // scaled amount accordingly
-                let rate1 := mload(add(commissionInfo, 0x40))
-                let rate2 := mload(add(commissionInfo, 0xa0))
                 let amount1Scaled, amount2Scaled := _sendTokenWithinBalance(
                     token,
                     referrer1,
