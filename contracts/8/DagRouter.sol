@@ -31,7 +31,6 @@ abstract contract DagRouter is CommonLib {
 
         address fromToken = _bytes32ToAddress(_baseRequest.fromToken);
 
-        require(paths.length > 0, "paths must be > 0");
         address firstNodeToken = _bytes32ToAddress(paths[0].fromToken);
 
         // In order to deal with ETH/WETH transfer rules in a unified manner,

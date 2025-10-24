@@ -928,6 +928,7 @@ contract DexRouter is
         isExpired(baseRequest.deadLine)
         returns (uint256 returnAmount)
     {
+        require(paths.length > 0, "paths must be > 0");
         emit SwapOrderId(orderId);
 
         receiver = receiver == address(0) ? msg.sender : receiver;
@@ -935,9 +936,7 @@ contract DexRouter is
         (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
         
         uint256 mode = _MODE_LEGACY;
-        if (paths.length > 0) {
-            mode = paths[0].fromToken & _TRANSFER_MODE_MASK;
-        }
+        mode = paths[0].fromToken & _TRANSFER_MODE_MASK;
         
         _validateCommissionInfo(commissionInfo, _bytes32ToAddress(baseRequest.fromToken), baseRequest.toToken, mode);
 
