@@ -138,10 +138,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
             }            
             // calculate offset based on commission flag
             let offset := 0x00
-            if or(
-                eq(flag, FROM_TOKEN_COMMISSION_DUAL),
-                eq(flag, TO_TOKEN_COMMISSION_DUAL)
-            ) {
+            if eq(isDualreferrers, 1) {
                 offset := 0x60  // 96 bytes for dual commission
             }
             if or(
