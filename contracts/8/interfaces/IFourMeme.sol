@@ -26,3 +26,19 @@ interface ITokenManager2 {
         address feeRecipient//The address that will receive the fee.
     ) external;
 }
+
+interface ITokenManagerHelper3 {
+    /// @notice Sell tokens for ETH
+    /// @dev If the user wants to sell tokens for BNB through a third-party router, the original sender of the transaction must be the token owner.
+    /// This method is only applicable for ERC20/ERC20 trading pairs (quote token is not address(0)). It is not supported for BNB trading pairs.
+    /// The trading fee will be collected in the quote token (ERC20) instead of BNB.
+    function sellForEth(
+        uint256 origin, // The platform from which the request is sent. Pass 0 if not applicable.
+        address token, // The address of the token to sell
+        address from, // The address of the token owner (tx.origin must equal from)
+        uint256 amount, // The amount of tokens to sell
+        uint256 minFunds, // The minimum amount of BNB to receive
+        uint256 feeRate, // The fee rate for the transaction. 100 means 1%, 10 means 0.1%. (MAX 5%)
+        address feeRecipient // The address that will receive the fee (in quote token)
+    ) external;
+}

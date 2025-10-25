@@ -12,11 +12,8 @@ interface IAspectaKeyPool {
     ) external payable;
 
     function sellByRouter(
-        address recipient,
         uint256 amount,
-        uint256 minPrice,
-        uint fee,
-        address feeRecipient
+        uint256 minPrice
     ) external;
 
     function getBuyPrice(
@@ -30,4 +27,11 @@ interface IAspectaKeyPool {
     function getPurchaseAmountByPayment(
         uint256 payment
     ) external view returns (uint256, uint256);
+
+    function balanceOf(
+        address user
+    ) external view returns (uint256);
+
+    function getProtocolFeePercentage() external view returns (uint256);
+
 }

@@ -2,6 +2,7 @@
 src = "contracts/8"
 out = "artifacts"
 test = "src/tests/transferMode"
+
 libs = ["node_modules", "lib"]
 optimizer = true
 optimizer_runs = 1
@@ -18,12 +19,12 @@ evm_version = "cancun"
 fs_permissions = [{access = "read-write", path = "./"}]
 
 [rpc_endpoints]
-arb = "https://arb1.arbitrum.io/rpc"
-avax = "https://rpc.ankr.com/avalanche"
+arb = "https://arb1.lava.build"
+avax = "https://avax-mainnet.g.alchemy.com/v2/Vi9EBxKbLyTvKM3I2LXvsOV8f6fWsbrj"
 base = "https://mainnet.base.org"
-bsc = "https://bnb-mainnet.g.alchemy.com/public"
+bsc = "https://site1.moralis-nodes.com/bsc/ca1462af506243baa6d81ceef01176b9"
 conflux = "https://evm.confluxrpc.com"
-cro = "https://evm-cronos.crypto.org"
+cro = "https://cronos-evm-rpc.publicnode.com"
 eth = "https://eth-mainnet.g.alchemy.com/v2/aMbWrR8EcmCGpF6rCSNk0P24wTZbbG7R"
 ethw = "https://mainnet.ethereumpow.org"
 flare = "https://flare-api.flare.network/ext/C/rpc"
@@ -35,6 +36,9 @@ op = "https://optimism-mainnet.public.blastapi.io"
 polygon = "https://polygon-mainnet.g.alchemy.com/v2/aMbWrR8EcmCGpF6rCSNk0P24wTZbbG7R"
 polyzkevm = "https://zkevm-rpc.com"
 scroll = "https://rpc.scroll.io"
+xlayer = "https://xlayer.drpc.org"
+sonic = "https://sonic-rpc.publicnode.com"
+unichain = "https://unichain.drpc.org"
 
 [fmt]
 line_length = 120
