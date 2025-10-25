@@ -18,5 +18,5 @@ module.exports = {
     commisson: "",
     p2pTrading: "",
 
-    newImpl: "0x69C236E021F5775B0D0328ded5EaC708E3B869DF",
+    newImpl: "0xdCD47934F697890f9D4C3af2B8B42d7336235894",
 }
