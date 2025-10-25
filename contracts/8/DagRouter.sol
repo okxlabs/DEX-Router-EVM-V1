@@ -37,11 +37,11 @@ abstract contract DagRouter is CommonLib {
         // we do not need to judge according to fromToken.
         if (IERC20(fromToken).isETH()) {
             require(firstNodeToken == _WETH, "firstToken mismatch");
+            require(msg.value >= _baseRequest.fromTokenAmount, "value not equal amount");
             IWETH(_WETH).deposit{
                 value: _baseRequest.fromTokenAmount
             }();
             payer = address(this);
-            require(msg.value >= _baseRequest.fromTokenAmount, "value not equal amount");
         } else {
             require(firstNodeToken == fromToken, "firstToken mismatch");
             require(msg.value == 0, "value must be 0");
