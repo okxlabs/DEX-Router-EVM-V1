@@ -180,10 +180,10 @@ contract DexRouter is
             IWETH(_WETH).deposit{
                 value: _baseRequest.fromTokenAmount
             }();
-            require(batches[0][0].fromToken == _WETH, "firstToken mismatch");
+            require(_bytes32ToAddress(batches[0][0].fromToken) == _WETH, "firstToken mismatch");
             payer = address(this);
         } else {
-            require(batches[0][0].fromToken == fromToken, "firstToken mismatch");
+            require(_bytes32ToAddress(batches[0][0].fromToken) == fromToken, "firstToken mismatch");
         }
 
         // 2. check total batch amount
