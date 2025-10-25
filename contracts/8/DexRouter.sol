@@ -175,7 +175,7 @@ contract DexRouter is
         // In order to deal with ETH/WETH transfer rules in a unified manner,
         // we do not need to judge according to fromToken.
         if (UniversalERC20.isETH(IERC20(fromToken))) {
-            require(msg.value >= _baseRequest.fromTokenAmount, "value not equal amount");
+            require(msg.value >= _baseRequest.fromTokenAmount, "msg.value not correct");
             IWETH(_WETH).deposit{
                 value: _baseRequest.fromTokenAmount
             }();
