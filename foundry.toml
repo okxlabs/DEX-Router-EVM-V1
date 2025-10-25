@@ -35,3 +35,23 @@ op = "https://optimism-mainnet.public.blastapi.io"
 polygon = "https://polygon-mainnet.g.alchemy.com/v2/aMbWrR8EcmCGpF6rCSNk0P24wTZbbG7R"
 polyzkevm = "https://zkevm-rpc.com"
 scroll = "https://rpc.scroll.io"
+
+[fmt]
+line_length = 120
+tab_width = 4
+style = "space"
+bracket_spacing = false
+int_types = "long"
+multiline_func_header = "attributes_first"
+quote_style = "double"
+number_underscore = "preserve"
+hex_underscore = "remove"
+single_line_statement_blocks = "preserve"
+override_spacing = true
+wrap_comments = false
+docs_style = "preserve"
+ignore = []
+contract_new_lines = false
+sort_imports = true
+pow_no_space = true
+call_compact_args = true
