@@ -128,9 +128,7 @@ contract DexRouter is
         for (uint256 i = 0; i < hopLength; ) {
             if (i > 0) {
                 fromToken = _bytes32ToAddress(hops[i].fromToken);
-                batchAmount = IERC20(fromToken).universalBalanceOf(
-                    address(this)
-                );
+                batchAmount = _getBalanceOf(fromToken, address(this));
                 payer = address(this);
             }
 
@@ -177,6 +175,7 @@ contract DexRouter is
         // In order to deal with ETH/WETH transfer rules in a unified manner,
         // we do not need to judge according to fromToken.
         if (UniversalERC20.isETH(IERC20(fromToken))) {
+            require(msg.value >= _baseRequest.fromTokenAmount, "value not equal amount");
             IWETH(_WETH).deposit{
                 value: _baseRequest.fromTokenAmount
             }();
@@ -342,7 +341,7 @@ contract DexRouter is
         }
         baseRequest.fromTokenAmount = amount;
 
-        returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(to);
+        returnAmount = _getBalanceOf(baseRequest.toToken, to);
         _smartSwapInternal(
             baseRequest,
             batchesAmount,
@@ -353,7 +352,7 @@ contract DexRouter is
         );
         // check minReturnAmount
         returnAmount =
-            IERC20(baseRequest.toToken).universalBalanceOf(to) -
+            _getBalanceOf(baseRequest.toToken, to) -
             returnAmount;
         require(
             returnAmount >= baseRequest.minReturnAmount,
@@ -532,9 +531,7 @@ contract DexRouter is
         
         _validateCommissionInfo(commissionInfo, _bytes32ToAddress(baseRequest.fromToken), baseRequest.toToken, mode);
 
-        returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(
-            receiver
-        );
+        returnAmount = _getBalanceOf(baseRequest.toToken, receiver);
 
         {
             (
@@ -569,7 +566,7 @@ contract DexRouter is
 
         // check minReturnAmount
         returnAmount =
-            IERC20(baseRequest.toToken).universalBalanceOf(receiver) -
+            _getBalanceOf(baseRequest.toToken, receiver) -
             returnAmount;
         require(
             returnAmount >= baseRequest.minReturnAmount,
@@ -935,14 +932,11 @@ contract DexRouter is
 
         (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
         
-        uint256 mode = _MODE_LEGACY;
-        mode = paths[0].fromToken & _TRANSFER_MODE_MASK;
+        uint256 mode = paths[0].fromToken & _TRANSFER_MODE_MASK;
         
         _validateCommissionInfo(commissionInfo, _bytes32ToAddress(baseRequest.fromToken), baseRequest.toToken, mode);
 
-        returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(
-            receiver
-        );
+        returnAmount = _getBalanceOf(baseRequest.toToken, receiver);
 
         (
             address middleReceiver,
@@ -974,7 +968,7 @@ contract DexRouter is
 
         // check minReturnAmount
         returnAmount =
-            IERC20(baseRequest.toToken).universalBalanceOf(receiver) -
+            _getBalanceOf(baseRequest.toToken, receiver) -
             returnAmount;
         require(
             returnAmount >= baseRequest.minReturnAmount,
