@@ -31,19 +31,20 @@ abstract contract DagRouter is CommonLib {
 
         address fromToken = _bytes32ToAddress(_baseRequest.fromToken);
 
-        require(paths.length > 0, "paths must be > 0");
         address firstNodeToken = _bytes32ToAddress(paths[0].fromToken);
 
         // In order to deal with ETH/WETH transfer rules in a unified manner,
         // we do not need to judge according to fromToken.
         if (IERC20(fromToken).isETH()) {
             require(firstNodeToken == _WETH, "firstToken mismatch");
-            IWETH(address(uint160(_WETH))).deposit{
+            IWETH(_WETH).deposit{
                 value: _baseRequest.fromTokenAmount
             }();
             payer = address(this);
+            require(msg.value >= _baseRequest.fromTokenAmount, "value not equal amount");
         } else {
             require(firstNodeToken == fromToken, "firstToken mismatch");
+            require(msg.value == 0, "value must be 0");
         }
 
         // 2. execute dag swap
@@ -157,7 +158,7 @@ abstract contract DagRouter is CommonLib {
                     _transferInternal(
                         payer,
                         path.assetTo[i],
-                        fromToken,
+                        path.fromToken,
                         _fromTokenAmount
                     );
                 }

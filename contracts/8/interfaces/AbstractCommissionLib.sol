@@ -53,6 +53,7 @@ abstract contract AbstractCommissionLib {
     function _validateCommissionInfo(
         CommissionInfo memory commissionInfo,
         address fromToken,
-        address toToken
+        address toToken,
+        uint256 mode
     ) internal pure virtual;
 }

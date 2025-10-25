@@ -66,7 +66,6 @@ contract DexRouter is
             bool reverse;
             {
                 uint256 weight;
-                address fromToken = _bytes32ToAddress(path.fromToken);
                 assembly {
                     poolAddress := and(rawData, _ADDRESS_MASK)
                     reverse := and(rawData, _REVERSE_MASK)
@@ -87,7 +86,7 @@ contract DexRouter is
                     _transferInternal(
                         payer,
                         path.assetTo[i],
-                        fromToken,
+                        path.fromToken,
                         _fromTokenAmount
                     );
                 }
@@ -181,7 +180,10 @@ contract DexRouter is
             IWETH(_WETH).deposit{
                 value: _baseRequest.fromTokenAmount
             }();
+            require(batches[0][0].fromToken == _WETH, "firstToken mismatch");
             payer = address(this);
+        } else {
+            require(batches[0][0].fromToken == fromToken, "firstToken mismatch");
         }
 
         // 2. check total batch amount
@@ -204,6 +206,10 @@ contract DexRouter is
         // check length, fix DRW-02: LACK OF LENGTH CHECK ON BATATCHES
         require(batchesAmount.length == batches.length, "length mismatch");
         for (uint256 i = 0; i < batches.length; ) {
+            if (i > 0) {
+                require(batches[i][0].fromToken == batches[0][0].fromToken, "Inconsistent fromToken across batches");
+            }
+            
             // execute hop, if the whole swap replacing by pmm fails, the funds will return to dexRouter
             _exeHop(
                 payer,
@@ -290,7 +296,7 @@ contract DexRouter is
     /// @return returnAmount The total amount of destination tokens received, ready for investment.
     /// @dev This function is designed for scenarios where investments are made in batches or through complex paths to optimize returns. Adjustments are made based on the contract's current token balance to ensure precise allocation.
 
-    function smartSwapByInvest(
+    function smartSwapByInvest( // change function name
         BaseRequest memory baseRequest,
         uint256[] memory batchesAmount,
         RouterPath[][] memory batches,
@@ -401,7 +407,8 @@ contract DexRouter is
     ) internal returns (uint256 returnAmount) {
         address receiverAddr = (receiver & _ADDRESS_MASK) == 0 ? msg.sender : _bytes32ToAddress(receiver);
         (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
-        _validateCommissionInfo(commissionInfo, srcToken, toToken);
+        // add permit2
+        _validateCommissionInfo(commissionInfo, srcToken, toToken, _MODE_LEGACY);
 
         returnAmount = _getBalanceOf(toToken, receiverAddr);
 
@@ -517,9 +524,13 @@ contract DexRouter is
     ) internal returns (uint256 returnAmount) {
         receiver = receiver == address(0) ? msg.sender : receiver;
         (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
-
-        address fromToken = _bytes32ToAddress(baseRequest.fromToken);
-        _validateCommissionInfo(commissionInfo, fromToken, baseRequest.toToken);
+        
+        uint256 mode = _MODE_LEGACY;
+        if (batches.length > 0 && batches[0].length > 0) {
+            mode = batches[0][0].fromToken & _TRANSFER_MODE_MASK;
+        }
+        
+        _validateCommissionInfo(commissionInfo, _bytes32ToAddress(baseRequest.fromToken), baseRequest.toToken, mode);
 
         returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(
             receiver
@@ -566,7 +577,7 @@ contract DexRouter is
         );
 
         emit OrderRecord(
-            fromToken,
+            _bytes32ToAddress(baseRequest.fromToken),
             baseRequest.toToken,
             tx.origin,
             baseRequest.fromTokenAmount,
@@ -627,7 +638,7 @@ contract DexRouter is
         receiver = receiver == address(0) ? msg.sender : receiver;
         (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
 
-        _validateCommissionInfo(commissionInfo, srcToken, toToken);
+        _validateCommissionInfo(commissionInfo, srcToken, toToken, _MODE_LEGACY);
         returnAmount = _getBalanceOf(toToken, receiver);
 
         _doUnxswap(payer, receiver, srcToken, toToken, amount, minReturn, pools, commissionInfo, trimInfo);
@@ -792,7 +803,7 @@ contract DexRouter is
         address srcToken = reversed ? _WETH : _ETH;
         address toToken = reversed ? _ETH : _WETH;
 
-        _validateCommissionInfo(commissionInfo, srcToken, toToken);
+        _validateCommissionInfo(commissionInfo, srcToken, toToken, _MODE_LEGACY);
 
         (
             address middleReceiver,
@@ -917,13 +928,17 @@ contract DexRouter is
         isExpired(baseRequest.deadLine)
         returns (uint256 returnAmount)
     {
+        require(paths.length > 0, "paths must be > 0");
         emit SwapOrderId(orderId);
 
         receiver = receiver == address(0) ? msg.sender : receiver;
 
-        address fromToken = _bytes32ToAddress(baseRequest.fromToken);
         (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
-        _validateCommissionInfo(commissionInfo, fromToken, baseRequest.toToken);
+        
+        uint256 mode = _MODE_LEGACY;
+        mode = paths[0].fromToken & _TRANSFER_MODE_MASK;
+        
+        _validateCommissionInfo(commissionInfo, _bytes32ToAddress(baseRequest.fromToken), baseRequest.toToken, mode);
 
         returnAmount = IERC20(baseRequest.toToken).universalBalanceOf(
             receiver
@@ -967,7 +982,7 @@ contract DexRouter is
         );
 
         emit OrderRecord(
-            fromToken,
+            _bytes32ToAddress(baseRequest.fromToken),
             baseRequest.toToken,
             tx.origin,
             baseRequest.fromTokenAmount,

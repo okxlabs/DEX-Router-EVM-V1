@@ -138,10 +138,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
             }            
             // calculate offset based on commission flag
             let offset := 0x00
-            if or(
-                eq(flag, FROM_TOKEN_COMMISSION_DUAL),
-                eq(flag, TO_TOKEN_COMMISSION_DUAL)
-            ) {
+            if eq(isDualreferrers, 1) {
                 offset := 0x60  // 96 bytes for dual commission
             }
             if or(
@@ -338,7 +335,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 }
             }
             // get balance, then scale amount1, amount2 according to balance
-            function _sendTokenWithinBalance(token, to1, amount1, to2, amount2)
+            function _sendTokenWithinBalance(token, to1, rate1, to2, rate2)
                 -> amount1Scaled, amount2Scaled
             {
                 let freePtr := mload(0x40)
@@ -364,9 +361,9 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                     )
                 }
                 let balanceAfter := mload(0x00)
-                let amountTotal := add(amount1, amount2)
+                let rateTotal := add(rate1, rate2) // amount = 0.0000001
                 amount1Scaled := _mulDiv(
-                    _mulDiv(amount1, WAD, amountTotal),
+                    _mulDiv(rate1, WAD, rateTotal),
                     balanceAfter,
                     WAD
                 ) // WARNING: Precision issues may also exist!!
@@ -446,10 +443,11 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 let hasNextRefer := gt(mload(add(commissionInfo, 0xa0)), 0)
                 status := _getStatus(token, isToB, hasNextRefer)
             }
+            
             let referrer1, referrer2, amount1, amount2
+            let rate1 := mload(add(commissionInfo, 0x40))
+            let rate2 := mload(add(commissionInfo, 0xa0))
             {
-                let rate1 := mload(add(commissionInfo, 0x40))
-                let rate2 := mload(add(commissionInfo, 0xa0))
                 // let totalRate := add(rate, rate2)
                 if gt(add(rate1, rate2), commissionRateLimit) {
                     _revertWithReason(
@@ -507,7 +505,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 let amount1Scaled, amount2Scaled := _sendTokenWithinBalance(
                     token,
                     referrer1,
-                    amount1,
+                    rate1,
                     0,
                     0
                 )
@@ -520,9 +518,9 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 let amount1Scaled, amount2Scaled := _sendTokenWithinBalance(
                     token,
                     referrer1,
-                    amount1,
+                    rate1,
                     referrer2,
-                    amount2
+                    rate2
                 )
                 _emitCommissionFromToken(token, amount1Scaled, referrer1)
                 _emitCommissionFromToken(token, amount2Scaled, referrer2)
@@ -830,8 +828,18 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
     function _validateCommissionInfo(
         CommissionInfo memory commissionInfo,
         address fromToken,
-        address toToken
+        address toToken,
+        uint256 mode
     ) internal pure override {
+        if ((
+            (mode & _MODE_NO_TRANSFER) != 0 
+         || (mode & _MODE_BY_INVEST) != 0
+         || (mode & _MODE_PERMIT2) != 0
+        )
+         && commissionInfo.isFromTokenCommission) {
+            revert("From token commission not supported");
+        }
+        
         require(
             (commissionInfo.isFromTokenCommission && commissionInfo.token == fromToken)
                 || (commissionInfo.isToTokenCommission && commissionInfo.token == toToken)
