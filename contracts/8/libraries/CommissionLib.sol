@@ -444,9 +444,9 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 status := _getStatus(token, isToB, hasNextRefer)
             }
             
-            let referrer1, referrer2, amount1, amount2
-            let rate1 := mload(add(commissionInfo, 0x40))
-            let rate2 := mload(add(commissionInfo, 0xa0))
+            let referrer1, referrer2, amount1, amount2, rate1, rate2
+            rate1 := mload(add(commissionInfo, 0x40))
+            rate2 := mload(add(commissionInfo, 0xa0))
             {
                 // let totalRate := add(rate, rate2)
                 if gt(add(rate1, rate2), commissionRateLimit) {
@@ -838,6 +838,12 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
         )
          && commissionInfo.isFromTokenCommission) {
             revert("From token commission not supported");
+        }
+        if(fromToken == toToken) {
+            revert("Invalid tokens");
+        }
+        if (commissionInfo.isFromTokenCommission == true && commissionInfo.isToTokenCommission == true) {
+            revert("Invalid commission direction");
         }
         
         require(
