@@ -43,7 +43,7 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 200
+            runs: 1
           },
         }
       }
@@ -616,7 +616,7 @@ module.exports = {
         network: "base",
         chainId: 8453,
         urls: {
-          apiURL: "https://api.basescan.org/api",
+          apiURL: "https://api.etherscan.io/v2/api?chainid=8453",
           browserURL: "https://basescan.org"
         }
       },
@@ -624,7 +624,7 @@ module.exports = {
         network: "linea",
         chainId: 59144,
         urls: {
-          apiURL: "https://api.lineascan.build/api",
+          apiURL: "https://api.etherscan.io/v2/api?chainid=59144",
           browserURL: "https://lineascan.build"
         }
       },
@@ -632,7 +632,7 @@ module.exports = {
         network: "mantle",
         chainId: 5000,
         urls: {
-          apiURL: "https://api.mantlescan.xyz/api",
+          apiURL: "https://api.etherscan.io/v2/api?chainid=5000",
           browserURL: "https://mantlescan.xyz"
         }
       },
@@ -664,7 +664,7 @@ module.exports = {
         network: "scroll",
         chainId: 534352,
         urls: {
-          apiURL: "https://api.scrollscan.com/api",
+          apiURL: "https://api.etherscan.io/v2/api?chainid=534352",
           browserURL: "https://scrollscan.com"
         }
       },
@@ -672,7 +672,7 @@ module.exports = {
         network: "blast",
         chainId: 81457,
         urls: {
-          apiURL: "https://api.blastscan.io/api",
+          apiURL: "https://api.etherscan.io/v2/api?chainid=81457",
           browserURL: "https://blastscan.com"
         }
       },
@@ -727,7 +727,7 @@ module.exports = {
       {
         network: "sonic",
         chainId: 146,
-        urls: { apiURL: "https://api.sonicscan.org/api", browserURL: "https://sonicscan.org", }
+        urls: { apiURL: "https://api.etherscan.io/v2/api?chainid=146", browserURL: "https://sonicscan.org", }
       }
     ]
   },
