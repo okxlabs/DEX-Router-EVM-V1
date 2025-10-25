@@ -842,7 +842,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
         if(fromToken == toToken) {
             revert("Invalid tokens");
         }
-        if (commissionInfo.isFromTokenCommission == true && commissionInfo.isToTokenCommission == true) {
+        if (commissionInfo.isFromTokenCommission && commissionInfo.isToTokenCommission) {
             revert("Invalid commission direction");
         }
         

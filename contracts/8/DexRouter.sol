@@ -175,7 +175,6 @@ contract DexRouter is
         // In order to deal with ETH/WETH transfer rules in a unified manner,
         // we do not need to judge according to fromToken.
         if (UniversalERC20.isETH(IERC20(fromToken))) {
-            require(msg.value >= _baseRequest.fromTokenAmount, "msg.value not correct");
             IWETH(_WETH).deposit{
                 value: _baseRequest.fromTokenAmount
             }();
@@ -524,10 +523,7 @@ contract DexRouter is
         receiver = receiver == address(0) ? msg.sender : receiver;
         (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
         
-        uint256 mode = _MODE_LEGACY;
-        if (batches.length > 0 && batches[0].length > 0) {
-            mode = batches[0][0].fromToken & _TRANSFER_MODE_MASK;
-        }
+        uint256 mode = batches[0][0].fromToken & _TRANSFER_MODE_MASK;
         
         _validateCommissionInfo(commissionInfo, _bytes32ToAddress(baseRequest.fromToken), baseRequest.toToken, mode);
 
