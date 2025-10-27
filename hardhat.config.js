@@ -494,7 +494,7 @@ module.exports = {
       }
     },
     iotex: {
-      url: 'https://babel-api.fastblocks.io',
+      url: 'https://babel-api.mainnet.iotex.one',
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
@@ -563,6 +563,16 @@ module.exports = {
           runs: 200
         },
       }
+    },
+    plasma: {
+      url: 'https://rpc.plasma.to',
+      accounts: [`${PRIVATE_KEY}`],
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+      }
     }
   },
   paths: {
@@ -613,11 +623,28 @@ module.exports = {
     },
     customChains: [
       {
+        network: "mainnet",
+        chainId: 1,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api?chainid=1",
+          browserURL: "https://etherscan.io"
+        }
+      },
+      {
         network: "base",
         chainId: 8453,
         urls: {
           apiURL: "https://api.etherscan.io/v2/api?chainid=8453",
           browserURL: "https://basescan.org"
+        }
+      },
+
+      {
+        network: "arbitrumOne",
+        chainId: 42161,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api?chainid=42161",
+          browserURL: "https://arbiscan.io"
         }
       },
       {
