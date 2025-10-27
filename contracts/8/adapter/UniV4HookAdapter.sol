@@ -8,7 +8,7 @@ import "../libraries/SafeERC20.sol";
 import "../interfaces/IWETH.sol";
 import "../interfaces/IPoolManager.sol";
 import {PoolKey} from "../types/PoolKey.sol";
-import {Currency} from "../types/Currency.sol";
+import {Currency, equals, lessThan} from "../types/Currency.sol";
 import {BalanceDelta} from "../types/BalanceDelta.sol";
 import {SafeCallback} from "../libraries/SafeCallback.sol";
 import "../libraries/TransientStateLibrary.sol";
@@ -127,11 +127,10 @@ contract UniV4HookAdapter is IAdapter, SafeCallback {
     function getPoolAndSwapDirection(
         PathKey memory params
     ) internal pure returns (PoolKey memory poolKey, bool zeroForOne) {
-        (Currency currency0, Currency currency1) = params.inputCurrency <
-            params.intermediateCurrency
+        (Currency currency0, Currency currency1) = lessThan(params.inputCurrency, params.intermediateCurrency)
             ? (params.inputCurrency, params.intermediateCurrency)
             : (params.intermediateCurrency, params.inputCurrency);
-        zeroForOne = params.inputCurrency == currency0;
+        zeroForOne = equals(params.inputCurrency, currency0);
         poolKey = PoolKey(
             currency0,
             currency1,
