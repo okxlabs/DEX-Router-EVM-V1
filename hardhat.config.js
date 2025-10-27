@@ -294,7 +294,7 @@ module.exports = {
       },
     },
     ftm: {
-      url: "https://fantom-json-rpc.stakely.io",
+      url: "https://1rpc.io/ftm",
       accounts: [`${PRIVATE_KEY}`],
       settings: {
         optimizer: {
