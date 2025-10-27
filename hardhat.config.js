@@ -44,7 +44,16 @@ module.exports = {
           optimizer: {
             enabled: true,
             runs: 1
-          },
+          }
+        }
+      },
+      {
+        version: '0.8.20',
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1
+          }
         }
       }
     ]
@@ -576,7 +585,9 @@ module.exports = {
     }
   },
   paths: {
-    sources: './contracts/8'
+    sources: './contracts/8',
+    cache: './cache',
+    artifacts: './artifacts'
   },
   abiExporter: {
     path: './abi',

@@ -2,13 +2,13 @@
 // solhint-disable
 pragma solidity ^0.8.17;
 
-import {IAdapter} from "@dex/interfaces/IAdapter.sol";
-import {IERC20} from "@dex/interfaces/IERC20.sol";
-import {SafeERC20} from "@dex/libraries/SafeERC20.sol";
-import {IUniswapV2Pair} from "@dex/interfaces/IUniswapV2Pair.sol";
-import {IDyorPumpRouterV3, IDyorPoolV3} from "@dex/interfaces/IDyor.sol";
-import {RestrictedLiquidityLib, RefundLib} from "@dex/libraries/Adapters.sol";
-import {IWETH} from "@dex/interfaces/IWETH.sol";
+import {IAdapter} from "../interfaces/IAdapter.sol";
+import {IERC20} from "../interfaces/IERC20.sol";
+import {SafeERC20} from "../libraries/SafeERC20.sol";
+import {IUniswapV2Pair} from "../interfaces/IUniswapV2Pair.sol";
+import {IDyorPumpRouterV3, IDyorPoolV3} from "../interfaces/IDyor.sol";
+import {RestrictedLiquidityLib, RefundLib} from "../libraries/Adapters.sol";
+import {IWETH} from "../interfaces/IWETH.sol";
 /**
  * @title DyorPumpRouterV3Adapter
  * @notice DyorPumpRouterV3 adapter for DyorPumpRouterV3 DEX protocols
