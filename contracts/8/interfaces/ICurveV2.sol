@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 interface ICurveV2 {
+    // solium-disable-next-line mixedcase
     function exchange(
         uint256 i,
         uint256 j,
@@ -10,6 +11,7 @@ interface ICurveV2 {
         uint256 minDy
     ) external;
 
+    // solium-disable-next-line mixedcase
     function exchange(
         uint256 i,
         uint256 j,
@@ -18,6 +20,7 @@ interface ICurveV2 {
         bool use_eth
     ) external payable;
 
+    // For two crypto pools
     function exchange(
         int128 i,
         int128 j,

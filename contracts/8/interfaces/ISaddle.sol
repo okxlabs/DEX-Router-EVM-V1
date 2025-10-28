@@ -1,8 +1,11 @@
+
+
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 interface ISwap {
+    // pool data view functions
     function getA() external view returns (uint256);
 
     function getAPrecise() external view returns (uint256);
@@ -32,6 +35,7 @@ interface ISwap {
             address
         );
 
+    // min return calculation functions
     function calculateSwap(
         uint8 tokenIndexFrom,
         uint8 tokenIndexTo,
@@ -52,6 +56,7 @@ interface ISwap {
         uint256 tokenAmount,
         uint8 tokenIndex
     ) external view returns (uint256 availableTokenAmount);
+
 
     function swap(
         uint8 tokenIndexFrom,
@@ -88,6 +93,7 @@ interface ISwap {
 }
 
 interface IMetaSwap {
+    // pool data view functions
     function getA() external view returns (uint256);
 
     function getTokenIndex(address tokenAddress) external view returns (uint8);
@@ -107,6 +113,7 @@ interface IMetaSwap {
             uint256 baseCacheLastUpdated
         );
 
+    // min return calculation functions
     function calculateSwap(
         uint8 tokenIndexFrom,
         uint8 tokenIndexTo,

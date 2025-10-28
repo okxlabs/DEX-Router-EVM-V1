@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity ^0.8.0;
 
 enum YieldMode {
     AUTOMATIC,
@@ -13,6 +13,7 @@ enum GasMode {
 }
 
 interface IBlast {
+    // configure
     function configureContract(
         address contractAddress,
         YieldMode _yield,
@@ -25,6 +26,7 @@ interface IBlast {
         address governor
     ) external;
 
+    // base configuration options
     function configureClaimableYield() external;
     function configureClaimableYieldOnBehalf(address contractAddress) external;
     function configureAutomaticYield() external;
@@ -41,6 +43,7 @@ interface IBlast {
         address contractAddress
     ) external;
 
+    // claim yield
     function claimYield(
         address contractAddress,
         address recipientOfYield,
@@ -51,6 +54,7 @@ interface IBlast {
         address recipientOfYield
     ) external returns (uint256);
 
+    // claim gas
     function claimAllGas(
         address contractAddress,
         address recipientOfGas
@@ -71,6 +75,7 @@ interface IBlast {
         uint256 gasSecondsToConsume
     ) external returns (uint256);
 
+    // read functions
     function readClaimableYield(
         address contractAddress
     ) external view returns (uint256);
