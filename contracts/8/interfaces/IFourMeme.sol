@@ -1,18 +1,19 @@
 /// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+
 pragma abicoder v2;
 
 interface ITokenManager2 {
 
     function buyTokenAMAP(
         address token,
-        address to, 
-        uint256 funds, 
+        address to,
+        uint256 funds,
         uint256 minAmount
     ) external payable;
 
     function sellToken(
-        address token, 
+        address token,
         uint256 amount
     ) external;
 

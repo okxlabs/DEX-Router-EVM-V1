@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "./IERC20.sol";
 
 interface IERC4626 is IERC20 {
-    
+
     /**
      * @dev Returns the address of the underlying token used for the Vault for accounting, depositing, and withdrawing.
      *

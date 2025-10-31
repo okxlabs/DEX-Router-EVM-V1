@@ -21,6 +21,6 @@ interface IAaveStaticAToken {
 
   function aToken() external view returns (IERC20);
 
-  // interface from 4626 Vault 
+  // interface from 4626 Vault
   function asset() external view returns (address assetTokenAddress);
 }

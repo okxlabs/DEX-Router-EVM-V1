@@ -57,5 +57,5 @@ interface IRamsesV2 {
         uint160 sqrtPriceLimitX96,
         bytes calldata data
     ) external returns (int256 amount0, int256 amount1);
-    
+
 }

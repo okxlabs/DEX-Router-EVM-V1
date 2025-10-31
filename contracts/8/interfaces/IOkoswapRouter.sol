@@ -12,12 +12,12 @@ interface IOkoswapRouter {
     /// @param to Recipient address of the output tokens
     /// @param deadline Unix timestamp after which the transaction will revert
     function swapExactETHForTokens(
-        uint256 amountOutMin, 
-        address[] calldata path, 
-        address to, 
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
         uint256 deadline
     ) external payable returns (uint256[] memory amounts);
-        
+
     /// @notice Swaps exact tokens for ETH along a specified path
     /// @dev Path must end with WETH, deducts 2% fee from output ETH
     /// @param amountIn Exact amount of input tokens to swap

@@ -1,5 +1,6 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.7.5;
+
 pragma abicoder v2;
 
 /// @title Creates and initializes V3 Pools

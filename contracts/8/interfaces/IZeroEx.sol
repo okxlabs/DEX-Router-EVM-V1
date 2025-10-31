@@ -1,25 +1,7 @@
-// SPDX-License-Identifier: Apache-2.0
-/*
-
-  Copyright 2021 ZeroEx Intl.
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-
-*/
-
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-pragma experimental ABIEncoderV2;
 
+pragma experimental ABIEncoderV2;
 
 /// @dev A standard OTC or OO limit order.
 struct LimitOrder {
@@ -75,7 +57,7 @@ struct OrderInfo {
 
 /// @dev Feature for interacting with OTC orders.
 interface IZeroEx {
- 
+
     /// @dev Fill a limit order. The taker and sender will be the caller.
     /// @param order The limit order. ETH protocol fees can be
     ///      attached to this call. Any unspent ETH will be refunded to
@@ -89,7 +71,6 @@ interface IZeroEx {
         Signature calldata signature,
         uint128 takerTokenFillAmount
     ) external payable returns (uint128 takerTokenFilledAmount, uint128 makerTokenFilledAmount);
-
 
     /// @dev Fill a limit order for exactly `takerTokenFillAmount` taker tokens.
     ///      The taker will be the caller. ETH protocol fees can be
@@ -105,7 +86,6 @@ interface IZeroEx {
         uint128 takerTokenFillAmount
     ) external payable returns (uint128 makerTokenFilledAmount);
 
-
     /// @dev Get the order info for a limit order.
     /// @param order The limit order.
     /// @return orderInfo Info about the order.
@@ -113,7 +93,6 @@ interface IZeroEx {
         LimitOrder calldata order
     ) external view returns (OrderInfo memory orderInfo);
 }
-
 
 interface IERC20TokenV06 {
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -157,5 +136,3 @@ interface IERC20TokenV06 {
     /// @dev Get the number of decimals this token has.
     function decimals() external view returns (uint8);
 }
-
-

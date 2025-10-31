@@ -1,5 +1,6 @@
 /// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+
 pragma abicoder v2;
 
 interface IfrxETHMinter {
@@ -12,7 +13,6 @@ interface IfrxETHMinter {
         but you might run into msg.sender vs tx.origin issues with the ERC4626 */
     function submitAndDeposit(address recipient) external payable returns (uint256 shares);
 }
-
 
 interface IsfrxETH {
 

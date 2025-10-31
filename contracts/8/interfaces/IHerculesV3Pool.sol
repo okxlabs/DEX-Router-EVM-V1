@@ -25,7 +25,6 @@ interface IHerculesV3Pool {
         bytes calldata data
     ) external returns (int256 amount0, int256 amount1);
 
-
     /**
     * @notice The first of the two tokens of the pool, sorted by address
     * @return The token contract address

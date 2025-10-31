@@ -1,5 +1,6 @@
 /// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+
 pragma abicoder v2;
 
 interface IFxMarket {
@@ -40,7 +41,6 @@ interface IFxMarket {
     address recipient,
     uint256 minXTokenMinted
   ) external returns (uint256 xTokenMinted, uint256 bonus);
-
 
   /// @notice Redeem base token with fToken and xToken.
   /// @param fTokenIn the amount of fToken to redeem, use `uint256(-1)` to redeem all fToken.

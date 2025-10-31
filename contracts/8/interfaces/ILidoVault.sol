@@ -10,7 +10,7 @@ interface ILidoVault {
 
     //return the amount of shares owned by the _account
     function sharesOf(address _account) external view returns (uint256);
-    
+
     //amountToShare
     function getSharesByPooledEth(uint256 _ethAmount) external view returns (uint256);
 

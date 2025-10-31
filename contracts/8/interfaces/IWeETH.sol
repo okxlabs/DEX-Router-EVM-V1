@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
-
 interface IWeETH {
     /// @notice The eETH token contract
     function eETH() external view returns (address);
@@ -20,7 +19,7 @@ interface IWeETH {
     /// @param _eETHAmount amount sent in
     /// @return The total number of shares for the specified amount
     function getWeETHByeETH(uint256 _eETHAmount) external view returns (uint256);
-    
+
     /// @notice Fetches the amount of eEth respective to the amount of weEth sent in
     /// @param _weETHAmount amount sent in
     /// @return The total amount for the number of shares sent in

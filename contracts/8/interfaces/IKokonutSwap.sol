@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.3;
 
 interface IKokonutSwapPool {
@@ -52,10 +51,6 @@ interface IKokonutSwapPool {
 
     function withdrawLostToken(address token, uint256 amount, address to) external;
 }
-
-
-
-
 
 interface IKokonutSwapFlashCallback {
     function onFlashLoan(

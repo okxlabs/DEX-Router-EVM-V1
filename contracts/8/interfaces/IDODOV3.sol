@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 interface IDODOV3 {
     // =============== Read ===============
     function getTokenMMPriceInfoForRead(address token)
-        external 
+        external
         view
         returns (
             uint256 askDownPrice,
@@ -68,7 +68,7 @@ interface IDODOV3 {
     /// @return payFromAmount fromToken's amount
     /// @return receiveToAmount toToken's amount = toAmount
     /// @return vusdAmount fromToken bid vusd
-    /// @return swapFee dodo takes the fee 
+    /// @return swapFee dodo takes the fee
     function queryBuyTokens(
         address fromToken,
         address toToken,

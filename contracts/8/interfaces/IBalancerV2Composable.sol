@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-pragma abicoder v2;
 
+pragma abicoder v2;
 
 struct Hop {
     bytes32 poolId;

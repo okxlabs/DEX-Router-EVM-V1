@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 interface ISmardexPair {
-    
+
     /**
      * @notice get the token0 address
      * @return address of the token0
@@ -30,7 +30,7 @@ interface ISmardexPair {
         bool _zeroForOne,
         int256 _amountSpecified,
         bytes calldata _data
-    ) external returns (int256 amount0_, int256 amount1_);    
+    ) external returns (int256 amount0_, int256 amount1_);
 }
 
 interface ISmardexSwapCallback {

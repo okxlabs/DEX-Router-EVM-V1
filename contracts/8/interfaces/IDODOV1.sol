@@ -1,5 +1,6 @@
 /// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+
 pragma abicoder v2;
 
 interface IDODOV1 {
@@ -72,11 +73,11 @@ interface IDODOV1 {
 
     function getOraclePrice() external view returns (uint256);
 
-    function getMidPrice() external view returns (uint256 midPrice); 
+    function getMidPrice() external view returns (uint256 midPrice);
 }
 
 interface IDODOSellHelper {
     function querySellQuoteToken(address dodo, uint256 amount) external view returns (uint256);
-    
+
     function querySellBaseToken(address dodo, uint256 amount) external view returns (uint256);
 }

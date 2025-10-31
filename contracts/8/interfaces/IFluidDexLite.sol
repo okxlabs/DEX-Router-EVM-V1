@@ -20,8 +20,8 @@ interface IFluidDexLite {
     /// @param amountLimit_ The minimum/maximum amount for the unspecified side.
     /// @param to_ The recipient address.
     function swapSingle(
-        DexKey calldata dexKey_, 
-        bool swap0To1_, 
+        DexKey calldata dexKey_,
+        bool swap0To1_,
         int256 amountSpecified_,
         uint256 amountLimit_,
         address to_,

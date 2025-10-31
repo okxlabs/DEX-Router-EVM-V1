@@ -17,4 +17,3 @@ interface IAxialPool {
     ) external returns (uint256);
 
 }
-

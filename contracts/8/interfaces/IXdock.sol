@@ -1,11 +1,12 @@
 /// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+
 pragma abicoder v2;
 
 interface IXdock {
 
     function buyExactIn(
-        address token, 
+        address token,
         uint256 minTokenAmountOut
     ) external payable;
 
