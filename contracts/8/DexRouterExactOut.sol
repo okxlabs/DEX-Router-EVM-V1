@@ -12,7 +12,7 @@ import "./interfaces/IWETH.sol";
 import "./interfaces/IAdapter.sol";
 import "./interfaces/IApproveProxy.sol";
 import "./interfaces/IWNativeRelayer.sol";
-import "./interfaces/IXBridge.sol";
+
 
 import "./libraries/Permitable.sol";
 import "./libraries/PMMLib.sol";
