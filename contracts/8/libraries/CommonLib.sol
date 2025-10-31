@@ -75,19 +75,32 @@ abstract contract CommonLib is CommonUtils {
     /// @notice Transfers tokens internally within the contract.
     /// @param payer The address of the payer.
     /// @param to The address of the receiver.
-    /// @param token The address of the token to be transferred.
+    /// @param fromTokenWithMode FromToken with mode encoded in high bits
     /// @param amount The amount of tokens to be transferred.
     /// @dev Handles the transfer of ERC20 tokens or native tokens within the contract.
     function _transferInternal(
         address payer,
         address to,
-        address token,
+        uint256 fromTokenWithMode,
         uint256 amount
     ) internal {
-        if (payer == address(this)) {
+        address token = address(uint160(fromTokenWithMode & _ADDRESS_MASK));
+        uint256 mode = fromTokenWithMode & _TRANSFER_MODE_MASK;
+        
+        if (mode == _MODE_NO_TRANSFER) {
+            return;
+        } else if (mode == _MODE_BY_INVEST) {
             SafeERC20.safeTransfer(IERC20(token), to, amount);
+            return;
+        } else if (mode == _MODE_PERMIT2) {
+            // Permit2 mode - reserved for future implementation
+            return;
         } else {
-            IApproveProxy(_APPROVE_PROXY).claimTokens(token, payer, to, amount);
+            if (payer == address(this)) {
+                SafeERC20.safeTransfer(IERC20(token), to, amount);
+            } else {
+                IApproveProxy(_APPROVE_PROXY).claimTokens(token, payer, to, amount);
+            }
         }
     }
 

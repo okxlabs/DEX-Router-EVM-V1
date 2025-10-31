@@ -18,6 +18,7 @@ abstract contract DagRouter is CommonLib {
         address refundTo;
     }
 
+    /// @notice The fromTokenAmount will not must be greater than 0, cause for some protocols the fromTokenAmount needs to be 0 to skip token transfer like fourmeme. 
     function _dagSwapInternal(
         BaseRequest calldata baseRequest,
         RouterPath[] calldata paths,
@@ -25,27 +26,24 @@ abstract contract DagRouter is CommonLib {
         address refundTo,
         address receiver
     ) internal {
-        // 1. transfer from token in
+        // 1. check and process ETH
         BaseRequest memory _baseRequest = baseRequest;
-        require(
-            _baseRequest.fromTokenAmount > 0,
-            "fromTokenAmount must be > 0"
-        );
+
         address fromToken = _bytes32ToAddress(_baseRequest.fromToken);
 
-        require(paths.length > 0, "paths must be > 0");
         address firstNodeToken = _bytes32ToAddress(paths[0].fromToken);
 
         // In order to deal with ETH/WETH transfer rules in a unified manner,
         // we do not need to judge according to fromToken.
         if (IERC20(fromToken).isETH()) {
             require(firstNodeToken == _WETH, "firstToken mismatch");
-            IWETH(address(uint160(_WETH))).deposit{
+            IWETH(_WETH).deposit{
                 value: _baseRequest.fromTokenAmount
             }();
             payer = address(this);
         } else {
             require(firstNodeToken == fromToken, "firstToken mismatch");
+            require(msg.value == 0, "value must be 0");
         }
 
         // 2. execute dag swap
@@ -150,21 +148,19 @@ abstract contract DagRouter is CommonLib {
             {
                 uint256 _fromTokenAmount;
                 if (i == path.mixAdapters.length - 1) {
-                    if (payer == address(this)) {
-                        _fromTokenAmount = IERC20(fromToken).balanceOf(address(this));
-                    } else {
-                        _fromTokenAmount = nodeBalance - accAmount;
-                    }
+                    _fromTokenAmount = nodeBalance - accAmount;
                 } else {
                     _fromTokenAmount = (nodeBalance * weight) / 10_000;
                     accAmount += _fromTokenAmount;
                 }
-                _transferInternal(
-                    payer,
-                    path.assetTo[i],
-                    fromToken,
-                    _fromTokenAmount
-                );
+                if (_fromTokenAmount > 0) {
+                    _transferInternal(
+                        payer,
+                        path.assetTo[i],
+                        path.fromToken,
+                        _fromTokenAmount
+                    );
+                }
             }
 
             // 3. execute single swap

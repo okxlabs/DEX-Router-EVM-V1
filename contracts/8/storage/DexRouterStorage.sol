@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
 contract DexRouterStorage {
     // In the test scenario, we take it as a settable state and adjust it to a constant after it stabilizes

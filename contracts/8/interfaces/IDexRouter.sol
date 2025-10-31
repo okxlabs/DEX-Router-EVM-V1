@@ -2,12 +2,6 @@
 pragma solidity >=0.8.17;
 
 interface IDexRouter {
-    struct ExecutorInfo {
-        address assetTo;
-        uint256 toTokenExpectedAmount;
-        uint256 maxConsumeAmount;
-        bytes executorData;
-    }
     struct BaseRequest {
         uint256 fromToken;
         address toToken;
