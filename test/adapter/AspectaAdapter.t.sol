@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
 import {Test, console2} from "forge-std/test.sol";
 import "@dex/adapter/AspectaAdapter.sol";
