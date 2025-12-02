@@ -401,13 +401,6 @@ This document records the historical deployment addresses of DexRouter implement
 | 2025-04-29 (Receiver) | `TFMKD7FZKy6NeWxS3FA9fXnB8vd73y6irp` |
 | 2025-04-16 (Before Stop) | `TXZQ9Mzd1jf21rLc9o3JiyUAQorWDzMSNB` |
 
-### Solana (SOL)
-
-| Version/Date | Address |
-|--------------|---------|
-| 2025-11-27 (Legacy) | `6m2CDdhRgxpH4WjvdzxAYbGxwdGUz5MziiL5jek2kBma` |
-| 2025-11-27 (DAG) | `proVF4pMXVaYqmy4NjniPh4pqKNfMmsihgd4wdkCX3u` |
-
 ---
 
 ## Version Descriptions
