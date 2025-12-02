@@ -1,12 +1,14 @@
-pragma solidity 0.8.17;
+/// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
 pragma abicoder v2;
 
 struct OrderRFQ {
-    uint256 info;
+    uint256 info; // lowest 64 bits is the order id, next 64 bits is the expiration timestamp
     address makerAsset;
     address takerAsset;
     address maker;
-    address allowedSender;
+    address allowedSender; // equals to Zero address on public orders
     uint256 makingAmount;
     uint256 takingAmount;
     address settler;

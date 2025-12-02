@@ -1,4 +1,6 @@
-pragma solidity 0.8.17;
+/// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
 pragma abicoder v2;
 
 interface IFraxswap {
@@ -9,5 +11,5 @@ interface IFraxswap {
     function getAmountOut(uint amountIn, address tokenIn) external view returns (uint);
     function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external;
     function getTwammReserves() external view returns (uint112 _reserve0, uint112 _reserve1, uint32 _blockTimestampLast, uint112 _twammReserve0, uint112 _twammReserve1, uint256 _fee) ;
-    function executeVirtualOrders(uint256 blockTimestamp) external ; 
+    function executeVirtualOrders(uint256 blockTimestamp) external ;
 }

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity ^0.8.0;
+
 pragma abicoder v2;
 
 interface INomiswapStable {
@@ -12,7 +13,7 @@ interface INomiswapStable {
     ) external returns (uint256[] memory amounts);
 
     function getAmountOut(
-        address tokenIn, 
+        address tokenIn,
         uint256 amountIn
     ) external view returns (uint256 finalAmountOut);
 

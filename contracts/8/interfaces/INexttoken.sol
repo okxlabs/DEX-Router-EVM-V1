@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity ^0.8.0;
+
 pragma abicoder v2;
 
 interface INexttoken {
 
     function getSwapTokenIndex(
-        bytes32 key, 
+        bytes32 key,
         address tokenAddress
     ) external returns (uint8);
 
@@ -19,7 +20,7 @@ interface INexttoken {
     ) external returns (uint256);
 
     function getSwapTokenBalance(
-        bytes32 key, 
+        bytes32 key,
         uint8 index
     ) external view returns (uint256);
 
@@ -28,6 +29,10 @@ interface INexttoken {
     function getSwapA(bytes32 key) external view returns (uint256);
 
     function getSwapLPToken(bytes32 key) external view returns (address);
+
+    //function getSwapStorage(bytes32 key) external view returns (SwapUtils.Swap memory);
+
+    //function getSwapToken(bytes32 key, uint8 index) external view returns (IERC20);
 
     function getSwapVirtualPrice(bytes32 key) external view returns (uint256);
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity ^0.8.0;
 
 struct SwapData {
     SwapType swapType;
@@ -12,28 +12,33 @@ enum SwapType {
     NONE,
     KYBERSWAP,
     ONE_INCH,
+    // ETH_WETH not used in Aggregator
     ETH_WETH
 }
 
 struct TokenInput {
+    // TOKEN DATA
     address tokenIn;
     uint256 netTokenIn;
     address tokenMintSy;
+    // AGGREGATOR DATA
     address pendleSwap;
     SwapData swapData;
 }
 
 struct TokenOutput {
+    // TOKEN DATA
     address tokenOut;
     uint256 minTokenOut;
     address tokenRedeemSy;
+    // AGGREGATOR DATA
     address pendleSwap;
     SwapData swapData;
 }
 
 struct LimitOrderData {
     address limitRouter;
-    uint256 epsSkipMarket;
+    uint256 epsSkipMarket; // only used for swap operations, will be ignored otherwise
     FillOrderParams[] normalFills;
     FillOrderParams[] flashFills;
     bytes optData;
@@ -76,6 +81,7 @@ interface IPLimitOrderType {
         YT_FOR_SY
     }
 
+    // Fixed-size order part with core information
     struct StaticOrder {
         uint256 salt;
         uint256 expiry;

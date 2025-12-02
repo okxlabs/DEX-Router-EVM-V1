@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity ^0.8.0;
 
 import "./IERC20.sol";
 
@@ -21,5 +21,6 @@ interface IAaveStaticAToken {
 
   function aToken() external view returns (IERC20);
 
+  // interface from 4626 Vault
   function asset() external view returns (address assetTokenAddress);
 }

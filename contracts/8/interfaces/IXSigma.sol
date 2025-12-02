@@ -1,22 +1,26 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity ^0.8.0;
+
 pragma abicoder v2;
 
 uint256 constant POOL_TOKEN_AMOUNT= 3;
 
 interface IXSigma {
+    // solium-disable-next-line mixedcase
     function get_dy_underlying(
         int128 i,
         int128 j,
         uint256 dx
     ) external view returns (uint256 dy);
 
+    // solium-disable-next-line mixedcase
     function get_dy(
         int128 i,
         int128 j,
         uint256 dx
     ) external view returns (uint256 dy);
 
+    // solium-disable-next-line mixedcase
     function exchange(
         int128 i,
         int128 j,
@@ -35,5 +39,6 @@ interface IXSigma {
         uint256 min_mint_amount
     ) external;
 
+    // view coins address
     function coins(uint256 arg0) external view returns (address out);
 }

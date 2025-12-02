@@ -1,4 +1,6 @@
-pragma solidity 0.8.17;
+/// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
 pragma abicoder v2;
 
 interface IMstable {
@@ -27,6 +29,7 @@ interface IMstable {
         uint256[] calldata _inputQuantities
     ) external view virtual returns (uint256 mintOutput);
 
+    // Swaps
     function swap(
         address _input,
         address _output,
@@ -41,6 +44,7 @@ interface IMstable {
         virtual
         returns (uint256 swapOutput);
 
+    // Redemption
     function redeem(
         address _output,
         uint256 _mAssetQuantity,

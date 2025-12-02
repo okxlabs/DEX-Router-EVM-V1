@@ -1,4 +1,6 @@
-pragma solidity 0.8.17;
+/// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
 pragma abicoder v2;
 
 interface IFushionX {
@@ -27,5 +29,7 @@ interface IFushionX {
 
     function token1() external view returns (address);
 
+    /// @notice The pool's fee in hundredths of a bip, i.e. 1e-6
+    /// @return The fee
     function fee() external view returns (uint24);
 }

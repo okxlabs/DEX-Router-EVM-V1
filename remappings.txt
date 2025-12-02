@@ -4,3 +4,4 @@
 ds-test/=lib/forge-std/lib/ds-test/src/
 forge-std/=lib/forge-std/src/
 @okxlabs/=contracts/8
+@dex/=contracts/8

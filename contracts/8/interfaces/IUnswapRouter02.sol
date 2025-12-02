@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity >=0.5.0;
 
 interface IUnswapRouter02 {
     function factory() external pure returns (address);
@@ -189,4 +189,18 @@ interface IUnswapRouter02 {
         uint256 deadline
     ) external;
 
+    // function swapExactETHForTokensSupportingFeeOnTransferTokens(
+    //   uint256 amountOutMin,
+    //   address[] calldata path,
+    //   address to,
+    //   uint256 deadline
+    // ) external payable;
+
+    // function swapExactTokensForETHSupportingFeeOnTransferTokens(
+    //   uint256 amountIn,
+    //   uint256 amountOutMin,
+    //   address[] calldata path,
+    //   address to,
+    //   uint256 deadline
+    // ) external;
 }

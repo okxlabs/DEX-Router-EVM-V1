@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity ^0.8.0;
+
 pragma abicoder v2;
 
 interface ISpartanV2Router {
@@ -9,7 +10,7 @@ interface ISpartanV2Router {
         address member,
         uint minAmount
     ) external ;
-    
+
     function sellTo(
         uint amount,
         address token,
@@ -19,4 +20,3 @@ interface ISpartanV2Router {
     ) external payable returns (uint);
 
 }
-

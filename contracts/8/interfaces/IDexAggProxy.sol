@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity ^0.8.0;
+
 pragma abicoder v2;
 
 interface IDexAggProxy {
@@ -51,7 +52,7 @@ interface IDexAggProxy {
         uint256 quoteInAmount,
         uint256 baseMinAmount,
         uint256 quoteMinAmount,
-        uint8 flag,
+        uint8 flag, //  0 - ERC20, 1 - baseInETH, 2 - quoteInETH
         uint256 deadLine
     )
         external
