@@ -17,7 +17,7 @@ contract UnxswapRouter is CommonUtils {
         0xa9059cbbd0e30db0000000000000000000000000000000000000000000000000;
     uint256 private constant _SWAP_GETRESERVES_SELECTOR =
         0x022c0d9f0902f1ac000000000000000000000000000000000000000000000000;
-    uint256 private constant _WITHDRAW_TRNASFER_SELECTOR =
+    uint256 private constant _WITHDRAW_TRANSFER_SELECTOR =
         0x2e1a7d4da9059cbb000000000000000000000000000000000000000000000000;
     uint256 private constant _BALANCEOF_TOKEN0_SELECTOR =
         0x70a082310dfe1681000000000000000000000000000000000000000000000000;
@@ -453,7 +453,7 @@ contract UnxswapRouter is CommonUtils {
                     address()
                 )
 
-                mstore(emptyPtr, _WITHDRAW_TRNASFER_SELECTOR)
+                mstore(emptyPtr, _WITHDRAW_TRANSFER_SELECTOR)
                 mstore(add(emptyPtr, 0x08), _WNATIVE_RELAY)
                 mstore(add(emptyPtr, 0x28), returnAmount)
                 if iszero(

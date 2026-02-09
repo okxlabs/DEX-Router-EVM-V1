@@ -845,6 +845,14 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
         if (commissionInfo.isFromTokenCommission && commissionInfo.isToTokenCommission) {
             revert("Invalid commission direction");
         }
+
+        // Validate commission recipient addresses to prevent accidental burns.
+        if (commissionInfo.isFromTokenCommission || commissionInfo.isToTokenCommission) {
+            require(commissionInfo.refererAddress != address(0), "Invalid referrer");
+            if (commissionInfo.commissionRate2 > 0) {
+                require(commissionInfo.refererAddress2 != address(0), "Invalid referrer2");
+            }
+        }
         
         require(
             (commissionInfo.isFromTokenCommission && commissionInfo.token == fromToken)
@@ -852,5 +860,15 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 || (!commissionInfo.isFromTokenCommission && !commissionInfo.isToTokenCommission),
             "Invalid commission info"
         );
+    }
+
+    function _validateTrimInfo(TrimInfo memory trimInfo) internal pure {
+        if (!trimInfo.hasTrim) return;
+
+        // Validate trim/charge recipient addresses to prevent accidental burns.
+        require(trimInfo.trimAddress != address(0), "Invalid trimAddress");
+        if (trimInfo.chargeRate > 0) {
+            require(trimInfo.chargeAddress != address(0), "Invalid chargeAddress");
+        }
     }
 }
