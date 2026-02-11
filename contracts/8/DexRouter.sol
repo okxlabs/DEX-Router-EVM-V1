@@ -52,17 +52,16 @@ contract DexRouter is
     /// @param to The address of the receiver.
     /// @param batchAmount The amount to be transferred in each batch.
     /// @param path The routing path for the swap.
-    /// @param noTransfer A flag to indicate whether the token transfer should be skipped.
     /// @dev It includes checks for the total weight of the paths and executes the swapping through the adapters.
     function _exeForks(
         address payer,
         address refundTo,
         address to,
         uint256 batchAmount,
-        RouterPath memory path,
-        bool noTransfer
+        RouterPath memory path
     ) private {
         uint256 totalWeight;
+        uint256 accAmount;
         for (uint256 i = 0; i < path.mixAdapters.length; i++) {
             bytes32 rawData = bytes32(path.rawData[i]);
             address poolAddress;
@@ -79,10 +78,14 @@ contract DexRouter is
                     require(totalWeight == 10_000, "totalWeight must be 10000");
                 }
 
-                if (!noTransfer) {
-                    uint256 _fromTokenAmount = weight == 10_000
-                        ? batchAmount
-                        : (batchAmount * weight) / 10_000;
+                uint256 _fromTokenAmount;
+                if (i == path.mixAdapters.length - 1) {
+                    _fromTokenAmount = batchAmount - accAmount;
+                } else {
+                    _fromTokenAmount = (batchAmount * weight) / 10_000;
+                    accAmount += _fromTokenAmount;
+                }
+                if (_fromTokenAmount > 0) {
                     _transferInternal(
                         payer,
                         path.assetTo[i],
@@ -120,8 +123,6 @@ contract DexRouter is
         RouterPath[] memory hops
     ) private {
         address fromToken = _bytes32ToAddress(hops[0].fromToken);
-        bool toNext;
-        bool noTransfer;
 
         // execute hop
         uint256 hopLength = hops.length;
@@ -135,16 +136,10 @@ contract DexRouter is
             address to = address(this);
             if (i == hopLength - 1 && !isToNative) {
                 to = receiver;
-            } else if (i < hopLength - 1 && hops[i + 1].assetTo.length == 1) {
-                to = hops[i + 1].assetTo[0];
-                toNext = true;
-            } else {
-                toNext = false;
             }
 
             // 3.2 execute forks
-            _exeForks(payer, refundTo, to, batchAmount, hops[i], noTransfer);
-            noTransfer = toNext;
+            _exeForks(payer, refundTo, to, batchAmount, hops[i]);
 
             unchecked {
                 ++i;
@@ -196,7 +191,7 @@ contract DexRouter is
             }
             require(
                 totalBatchAmount <= _baseRequest.fromTokenAmount,
-                "Route: number of batches should be <= fromTokenAmount"
+                "Route: total batch amount should be <= fromTokenAmount"
             );
         }
 
@@ -431,6 +426,10 @@ contract DexRouter is
             "Min return not reached"
         );
 
+        if (srcToken == _ETH) {
+            _refundETH(msg.sender); // In case of  msg.value > fromTokenAmount, the unused ETH will be refunded to refundTo
+        }
+
         emit OrderRecord(
             srcToken,
             toToken,
@@ -574,6 +573,10 @@ contract DexRouter is
             "Min return not reached"
         );
 
+        if (_bytes32ToAddress(baseRequest.fromToken) == _ETH) {
+            _refundETH(refundTo); // In case of  msg.value > fromTokenAmount, the unused ETH will be refunded to refundTo
+        }
+
         emit OrderRecord(
             _bytes32ToAddress(baseRequest.fromToken),
             baseRequest.toToken,
@@ -648,6 +651,10 @@ contract DexRouter is
             returnAmount >= minReturn,
             "Min return not reached"
         );
+
+        if (srcToken == _ETH) {
+            _refundETH(msg.sender); // In case of  msg.value > fromTokenAmount, the unused ETH will be refunded to refundTo
+        }
 
         emit OrderRecord(
             srcToken,
@@ -801,14 +808,12 @@ contract DexRouter is
 
         (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
 
-        // swapWrap: disallow fromToken commission + positive slippage trim to reduce external-call reentrancy surface.
-        require(!(commissionInfo.isFromTokenCommission && trimInfo.hasTrim), "Invalid commission/trim");
+        require(!trimInfo.hasTrim, "trim is not supported in swapWrap");
 
         address srcToken = reversed ? _WETH : _ETH;
         address toToken = reversed ? _ETH : _WETH;
 
         _validateCommissionInfo(commissionInfo, srcToken, toToken, _MODE_LEGACY);
-        _validateTrimInfo(trimInfo);
 
         (
             address middleReceiver,
@@ -832,7 +837,8 @@ contract DexRouter is
             IWNativeRelayer(_WNATIVE_RELAY).withdraw(amount);
             if (middleReceiver != address(this)) {
                 (bool success, ) = payable(middleReceiver).call{
-                    value: address(this).balance
+                    value: address(this).balance,
+                    gas: NATIVE_TOKEN_TRANSFER_GAS_LIMIT
                 }("");
                 require(success, "transfer native token failed");
             }
@@ -853,6 +859,10 @@ contract DexRouter is
             toToken,
             trimInfo
         );
+
+        if (srcToken == _ETH) {
+            _refundETH(msg.sender); // In case of  msg.value > fromTokenAmount, the unused ETH will be refunded to refundTo
+        }
 
         emit OrderRecord(
             srcToken,
@@ -985,6 +995,10 @@ contract DexRouter is
             returnAmount >= baseRequest.minReturnAmount,
             "Min return not reached"
         );
+
+        if (_bytes32ToAddress(baseRequest.fromToken) == _ETH) {
+            _refundETH(msg.sender); // In case of  msg.value > fromTokenAmount, the unused ETH will be refunded to refundTo
+        }
 
         emit OrderRecord(
             _bytes32ToAddress(baseRequest.fromToken),

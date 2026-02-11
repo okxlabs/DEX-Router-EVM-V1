@@ -94,7 +94,7 @@ abstract contract CommonLib is CommonUtils {
             return;
         } else if (mode == _MODE_PERMIT2) {
             // Permit2 mode - reserved for future implementation
-            return;
+            revert("Permit2 mode is not supported");
         } else {
             if (payer == address(this)) {
                 SafeERC20.safeTransfer(IERC20(token), to, amount);
@@ -123,7 +123,7 @@ abstract contract CommonLib is CommonUtils {
             if (to != address(this)) {
                 uint256 ethBal = address(this).balance;
                 if (ethBal > 0) {
-                    (bool success, ) = payable(to).call{value: ethBal}("");
+                    (bool success, ) = payable(to).call{value: ethBal, gas: NATIVE_TOKEN_TRANSFER_GAS_LIMIT}("");
                     require(success, "transfer native token failed");
                 }
             }
@@ -147,6 +147,17 @@ abstract contract CommonLib is CommonUtils {
     ) internal pure returns (address result) {
         assembly {
             result := and(param, _ADDRESS_MASK)
+        }
+    }
+
+    /// @notice Refunds the ETH to the refundTo address.
+    /// @param refundTo The address of the receiver.
+    /// @dev Handles the refund of ETH to the refundTo address.
+    function _refundETH(address refundTo) internal {
+        uint256 ethBal = address(this).balance;
+        if (ethBal > 0) {
+            (bool success, ) = payable(refundTo).call{value: ethBal, gas: NATIVE_TOKEN_TRANSFER_GAS_LIMIT}("");
+            require(success, "refund ETH failed");
         }
     }
 }

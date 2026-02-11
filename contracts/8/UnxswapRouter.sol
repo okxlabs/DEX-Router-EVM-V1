@@ -473,7 +473,7 @@ contract UnxswapRouter is CommonUtils {
                         0x57
                     ) // "withdraw ETH failed"
                 }
-                if iszero(call(gas(), receiver, returnAmount, 0, 0, 0, 0)) {
+                if iszero(call(NATIVE_TOKEN_TRANSFER_GAS_LIMIT, receiver, returnAmount, 0, 0, 0, 0)) {
                     revertWithReason(
                         0x000000137472616e7366657220455448206661696c6564000000000000000000,
                         0x57
