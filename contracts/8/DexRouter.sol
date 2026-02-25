@@ -272,7 +272,7 @@ contract DexRouter is
         uint256 minReturn,
         // solhint-disable-next-line no-unused-vars
         bytes32[] calldata pools
-    ) external payable nonReentrant returns (uint256 returnAmount) {
+    ) external payable returns (uint256 returnAmount) {
         return unxswapTo(
             srcToken,
             amount,
@@ -296,7 +296,7 @@ contract DexRouter is
         RouterPath[][] memory batches,
         PMMLib.PMMSwapRequest[] memory extraData,
         address to
-    ) external payable nonReentrant returns (uint256 returnAmount) {
+    ) external payable returns (uint256 returnAmount) {
         return
             smartSwapByInvestWithRefund(
                 baseRequest,
@@ -922,7 +922,7 @@ contract DexRouter is
         uint256 orderId,
         BaseRequest calldata baseRequest,
         RouterPath[] calldata paths
-    ) external payable nonReentrant returns (uint256 returnAmount) {
+    ) external payable returns (uint256 returnAmount) {
         return dagSwapTo(orderId, msg.sender, baseRequest, paths);
     }
 
