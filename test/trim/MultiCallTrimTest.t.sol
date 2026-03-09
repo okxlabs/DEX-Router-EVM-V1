@@ -2,8 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "./TrimTestBase.t.sol";
+import "@okxlabs/libraries/EthReceiver.sol";
 
-contract MultiCall {
+contract MultiCall is EthReceiver {
     function multiCall(address[] calldata targets, uint256[] calldata values, bytes[] calldata datas) external payable {
         for (uint256 i = 0; i < targets.length; i++) {
             (bool success_, ) = targets[i].call{value: values[i]}(datas[i]);

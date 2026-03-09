@@ -5,9 +5,10 @@ import "@okxlabs/DexRouter.sol";
 import "@okxlabs/TokenApprove.sol";
 import "@okxlabs/TokenApproveProxy.sol";
 import "@okxlabs/libraries/CommonUtils.sol";
+import "@okxlabs/libraries/EthReceiver.sol";
 import {Test, console2} from "forge-std/test.sol";
 
-contract DagByInvestTest is Test ,CommonUtils {
+contract DagByInvestTest is Test ,CommonUtils, EthReceiver {
     DexRouter dexRouter;
     TokenApproveProxy tokenApproveProxy = TokenApproveProxy(0x70cBb871E8f30Fc8Ce23609E9E0Ea87B6b222F58);
     TokenApprove tokenApprove = TokenApprove(0x40aA958dd87FC8305b97f2BA922CDdCa374bcD7f);

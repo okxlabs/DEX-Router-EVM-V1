@@ -299,7 +299,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 revert(0, len)
             }
             function _sendETH(to, amount) {
-                let success := call(gas(), to, amount, 0, 0, 0, 0)
+                let success := call(NATIVE_TOKEN_TRANSFER_GAS_LIMIT, to, amount, 0, 0, 0, 0)
                 if eq(success, 0) {
                     _revertWithReason(
                         0x0000001c20636f6d6d697373696f6e2077697468206574686572206572726f72, //commission with ether error
@@ -621,7 +621,7 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 revert(0, len)
             }
             function _sendETH(to, amount) {
-                let success := call(gas(), to, amount, 0, 0, 0, 0)
+                let success := call(NATIVE_TOKEN_TRANSFER_GAS_LIMIT, to, amount, 0, 0, 0, 0)
                 if eq(success, 0) {
                     _revertWithReason(
                         0x0000001173656e64206574686572206661696c65640000000000000000000000,
@@ -845,6 +845,14 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
         if (commissionInfo.isFromTokenCommission && commissionInfo.isToTokenCommission) {
             revert("Invalid commission direction");
         }
+
+        // Validate commission recipient addresses to prevent accidental burns.
+        if (commissionInfo.isFromTokenCommission || commissionInfo.isToTokenCommission) {
+            require(commissionInfo.refererAddress != address(0), "Invalid referrer");
+            if (commissionInfo.commissionRate2 > 0) {
+                require(commissionInfo.refererAddress2 != address(0), "Invalid referrer2");
+            }
+        }
         
         require(
             (commissionInfo.isFromTokenCommission && commissionInfo.token == fromToken)
@@ -852,5 +860,17 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
                 || (!commissionInfo.isFromTokenCommission && !commissionInfo.isToTokenCommission),
             "Invalid commission info"
         );
+    }
+
+    function _validateTrimInfo(TrimInfo memory trimInfo) internal pure {
+        if (!trimInfo.hasTrim) return;
+
+        // Validate trim/charge recipient addresses to prevent accidental burns.
+        if (trimInfo.chargeRate < TRIM_DENOMINATOR) { // Not all trim is charged, so trimAddress should not be zero
+            require(trimInfo.trimAddress != address(0), "Invalid trimAddress");
+        }
+        if (trimInfo.chargeRate > 0) {
+            require(trimInfo.chargeAddress != address(0), "Invalid chargeAddress");
+        }
     }
 }
