@@ -8,7 +8,6 @@ import "./interfaces/IWNativeRelayer.sol";
 
 import "./libraries/Address.sol";
 import "./libraries/CommonUtils.sol";
-import "./libraries/RouterErrors.sol";
 import "./libraries/SafeCast.sol";
 
 contract UnxswapV3Router is IUniswapV3SwapCallback, CommonUtils {
@@ -181,7 +180,7 @@ contract UnxswapV3Router is IUniswapV3SwapCallback, CommonUtils {
                     ) // withdraw weth failed
                 }
                 // msg.value transfer
-                success := call(gas(), _receiver, _amount, 0, 0, 0, 0)
+                success := call(NATIVE_TOKEN_TRANSFER_GAS_LIMIT, _receiver, _amount, 0, 0, 0, 0)
                 if iszero(success) {
                     _revertWithReason(
                         0x0000001173656e64206574686572206661696c65640000000000000000000000,
@@ -222,46 +221,7 @@ contract UnxswapV3Router is IUniswapV3SwapCallback, CommonUtils {
                 returndatacopy(0, 0, 32)
                 token1 := mload(0)
             }
-            function _emitEvent(
-                _firstPoolStart,
-                _lastPoolStart,
-                _returnAmount
-            ) {
-                let srcToken := _ETH
-                let toToken := _ETH
-                if eq(callvalue(), 0) {
-                    let firstPool := calldataload(_firstPoolStart)
-                    switch eq(0, and(firstPool, _ONE_FOR_ZERO_MASK))
-                    case true {
-                        srcToken := _token0(firstPool)
-                    }
-                    default {
-                        srcToken := _token1(firstPool)
-                    }
-                }
-                if eq(and(calldataload(_lastPoolStart), _WETH_UNWRAP_MASK), 0) {
-                    let lastPool := calldataload(_lastPoolStart)
-                    switch eq(0, and(lastPool, _ONE_FOR_ZERO_MASK))
-                    case true {
-                        toToken := _token1(lastPool)
-                    }
-                    default {
-                        toToken := _token0(lastPool)
-                    }
-                }
-                let freePtr := mload(0x40)
-                mstore(0, srcToken)
-                mstore(32, toToken)
-                mstore(64, origin())
-                // mstore(96, _initAmount) //avoid stack too deep, since i mstore the initAmount to 96, so no need to re-mstore it
-                mstore(128, _returnAmount)
-                log1(
-                    0,
-                    160,
-                    0x1bb43f2da90e35f7b0cf38521ca95a49e68eb42fac49924930a5bd73cdf7576c
-                )
-                mstore(0x40, freePtr)
-            }
+
             let firstPoolStart
             let lastPoolStart
 
@@ -331,13 +291,6 @@ contract UnxswapV3Router is IUniswapV3SwapCallback, CommonUtils {
                 }
             }
 
-            if lt(returnAmount, minReturn) {
-                _revertWithReason(
-                    0x000000164d696e2072657475726e206e6f742072656163686564000000000000,
-                    90
-                ) // Min return not reached
-            }
-            _emitEvent(firstPoolStart, lastPoolStart, returnAmount)
         }
     }
 
@@ -392,20 +345,24 @@ contract UnxswapV3Router is IUniswapV3SwapCallback, CommonUtils {
             let emptyPtr := mload(0x40)
             let resultPtr := add(emptyPtr, 21) // 0x15 = _FF_FACTORY size
 
+            // Store token0/token1/fee at emptyPtr+32 to avoid overwriting
+            // Solidity's free memory pointer at 0x40
+            let hashBase := add(emptyPtr, 32)
+
             mstore(emptyPtr, _SELECTORS)
             // token0
-            if iszero(staticcall(gas(), caller(), emptyPtr, 4, 0, 32)) {
+            if iszero(staticcall(gas(), caller(), emptyPtr, 4, hashBase, 32)) {
                 reRevert()
             }
             //token1
             if iszero(
-                staticcall(gas(), caller(), add(emptyPtr, 4), 4, 32, 32)
+                staticcall(gas(), caller(), add(emptyPtr, 4), 4, add(hashBase, 32), 32)
             ) {
                 reRevert()
             }
             // fee
             if iszero(
-                staticcall(gas(), caller(), add(emptyPtr, 8), 4, 64, 32)
+                staticcall(gas(), caller(), add(emptyPtr, 8), 4, add(hashBase, 64), 32)
             ) {
                 reRevert()
             }
@@ -414,16 +371,16 @@ contract UnxswapV3Router is IUniswapV3SwapCallback, CommonUtils {
             let amount
             switch sgt(amount0Delta, 0)
             case 1 {
-                token := mload(0)
+                token := mload(hashBase)
                 amount := amount0Delta
             }
             default {
-                token := mload(32)
+                token := mload(add(hashBase, 32))
                 amount := amount1Delta
             }
-            // let salt := keccak256(0, 96)
+            // let salt := keccak256(hashBase, 96)
             mstore(emptyPtr, _FF_FACTORY)
-            mstore(resultPtr, keccak256(0, 96)) // Compute the inner hash in-place
+            mstore(resultPtr, keccak256(hashBase, 96)) // Compute the inner hash in-place
             mstore(add(resultPtr, 32), _POOL_INIT_CODE_HASH)
             let pool := and(keccak256(emptyPtr, 85), _ADDRESS_MASK)
             if iszero(eq(pool, caller())) {

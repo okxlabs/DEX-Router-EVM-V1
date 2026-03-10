@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
 import "./UnxswapRouter.sol";
 import "./UnxswapV3Router.sol";
 
 import "./interfaces/IWETH.sol";
-import "./interfaces/IAdapter.sol";
 import "./interfaces/IApproveProxy.sol";
 import "./interfaces/IWNativeRelayer.sol";
 
@@ -13,86 +14,36 @@ import "./libraries/PMMLib.sol";
 import "./libraries/CommissionLib.sol";
 import "./libraries/EthReceiver.sol";
 import "./libraries/UniswapTokenInfoHelper.sol";
+import "./libraries/CommonLib.sol";
+
+import "./DagRouter.sol";
+
 
 /// @title DexRouterV1
 /// @notice Entrance of Split trading in Dex platform
 /// @dev Entrance of Split trading in Dex platform
 contract DexRouter is
+    ReentrancyGuard,
     EthReceiver,
     UnxswapRouter,
     UnxswapV3Router,
     CommissionLib,
-    UniswapTokenInfoHelper
+    UniswapTokenInfoHelper,
+    DagRouter
 {
-    string public constant version = "v1.0.5-tee";
+    string public constant version = "v1.0.6-dag";
     using UniversalERC20 for IERC20;
-
-    struct BaseRequest {
-        uint256 fromToken;
-        address toToken;
-        uint256 fromTokenAmount;
-        uint256 minReturnAmount;
-        uint256 deadLine;
-    }
-
-    struct RouterPath {
-        address[] mixAdapters;
-        address[] assetTo;
-        uint256[] rawData;
-        bytes[] extraData;
-        uint256 fromToken;
-    }
 
     //-------------------------------
     //------- Modifier --------------
     //-------------------------------
     /// @notice Ensures a function is called before a specified deadline.
     /// @param deadLine The UNIX timestamp deadline.
-    modifier isExpired(uint256 deadLine) {
+    modifier notExpired(uint256 deadLine) {
         require(deadLine >= block.timestamp, "Route: expired");
         _;
     }
 
-    function _exeAdapter(
-        bool reverse,
-        address adapter,
-        address to,
-        address poolAddress,
-        bytes memory moreinfo,
-        address refundTo
-    ) internal {
-        if (reverse) {
-            (bool s, bytes memory res) = address(adapter).call(
-                abi.encodePacked(
-                    abi.encodeWithSelector(
-                        IAdapter.sellQuote.selector,
-                        to,
-                        poolAddress,
-                        moreinfo
-                    ),
-                    ORIGIN_PAYER + uint(uint160(refundTo))
-                )
-            );
-            if (!s) {
-                _revert(res);
-            }
-        } else {
-            (bool s, bytes memory res) = address(adapter).call(
-                abi.encodePacked(
-                    abi.encodeWithSelector(
-                        IAdapter.sellBase.selector,
-                        to,
-                        poolAddress,
-                        moreinfo
-                    ),
-                    ORIGIN_PAYER + uint(uint160(refundTo))
-                )
-            );
-            if (!s) {
-                _revert(res);
-            }
-        }
-    }
     //-------------------------------
     //------- Internal Functions ----
     //-------------------------------
@@ -101,24 +52,22 @@ contract DexRouter is
     /// @param to The address of the receiver.
     /// @param batchAmount The amount to be transferred in each batch.
     /// @param path The routing path for the swap.
-    /// @param noTransfer A flag to indicate whether the token transfer should be skipped.
     /// @dev It includes checks for the total weight of the paths and executes the swapping through the adapters.
     function _exeForks(
         address payer,
         address refundTo,
         address to,
         uint256 batchAmount,
-        RouterPath memory path,
-        bool noTransfer
+        RouterPath memory path
     ) private {
         uint256 totalWeight;
+        uint256 accAmount;
         for (uint256 i = 0; i < path.mixAdapters.length; i++) {
             bytes32 rawData = bytes32(path.rawData[i]);
             address poolAddress;
             bool reverse;
             {
                 uint256 weight;
-                address fromToken = _bytes32ToAddress(path.fromToken);
                 assembly {
                     poolAddress := and(rawData, _ADDRESS_MASK)
                     reverse := and(rawData, _REVERSE_MASK)
@@ -126,20 +75,21 @@ contract DexRouter is
                 }
                 totalWeight += weight;
                 if (i == path.mixAdapters.length - 1) {
-                    require(
-                        totalWeight <= 10_000,
-                        "totalWeight can not exceed 10000 limit"
-                    );
+                    require(totalWeight == 10_000, "totalWeight must be 10000");
                 }
 
-                if (!noTransfer) {
-                    uint256 _fromTokenAmount = weight == 10_000
-                        ? batchAmount
-                        : (batchAmount * weight) / 10_000;
+                uint256 _fromTokenAmount;
+                if (i == path.mixAdapters.length - 1) {
+                    _fromTokenAmount = batchAmount - accAmount;
+                } else {
+                    _fromTokenAmount = (batchAmount * weight) / 10_000;
+                    accAmount += _fromTokenAmount;
+                }
+                if (_fromTokenAmount > 0) {
                     _transferInternal(
                         payer,
                         path.assetTo[i],
-                        fromToken,
+                        path.fromToken,
                         _fromTokenAmount
                     );
                 }
@@ -173,33 +123,23 @@ contract DexRouter is
         RouterPath[] memory hops
     ) private {
         address fromToken = _bytes32ToAddress(hops[0].fromToken);
-        bool toNext;
-        bool noTransfer;
 
         // execute hop
         uint256 hopLength = hops.length;
         for (uint256 i = 0; i < hopLength; ) {
             if (i > 0) {
                 fromToken = _bytes32ToAddress(hops[i].fromToken);
-                batchAmount = IERC20(fromToken).universalBalanceOf(
-                    address(this)
-                );
+                batchAmount = _getBalanceOf(fromToken, address(this));
                 payer = address(this);
             }
 
             address to = address(this);
             if (i == hopLength - 1 && !isToNative) {
                 to = receiver;
-            } else if (i < hopLength - 1 && hops[i + 1].assetTo.length == 1) {
-                to = hops[i + 1].assetTo[0];
-                toNext = true;
-            } else {
-                toNext = false;
             }
 
             // 3.2 execute forks
-            _exeForks(payer, refundTo, to, batchAmount, hops[i], noTransfer);
-            noTransfer = toNext;
+            _exeForks(payer, refundTo, to, batchAmount, hops[i]);
 
             unchecked {
                 ++i;
@@ -207,78 +147,12 @@ contract DexRouter is
         }
     }
 
-    /// @notice Transfers tokens internally within the contract.
-    /// @param payer The address of the payer.
-    /// @param to The address of the receiver.
-    /// @param token The address of the token to be transferred.
-    /// @param amount The amount of tokens to be transferred.
-    /// @dev Handles the transfer of ERC20 tokens or native tokens within the contract.
-    function _transferInternal(
-        address payer,
-        address to,
-        address token,
-        uint256 amount
-    ) private {
-        if (payer == address(this)) {
-            SafeERC20.safeTransfer(IERC20(token), to, amount);
-        } else {
-            IApproveProxy(_APPROVE_PROXY).claimTokens(token, payer, to, amount);
-        }
-    }
-    /// @notice Transfers the specified token to the user.
-    /// @param token The address of the token to be transferred.
-    /// @param to The address of the receiver.
-    /// @dev Handles the withdrawal of tokens to the user, converting WETH to ETH if necessary.
-
-    function _transferTokenToUser(address token, address to) private {
-        if ((IERC20(token).isETH())) {
-            uint256 wethBal = IERC20(address(uint160(_WETH))).balanceOf(
-                address(this)
-            );
-            if (wethBal > 0) {
-                IWETH(address(uint160(_WETH))).transfer(
-                    _WNATIVE_RELAY,
-                    wethBal
-                );
-                IWNativeRelayer(_WNATIVE_RELAY).withdraw(wethBal);
-            }
-            if (to != address(this)) {
-                uint256 ethBal = address(this).balance;
-                if (ethBal > 0) {
-                    (bool success, ) = payable(to).call{value: ethBal}("");
-                    require(success, "transfer native token failed");
-                }
-            }
-        } else {
-            if (to != address(this)) {
-                uint256 bal = IERC20(token).balanceOf(address(this));
-                if (bal > 0) {
-                    SafeERC20.safeTransfer(IERC20(token), to, bal);
-                }
-            }
-        }
-    }
-
-    /// @notice Converts a uint256 value into an address.
-    /// @param param The uint256 value to be converted.
-    /// @return result The address obtained from the conversion.
-    /// @dev This function is used to extract an address from a uint256,
-    /// typically used when dealing with low-level data operations or when addresses are packed into larger data types.
-
-    function _bytes32ToAddress(
-        uint256 param
-    ) private pure returns (address result) {
-        assembly {
-            result := and(param, _ADDRESS_MASK)
-        }
-    }
     /// @notice Executes a complex swap based on provided parameters and paths.
     /// @param baseRequest Basic swap details including tokens, amounts, and deadline.
     /// @param batchesAmount Amounts for each swap batch.
     /// @param batches Detailed swap paths for execution.
     /// @param payer Address providing the tokens.
     /// @param receiver Address receiving the swapped tokens.
-    /// @return returnAmount Total received tokens from the swap.
 
     function _smartSwapInternal(
         BaseRequest memory baseRequest,
@@ -287,25 +161,22 @@ contract DexRouter is
         address payer,
         address refundTo,
         address receiver
-    ) private returns (uint256 returnAmount) {
+    ) private {
         // 1. transfer from token in
         BaseRequest memory _baseRequest = baseRequest;
-        require(
-            _baseRequest.fromTokenAmount > 0,
-            "Route: fromTokenAmount must be > 0"
-        );
+
         address fromToken = _bytes32ToAddress(_baseRequest.fromToken);
-        returnAmount = IERC20(_baseRequest.toToken).universalBalanceOf(
-            receiver
-        );
 
         // In order to deal with ETH/WETH transfer rules in a unified manner,
         // we do not need to judge according to fromToken.
         if (UniversalERC20.isETH(IERC20(fromToken))) {
-            IWETH(address(uint160(_WETH))).deposit{
+            IWETH(_WETH).deposit{
                 value: _baseRequest.fromTokenAmount
             }();
+            require(_bytes32ToAddress(batches[0][0].fromToken) == _WETH, "firstToken mismatch");
             payer = address(this);
+        } else {
+            require(_bytes32ToAddress(batches[0][0].fromToken) == fromToken, "firstToken mismatch");
         }
 
         // 2. check total batch amount
@@ -320,7 +191,7 @@ contract DexRouter is
             }
             require(
                 totalBatchAmount <= _baseRequest.fromTokenAmount,
-                "Route: number of batches should be <= fromTokenAmount"
+                "Route: total batch amount should be <= fromTokenAmount"
             );
         }
 
@@ -328,6 +199,10 @@ contract DexRouter is
         // check length, fix DRW-02: LACK OF LENGTH CHECK ON BATATCHES
         require(batchesAmount.length == batches.length, "length mismatch");
         for (uint256 i = 0; i < batches.length; ) {
+            if (i > 0) {
+                require(batches[i][0].fromToken == batches[0][0].fromToken, "Inconsistent fromToken across batches");
+            }
+            
             // execute hop, if the whole swap replacing by pmm fails, the funds will return to dexRouter
             _exeHop(
                 payer,
@@ -344,24 +219,6 @@ contract DexRouter is
 
         // 5. transfer tokens to user
         _transferTokenToUser(_baseRequest.toToken, receiver);
-
-        // 6. check minReturnAmount
-        returnAmount =
-            IERC20(_baseRequest.toToken).universalBalanceOf(receiver) -
-            returnAmount;
-        require(
-            returnAmount >= _baseRequest.minReturnAmount,
-            "Min return not reached"
-        );
-
-        emit OrderRecord(
-            fromToken,
-            _baseRequest.toToken,
-            tx.origin,
-            _baseRequest.fromTokenAmount,
-            returnAmount
-        );
-        return returnAmount;
     }
 
     //-------------------------------
@@ -386,7 +243,8 @@ contract DexRouter is
     )
         external
         payable
-        isExpired(baseRequest.deadLine)
+        nonReentrant
+        notExpired(baseRequest.deadLine)
         returns (uint256 returnAmount)
     {
         emit SwapOrderId(orderId);
@@ -432,7 +290,7 @@ contract DexRouter is
     /// @return returnAmount The total amount of destination tokens received, ready for investment.
     /// @dev This function is designed for scenarios where investments are made in batches or through complex paths to optimize returns. Adjustments are made based on the contract's current token balance to ensure precise allocation.
 
-    function smartSwapByInvest(
+    function smartSwapByInvest( // change function name
         BaseRequest memory baseRequest,
         uint256[] memory batchesAmount,
         RouterPath[][] memory batches,
@@ -459,7 +317,8 @@ contract DexRouter is
     )
         public
         payable
-        isExpired(baseRequest.deadLine)
+        nonReentrant
+        notExpired(baseRequest.deadLine)
         returns (uint256 returnAmount)
     {
         address fromToken = _bytes32ToAddress(baseRequest.fromToken);
@@ -477,15 +336,31 @@ contract DexRouter is
             }
         }
         baseRequest.fromTokenAmount = amount;
-        return
-            _smartSwapInternal(
-                baseRequest,
-                batchesAmount,
-                batches,
-                address(this), // payer
-                refundTo, // refundTo
-                to // receiver
-            );
+
+        returnAmount = _getBalanceOf(baseRequest.toToken, to);
+        _smartSwapInternal(
+            baseRequest,
+            batchesAmount,
+            batches,
+            address(this), // payer
+            refundTo, // refundTo
+            to // receiver
+        );
+        // check minReturnAmount
+        returnAmount =
+            _getBalanceOf(baseRequest.toToken, to) -
+            returnAmount;
+        require(
+            returnAmount >= baseRequest.minReturnAmount,
+            "Min return not reached"
+        );
+        emit OrderRecord(
+            fromToken,
+            baseRequest.toToken,
+            tx.origin,
+            baseRequest.fromTokenAmount,
+            returnAmount
+        );
     }
 
     /// @notice Executes a swap using the Uniswap V3 protocol.
@@ -500,7 +375,7 @@ contract DexRouter is
         uint256 amount,
         uint256 minReturn,
         uint256[] calldata pools
-    ) external payable returns (uint256 returnAmount) {
+    ) external payable nonReentrant returns (uint256 returnAmount) {
         emit SwapOrderId((receiver & _ORDER_ID_MASK) >> 160);
         (address srcToken, address toToken) = _getUniswapV3TokenInfo(msg.value > 0, pools);
         return
@@ -525,20 +400,68 @@ contract DexRouter is
         uint256 minReturn,
         uint256[] calldata pools
     ) internal returns (uint256 returnAmount) {
-        CommissionInfo memory commissionInfo = _getCommissionInfo();
-        _validateCommissionInfo(commissionInfo, srcToken, toToken);
+        address receiverAddr = (receiver & _ADDRESS_MASK) == 0 ? msg.sender : _bytes32ToAddress(receiver);
+        (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
+        // add permit2
+        _validateCommissionInfo(commissionInfo, srcToken, toToken, _MODE_LEGACY);
+        _validateTrimInfo(trimInfo);
 
+        returnAmount = _getBalanceOf(toToken, receiverAddr);
+
+        _doUniswapV3Swap(
+            payer,
+            receiverAddr,
+            amount,
+            minReturn,
+            toToken,
+            pools,
+            commissionInfo,
+            trimInfo
+        );
+
+        // check minReturnAmount
+        returnAmount = _getBalanceOf(toToken, receiverAddr) - returnAmount;
+        require(
+            returnAmount >= minReturn,
+            "Min return not reached"
+        );
+
+        if (srcToken == _ETH) {
+            _refundETH(msg.sender); // In case of  msg.value > fromTokenAmount, the unused ETH will be refunded to refundTo
+        }
+
+        emit OrderRecord(
+            srcToken,
+            toToken,
+            tx.origin,
+            amount,
+            returnAmount
+        );
+    }
+
+    function _doUniswapV3Swap(
+        address payer,
+        address receiver,
+        uint256 amount,
+        uint256 minReturn,
+        address toToken,
+        uint256[] calldata pools,
+        CommissionInfo memory commissionInfo,
+        TrimInfo memory trimInfo
+    ) private {
         (
             address middleReceiver,
             uint256 balanceBefore
         ) = _doCommissionFromToken(
                 commissionInfo,
                 payer,
-                address(uint160(receiver)),
-                amount
+                receiver,
+                amount,
+                trimInfo.hasTrim,
+                toToken
             );
 
-        uint256 swappedAmount = _uniswapV3Swap(
+        _uniswapV3Swap(
             payer,
             payable(middleReceiver),
             amount,
@@ -546,12 +469,13 @@ contract DexRouter is
             pools
         );
 
-        uint256 commissionAmount = _doCommissionToToken(
+        _doCommissionAndTrimToToken(
             commissionInfo,
-            address(uint160(receiver)),
-            balanceBefore
+            receiver,
+            balanceBefore,
+            toToken,
+            trimInfo
         );
-        return swappedAmount - commissionAmount;
     }
 
     /// @notice Executes a smart swap directly to a specified receiver address.
@@ -574,7 +498,8 @@ contract DexRouter is
     )
         external
         payable
-        isExpired(baseRequest.deadLine)
+        nonReentrant
+        notExpired(baseRequest.deadLine)
         returns (uint256 returnAmount)
     {
         emit SwapOrderId(orderId);
@@ -597,39 +522,71 @@ contract DexRouter is
         BaseRequest memory baseRequest,
         uint256[] memory batchesAmount,
         RouterPath[][] memory batches
-    ) internal returns (uint256) {
-        require(receiver != address(0), "not addr(0)");
-        CommissionInfo memory commissionInfo = _getCommissionInfo();
+    ) internal returns (uint256 returnAmount) {
+        receiver = receiver == address(0) ? msg.sender : receiver;
+        (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
+        
+        uint256 mode = batches[0][0].fromToken & _TRANSFER_MODE_MASK;
+        
+        _validateCommissionInfo(commissionInfo, _bytes32ToAddress(baseRequest.fromToken), baseRequest.toToken, mode);
+        _validateTrimInfo(trimInfo);
 
-        _validateCommissionInfo(commissionInfo, _bytes32ToAddress(baseRequest.fromToken), baseRequest.toToken);
+        returnAmount = _getBalanceOf(baseRequest.toToken, receiver);
 
-        (
-            address middleReceiver,
-            uint256 balanceBefore
-        ) = _doCommissionFromToken(
-                commissionInfo,
+        {
+            (
+                address middleReceiver,
+                uint256 balanceBefore
+            ) = _doCommissionFromToken(
+                    commissionInfo,
+                    payer,
+                    receiver,
+                    baseRequest.fromTokenAmount,
+                    trimInfo.hasTrim,
+                    baseRequest.toToken
+                );
+
+            _smartSwapInternal(
+                baseRequest,
+                batchesAmount,
+                batches,
                 payer,
-                receiver,
-                baseRequest.fromTokenAmount
+                refundTo,
+                middleReceiver
             );
-        address _payer = payer; // avoid stack too deep
-        uint256 swappedAmount = _smartSwapInternal(
-            baseRequest,
-            batchesAmount,
-            batches,
-            _payer,
-            refundTo,
-            middleReceiver
+
+            _doCommissionAndTrimToToken(
+                commissionInfo,
+                receiver,
+                balanceBefore,
+                baseRequest.toToken,
+                trimInfo
+            );
+        }
+
+        // check minReturnAmount
+        returnAmount =
+            _getBalanceOf(baseRequest.toToken, receiver) -
+            returnAmount;
+        require(
+            returnAmount >= baseRequest.minReturnAmount,
+            "Min return not reached"
         );
 
-        uint256 commissionAmount = _doCommissionToToken(
-            commissionInfo,
-            receiver,
-            balanceBefore
+        if (_bytes32ToAddress(baseRequest.fromToken) == _ETH) {
+            _refundETH(refundTo); // In case of  msg.value > fromTokenAmount, the unused ETH will be refunded to refundTo
+        }
+
+        emit OrderRecord(
+            _bytes32ToAddress(baseRequest.fromToken),
+            baseRequest.toToken,
+            tx.origin,
+            baseRequest.fromTokenAmount,
+            returnAmount
         );
-        return swappedAmount - commissionAmount;
     }
-    /// @notice Executes a token swap using the Unxswap protocol, sending the output directly to a specified receiver. For unxswap, if srcToken is ETH, srcToken needs to be address(0).
+    /// @notice Executes a token swap using the Unxswap protocol, sending the output directly to a specified receiver.
+    ///         The srcToken can be 0xEeee or address(0) for temporary use, the address(0) usage will removed in the future.
     /// @param srcToken The source token to be swapped.
     /// @param amount The amount of the source token to be swapped.
     /// @param minReturn The minimum amount of destination tokens expected from the swap, ensuring the trade does not proceed under unfavorable conditions.
@@ -644,14 +601,15 @@ contract DexRouter is
         address receiver,
         // solhint-disable-next-line no-unused-vars
         bytes32[] calldata pools
-    ) public payable returns (uint256 returnAmount) {
+    ) public payable nonReentrant returns (uint256 returnAmount) {
         emit SwapOrderId((srcToken & _ORDER_ID_MASK) >> 160);
 
         // validate token info
         (address fromToken, address toToken) = _getUnxswapTokenInfo(msg.value > 0, pools);
         address srcTokenAddr = _bytes32ToAddress(srcToken);
+        srcTokenAddr = srcTokenAddr == address(0) ? _ETH : srcTokenAddr;
         require(
-            (srcTokenAddr == fromToken && fromToken != _ETH) || (srcTokenAddr == address(0) && fromToken == _ETH),
+            srcTokenAddr == fromToken,
             "unxswap: token mismatch"
         );
         
@@ -667,7 +625,7 @@ contract DexRouter is
             );
     }
 
-    /// @notice If srcToken is ETH, srcToken needs to be 0xEeee. And for commission validation, ETH needs to be 0xEeee. But _unxswapInternal needs srcToken to be address(0) if srcToken is ETH.
+    /// @notice If srcToken is ETH, srcToken needs to be 0xEeee for commission validation and _unxswapInternal.
     function _unxswapTo(
         address srcToken,
         address toToken,
@@ -678,11 +636,48 @@ contract DexRouter is
         // solhint-disable-next-line no-unused-vars
         bytes32[] calldata pools
     ) internal returns (uint256 returnAmount) {
-        require(receiver != address(0), "not addr(0)");
-        CommissionInfo memory commissionInfo = _getCommissionInfo();
+        receiver = receiver == address(0) ? msg.sender : receiver;
+        (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
 
-        _validateCommissionInfo(commissionInfo, srcToken, toToken);
+        _validateCommissionInfo(commissionInfo, srcToken, toToken, _MODE_LEGACY);
+        _validateTrimInfo(trimInfo);
+        returnAmount = _getBalanceOf(toToken, receiver);
 
+        _doUnxswap(payer, receiver, srcToken, toToken, amount, minReturn, pools, commissionInfo, trimInfo);
+
+        // check minReturnAmount
+        returnAmount = _getBalanceOf(toToken, receiver) - returnAmount;
+        require(
+            returnAmount >= minReturn,
+            "Min return not reached"
+        );
+
+        if (srcToken == _ETH) {
+            _refundETH(msg.sender); // In case of  msg.value > fromTokenAmount, the unused ETH will be refunded to refundTo
+        }
+
+        emit OrderRecord(
+            srcToken,
+            toToken,
+            tx.origin,
+            amount,
+            returnAmount
+        );
+
+        return returnAmount;
+    }
+
+    function _doUnxswap(
+        address payer,
+        address receiver,
+        address srcToken,
+        address toToken,
+        uint256 amount,
+        uint256 minReturn,
+        bytes32[] calldata pools,
+        CommissionInfo memory commissionInfo,
+        TrimInfo memory trimInfo
+    ) private {
         (
             address middleReceiver,
             uint256 balanceBefore
@@ -690,24 +685,28 @@ contract DexRouter is
                 commissionInfo,
                 payer,
                 receiver,
-                amount
+                amount,
+                trimInfo.hasTrim,
+                toToken
             );
 
-        uint256 swappedAmount = _unxswapInternal(
-            srcToken == _ETH ? IERC20(address(0)) : IERC20(srcToken),
+        address _payer = payer;
+        _unxswapInternal(
+            IERC20(srcToken),
             amount,
             minReturn,
             pools,
-            payer,
+            _payer,
             middleReceiver
         );
 
-        uint256 commissionAmount = _doCommissionToToken(
+        _doCommissionAndTrimToToken(
             commissionInfo,
             receiver,
-            balanceBefore
+            balanceBefore,
+            toToken,
+            trimInfo
         );
-        return swappedAmount - commissionAmount;
     }
 
     /// @notice Executes a Uniswap V3 token swap to a specified receiver using structured base request parameters. For uniswapV3, if fromToken or toToken is ETH, the address needs to be 0xEeee.
@@ -727,7 +726,8 @@ contract DexRouter is
     )
         external
         payable
-        isExpired(baseRequest.deadLine)
+        nonReentrant
+        notExpired(baseRequest.deadLine)
         returns (uint256 returnAmount)
     {
         emit SwapOrderId(orderId);
@@ -752,7 +752,7 @@ contract DexRouter is
             );
     }
 
-    /// @notice Executes a Unxswap token swap to a specified receiver using structured base request parameters. For unxswap, if fromToken or toToken is ETH, the address needs to be address(0).
+    /// @notice Executes a Unxswap token swap to a specified receiver using structured base request parameters. For unxswap, if fromToken or toToken is ETH, the address can be 0xEeee or address(0) for temporary use, the address(0) usage will removed in the future.
     /// @param orderId Unique identifier for the swap order, facilitating tracking and reference.
     /// @param receiver The address that will receive the swapped tokens.
     /// @param baseRequest Struct containing essential swap parameters including source token, destination token, amount, minimum return, and deadline.
@@ -769,7 +769,8 @@ contract DexRouter is
     )
         external
         payable
-        isExpired(baseRequest.deadLine)
+        nonReentrant
+        notExpired(baseRequest.deadLine)
         returns (uint256 returnAmount)
     {
         emit SwapOrderId(orderId);
@@ -778,8 +779,8 @@ contract DexRouter is
 
         // validate fromToken and toToken from baseRequest
         address fromTokenAddr = _bytes32ToAddress(baseRequest.fromToken);
-        require((fromTokenAddr == fromToken && fromToken != _ETH) || (fromTokenAddr == address(0) && fromToken == _ETH), "unxswap: fromToken mismatch");
-        require((baseRequest.toToken == toToken && toToken != _ETH) || (baseRequest.toToken == address(0) && toToken == _ETH), "unxswap: toToken mismatch");
+        require((fromTokenAddr == fromToken) || (fromTokenAddr == address(0) && fromToken == _ETH), "unxswap: fromToken mismatch");
+        require((baseRequest.toToken == toToken) || (baseRequest.toToken == address(0) && toToken == _ETH), "unxswap: toToken mismatch");
 
         return
             _unxswapTo(
@@ -800,14 +801,19 @@ contract DexRouter is
         bool reversed,
         uint256 amount
     ) internal {
-        require(amount > 0, "amount must be > 0");
+        emit SwapOrderId(orderId);
 
-        CommissionInfo memory commissionInfo = _getCommissionInfo();
+        require(amount > 0, "amount must be > 0");
+        receiver = receiver == address(0) ? msg.sender : receiver;
+
+        (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
+
+        require(!trimInfo.hasTrim, "trim is not supported in swapWrap");
 
         address srcToken = reversed ? _WETH : _ETH;
         address toToken = reversed ? _ETH : _WETH;
 
-        _validateCommissionInfo(commissionInfo, srcToken, toToken);
+        _validateCommissionInfo(commissionInfo, srcToken, toToken, _MODE_LEGACY);
 
         (
             address middleReceiver,
@@ -816,7 +822,9 @@ contract DexRouter is
                 commissionInfo,
                 msg.sender,
                 receiver,
-                amount
+                amount,
+                trimInfo.hasTrim,
+                toToken
             );
 
         if (reversed) {
@@ -829,7 +837,8 @@ contract DexRouter is
             IWNativeRelayer(_WNATIVE_RELAY).withdraw(amount);
             if (middleReceiver != address(this)) {
                 (bool success, ) = payable(middleReceiver).call{
-                    value: address(this).balance
+                    value: address(this).balance,
+                    gas: NATIVE_TOKEN_TRANSFER_GAS_LIMIT
                 }("");
                 require(success, "transfer native token failed");
             }
@@ -842,20 +851,25 @@ contract DexRouter is
                 SafeERC20.safeTransfer(IERC20(_WETH), middleReceiver, amount);
             }
         }
-
-        _doCommissionToToken(
+        // emit return amount should be the amount after commission
+        uint256 toTokenCommissionAndTrimAmount = _doCommissionAndTrimToToken(
             commissionInfo,
             receiver,
-            balanceBefore
+            balanceBefore,
+            toToken,
+            trimInfo
         );
 
-        emit SwapOrderId(orderId);
+        if (srcToken == _ETH) {
+            _refundETH(msg.sender); // In case of  msg.value > fromTokenAmount, the unused ETH will be refunded to refundTo
+        }
+
         emit OrderRecord(
             srcToken,
             toToken,
             tx.origin,
             amount,
-            amount
+            amount - toTokenCommissionAndTrimAmount
         );
     }
 
@@ -865,7 +879,7 @@ contract DexRouter is
     /// @dev This function supports bidirectional swaps between ETH and WETH with minimal gas overhead.
     /// The rawdata parameter encodes both the direction (reversed flag) and amount using bit operations.
     /// When reversed=false: ETH -> WETH, when reversed=true: WETH -> ETH.
-    function swapWrap(uint256 orderId, uint256 rawdata) external payable {
+    function swapWrap(uint256 orderId, uint256 rawdata) external payable nonReentrant {
         bool reversed;
         uint128 amount;
         assembly {
@@ -888,10 +902,11 @@ contract DexRouter is
     )
         external
         payable
-        isExpired(baseRequest.deadLine)
+        nonReentrant
+        notExpired(baseRequest.deadLine)
     {
         bool reversed;
-        address fromTokenAddr = address(uint160(baseRequest.fromToken));
+        address fromTokenAddr = _bytes32ToAddress(baseRequest.fromToken);
         if (fromTokenAddr == _ETH && baseRequest.toToken == _WETH) {
             reversed = false;
         } else if (fromTokenAddr == _WETH && baseRequest.toToken == _ETH) {
@@ -903,19 +918,94 @@ contract DexRouter is
         _swapWrap(orderId, receiver, reversed, baseRequest.fromTokenAmount);
     }
 
-    /**
-     * @dev Reverts with returndata if present. Otherwise reverts with "FailedCall".
-     * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/c64a1edb67b6e3f4a15cca8909c9482ad33a02b0/contracts/utils/Address.sol#L135-L149
-     */
-    function _revert(bytes memory returndata) private pure {
-        // Look for revert reason and bubble it up if present
-        if (returndata.length > 0) {
-            // The easiest way to bubble the revert reason is using memory via assembly
-            assembly ("memory-safe") {
-                revert(add(returndata, 0x20), mload(returndata))
-            }
-        } else {
-            revert("adaptor call failed");
+    function dagSwapByOrderId(
+        uint256 orderId,
+        BaseRequest calldata baseRequest,
+        RouterPath[] calldata paths
+    ) external payable returns (uint256 returnAmount) {
+        return dagSwapTo(orderId, msg.sender, baseRequest, paths);
+    }
+
+    /// @notice Executes a DAG swap to a specified receiver using structured base request parameters.
+    /// @param orderId Unique identifier for the swap order, facilitating tracking and reference.
+    /// @param receiver The address that will receive the swapped tokens.
+    /// @param baseRequest Struct containing essential swap parameters including source token, destination token, amount, minimum return, and deadline.
+    /// @param paths An array of RouterPath structs defining the DAG swap route.
+    /// @return returnAmount The total amount of destination tokens received from the swap.
+    /// @dev This function validates token compatibility with the provided pool route and ensures proper swap execution.
+    function dagSwapTo(
+        uint256 orderId,
+        address receiver,
+        BaseRequest calldata baseRequest,
+        RouterPath[] calldata paths
+    )
+        public
+        payable
+        nonReentrant
+        notExpired(baseRequest.deadLine)
+        returns (uint256 returnAmount)
+    {
+        require(paths.length > 0, "paths must be > 0");
+        emit SwapOrderId(orderId);
+
+        receiver = receiver == address(0) ? msg.sender : receiver;
+
+        (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
+        
+        uint256 mode = paths[0].fromToken & _TRANSFER_MODE_MASK;
+        
+        _validateCommissionInfo(commissionInfo, _bytes32ToAddress(baseRequest.fromToken), baseRequest.toToken, mode);
+        _validateTrimInfo(trimInfo);
+
+        returnAmount = _getBalanceOf(baseRequest.toToken, receiver);
+
+        (
+            address middleReceiver,
+            uint256 balanceBefore
+        ) = _doCommissionFromToken(
+                commissionInfo,
+                msg.sender,
+                receiver,
+                baseRequest.fromTokenAmount,
+                trimInfo.hasTrim,
+                baseRequest.toToken
+            );
+
+        _dagSwapInternal(
+            baseRequest,
+            paths,
+            msg.sender,
+            msg.sender,
+            middleReceiver
+        );
+
+        _doCommissionAndTrimToToken(
+            commissionInfo,
+            receiver,
+            balanceBefore,
+            baseRequest.toToken,
+            trimInfo
+        );
+
+        // check minReturnAmount
+        returnAmount =
+            _getBalanceOf(baseRequest.toToken, receiver) -
+            returnAmount;
+        require(
+            returnAmount >= baseRequest.minReturnAmount,
+            "Min return not reached"
+        );
+
+        if (_bytes32ToAddress(baseRequest.fromToken) == _ETH) {
+            _refundETH(msg.sender); // In case of  msg.value > fromTokenAmount, the unused ETH will be refunded to refundTo
         }
+
+        emit OrderRecord(
+            _bytes32ToAddress(baseRequest.fromToken),
+            baseRequest.toToken,
+            tx.origin,
+            baseRequest.fromTokenAmount,
+            returnAmount
+        );
     }
 }

@@ -1,7 +1,0 @@
-// SPDX-License-Identifier: MIT
-
-pragma solidity 0.8.17;
-
-interface ILBPair {
-   function swap(bool swapForY, address to) external returns (bytes32 amountsOut);
-}

@@ -1,0 +1,293 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "forge-std/Test.sol";
+import "@okxlabs/DexRouter.sol";
+import "@okxlabs/TokenApprove.sol";
+import "@okxlabs/TokenApproveProxy.sol";
+import "@okxlabs/utils/WNativeRelayer.sol";
+import "@okxlabs/libraries/SafeERC20.sol";
+import "../common/CommissionHelper.t.sol";
+import "../common/TrimHelper.t.sol";
+
+interface ISafeMoon {
+    function owner() external view returns (address);
+    function updateBuyFees(uint256 _marketingFee, uint256 _liquidityFee, uint256 _devFee) external;
+    function updateSellFees(uint256 _marketingFee, uint256 _liquidityFee, uint256 _devFee) external;
+    function buyTotalFees() external view returns (uint256);
+    function sellTotalFees() external view returns (uint256);
+}
+
+contract TrimTestBase is Test, CommissionHelper, TrimHelper {
+    // tokens
+    address constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // decimals=18
+    address constant USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7; // decimals=6
+    address constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48; // decimals=6
+    address constant SAFEMOON = 0xE253Be149830bcE1a6Af3BE399f3a952eabe127E; // Tax token, UniswapV2 pool always takes fee for sell and buy, decimals=18
+
+    // pools
+    address constant WETH_USDT_UNIV2 = 0x0d4a11d5EEaaC28EC3F61d100daF4d40471f1852;
+    address constant WETH_USDT_UNIV3 = 0x4e68Ccd3E89f51C3074ca5072bbAC773960dFa36;
+    address constant USDC_WETH_UNIV2 = 0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc;
+    address constant USDC_WETH_UNIV3 = 0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640;
+    address constant WETH_SAFEMOON_UNIV2 = 0xd2e185A9076d33BD76cE548961EE6E9cB700BA17;
+
+    // users
+    address public admin = vm.rememberKey(1);
+    address public arnaud = vm.rememberKey(11111111111111111111);
+    address public trimAddress = vm.rememberKey(22222222222222222222);
+    address public chargeAddress = vm.rememberKey(33333333333333333333);
+    address public referrerAddress = vm.rememberKey(44444444444444444444);
+    address public referrerAddress2 = vm.rememberKey(55555555555555555555);
+    
+    // contracts
+    DexRouter public dexRouter;
+    TokenApprove tokenApprove = TokenApprove(0x40aA958dd87FC8305b97f2BA922CDdCa374bcD7f); // ETH
+    TokenApproveProxy tokenApproveProxy = TokenApproveProxy(0x70cBb871E8f30Fc8Ce23609E9E0Ea87B6b222F58); // ETH
+    WNativeRelayer wNativeRelayer = WNativeRelayer(payable(0x5703B683c7F928b721CA95Da988d73a3299d4757)); // ETH
+
+    address constant UniversalUniV3Adapter = 0x6747BcaF9bD5a5F0758Cbe08903490E45DdfACB5;
+    address constant UniV2Adapter = 0xc837BbEa8C7b0caC0e8928f797ceB04A34c9c06e;
+
+    uint256 public oneEther = 1 * 10 ** 18;
+
+    struct SwapInfo {
+        uint256 orderId;
+        DexRouter.BaseRequest baseRequest;
+        uint256[] batchesAmount;
+        DexRouter.RouterPath[][] batches;
+        PMMLib.PMMSwapRequest[] extraData;
+    }
+
+    modifier tokenLogAndCheck(
+        address _fromToken,
+        address _toToken,
+        uint256 _amount,
+        bool trimShouldReceive,
+        bool chargeShouldReceive,
+        bool isFromCommission,
+        bool referrer1ShouldReceive,
+        bool referrer2ShouldReceive
+    ) {
+        vm.startPrank(arnaud);
+        console2.log("User arnaud:", arnaud);
+        address[] memory tokens = new address[](2);
+        tokens[0] = _fromToken;
+        tokens[1] = _toToken;
+        console2.log("========== before swap ==========");
+        for (uint256 i = 0; i < tokens.length; i++) {
+            address token = tokens[i];
+            if (token == ETH) {
+                if (i == 0) {
+                    deal(address(arnaud), _amount);
+                }
+                console2.log(
+                    "arnaud ETH balance before: %d",
+                    address(arnaud).balance
+                );
+                uint256 trimBalance = address(trimAddress).balance;
+                console2.log("trim ETH balance before: %d", trimBalance);
+                require(trimBalance == 0, "trim ETH balance before should be 0");
+                uint256 chargeBalance = address(chargeAddress).balance;
+                console2.log("charge ETH balance before: %d", chargeBalance);
+                require(chargeBalance == 0, "charge ETH balance before should be 0");
+                uint256 referrer1Balance = address(referrerAddress).balance;
+                console2.log("referrer1 ETH balance before: %d", referrer1Balance);
+                require(referrer1Balance == 0, "referrer1 ETH balance before should be 0");
+                uint256 referrer2Balance = address(referrerAddress2).balance;
+                console2.log("referrer2 ETH balance before: %d", referrer2Balance);
+                require(referrer2Balance == 0, "referrer2 ETH balance before should be 0");
+            } else {
+                if (i == 0) {
+                    deal(token, arnaud, _amount);
+                    SafeERC20.safeApprove(IERC20(token), address(tokenApprove), _amount);
+                }
+                console2.log(
+                    "%s balance before: %d",
+                    IERC20(token).symbol(),
+                    IERC20(token).balanceOf(address(arnaud))
+                );
+                uint256 trimBalance = IERC20(token).balanceOf(address(trimAddress));
+                console2.log("trim %s balance before: %d", IERC20(token).symbol(), trimBalance);
+                require(trimBalance == 0, "trim balance before should be 0");
+                uint256 chargeBalance = IERC20(token).balanceOf(address(chargeAddress));
+                console2.log("charge %s balance before: %d", IERC20(token).symbol(), chargeBalance);
+                require(chargeBalance == 0, "charge balance before should be 0");
+                uint256 referrer1Balance = IERC20(token).balanceOf(address(referrerAddress));
+                console2.log("referrer1 %s balance before: %d", IERC20(token).symbol(), referrer1Balance);
+                require(referrer1Balance == 0, "referrer1 balance before should be 0");
+                uint256 referrer2Balance = IERC20(token).balanceOf(address(referrerAddress2));
+                console2.log("referrer2 %s balance before: %d", IERC20(token).symbol(), referrer2Balance);
+                require(referrer2Balance == 0, "referrer2 balance before should be 0");
+            }
+        }
+        _;
+        console2.log("========== after swap ==========");
+        for (uint256 i = 0; i < tokens.length; i++) {
+            address token = tokens[i];
+            if (token == ETH) {
+                console2.log("arnaud ETH balance after: %d", address(arnaud).balance);
+                uint256 trimBalance = address(trimAddress).balance;
+                console2.log("trim ETH balance after: %d", trimBalance);
+                // Only when token is toToken, then check with shouldReceive flag.
+                if (i == 1) {
+                    require(
+                        (trimShouldReceive && trimBalance > 0) || (!trimShouldReceive && trimBalance == 0),
+                        "trim1 ETH balance error after swap"
+                    );
+                }
+                uint256 chargeBalance = address(chargeAddress).balance;
+                console2.log("charge ETH balance after: %d", chargeBalance);
+                if (i == 1) {
+                    require(
+                        (chargeShouldReceive && chargeBalance > 0) || (!chargeShouldReceive && chargeBalance == 0),
+                        "charge ETH balance error after swap"
+                    );
+                }
+                uint256 referrer1Balance = address(referrerAddress).balance;
+                console2.log("referrer1 ETH balance after: %d", referrer1Balance);
+                // Only when isFromCommission==true and token is fromToken, or isFromCommission==false and token is toToken, then check with shouldReceive flag.
+                if ((i == 0 && isFromCommission) || (i == 1 && !isFromCommission)) {
+                    require(
+                        (referrer1ShouldReceive && referrer1Balance > 0) || (!referrer1ShouldReceive && referrer1Balance == 0),
+                        "referrer1 ETH balance error after swap"
+                    );
+                }
+                uint256 referrer2Balance = address(referrerAddress2).balance;
+                console2.log("referrer2 ETH balance after: %d", referrer2Balance);
+                if ((i == 0 && isFromCommission) || (i == 1 && !isFromCommission)) {
+                    require(
+                        (referrer2ShouldReceive && referrer2Balance > 0) || (!referrer2ShouldReceive && referrer2Balance == 0),
+                        "referrer2 ETH balance error after swap"
+                    );
+                }
+            } else {
+                console2.log("%s balance after: %d", IERC20(token).symbol(), IERC20(token).balanceOf(address(arnaud)));
+                uint256 trimBalance = IERC20(token).balanceOf(address(trimAddress));
+                console2.log("trim %s balance after: %d", IERC20(token).symbol(), trimBalance);
+                if (i == 1) {
+                    require(
+                        (trimShouldReceive && trimBalance > 0) || (!trimShouldReceive && trimBalance == 0),
+                        "trim balance error after swap"
+                    );
+                }
+                uint256 chargeBalance = IERC20(token).balanceOf(address(chargeAddress));
+                console2.log("charge %s balance after: %d", IERC20(token).symbol(), chargeBalance);
+                if (i == 1) {
+                    require(
+                        (chargeShouldReceive && chargeBalance > 0) || (!chargeShouldReceive && chargeBalance == 0),
+                        "charge balance error after swap"
+                    );
+                }
+                uint256 referrer1Balance = IERC20(token).balanceOf(address(referrerAddress));
+                console2.log("referrer1 %s balance after: %d", IERC20(token).symbol(), referrer1Balance);
+                if ((i == 0 && isFromCommission) || (i == 1 && !isFromCommission)) {
+                    require(
+                        (referrer1ShouldReceive && referrer1Balance > 0) || (!referrer1ShouldReceive && referrer1Balance == 0),
+                        "referrer1 balance error after swap"
+                    );
+                }
+                uint256 referrer2Balance = IERC20(token).balanceOf(address(referrerAddress2));
+                console2.log("referrer2 %s balance after: %d", IERC20(token).symbol(), referrer2Balance);
+                if ((i == 0 && isFromCommission) || (i == 1 && !isFromCommission)) {
+                    require(
+                        (referrer2ShouldReceive && referrer2Balance > 0) || (!referrer2ShouldReceive && referrer2Balance == 0),
+                        "referrer2 balance error after swap"
+                    );
+                }
+            }
+        }
+        vm.stopPrank();
+    }
+
+    function setUp() public virtual {
+        vm.createSelectFork("https://eth-mainnet.public.blastapi.io", 23293873); // 2025.9.5 10:18
+        vm.startPrank(admin);
+        dexRouter = new DexRouter();
+        vm.stopPrank();
+        address wNativeRelayerOwner = wNativeRelayer.owner();
+        vm.startPrank(wNativeRelayerOwner);
+        tokenApproveProxy.addProxy(address(dexRouter));
+        address[] memory whitelistedCallers = new address[](1);
+        whitelistedCallers[0] = address(dexRouter);
+        wNativeRelayer.setCallerOk(whitelistedCallers, true);
+        vm.stopPrank();
+        address safeMoonOwner = ISafeMoon(SAFEMOON).owner();
+        vm.startPrank(safeMoonOwner);
+        ISafeMoon(SAFEMOON).updateBuyFees(10, 0, 0);
+        ISafeMoon(SAFEMOON).updateSellFees(20, 0, 0);
+        vm.stopPrank();
+        // console2.log("safeMoon buy fees: %d", ISafeMoon(SAFEMOON).buyTotalFees());
+        // console2.log("safeMoon sell fees: %d", ISafeMoon(SAFEMOON).sellTotalFees());
+    }
+
+    // ==================== Internal Functions ====================
+    function _generateBaseRequest(
+        address _fromToken,
+        address _toToken,
+        uint256 _amount
+    ) internal view returns (DexRouter.BaseRequest memory baseRequest) {
+        baseRequest.fromToken = uint256(uint160(_fromToken));
+        baseRequest.toToken = _toToken;
+        baseRequest.fromTokenAmount = _amount;
+        baseRequest.minReturnAmount = 0;
+        baseRequest.deadLine = block.timestamp + 1000;
+    }
+
+    function _generate1TrimOnlyTrimData() internal view returns (bytes memory) {
+        return _buildTrimInfoUnified(
+            50, // trimRate 5%
+            trimAddress, // trimAddress
+            100, // expectAmountOut 100, but usually the trimAmount will be the allowedMaxTrimAmount cause the expectAmountOut is too small
+            0, // chargeRate 0%, all for trim
+            address(0) // chargeAddress
+        );
+    }
+
+    function _generate1TrimOnlyChargeData() internal view returns (bytes memory) {
+        return _buildTrimInfoUnified(
+            50, // trimRate 5%
+            address(0), // trimAddress
+            100, // expectAmountOut 100, but usually the trimAmount will be the allowedMaxTrimAmount cause the expectAmountOut is too small
+            1000, // chargeRate 100%, all for charge
+            chargeAddress // chargeAddress
+        );
+    }
+
+    function _generate2TrimData() internal view returns (bytes memory) {
+        return _buildTrimInfoUnified(
+            50, // trimRate 5%
+            trimAddress, // trimAddress
+            100, // expectAmountOut 100, but usually the trimAmount will be the allowedMaxTrimAmount cause the expectAmountOut is too small
+            40, // chargeRate 40% of trimAmount
+            chargeAddress // chargeAddress
+        );
+    }
+
+    function _generate1CommissionData(bool isFromTokenCommission, address token) internal view returns (bytes memory) {
+        return _buildCommissionInfoUnified(
+            isFromTokenCommission, // isFromTokenCommission
+            !isFromTokenCommission, // isToTokenCommission
+            token, // token
+            1000000, // commissionRate 0.1%, denominator = 10 ** 9
+            referrerAddress, // refererAddress
+            0, // commissionRate2 0%
+            address(0), // refererAddress2
+            false // isToBCommission
+        );
+    }
+
+    function _generate2CommissionData(bool isFromTokenCommission, address token) internal view returns (bytes memory) {
+        return _buildCommissionInfoUnified(
+            isFromTokenCommission, // isFromTokenCommission
+            !isFromTokenCommission, // isToTokenCommission
+            token, // token
+            1000000, // commissionRate 0.1%, denominator = 10 ** 9
+            referrerAddress, // refererAddress
+            1000000, // commissionRate2 0.1%, denominator = 10 ** 9
+            referrerAddress2, // refererAddress2
+            false // isToBCommission
+        );
+    }
+}

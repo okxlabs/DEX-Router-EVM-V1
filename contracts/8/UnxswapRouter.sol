@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity ^0.8.0;
 
 import "./interfaces/IUni.sol";
 
@@ -17,7 +17,7 @@ contract UnxswapRouter is CommonUtils {
         0xa9059cbbd0e30db0000000000000000000000000000000000000000000000000;
     uint256 private constant _SWAP_GETRESERVES_SELECTOR =
         0x022c0d9f0902f1ac000000000000000000000000000000000000000000000000;
-    uint256 private constant _WITHDRAW_TRNASFER_SELECTOR =
+    uint256 private constant _WITHDRAW_TRANSFER_SELECTOR =
         0x2e1a7d4da9059cbb000000000000000000000000000000000000000000000000;
     uint256 private constant _BALANCEOF_TOKEN0_SELECTOR =
         0x70a082310dfe1681000000000000000000000000000000000000000000000000;
@@ -29,8 +29,6 @@ contract UnxswapRouter is CommonUtils {
 
     uint256 private constant _DENOMINATOR = 1_000_000_000;
     uint256 private constant _NUMERATOR_OFFSET = 160;
-
-    uint256 private constant ETH_ADDRESS = 0x00;
 
     //-------------------------------
     //------- Internal Functions ----
@@ -243,7 +241,7 @@ contract UnxswapRouter is CommonUtils {
             }
             let emptyPtr := mload(0x40)
             let rawPair := calldataload(poolsOffset)
-            switch eq(ETH_ADDRESS, srcToken)
+            switch eq(_ETH, srcToken)
             case 1 {
                 // require callvalue() >= amount, lt: if x < y return 1，else return 0
                 if eq(lt(callvalue(), amount), 1) {
@@ -443,7 +441,7 @@ contract UnxswapRouter is CommonUtils {
                 }
             }
             default {
-                toToken := ETH_ADDRESS
+                toToken := _ETH
                 returnAmount := swap(
                     emptyPtr,
                     returnAmount,
@@ -455,7 +453,7 @@ contract UnxswapRouter is CommonUtils {
                     address()
                 )
 
-                mstore(emptyPtr, _WITHDRAW_TRNASFER_SELECTOR)
+                mstore(emptyPtr, _WITHDRAW_TRANSFER_SELECTOR)
                 mstore(add(emptyPtr, 0x08), _WNATIVE_RELAY)
                 mstore(add(emptyPtr, 0x28), returnAmount)
                 if iszero(
@@ -475,7 +473,7 @@ contract UnxswapRouter is CommonUtils {
                         0x57
                     ) // "withdraw ETH failed"
                 }
-                if iszero(call(gas(), receiver, returnAmount, 0, 0, 0, 0)) {
+                if iszero(call(NATIVE_TOKEN_TRANSFER_GAS_LIMIT, receiver, returnAmount, 0, 0, 0, 0)) {
                     revertWithReason(
                         0x000000137472616e7366657220455448206661696c6564000000000000000000,
                         0x57
@@ -483,23 +481,6 @@ contract UnxswapRouter is CommonUtils {
                 }
             }
 
-            if lt(returnAmount, minReturn) {
-                revertWithReason(
-                    0x000000164d696e2072657475726e206e6f742072656163686564000000000000,
-                    0x5a
-                ) // "Min return not reached"
-            }
-            // emit event
-            mstore(emptyPtr, srcToken)
-            mstore(add(emptyPtr, 0x20), toToken)
-            mstore(add(emptyPtr, 0x40), origin())
-            mstore(add(emptyPtr, 0x60), amount)
-            mstore(add(emptyPtr, 0x80), returnAmount)
-            log1(
-                emptyPtr,
-                0xa0,
-                0x1bb43f2da90e35f7b0cf38521ca95a49e68eb42fac49924930a5bd73cdf7576c
-            )
         }
     }
 }
