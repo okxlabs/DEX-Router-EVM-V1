@@ -281,7 +281,7 @@ contract DexRouter is
             pools
         );
     }
-    /// @notice Executes a swap tailored for investment purposes, adjusting swap amounts based on the contract's balance. For smartSwap, if fromToken or toToken is ETH, the address needs to be 0xEeee.
+    /// @notice Executes a swap tailored for investment purposes, adjusting swap amounts based on the contract's balance.
     /// @param baseRequest Struct containing essential swap parameters like source and destination tokens, amounts, and deadline.
     /// @param batchesAmount Array indicating how much of the source token to swap in each batch, facilitating diversified investments.
     /// @param batches Detailed routing information for executing the swap across different paths or protocols.
