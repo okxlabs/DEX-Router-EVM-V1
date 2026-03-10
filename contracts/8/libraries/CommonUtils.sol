@@ -34,6 +34,8 @@ abstract contract CommonUtils is IDexRouter {
     uint256 internal constant _OUTPUT_INDEX_MASK =
         0x000000000000000000ff00000000000000000000000000000000000000000000;
 
+    uint256 internal constant NATIVE_TOKEN_TRANSFER_GAS_LIMIT = 100000; // NOTE: This value needs to be changed before deployment to different networks
+
     /// @dev WETH address is network-specific and needs to be changed before deployment.
     /// It can not be moved to immutable as immutables are not supported in assembly
     // ETH:     C02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2

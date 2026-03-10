@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../common/TrimAndCommissionTestBase.t.sol";
+import "./TrimTestBase.t.sol";
 
 /*
  * The unxswap method is tested with condition1 * condition2:
@@ -22,7 +22,7 @@ import "../common/TrimAndCommissionTestBase.t.sol";
  *     (10) 2trim + 2toCommission
  *     (11) 2trim + 2fromCommission
 */
-contract UnxswapTrimTest is TrimAndCommissionTestBase {
+contract UnxswapTrimTest is TrimTestBase {
 
     // ==================== ERC20->ERC20 ====================
     // ERC20->ERC20 with noTrim and noCommission

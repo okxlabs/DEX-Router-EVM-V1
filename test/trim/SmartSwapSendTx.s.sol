@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/test.sol";
 import "forge-std/console2.sol";
 
-import "@dex/DexRouter.sol";
+import "@okxlabs/DexRouter.sol";
 import "../common/CommissionHelper.t.sol";
 import "../common/TrimHelper.t.sol";
 
@@ -78,27 +78,22 @@ contract SendTx is Test, CommissionHelper, TrimHelper {
         console2.log("ownedAddress USDC balance before", IERC20(USDC).balanceOf(address(ownedAddress)));
 
         bytes memory swapData = _generateETH2USDCSmartSwapData();
-        uint256[] memory commissionRates = new uint256[](2);
-        commissionRates[0] = 10000000;
-        commissionRates[1] = 20000000;
-        address[] memory referrerAddresses = new address[](2);
-        referrerAddresses[0] = ownedAddress;
-        referrerAddresses[1] = deployer;
         bytes memory commissionData = _buildCommissionInfoUnified(
             true, // isFromTokenCommission
             false, // isToBCommission
             ETH, // commissionToken
-            true, // isToBCommission
-            commissionRates,
-            referrerAddresses
+            10000000, // commissionRate1
+            ownedAddress, // refer1
+            20000000, // commissionRate2
+            deployer, // refer2
+            true // isToBCommission
         );
         bytes memory trimData = _buildTrimInfoUnified(
             100, // trimRate
             ownedAddress, // trimAddress
             2000, // expectAmountOut
             300, // chargeRate
-            deployer, // chargeAddress,
-            true // isToBTrim
+            deployer // chargeAddress
         );
         bytes memory data = bytes.concat(swapData, trimData, commissionData); /// @notice the trimData should be before the commissionData
         (bool success, ) = address(dexRouter).call{
