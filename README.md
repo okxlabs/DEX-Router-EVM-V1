@@ -233,25 +233,31 @@ contract SmartSwap {
 
 ## Repository Structure
 
-All contracts are held within the `contracts/8/` folder.
+Default builds only compile contracts from the `contracts/8/` folder. ExactOut contracts are kept
+separately under `contracts/exactout/` and are not part of the default build path.
 
 ```
 DEX-Router-EVM/
-├── contracts/8/
-│   ├── DexRouter.sol                # Main router contract (exact input)
-│   ├── DexRouterExactOut.sol        # ExactOut router contract
-│   ├── UnxswapRouter.sol            # Uniswap V2 router (exact input)
-│   ├── UnxswapV3Router.sol          # Uniswap V3 router (exact input)
-│   ├── UnxswapExactOutRouter.sol    # Uniswap V2 exact output router
-│   ├── UnxswapV3ExactOutRouter.sol  # Uniswap V3 exact output router
-│   ├── adapter/                     # 80+ DEX adapters
-│   │   ├── UniV3Adapter.sol
-│   │   ├── PancakeswapV3Adapter.sol
-│   │   ├── CurveAdapter.sol
-│   │   └── ...
-│   ├── interfaces/                  # Protocol interfaces
-│   ├── libraries/                   # Utility libraries
-│   └── utils/                       # Utility contracts
+├── contracts/
+│   ├── 8/
+│   │   ├── DexRouter.sol                # Main router contract (exact input)
+│   │   ├── UnxswapRouter.sol            # Uniswap V2 router (exact input)
+│   │   ├── UnxswapV3Router.sol          # Uniswap V3 router (exact input)
+│   │   ├── adapter/                     # 80+ DEX adapters
+│   │   │   ├── UniV3Adapter.sol
+│   │   │   ├── PancakeswapV3Adapter.sol
+│   │   │   ├── CurveAdapter.sol
+│   │   │   └── ...
+│   │   ├── interfaces/                  # Protocol interfaces
+│   │   ├── libraries/                   # Utility libraries
+│   │   └── utils/                       # Utility contracts
+│   └── exactout/
+│       ├── DexRouterExactOut.sol        # ExactOut router contract
+│       ├── UnxswapExactOutRouter.sol    # Uniswap V2 exact output router
+│       ├── UnxswapV3ExactOutRouter.sol  # Uniswap V3 exact output router
+│       ├── interfaces/                  # ExactOut-specific interfaces
+│       ├── libraries/                   # ExactOut-specific libraries
+│       └── storage/                     # ExactOut storage layout
 ├── hardhat.config.js                # Hardhat configuration
 ├── foundry.toml                     # Foundry configuration
 └── package.json                     # Dependencies
@@ -285,4 +291,3 @@ We welcome contributions! Please see our [Discord community](https://discord.gg/
 - Include tests for new functionality  
 - Update documentation as needed
 - Add a changelog entry describing your changes
-
