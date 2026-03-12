@@ -31,7 +31,7 @@ contract DexRouter is
     UniswapTokenInfoHelper,
     DagRouter
 {
-    string public constant version = "v1.0.6-dag";
+    string public constant version = "v1.0.6.1-auditFix";
     using UniversalERC20 for IERC20;
 
     //-------------------------------
