@@ -17,6 +17,7 @@ import "./libraries/UniswapTokenInfoHelper.sol";
 import "./libraries/CommonLib.sol";
 
 import "./DagRouter.sol";
+import "./libraries/RouterErrors.sol";
 
 
 /// @title DexRouterV1
@@ -40,7 +41,7 @@ contract DexRouter is
     /// @notice Ensures a function is called before a specified deadline.
     /// @param deadLine The UNIX timestamp deadline.
     modifier notExpired(uint256 deadLine) {
-        require(deadLine >= block.timestamp, "Route: expired");
+        if (deadLine < block.timestamp) revert DexRouter_Expired();
         _;
     }
 
@@ -75,7 +76,7 @@ contract DexRouter is
                 }
                 totalWeight += weight;
                 if (i == path.mixAdapters.length - 1) {
-                    require(totalWeight == 10_000, "totalWeight must be 10000");
+                    if (totalWeight != 10_000) revert DexRouter_TotalWeightMustBe10000();
                 }
 
                 uint256 _fromTokenAmount;
@@ -173,10 +174,10 @@ contract DexRouter is
             IWETH(_WETH).deposit{
                 value: _baseRequest.fromTokenAmount
             }();
-            require(_bytes32ToAddress(batches[0][0].fromToken) == _WETH, "firstToken mismatch");
+            if (_bytes32ToAddress(batches[0][0].fromToken) != _WETH) revert DexRouter_FirstTokenMismatch();
             payer = address(this);
         } else {
-            require(_bytes32ToAddress(batches[0][0].fromToken) == fromToken, "firstToken mismatch");
+            if (_bytes32ToAddress(batches[0][0].fromToken) != fromToken) revert DexRouter_FirstTokenMismatch();
         }
 
         // 2. check total batch amount
@@ -189,18 +190,15 @@ contract DexRouter is
                     ++i;
                 }
             }
-            require(
-                totalBatchAmount <= _baseRequest.fromTokenAmount,
-                "Route: total batch amount should be <= fromTokenAmount"
-            );
+            if (totalBatchAmount > _baseRequest.fromTokenAmount) revert DexRouter_TotalBatchAmountExceeded();
         }
 
         // 4. execute batch
         // check length, fix DRW-02: LACK OF LENGTH CHECK ON BATATCHES
-        require(batchesAmount.length == batches.length, "length mismatch");
+        if (batchesAmount.length != batches.length) revert DexRouter_LengthMismatch();
         for (uint256 i = 0; i < batches.length; ) {
             if (i > 0) {
-                require(batches[i][0].fromToken == batches[0][0].fromToken, "Inconsistent fromToken across batches");
+                if (batches[i][0].fromToken != batches[0][0].fromToken) revert DexRouter_InconsistentFromToken();
             }
             
             // execute hop, if the whole swap replacing by pmm fails, the funds will return to dexRouter
@@ -322,10 +320,10 @@ contract DexRouter is
         returns (uint256 returnAmount)
     {
         address fromToken = _bytes32ToAddress(baseRequest.fromToken);
-        require(fromToken != _ETH, "Invalid source token");
-        require(refundTo != address(0), "refundTo is address(0)");
-        require(to != address(0), "to is address(0)");
-        require(baseRequest.fromTokenAmount > 0, "fromTokenAmount is 0");
+        if (fromToken == _ETH) revert DexRouter_InvalidSourceToken();
+        if (refundTo == address(0)) revert DexRouter_RefundToIsZeroAddress();
+        if (to == address(0)) revert DexRouter_ToIsZeroAddress();
+        if (baseRequest.fromTokenAmount == 0) revert DexRouter_FromTokenAmountIsZero();
         uint256 amount = IERC20(fromToken).balanceOf(address(this));
         for (uint256 i = 0; i < batchesAmount.length; ) {
             batchesAmount[i] =
@@ -350,10 +348,7 @@ contract DexRouter is
         returnAmount =
             _getBalanceOf(baseRequest.toToken, to) -
             returnAmount;
-        require(
-            returnAmount >= baseRequest.minReturnAmount,
-            "Min return not reached"
-        );
+        if (returnAmount < baseRequest.minReturnAmount) revert DexRouter_MinReturnNotReached();
         emit OrderRecord(
             fromToken,
             baseRequest.toToken,
@@ -421,10 +416,7 @@ contract DexRouter is
 
         // check minReturnAmount
         returnAmount = _getBalanceOf(toToken, receiverAddr) - returnAmount;
-        require(
-            returnAmount >= minReturn,
-            "Min return not reached"
-        );
+        if (returnAmount < minReturn) revert DexRouter_MinReturnNotReached();
 
         if (srcToken == _ETH) {
             _refundETH(msg.sender); // In case of  msg.value > fromTokenAmount, the unused ETH will be refunded to refundTo
@@ -568,10 +560,7 @@ contract DexRouter is
         returnAmount =
             _getBalanceOf(baseRequest.toToken, receiver) -
             returnAmount;
-        require(
-            returnAmount >= baseRequest.minReturnAmount,
-            "Min return not reached"
-        );
+        if (returnAmount < baseRequest.minReturnAmount) revert DexRouter_MinReturnNotReached();
 
         if (_bytes32ToAddress(baseRequest.fromToken) == _ETH) {
             _refundETH(refundTo); // In case of  msg.value > fromTokenAmount, the unused ETH will be refunded to refundTo
@@ -608,10 +597,7 @@ contract DexRouter is
         (address fromToken, address toToken) = _getUnxswapTokenInfo(msg.value > 0, pools);
         address srcTokenAddr = _bytes32ToAddress(srcToken);
         srcTokenAddr = srcTokenAddr == address(0) ? _ETH : srcTokenAddr;
-        require(
-            srcTokenAddr == fromToken,
-            "unxswap: token mismatch"
-        );
+        if (srcTokenAddr != fromToken) revert DexRouter_UnxswapTokenMismatch();
         
         return
             _unxswapTo(
@@ -647,10 +633,7 @@ contract DexRouter is
 
         // check minReturnAmount
         returnAmount = _getBalanceOf(toToken, receiver) - returnAmount;
-        require(
-            returnAmount >= minReturn,
-            "Min return not reached"
-        );
+        if (returnAmount < minReturn) revert DexRouter_MinReturnNotReached();
 
         if (srcToken == _ETH) {
             _refundETH(msg.sender); // In case of  msg.value > fromTokenAmount, the unused ETH will be refunded to refundTo
@@ -735,10 +718,7 @@ contract DexRouter is
         (address srcToken, address toToken) = _getUniswapV3TokenInfo(msg.value > 0, pools);
 
         // validate fromToken and toToken from baseRequest
-        require(
-            _bytes32ToAddress(baseRequest.fromToken) == srcToken && baseRequest.toToken == toToken,
-            "uniswapV3: token mismatch"
-        );
+        if (_bytes32ToAddress(baseRequest.fromToken) != srcToken || baseRequest.toToken != toToken) revert DexRouter_UniswapV3TokenMismatch();
 
         return
             _uniswapV3SwapTo(
@@ -779,8 +759,8 @@ contract DexRouter is
 
         // validate fromToken and toToken from baseRequest
         address fromTokenAddr = _bytes32ToAddress(baseRequest.fromToken);
-        require((fromTokenAddr == fromToken) || (fromTokenAddr == address(0) && fromToken == _ETH), "unxswap: fromToken mismatch");
-        require((baseRequest.toToken == toToken) || (baseRequest.toToken == address(0) && toToken == _ETH), "unxswap: toToken mismatch");
+        if (fromTokenAddr != fromToken && !(fromTokenAddr == address(0) && fromToken == _ETH)) revert DexRouter_UnxswapFromTokenMismatch();
+        if (baseRequest.toToken != toToken && !(baseRequest.toToken == address(0) && toToken == _ETH)) revert DexRouter_UnxswapToTokenMismatch();
 
         return
             _unxswapTo(
@@ -803,12 +783,12 @@ contract DexRouter is
     ) internal {
         emit SwapOrderId(orderId);
 
-        require(amount > 0, "amount must be > 0");
+        if (amount == 0) revert DexRouter_AmountMustBePositive();
         receiver = receiver == address(0) ? msg.sender : receiver;
 
         (CommissionInfo memory commissionInfo, TrimInfo memory trimInfo) = _getCommissionAndTrimInfo();
 
-        require(!trimInfo.hasTrim, "trim is not supported in swapWrap");
+        if (trimInfo.hasTrim) revert DexRouter_TrimNotSupportedInSwapWrap();
 
         address srcToken = reversed ? _WETH : _ETH;
         address toToken = reversed ? _ETH : _WETH;
@@ -840,11 +820,11 @@ contract DexRouter is
                     value: address(this).balance,
                     gas: NATIVE_TOKEN_TRANSFER_GAS_LIMIT
                 }("");
-                require(success, "transfer native token failed");
+                if (!success) revert DexRouter_TransferNativeTokenFailed();
             }
         } else {
             if (!commissionInfo.isFromTokenCommission) {
-                require(msg.value == amount, "value not equal amount");
+                if (msg.value != amount) revert DexRouter_ValueNotEqualAmount();
             }
             IWETH(_WETH).deposit{value: amount}();
             if (middleReceiver != address(this)) {
@@ -912,7 +892,7 @@ contract DexRouter is
         } else if (fromTokenAddr == _WETH && baseRequest.toToken == _ETH) {
             reversed = true;
         } else {
-            revert("SwapWrap: invalid token pair");
+            revert DexRouter_InvalidTokenPair();
         }
 
         _swapWrap(orderId, receiver, reversed, baseRequest.fromTokenAmount);
@@ -945,7 +925,7 @@ contract DexRouter is
         notExpired(baseRequest.deadLine)
         returns (uint256 returnAmount)
     {
-        require(paths.length > 0, "paths must be > 0");
+        if (paths.length == 0) revert DexRouter_PathsMustBePositive();
         emit SwapOrderId(orderId);
 
         receiver = receiver == address(0) ? msg.sender : receiver;
@@ -991,10 +971,7 @@ contract DexRouter is
         returnAmount =
             _getBalanceOf(baseRequest.toToken, receiver) -
             returnAmount;
-        require(
-            returnAmount >= baseRequest.minReturnAmount,
-            "Min return not reached"
-        );
+        if (returnAmount < baseRequest.minReturnAmount) revert DexRouter_MinReturnNotReached();
 
         if (_bytes32ToAddress(baseRequest.fromToken) == _ETH) {
             _refundETH(msg.sender); // In case of  msg.value > fromTokenAmount, the unused ETH will be refunded to refundTo

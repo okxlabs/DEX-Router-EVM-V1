@@ -9,6 +9,7 @@ import "../interfaces/IApproveProxy.sol";
 import "../interfaces/IWNativeRelayer.sol";
 import "../interfaces/IWETH.sol";
 import "../interfaces/IERC20.sol";
+import "./RouterErrors.sol";
 
 
 /// @title Base contract with common permit handling logics
@@ -68,7 +69,7 @@ abstract contract CommonLib is CommonUtils {
                 revert(add(returndata, 0x20), mload(returndata))
             }
         } else {
-            revert("adaptor call failed");
+            revert CommonLib_AdaptorCallFailed();
         }
     }
 
@@ -94,7 +95,7 @@ abstract contract CommonLib is CommonUtils {
             return;
         } else if (mode == _MODE_PERMIT2) {
             // Permit2 mode - reserved for future implementation
-            revert("Permit2 mode is not supported");
+            revert CommonLib_Permit2ModeNotSupported();
         } else {
             if (payer == address(this)) {
                 SafeERC20.safeTransfer(IERC20(token), to, amount);
@@ -124,7 +125,7 @@ abstract contract CommonLib is CommonUtils {
                 uint256 ethBal = address(this).balance;
                 if (ethBal > 0) {
                     (bool success, ) = payable(to).call{value: ethBal, gas: NATIVE_TOKEN_TRANSFER_GAS_LIMIT}("");
-                    require(success, "transfer native token failed");
+                    if (!success) revert CommonLib_TransferNativeTokenFailed();
                 }
             }
         } else {
@@ -157,7 +158,7 @@ abstract contract CommonLib is CommonUtils {
         uint256 ethBal = address(this).balance;
         if (ethBal > 0) {
             (bool success, ) = payable(refundTo).call{value: ethBal, gas: NATIVE_TOKEN_TRANSFER_GAS_LIMIT}("");
-            require(success, "refund ETH failed");
+            if (!success) revert CommonLib_RefundETHFailed();
         }
     }
 }
