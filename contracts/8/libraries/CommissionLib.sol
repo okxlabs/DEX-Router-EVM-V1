@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./CommonUtils.sol";
+import "./RouterErrors.sol";
 import "../interfaces/AbstractCommissionLib.sol";
 /// @title Base contract with common permit handling logics
 
@@ -545,12 +546,12 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
             return 0;
         }
         uint256 balanceAfter = _getBalanceOf(toToken, address(this));
-        require(balanceAfter >= balanceBefore, "invalid balance after");
+        if (balanceAfter < balanceBefore) revert Commission_InvalidBalanceAfter();
         uint256 inputAmount = balanceAfter - balanceBefore;
 
         // process commission
         if (commissionInfo.isToTokenCommission) {
-            require(commissionInfo.commissionRate + commissionInfo.commissionRate2 <= commissionRateLimit, "error commission rate limit");
+            if (commissionInfo.commissionRate + commissionInfo.commissionRate2 > commissionRateLimit) revert Commission_RateLimitExceeded();
             uint256 commissionAmount = inputAmount * (commissionInfo.commissionRate + commissionInfo.commissionRate2) / DENOMINATOR;
             _doCommissionOrTrimToTokenInternal(
                 true,
@@ -567,8 +568,8 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
 
         // process trim
         if (trimInfo.hasTrim && inputAmount > trimInfo.expectAmountOut) {
-            require(trimInfo.trimRate <= TRIM_RATE_LIMIT, "error trim rate limit");
-            require(trimInfo.chargeRate <= TRIM_DENOMINATOR, "error charge rate");
+            if (trimInfo.trimRate > TRIM_RATE_LIMIT) revert Commission_TrimRateLimitExceeded();
+            if (trimInfo.chargeRate > TRIM_DENOMINATOR) revert Commission_InvalidChargeRate();
             uint256 trimAmount = inputAmount - trimInfo.expectAmountOut;
             uint256 allowedMaxTrimAmount = inputAmount * trimInfo.trimRate / TRIM_DENOMINATOR;
             if (trimAmount > allowedMaxTrimAmount) {
@@ -837,29 +838,28 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
          || (mode & _MODE_PERMIT2) != 0
         )
          && commissionInfo.isFromTokenCommission) {
-            revert("From token commission not supported");
+            revert Commission_FromTokenCommissionNotSupported();
         }
         if(fromToken == toToken) {
-            revert("Invalid tokens");
+            revert Commission_InvalidTokens();
         }
         if (commissionInfo.isFromTokenCommission && commissionInfo.isToTokenCommission) {
-            revert("Invalid commission direction");
+            revert Commission_InvalidCommissionDirection();
         }
 
         // Validate commission recipient addresses to prevent accidental burns.
         if (commissionInfo.isFromTokenCommission || commissionInfo.isToTokenCommission) {
-            require(commissionInfo.refererAddress != address(0), "Invalid referrer");
+            if (commissionInfo.refererAddress == address(0)) revert Commission_InvalidReferrer();
             if (commissionInfo.commissionRate2 > 0) {
-                require(commissionInfo.refererAddress2 != address(0), "Invalid referrer2");
+                if (commissionInfo.refererAddress2 == address(0)) revert Commission_InvalidReferrer2();
             }
         }
         
-        require(
-            (commissionInfo.isFromTokenCommission && commissionInfo.token == fromToken)
+        if (
+            !((commissionInfo.isFromTokenCommission && commissionInfo.token == fromToken)
                 || (commissionInfo.isToTokenCommission && commissionInfo.token == toToken)
-                || (!commissionInfo.isFromTokenCommission && !commissionInfo.isToTokenCommission),
-            "Invalid commission info"
-        );
+                || (!commissionInfo.isFromTokenCommission && !commissionInfo.isToTokenCommission))
+        ) revert Commission_InvalidCommissionInfo();
     }
 
     function _validateTrimInfo(TrimInfo memory trimInfo) internal pure {
@@ -867,10 +867,10 @@ abstract contract CommissionLib is AbstractCommissionLib, CommonUtils {
 
         // Validate trim/charge recipient addresses to prevent accidental burns.
         if (trimInfo.chargeRate < TRIM_DENOMINATOR) { // Not all trim is charged, so trimAddress should not be zero
-            require(trimInfo.trimAddress != address(0), "Invalid trimAddress");
+            if (trimInfo.trimAddress == address(0)) revert Commission_InvalidTrimAddress();
         }
         if (trimInfo.chargeRate > 0) {
-            require(trimInfo.chargeAddress != address(0), "Invalid chargeAddress");
+            if (trimInfo.chargeAddress == address(0)) revert Commission_InvalidChargeAddress();
         }
     }
 }

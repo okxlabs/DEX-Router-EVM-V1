@@ -4,9 +4,9 @@ pragma solidity 0.8.17;
 import "./libraries/CommonLib.sol";
 import "./libraries/UniversalERC20.sol";
 import "./interfaces/IERC20.sol";
+import "./libraries/RouterErrors.sol";
 
 abstract contract DagRouter is CommonLib {
-
     using UniversalERC20 for IERC20;
 
     /// @notice Core DAG algorithm data structure
@@ -36,14 +36,14 @@ abstract contract DagRouter is CommonLib {
         // In order to deal with ETH/WETH transfer rules in a unified manner,
         // we do not need to judge according to fromToken.
         if (IERC20(fromToken).isETH()) {
-            require(firstNodeToken == _WETH, "firstToken mismatch");
+            if (firstNodeToken != _WETH) revert DagRouter_FirstTokenMismatch();
             IWETH(_WETH).deposit{
                 value: _baseRequest.fromTokenAmount
             }();
             payer = address(this);
         } else {
-            require(firstNodeToken == fromToken, "firstToken mismatch");
-            require(msg.value == 0, "value must be 0");
+            if (firstNodeToken != fromToken) revert DagRouter_FirstTokenMismatch();
+            if (msg.value != 0) revert DagRouter_ValueMustBeZero();
         }
 
         // 2. execute dag swap
@@ -103,18 +103,17 @@ abstract contract DagRouter is CommonLib {
         uint256 accAmount;
         address fromToken = _bytes32ToAddress(path.fromToken);
 
-        require(path.mixAdapters.length > 0, "edge length must be > 0");
-        require(
-            path.mixAdapters.length == path.rawData.length &&
-            path.mixAdapters.length == path.extraData.length &&
-            path.mixAdapters.length == path.assetTo.length,
-            "path length mismatch"
-        );
+        if (path.mixAdapters.length == 0) revert DagRouter_EdgeLengthMustBePositive();
+        if (
+            path.mixAdapters.length != path.rawData.length ||
+            path.mixAdapters.length != path.extraData.length ||
+            path.mixAdapters.length != path.assetTo.length
+        ) revert DagRouter_PathLengthMismatch();
 
         // to get the nodeBalance for non-first node, the balance of the first node is the original passed value
         if (nodeIndex != 0) {
             nodeBalance = IERC20(fromToken).balanceOf(address(this));
-            require(nodeBalance > 0, "node balance must be > 0");
+            if (nodeBalance == 0) revert DagRouter_NodeBalanceMustBePositive();
         }
 
         // execute edges
@@ -132,15 +131,12 @@ abstract contract DagRouter is CommonLib {
                     outputIndex := shr(176, and(rawData, _OUTPUT_INDEX_MASK))
                 }
 
-                require(inputIndex == nodeIndex, "node inputIndex inconsistent");
-                require(inputIndex < outputIndex && outputIndex <= swapState.nodeNum, "node index out of range");
+                if (inputIndex != nodeIndex) revert DagRouter_NodeInputIndexInconsistent();
+                if (inputIndex >= outputIndex || outputIndex > swapState.nodeNum) revert DagRouter_NodeIndexOutOfRange();
 
                 totalWeight += weight;
                 if (i == path.mixAdapters.length - 1) {
-                    require(
-                        totalWeight == 10_000,
-                        "totalWeight must be 10000"
-                    );
+                    if (totalWeight != 10_000) revert DagRouter_TotalWeightMustBe10000();
                 }
             }
 
