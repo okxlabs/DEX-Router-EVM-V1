@@ -8,8 +8,8 @@ import {IUniV3} from "../interfaces/IUniV3.sol";
 /// @title UniswapTokenInfoHelper
 /// @notice Helper functions for getting fromToken and toToken from
 /// encoded pools array of unxswap and uniswapV3Swap methods.
-/// @dev This contract will be used in DexRouter and DexRouterExactOut. So the
-/// masks are re-defined here and keep the same as in the original contracts.
+/// @dev This contract is used by DexRouter, so the masks are re-defined here
+/// and kept the same as in the router contracts.
 abstract contract UniswapTokenInfoHelper is CommonUtils {
     function _getUnxswapTokenInfo(bool sendValue, bytes32[] calldata pools)
         internal
